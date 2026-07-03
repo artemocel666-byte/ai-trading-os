@@ -1,0 +1,15 @@
+[
+  {
+    "provider": "fixture",
+    "provider_event_id": "eur-cpi-1",
+    "title": "Consumer Price Index",
+    "currency": "EUR",
+    "country": "Eurozone",
+    "impact": "HIGH",
+    "scheduled_at": "2026-07-03T12:00:00+02:00",
+    "actual": "N/A",
+    "forecast": "2.1",
+    "previous": "2.0",
+    "fetched_at": "2026-07-03T09:30:00Z"
+  }
+]

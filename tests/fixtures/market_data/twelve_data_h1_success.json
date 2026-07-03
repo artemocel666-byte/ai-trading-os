@@ -1,0 +1,14 @@
+{
+  "status": "ok",
+  "values": [
+    {
+      "datetime": "2026-07-02T08:00:00Z",
+      "open": "1.2000",
+      "high": "1.2100",
+      "low": "1.1900",
+      "close": "1.2050",
+      "volume": "2500",
+      "is_closed": true
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+[
+  {
+    "provider": "fixture",
+    "pair": "EURUSD",
+    "timeframe": "M15",
+    "open_time": "2026-07-03T10:00:00+02:00",
+    "close_time": "2026-07-03T10:15:00+02:00",
+    "open": "1.1000",
+    "high": "1.1050",
+    "low": "1.0950",
+    "close": "1.1020",
+    "volume": "1000",
+    "is_closed": true
+  }
+]

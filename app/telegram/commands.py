@@ -1,0 +1,149 @@
+from typing import Any, cast
+
+from telegram import Update
+from telegram.ext import Application, CommandHandler, ContextTypes
+
+from app.core.config import Settings
+from app.core.enums import MessageType
+from app.core.exceptions import NotImplementedFeatureError
+from app.services.analysis_service import AnalysisService
+from app.services.system_state_service import SystemStateService
+from app.telegram.authorization import TelegramIdentity, is_authorized
+from app.telegram.formatter import TelegramFormatter
+
+
+def _identity(update: Update) -> TelegramIdentity:
+    user = update.effective_user
+    chat = update.effective_chat
+    return TelegramIdentity(
+        user_id=user.id if user is not None else None,
+        chat_id=chat.id if chat is not None else None,
+    )
+
+
+def _settings(context: ContextTypes.DEFAULT_TYPE) -> Settings:
+    return cast(Settings, context.application.bot_data["settings"])
+
+
+def _system_state_service(context: ContextTypes.DEFAULT_TYPE) -> SystemStateService:
+    return cast(SystemStateService, context.application.bot_data["system_state_service"])
+
+
+def _analysis_service(context: ContextTypes.DEFAULT_TYPE) -> AnalysisService:
+    return cast(AnalysisService, context.application.bot_data["analysis_service"])
+
+
+def _formatter(context: ContextTypes.DEFAULT_TYPE) -> TelegramFormatter:
+    return cast(TelegramFormatter, context.application.bot_data["formatter"])
+
+
+async def _reply(
+    update: Update,
+    context: ContextTypes.DEFAULT_TYPE,
+    message_type: MessageType,
+    body_ru: str,
+) -> None:
+    if update.effective_message is None:
+        return
+    await update.effective_message.reply_text(_formatter(context).format(message_type, body_ru))
+
+
+async def _ensure_authorized(update: Update, context: ContextTypes.DEFAULT_TYPE) -> bool:
+    identity = _identity(update)
+    command = (
+        update.effective_message.text
+        if update.effective_message and update.effective_message.text
+        else "unknown"
+    )
+    if is_authorized(_settings(context), identity):
+        return True
+    await _system_state_service(context).record_unauthorized_telegram_access(
+        user_id=identity.user_id,
+        chat_id=identity.chat_id,
+        command=command.split()[0],
+    )
+    await _reply(update, context, MessageType.REJECTED, "Доступ запрещён.")
+    return False
+
+
+async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    if not await _ensure_authorized(update, context):
+        return
+    await _reply(
+        update,
+        context,
+        MessageType.EDUCATION,
+        "AI Trading OS находится в foundation-фазе и режиме разработки бумажной аналитики.",
+    )
+
+
+async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    if not await _ensure_authorized(update, context):
+        return
+    await _reply(
+        update,
+        context,
+        MessageType.EDUCATION,
+        "Доступные команды: /start, /help, /status, /start_scan, /stop_scan, /scan_now.",
+    )
+
+
+async def status_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    if not await _ensure_authorized(update, context):
+        return
+    status = await _system_state_service(context).get_full_status()
+    scan_text = "включено" if status["scan_enabled"] else "выключено"
+    heartbeat = status["worker_heartbeat"] or "ещё не получен"
+    await _reply(
+        update,
+        context,
+        MessageType.SYSTEM_STATUS,
+        (
+            "Статус системы: foundation-фаза. "
+            f"Сканирование: {scan_text}. "
+            f"Пульс worker: {heartbeat}. "
+            "Реальная торговля отключена."
+        ),
+    )
+
+
+async def start_scan_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    if not await _ensure_authorized(update, context):
+        return
+    await _system_state_service(context).enable_scanning(actor="telegram")
+    await _reply(
+        update,
+        context,
+        MessageType.APPROVED,
+        "Состояние сканирования включено, но аналитическая стратегия ещё не подключена.",
+    )
+
+
+async def stop_scan_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    if not await _ensure_authorized(update, context):
+        return
+    await _system_state_service(context).disable_scanning(actor="telegram")
+    await _reply(update, context, MessageType.CANCELLED, "Состояние сканирования выключено.")
+
+
+async def scan_now_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    if not await _ensure_authorized(update, context):
+        return
+    try:
+        await _analysis_service(context).scan_now()
+    except NotImplementedFeatureError:
+        await _reply(
+            update,
+            context,
+            MessageType.DATA_UNAVAILABLE,
+            "Аналитический движок не реализован в foundation-фазе. Результат не создан.",
+        )
+
+
+def add_handlers(application: Application[Any, Any, Any, Any, Any, Any]) -> None:
+    application.add_handler(CommandHandler("start", start_command))
+    application.add_handler(CommandHandler("help", help_command))
+    application.add_handler(CommandHandler("status", status_command))
+    application.add_handler(CommandHandler("start_scan", start_scan_command))
+    application.add_handler(CommandHandler("stop_scan", stop_scan_command))
+    application.add_handler(CommandHandler("scan_now", scan_now_command))

@@ -1,0 +1,14 @@
+[
+  {
+    "id": "eur-cpi-2",
+    "date": "2026-07-02T09:30:00Z",
+    "event": "Consumer Price Index",
+    "currency": "EUR",
+    "country": "Eurozone",
+    "impact": "Medium",
+    "actual": "N/A",
+    "estimate": "-",
+    "previous": "2.0",
+    "fetched_at": "2026-07-02T09:00:00Z"
+  }
+]

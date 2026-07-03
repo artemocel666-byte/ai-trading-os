@@ -1,0 +1,7 @@
+[
+  {
+    "id": "broken",
+*** Add File: tests/fixtures/economic_calendar/fmp_invalid_payload.json
+{
+  "unexpected": "object"
+}

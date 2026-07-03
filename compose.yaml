@@ -1,0 +1,153 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ai_trading_os
+      POSTGRES_USER: ai_trading_os
+      POSTGRES_PASSWORD: ai_trading_os
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ai_trading_os -d ai_trading_os"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  api:
+    build: .
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      APP_NAME: ${APP_NAME:-AI Trading OS}
+      APP_ENV: ${APP_ENV:-development}
+      APP_TIMEZONE: ${APP_TIMEZONE:-Europe/Stockholm}
+      STORAGE_TIMEZONE: ${STORAGE_TIMEZONE:-UTC}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      DATABASE_URL: ${DATABASE_URL:-postgresql+asyncpg://ai_trading_os:ai_trading_os@postgres:5432/ai_trading_os}
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY:-development-internal-key-change-me}
+      TELEGRAM_ENABLED: ${TELEGRAM_ENABLED:-false}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+      TELEGRAM_ALLOWED_USER_ID: ${TELEGRAM_ALLOWED_USER_ID:-}
+      TELEGRAM_ALLOWED_CHAT_ID: ${TELEGRAM_ALLOWED_CHAT_ID:-}
+      OPENAI_ENABLED: ${OPENAI_ENABLED:-false}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      MARKET_DATA_ENABLED: ${MARKET_DATA_ENABLED:-false}
+      TWELVE_DATA_API_KEY: ${TWELVE_DATA_API_KEY:-}
+      TWELVE_DATA_BASE_URL: ${TWELVE_DATA_BASE_URL:-https://api.twelvedata.com}
+      CALENDAR_ENABLED: ${CALENDAR_ENABLED:-false}
+      FMP_API_KEY: ${FMP_API_KEY:-}
+      FMP_BASE_URL: ${FMP_BASE_URL:-https://financialmodelingprep.com}
+      PROVIDER_CONNECT_TIMEOUT_SECONDS: ${PROVIDER_CONNECT_TIMEOUT_SECONDS:-5}
+      PROVIDER_READ_TIMEOUT_SECONDS: ${PROVIDER_READ_TIMEOUT_SECONDS:-10}
+      PROVIDER_WRITE_TIMEOUT_SECONDS: ${PROVIDER_WRITE_TIMEOUT_SECONDS:-5}
+      PROVIDER_POOL_TIMEOUT_SECONDS: ${PROVIDER_POOL_TIMEOUT_SECONDS:-5}
+      PROVIDER_RETRY_COUNT: ${PROVIDER_RETRY_COUNT:-2}
+      PROVIDER_RETRY_BACKOFF_SECONDS: ${PROVIDER_RETRY_BACKOFF_SECONDS:-0.1}
+      PROVIDER_MAX_REQUEST_RANGE_DAYS: ${PROVIDER_MAX_REQUEST_RANGE_DAYS:-31}
+      REQUIRE_INTEGRATION_TESTS: ${REQUIRE_INTEGRATION_TESTS:-false}
+      SCAN_ENABLED: ${SCAN_ENABLED:-false}
+      SERVICE_NAME: api
+    depends_on:
+      postgres:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    ports:
+      - "127.0.0.1:8000:8000"
+    command: ["uvicorn", "app.main:create_app", "--factory", "--host", "0.0.0.0", "--port", "8000"]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  worker:
+    build: .
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      APP_ENV: ${APP_ENV:-development}
+      APP_TIMEZONE: ${APP_TIMEZONE:-Europe/Stockholm}
+      STORAGE_TIMEZONE: ${STORAGE_TIMEZONE:-UTC}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      DATABASE_URL: ${DATABASE_URL:-postgresql+asyncpg://ai_trading_os:ai_trading_os@postgres:5432/ai_trading_os}
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY:-development-internal-key-change-me}
+      TELEGRAM_ENABLED: ${TELEGRAM_ENABLED:-false}
+      OPENAI_ENABLED: ${OPENAI_ENABLED:-false}
+      MARKET_DATA_ENABLED: ${MARKET_DATA_ENABLED:-false}
+      TWELVE_DATA_BASE_URL: ${TWELVE_DATA_BASE_URL:-https://api.twelvedata.com}
+      CALENDAR_ENABLED: ${CALENDAR_ENABLED:-false}
+      FMP_BASE_URL: ${FMP_BASE_URL:-https://financialmodelingprep.com}
+      REQUIRE_INTEGRATION_TESTS: ${REQUIRE_INTEGRATION_TESTS:-false}
+      SERVICE_NAME: worker
+    depends_on:
+      postgres:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    command: ["python", "-m", "app.scheduler.worker"]
+
+  bot:
+    build: .
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      APP_ENV: ${APP_ENV:-development}
+      APP_TIMEZONE: ${APP_TIMEZONE:-Europe/Stockholm}
+      STORAGE_TIMEZONE: ${STORAGE_TIMEZONE:-UTC}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      DATABASE_URL: ${DATABASE_URL:-postgresql+asyncpg://ai_trading_os:ai_trading_os@postgres:5432/ai_trading_os}
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY:-development-internal-key-change-me}
+      TELEGRAM_ENABLED: ${TELEGRAM_ENABLED:-false}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+      TELEGRAM_ALLOWED_USER_ID: ${TELEGRAM_ALLOWED_USER_ID:-}
+      TELEGRAM_ALLOWED_CHAT_ID: ${TELEGRAM_ALLOWED_CHAT_ID:-}
+      OPENAI_ENABLED: ${OPENAI_ENABLED:-false}
+      MARKET_DATA_ENABLED: ${MARKET_DATA_ENABLED:-false}
+      TWELVE_DATA_BASE_URL: ${TWELVE_DATA_BASE_URL:-https://api.twelvedata.com}
+      CALENDAR_ENABLED: ${CALENDAR_ENABLED:-false}
+      FMP_BASE_URL: ${FMP_BASE_URL:-https://financialmodelingprep.com}
+      REQUIRE_INTEGRATION_TESTS: ${REQUIRE_INTEGRATION_TESTS:-false}
+      SERVICE_NAME: bot
+    depends_on:
+      postgres:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    command: ["python", "-m", "app.telegram.bot"]
+    healthcheck:
+      test: ["CMD", "python", "scripts/process_health.py", "app.telegram.bot"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  migrate:
+    build: .
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      APP_ENV: ${APP_ENV:-development}
+      APP_TIMEZONE: ${APP_TIMEZONE:-Europe/Stockholm}
+      STORAGE_TIMEZONE: ${STORAGE_TIMEZONE:-UTC}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      DATABASE_URL: ${DATABASE_URL:-postgresql+asyncpg://ai_trading_os:ai_trading_os@postgres:5432/ai_trading_os}
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY:-development-internal-key-change-me}
+      TELEGRAM_ENABLED: ${TELEGRAM_ENABLED:-false}
+      OPENAI_ENABLED: ${OPENAI_ENABLED:-false}
+      MARKET_DATA_ENABLED: ${MARKET_DATA_ENABLED:-false}
+      TWELVE_DATA_BASE_URL: ${TWELVE_DATA_BASE_URL:-https://api.twelvedata.com}
+      CALENDAR_ENABLED: ${CALENDAR_ENABLED:-false}
+      FMP_BASE_URL: ${FMP_BASE_URL:-https://financialmodelingprep.com}
+      REQUIRE_INTEGRATION_TESTS: ${REQUIRE_INTEGRATION_TESTS:-false}
+      SERVICE_NAME: migrate
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: ["alembic", "upgrade", "head"]
+
+volumes:
+  postgres_data:
