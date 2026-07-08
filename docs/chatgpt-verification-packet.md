@@ -1,44 +1,26 @@
-# AI Trading OS - Phase 2 final defect corrections verification packet
+# AI Trading OS - Phase 2 final runtime verification packet
 
-Generated at: `2026-07-03T16:43:06.689026+00:00`
+Generated at: `2026-07-08T17:33:47+00:00`
 
 ## Scope
 
-This packet covers only the final Phase 2 defect corrections for provider JSON decoding, exact local range filtering, typed numeric failures, strict `is_closed` parsing, documentation, version-control initialization, and verification.
+This packet covers the completed Phase 2 data-adapter corrections plus the final Docker runtime
+verification results. The latest repository update is documentation-only.
 
 Phase 3 was not started. No strategies, indicators, scoring, signals, AI agents, OpenAI calls, paper trading, broker APIs, order execution, live position management, or real trading were added.
 
 ## Git Metadata
 
-`.git` was absent at the start of this pass and was initialized with `git init`.
-
 - Inside work tree: `true`
 
-- Current branch after init: `main`
+- Current branch: `main`
 
-- HEAD before initial commit: unavailable (`fatal: ambiguous argument 'HEAD'`)
+- Current HEAD before this documentation update: `0848243`
 
-### `git status --short` after init and before initial commit
+### `git status --short` before this documentation update
 
 ```text
-?? .dockerignore
-?? .env.example
-?? .gitignore
-?? AGENTS.md
-?? Dockerfile
-?? LICENSE
-?? Makefile
-?? PLANS.md
-?? README.md
-?? alembic.ini
-?? app/
-?? compose.yaml
-?? docs/
-?? migrations/
-?? pyproject.toml
-?? scripts/
-?? tests/
-?? uv.lock
+<clean>
 ```
 
 ## Summary Of Corrections
@@ -59,11 +41,37 @@ Phase 3 was not started. No strategies, indicators, scoring, signals, AI agents,
 
 - README.md and AGENTS.md now state `Current project phase: phase_2_data_adapters`.
 
-## Files Changed In This Defect Pass
+## Final Docker Runtime Verification
+
+The final Phase 2 runtime verification was completed on Docker.
+
+Verified results:
+
+- Docker Desktop runtime was available.
+- `docker compose build` succeeded.
+- `docker compose up -d` succeeded.
+- PostgreSQL container became healthy.
+- `migrate` container exited with code 0.
+- API `/ready` returned HTTP 200.
+- `/api/v1/system/status` returned:
+  - `database_status = ok`
+  - `project_phase = phase_2_data_adapters`
+  - `trading_strategy_implemented = false`
+  - `real_trading_enabled = false`
+- `alembic current` returned:
+  - `0002_phase2_data_constraints (head)`
+- `alembic check` returned:
+  - `No new upgrade operations detected.`
+- PostgreSQL integration tests ran with `REQUIRE_INTEGRATION_TESTS=true` and returned:
+  - `4 passed, 1 warning`
+
+## Files Covered By This Packet
 
 - `AGENTS.md`
 
 - `README.md`
+
+- `docs/phase2-verification-report.md`
 
 - `app/adapters/json_decoding.py`
 
@@ -102,6 +110,38 @@ Phase 3 was not started. No strategies, indicators, scoring, signals, AI agents,
 - `test_twelve_data_is_closed_rejects_non_boolean_values`
 
 ## Verification Commands Actually Run
+
+### Latest documentation-only update checks on 2026-07-08
+
+The requested `uv run ...` commands could not start in this shell because `uv` is not installed on
+the current `PATH`, and no local `uv` executable is present in the workspace or temporary runtime
+paths.
+
+Attempted command:
+
+```text
+uv run ruff format --check .
+zsh:1: command not found: uv
+```
+
+Equivalent checks were run with the repository `.venv` tools:
+
+```text
+.venv/bin/ruff format --check .
+85 files already formatted
+
+.venv/bin/ruff check .
+All checks passed!
+
+.venv/bin/mypy app
+Success: no issues found in 61 source files
+
+.venv/bin/pytest
+142 passed, 4 skipped, 1 warning in 0.73s
+
+.venv/bin/python scripts/security_check.py
+<no output; exit code 0>
+```
 
 ### `uv run ruff format --check .`
 
@@ -166,11 +206,59 @@ tests/unit/test_value_objects_and_enums.py ....                          [100%]
 <no output; exit code 0>
 ```
 
-## Runtime Verification Not Claimed
+## Runtime Verification Status
 
-Docker, PostgreSQL runtime connectivity, and Alembic runtime migration checks were not run in this pass, so this packet does not claim they passed. The full `pytest` run reported four skipped integration tests.
+Docker, PostgreSQL runtime connectivity, and Alembic runtime migration checks are now recorded as
+passed in the final Docker runtime verification section above.
+
+The default full `uv run pytest` command still reports four skipped integration tests when it is
+run without forcing PostgreSQL integration. The dedicated PostgreSQL integration run with
+`REQUIRE_INTEGRATION_TESTS=true` completed separately and returned `4 passed, 1 warning`.
 
 ## Changed File Contents
+
+### `docs/phase2-verification-report.md`
+
+```markdown
+# Phase 2 Verification Report
+
+Last updated: 2026-07-08
+
+## Current Phase
+
+- Current project phase: `phase_2_data_adapters`.
+- Phase 3 has not started.
+- Integrations remain disabled by default.
+- No strategy, indicators, analysis, scoring, signals, AI agents, OpenAI calls, paper trading,
+  broker APIs, order execution, live position management, real trading, or automatic trading were
+  added.
+
+## Final Docker Runtime Verification
+
+The final Phase 2 runtime verification was completed on Docker.
+
+Verified results:
+
+- Docker Desktop runtime was available.
+- `docker compose build` succeeded.
+- `docker compose up -d` succeeded.
+- PostgreSQL container became healthy.
+- `migrate` container exited with code 0.
+- API `/ready` returned HTTP 200.
+- `/api/v1/system/status` returned:
+  - `database_status = ok`
+  - `project_phase = phase_2_data_adapters`
+  - `trading_strategy_implemented = false`
+  - `real_trading_enabled = false`
+- `alembic current` returned:
+  - `0002_phase2_data_constraints (head)`
+- `alembic check` returned:
+  - `No new upgrade operations detected.`
+- PostgreSQL integration tests ran with `REQUIRE_INTEGRATION_TESTS=true` and returned:
+  - `4 passed, 1 warning`
+
+Phase 3 has not started.
+```
 
 ### `AGENTS.md`
 
