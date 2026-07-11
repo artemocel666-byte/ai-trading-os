@@ -16,20 +16,25 @@
   provider contract tests.
 - Phase 3A data-quality foundation: duplicate-safe candle/event storage repositories,
   deterministic data-quality snapshots, and historical replay utilities for tests.
+- Phase 3B feature engine foundation: deterministic closed-candle feature models, feature
+  calculation engine, feature service over repository protocols, and safety tests confirming no
+  strategy/signals/trading activation.
 
 ## Current Implementation Status
 
-The repository has completed the foundation phase, Phase 2 hardening/data adapters, and Phase 3A
-data-quality foundation. Production Twelve Data and FMP adapters exist, but live integrations remain
-disabled by default. Scanning state can be enabled or disabled, but no analytical engine is
-connected.
+The repository has completed the foundation phase, Phase 2 hardening/data adapters, Phase 3A
+data-quality foundation, and Phase 3B deterministic feature-engine foundation. Production Twelve
+Data and FMP adapters exist, but live integrations remain disabled by default. Scanning state can be
+enabled or disabled, but no strategy, signal generation, AI agent, paper-trading, or execution flow
+is connected.
 
 ## Future Phases
 
 - Phase 2: market-data and calendar adapters — completed as disabled-by-default factories plus
   production adapters covered by MockTransport-backed contract tests
 - Phase 3A: data-quality foundation — completed without trading analysis or decisions
-- Phase 3B: feature engine and deterministic analysis
+- Phase 3B: deterministic feature engine foundation — completed without trading decisions
+- Phase 3C: next phase if applicable; not started
 - Phase 4: analytical agents and Decision Engine
 - Phase 5: Russian Chief AI explanations
 - Phase 6: Telegram signal delivery
@@ -52,5 +57,4 @@ connected.
 
 ## Next Planned Task
 
-Phase 3B should add a feature-engine foundation for deterministic closed-candle feature extraction
-without signal generation, scoring, or trading recommendations.
+Phase 3C is the next phase if applicable. It has not started, and no Phase 3C behavior is active.

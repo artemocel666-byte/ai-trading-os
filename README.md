@@ -4,12 +4,12 @@ AI Trading OS is a safety-first foundation for a future modular Forex analysis a
 
 ## Current Status
 
-- Current project phase: phase_3a_data_quality_foundation.
+- Current project phase: phase_3b_feature_engine_foundation.
 - Trading strategy: not implemented.
 - Real trading: disabled and unsupported.
 - External integrations: disabled by default.
 - Telegram: can run in disabled mode without a token.
-- Phase 3A: deterministic data-quality foundation only.
+- Phase 3B: deterministic feature engine foundation only.
 
 ## Safety Warning
 
@@ -29,6 +29,15 @@ Phase 3A adds duplicate-safe storage/query repositories for normalized closed ca
 events, deterministic data-quality snapshots, and historical replay utilities for tests. It does not
 add strategy, indicators, technical analysis, scoring, signals, AI agents, OpenAI calls, paper
 trading, broker APIs, order execution, or real trading.
+
+## Phase 3B Status
+
+Phase 3B adds a deterministic, closed-candle-only feature engine that transforms existing normalized
+Phase 3A candles and economic events into typed immutable feature snapshots. It computes descriptive
+features only, such as latest close, candle counts, simple returns, rolling close means, ranges,
+volume summaries, true ranges, economic-event counts, and quality issues. It does not produce
+trading decisions, setup scoring, directions, recommendations, signals, AI output, broker activity,
+paper trading, order execution, or real trading. Phase 3C has not started.
 
 ## Prerequisites
 
@@ -117,7 +126,7 @@ When `TELEGRAM_ENABLED=false`, the bot process starts and remains healthy withou
 
 ## Current Limitations
 
-- No strategy, indicators, signals, OpenAI calls, backtesting, position sizing, broker execution, or real trading.
+- No strategy, signals, OpenAI calls, backtesting, position sizing, broker execution, or real trading.
 - `/scan_now` explicitly reports that the analytical engine is not implemented.
 - Worker jobs only update heartbeat and run foundation health checks.
 

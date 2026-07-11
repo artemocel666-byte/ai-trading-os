@@ -1,44 +1,23 @@
-# AI Trading OS - Phase 3A Verification Packet
+# AI Trading OS - Phase 3B Verification Packet
 
-Generated at: `2026-07-11T15:21:29Z`
+Generated at: `2026-07-11T15:48:23Z`
 
 ## Scope
 
-This packet documents the current uncommitted Phase 3A data-quality foundation work. Phase 3A is limited to deterministic closed-candle/economic-event storage, duplicate-safe upserts, read/query repositories, data-quality feature snapshots, and historical replay utilities.
+This packet documents Phase 3B: deterministic feature engine foundation. Phase 3B computes typed,
+immutable, descriptive market/data feature snapshots from already-normalized Phase 3A closed candles
+and economic events.
 
-Phase 3B was not started. No strategy, signals, AI agents, OpenAI calls, broker APIs, paper trading, order execution, or real trading were added or activated.
+Phase 3B is uncommitted at packet generation time. Phase 3C was not started.
 
-At packet generation time, Phase 3A is still uncommitted. Integration tests are now repeatable
-against the same PostgreSQL test database without requiring manual `dropdb` or database cleanup
-between runs.
-
-## Final Phase 3A Verification Results
-
-These are the latest successful Phase 3A verification results and supersede earlier environment
-fallback notes.
-
-- `uv run ruff format --check .`: `88 files already formatted`
-- `uv run ruff check .`: `All checks passed!`
-- `uv run mypy app`: `Success: no issues found in 63 source files`
-- `uv run pytest`: `145 passed, 5 skipped, 1 warning`
-- `uv run python scripts/security_check.py`: exit code `0`
-- Docker integration tests were run twice against the same `ai_trading_os_test` PostgreSQL database
-  without cleaning or dropping the database between runs; both runs passed with `5 passed, 1 warning`.
-- `docker compose build` succeeded.
-- `docker compose run --rm migrate alembic current` returned
-  `0002_phase2_data_constraints (head)`.
-- `docker compose run --rm migrate alembic check` returned
-  `No new upgrade operations detected.`
-- The test database migration to head succeeded.
-
-Phase 3B was not started. No strategy, signals, AI agents, OpenAI calls, broker APIs, paper trading,
-order execution, or real trading were added.
+No strategy, signals, setup scoring, AI agents, OpenAI calls, broker APIs, paper trading, order
+execution, or real trading were added or activated. Existing foundation-era signal/trading/paper
+tables remain inactive.
 
 ## Git Metadata
 
 - Branch: `main`
-
-- Current commit hash: `9d687096aeb5ab0b6586109b7e51a3b011d5aa90`
+- Current commit hash: `03c3acdb403867825db38936196000f53b9fd899`
 
 ### `git status --short`
 
@@ -48,249 +27,98 @@ order execution, or real trading were added.
  M README.md
  M app/core/constants.py
  M app/domain/entities/__init__.py
- M app/domain/interfaces/repositories.py
- M app/domain/interfaces/unit_of_work.py
- M app/persistence/repositories/__init__.py
- M app/persistence/repositories/foundation.py
- M app/persistence/unit_of_work.py
  M docs/chatgpt-verification-packet.md
+ M tests/contract/test_safety_boundaries.py
  M tests/integration/test_database_and_api.py
- M tests/unit/test_unit_of_work_lifecycle.py
-?? app/domain/entities/data_quality.py
-?? app/domain/replay.py
-?? tests/unit/test_data_quality_foundation.py
+?? app/domain/entities/features.py
+?? app/domain/feature_engine.py
+?? app/services/feature_service.py
+?? docs/phase3b-verification-report.md
+?? tests/unit/test_feature_engine_foundation.py
 ```
 
-## Repeatability Fix Addendum
+### `git diff --stat`
 
-Updated at: `2026-07-11T15:15:49Z`
+```text
+ AGENTS.md                                  |   11 +-
+ PLANS.md                                   |   18 +-
+ README.md                                  |   15 +-
+ app/core/constants.py                      |    2 +-
+ app/domain/entities/__init__.py            |   18 +
+ docs/chatgpt-verification-packet.md        | 3502 +++++++++++++---------------
+ tests/contract/test_safety_boundaries.py   |   31 +
+ tests/integration/test_database_and_api.py |    2 +-
+ 8 files changed, 1679 insertions(+), 1920 deletions(-)
+```
 
-### Scope
+### `git log --oneline -3`
 
-This addendum documents the Phase 3A integration test repeatability correction. The production
-repository upsert logic was not changed. The repeatability issue was isolated to stale integration
-test rows in `ai_trading_os_test` from a previous run.
+```text
+03c3acd Add Phase 3A data quality foundation
+9d68709 Document Phase 2 runtime verification
+0848243 Complete Phase 2 data adapters
+```
 
-The fix keeps duplicate-safe upsert behavior intact: the test still verifies first insert and then
-update for the same candle and economic event identity. Test isolation now deletes only rows owned
-by the dedicated integration fixture provider before and after the repository integration test.
+## Created Files
 
-Phase 3B was not started. No strategy, signals, AI agents, OpenAI calls, broker APIs, paper trading,
-order execution, or real trading were added or activated.
+- `app/domain/entities/features.py`
+- `app/domain/feature_engine.py`
+- `app/services/feature_service.py`
+- `docs/phase3b-verification-report.md`
+- `tests/unit/test_feature_engine_foundation.py`
 
-### Files Updated By This Addendum
+## Modified Files
 
-- `tests/integration/test_database_and_api.py`
+- `AGENTS.md`
+- `PLANS.md`
+- `README.md`
+- `app/core/constants.py`
+- `app/domain/entities/__init__.py`
 - `docs/chatgpt-verification-packet.md`
+- `tests/contract/test_safety_boundaries.py`
+- `tests/integration/test_database_and_api.py`
 
-### Current Integration Test Contents
+## Implementation Summary
 
-```python
-from datetime import UTC, datetime
-from decimal import Decimal
-from uuid import uuid4
+- Updated `PROJECT_PHASE` to `phase_3b_feature_engine_foundation`.
+- Added immutable Phase 3B feature models in `app/domain/entities/features.py`.
+- Added deterministic closed-candle feature calculation in `app/domain/feature_engine.py`.
+- Added `FeatureService` in `app/services/feature_service.py`, depending on UnitOfWork protocols.
+- Added unit/service tests for exact calculations, UTC normalization, closed-candle-only enforcement,
+  no future leakage, duplicate/gap/mismatch issues, event counts, empty/insufficient data behavior,
+  immutability, and repository-backed service behavior.
+- Added safety coverage confirming Phase 3B feature files do not introduce decision/execution terms.
+- No migration was added; Phase 3B reads existing Phase 2/3A tables only.
+- No API route, trading endpoint, signal endpoint, network call, provider call, secret, or API key was added.
 
-import pytest
-from fastapi.testclient import TestClient
-from sqlalchemy import delete
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
+## Verification Command Outputs
 
-from app.core.config import Settings
-from app.domain.entities import Candle, EconomicEvent, EconomicImpact, Timeframe
-from app.domain.value_objects import CurrencyPair
-from app.main import create_app
-from app.persistence.database import create_engine, create_session_factory
-from app.persistence.models import CandleModel, EconomicEventModel
-from app.persistence.session import build_uow_factory
-from app.services.system_state_service import SystemStateService
-
-_MARKET_CALENDAR_TEST_PROVIDER = "integration-phase3a-repository-test"
-
-
-async def _delete_market_calendar_test_rows(
-    session_factory: async_sessionmaker[AsyncSession],
-) -> None:
-    async with session_factory() as session:
-        await session.execute(
-            delete(CandleModel).where(CandleModel.provider == _MARKET_CALENDAR_TEST_PROVIDER)
-        )
-        await session.execute(
-            delete(EconomicEventModel).where(
-                EconomicEventModel.provider == _MARKET_CALENDAR_TEST_PROVIDER
-            )
-        )
-        await session.commit()
-
-
-@pytest.mark.integration
-@pytest.mark.asyncio
-async def test_system_state_persists_in_postgresql(postgres_database_url: str) -> None:
-    engine = create_engine(postgres_database_url)
-    try:
-        service = SystemStateService(build_uow_factory(create_session_factory(engine)))
-
-        await service.enable_scanning(actor="integration-test")
-        status = await service.get_full_status()
-
-        assert status["scan_enabled"] is True
-    finally:
-        await engine.dispose()
-
-
-@pytest.mark.integration
-@pytest.mark.asyncio
-async def test_unit_of_work_rolls_back_uncommitted_failure(postgres_database_url: str) -> None:
-    engine = create_engine(postgres_database_url)
-    key = f"rollback_{uuid4().hex}"
-    try:
-        uow_factory = build_uow_factory(create_session_factory(engine))
-
-        async def fail_inside_unit_of_work() -> None:
-            async with uow_factory() as uow:
-                await uow.system_state.set(key, {"value": "should_not_persist"})
-                raise RuntimeError("force rollback")
-
-        with pytest.raises(RuntimeError):
-            await fail_inside_unit_of_work()
-
-        async with uow_factory() as uow:
-            value = await uow.system_state.get(key)
-
-        assert value is None
-    finally:
-        await engine.dispose()
-
-
-@pytest.mark.integration
-def test_api_health_readiness_status_and_scan_state(postgres_database_url: str) -> None:
-    settings = Settings(_env_file=None, database_url=postgres_database_url)
-    app = create_app(settings)
-
-    with TestClient(app) as client:
-        health = client.get("/health")
-        ready = client.get("/ready")
-        status = client.get("/api/v1/system/status")
-        start = client.post(
-            "/api/v1/system/scanning/start",
-            headers={"X-Internal-API-Key": settings.internal_api_key.get_secret_value()},
-        )
-        stop = client.post(
-            "/api/v1/system/scanning/stop",
-            headers={"X-Internal-API-Key": settings.internal_api_key.get_secret_value()},
-        )
-
-    assert health.status_code == 200
-    assert health.json() == {"status": "alive", "service": "api"}
-    assert ready.status_code == 200
-    assert ready.json()["status"] == "ready"
-    assert status.status_code == 200
-    assert status.json()["project_phase"] == "phase_3a_data_quality_foundation"
-    assert status.json()["trading_strategy_implemented"] is False
-    assert status.json()["real_trading_enabled"] is False
-    assert start.status_code == 200
-    assert start.json()["scan_enabled"] is True
-    assert stop.status_code == 200
-    assert stop.json()["scan_enabled"] is False
-
-
-@pytest.mark.integration
-def test_state_changing_endpoint_requires_internal_api_key(postgres_database_url: str) -> None:
-    settings = Settings(_env_file=None, database_url=postgres_database_url)
-    app = create_app(settings)
-
-    with TestClient(app) as client:
-        response = client.post("/api/v1/system/scanning/start")
-
-    assert response.status_code == 401
-    assert response.json()["error"]["code"] == "UNAUTHORIZED"
-
-
-@pytest.mark.integration
-@pytest.mark.asyncio
-async def test_market_and_calendar_repositories_upsert_and_query(
-    postgres_database_url: str,
-) -> None:
-    engine = create_engine(postgres_database_url)
-    session_factory = create_session_factory(engine)
-    try:
-        await _delete_market_calendar_test_rows(session_factory)
-        uow_factory = build_uow_factory(session_factory)
-        pair = CurrencyPair(value="EURUSD")
-        candle = Candle(
-            provider=_MARKET_CALENDAR_TEST_PROVIDER,
-            pair=pair,
-            timeframe=Timeframe.M15,
-            open_time=datetime(2026, 7, 8, 8, 0, tzinfo=UTC),
-            close_time=datetime(2026, 7, 8, 8, 15, tzinfo=UTC),
-            open=Decimal("1.1000"),
-            high=Decimal("1.1050"),
-            low=Decimal("1.0950"),
-            close=Decimal("1.1020"),
-            volume=Decimal("100"),
-            is_closed=True,
-        )
-        updated_candle = candle.model_copy(update={"close": Decimal("1.1030")})
-        event = EconomicEvent(
-            provider=_MARKET_CALENDAR_TEST_PROVIDER,
-            provider_event_id="phase3a-cpi-event",
-            title="Consumer Price Index",
-            currency="EUR",
-            country="Eurozone",
-            impact=EconomicImpact.HIGH,
-            scheduled_at=datetime(2026, 7, 8, 8, 5, tzinfo=UTC),
-            actual=Decimal("2.2"),
-            forecast=Decimal("2.1"),
-            previous=Decimal("2.0"),
-            fetched_at=datetime(2026, 7, 8, 8, 0, tzinfo=UTC),
-        )
-        updated_event = event.model_copy(update={"actual": Decimal("2.3")})
-
-        async with uow_factory() as uow:
-            candle_insert = await uow.candles.upsert_many([candle])
-            candle_update = await uow.candles.upsert_many([updated_candle])
-            event_insert = await uow.economic_events.upsert_many([event])
-            event_update = await uow.economic_events.upsert_many([updated_event])
-            await uow.commit()
-
-        async with uow_factory() as uow:
-            candles = await uow.candles.list_range(
-                pair=pair,
-                timeframe=Timeframe.M15,
-                start_at=datetime(2026, 7, 8, 8, 0, tzinfo=UTC),
-                end_at=datetime(2026, 7, 8, 8, 15, tzinfo=UTC),
-                provider=_MARKET_CALENDAR_TEST_PROVIDER,
-            )
-            events = await uow.economic_events.list_window(
-                start_at=datetime(2026, 7, 8, 8, 0, tzinfo=UTC),
-                end_at=datetime(2026, 7, 8, 8, 15, tzinfo=UTC),
-                currencies=["EUR"],
-                provider=_MARKET_CALENDAR_TEST_PROVIDER,
-            )
-
-        assert candle_insert.inserted == 1
-        assert candle_update.updated == 1
-        assert event_insert.inserted == 1
-        assert event_update.updated == 1
-        assert [stored.close for stored in candles] == [Decimal("1.1030000000")]
-        assert [stored.actual for stored in events] == [Decimal("2.300000")]
-    finally:
-        await _delete_market_calendar_test_rows(session_factory)
-        await engine.dispose()
-```
-
-### Final Host Verification Commands
-
-The final requested host `uv` commands completed successfully.
-
-#### `uv run ruff format --check .`
+### `uv lock --check`
 
 Exit code: `0`
 
 ```text
-88 files already formatted
+Resolved 46 packages in 16ms
 ```
 
-#### `uv run ruff check .`
+### `uv sync`
+
+Exit code: `0`
+
+```text
+Resolved 46 packages in 3ms
+Checked 43 packages in 13ms
+```
+
+### `uv run ruff format --check .`
+
+Exit code: `0`
+
+```text
+92 files already formatted
+```
+
+### `uv run ruff check .`
 
 Exit code: `0`
 
@@ -298,59 +126,15 @@ Exit code: `0`
 All checks passed!
 ```
 
-#### `uv run mypy app`
+### `uv run mypy app`
 
 Exit code: `0`
 
 ```text
-Success: no issues found in 63 source files
+Success: no issues found in 66 source files
 ```
 
-#### `uv run pytest`
-
-Exit code: `0`
-
-```text
-145 passed, 5 skipped, 1 warning
-```
-
-#### `uv run python scripts/security_check.py`
-
-Exit code: `0`
-
-```text
-```
-
-### Earlier Host Verification Fallback From `.venv`
-
-These earlier fallback checks are retained for audit history. The final `uv run ...` results above
-are the authoritative latest host verification results.
-
-#### `.venv/bin/ruff format --check .`
-
-Exit code: `0`
-
-```text
-88 files already formatted
-```
-
-#### `.venv/bin/ruff check .`
-
-Exit code: `0`
-
-```text
-All checks passed!
-```
-
-#### `.venv/bin/mypy app`
-
-Exit code: `0`
-
-```text
-Success: no issues found in 63 source files
-```
-
-#### `.venv/bin/pytest`
+### `uv run pytest`
 
 Exit code: `0`
 
@@ -362,21 +146,22 @@ configfile: pyproject.toml
 testpaths: tests
 plugins: anyio-4.14.1, asyncio-0.26.0
 asyncio: mode=Mode.AUTO, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
-collected 150 items
+collected 162 items
 
-tests/contract/test_agent_contracts.py ......                            [  4%]
+tests/contract/test_agent_contracts.py ......                            [  3%]
 tests/contract/test_api_error_schema.py .                                [  4%]
-tests/contract/test_architecture_boundaries.py ..                        [  6%]
-tests/contract/test_provider_contracts.py .............................. [ 26%]
-...............................                                          [ 46%]
-tests/contract/test_safety_boundaries.py .........                       [ 52%]
-tests/integration/test_database_and_api.py sssss                         [ 56%]
-tests/unit/test_data_quality_foundation.py ...                           [ 58%]
-tests/unit/test_domain_market_models.py ..................               [ 70%]
-tests/unit/test_errors_and_redaction.py .......                          [ 74%]
-tests/unit/test_internal_api_key.py ....                                 [ 77%]
-tests/unit/test_settings.py .........                                    [ 83%]
-tests/unit/test_system_state_service.py .....                            [ 86%]
+tests/contract/test_architecture_boundaries.py ..                        [  5%]
+tests/contract/test_provider_contracts.py .............................. [ 24%]
+...............................                                          [ 43%]
+tests/contract/test_safety_boundaries.py ..........                      [ 49%]
+tests/integration/test_database_and_api.py sssss                         [ 52%]
+tests/unit/test_data_quality_foundation.py ...                           [ 54%]
+tests/unit/test_domain_market_models.py ..................               [ 65%]
+tests/unit/test_errors_and_redaction.py .......                          [ 69%]
+tests/unit/test_feature_engine_foundation.py ...........                 [ 76%]
+tests/unit/test_internal_api_key.py ....                                 [ 79%]
+tests/unit/test_settings.py .........                                    [ 84%]
+tests/unit/test_system_state_service.py .....                            [ 87%]
 tests/unit/test_telegram_commands.py ..                                  [ 88%]
 tests/unit/test_telegram_policy.py .....                                 [ 91%]
 tests/unit/test_time.py ...                                              [ 93%]
@@ -389,123 +174,197 @@ tests/unit/test_value_objects_and_enums.py ....                          [100%]
     from starlette.testclient import TestClient as TestClient  # noqa
 
 -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
-================== 145 passed, 5 skipped, 1 warning in 0.73s ===================
+================== 157 passed, 5 skipped, 1 warning in 0.73s ===================
 ```
 
-#### `.venv/bin/python scripts/security_check.py`
+### `uv run python scripts/security_check.py`
 
 Exit code: `0`
 
 ```text
 ```
 
-### Docker Verification Commands
+## Superseded Fallback Audit History
 
-#### `docker compose build`
+The following `.venv` command outputs are retained only as audit history from the earlier fallback
+verification pass. They are superseded by the successful host `uv` outputs above.
+
+### `.venv/bin/ruff format --check .`
 
 Exit code: `0`
 
 ```text
- Image ai-trading-os-worker Building 
+92 files already formatted
+```
+
+### `.venv/bin/ruff check .`
+
+Exit code: `0`
+
+```text
+All checks passed!
+```
+
+### `.venv/bin/mypy app`
+
+Exit code: `0`
+
+```text
+Success: no issues found in 66 source files
+```
+
+### `.venv/bin/pytest`
+
+Exit code: `0`
+
+```text
+============================= test session starts ==============================
+platform darwin -- Python 3.12.13, pytest-8.4.2, pluggy-1.6.0
+rootdir: /Users/artem.otsel/Documents/ai-trading-os
+configfile: pyproject.toml
+testpaths: tests
+plugins: anyio-4.14.1, asyncio-0.26.0
+asyncio: mode=Mode.AUTO, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collected 162 items
+
+tests/contract/test_agent_contracts.py ......                            [  3%]
+tests/contract/test_api_error_schema.py .                                [  4%]
+tests/contract/test_architecture_boundaries.py ..                        [  5%]
+tests/contract/test_provider_contracts.py .............................. [ 24%]
+...............................                                          [ 43%]
+tests/contract/test_safety_boundaries.py ..........                      [ 49%]
+tests/integration/test_database_and_api.py sssss                         [ 52%]
+tests/unit/test_data_quality_foundation.py ...                           [ 54%]
+tests/unit/test_domain_market_models.py ..................               [ 65%]
+tests/unit/test_errors_and_redaction.py .......                          [ 69%]
+tests/unit/test_feature_engine_foundation.py ...........                 [ 76%]
+tests/unit/test_internal_api_key.py ....                                 [ 79%]
+tests/unit/test_settings.py .........                                    [ 84%]
+tests/unit/test_system_state_service.py .....                            [ 87%]
+tests/unit/test_telegram_commands.py ..                                  [ 88%]
+tests/unit/test_telegram_policy.py .....                                 [ 91%]
+tests/unit/test_time.py ...                                              [ 93%]
+tests/unit/test_unit_of_work_lifecycle.py ......                         [ 97%]
+tests/unit/test_value_objects_and_enums.py ....                          [100%]
+
+=============================== warnings summary ===============================
+.venv/lib/python3.12/site-packages/fastapi/testclient.py:1
+  /Users/artem.otsel/Documents/ai-trading-os/.venv/lib/python3.12/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+================== 157 passed, 5 skipped, 1 warning in 0.70s ===================
+```
+
+### `.venv/bin/python scripts/security_check.py`
+
+Exit code: `0`
+
+```text
+```
+
+### `docker compose build`
+
+Exit code: `0`
+
+```text
  Image ai-trading-os-bot Building 
  Image ai-trading-os-migrate Building 
  Image ai-trading-os-api Building 
+ Image ai-trading-os-worker Building 
 #1 [internal] load local bake definitions
 #1 reading from stdin 1.91kB done
 #1 DONE 0.0s
 
-#2 [bot internal] load build definition from Dockerfile
+#2 [api internal] load build definition from Dockerfile
 #2 transferring dockerfile: 411B done
 #2 DONE 0.0s
 
-#3 [bot internal] load metadata for ghcr.io/astral-sh/uv:python3.12-bookworm-slim
-#3 DONE 1.1s
+#3 [api internal] load metadata for ghcr.io/astral-sh/uv:python3.12-bookworm-slim
+#3 DONE 0.9s
 
-#4 [migrate internal] load .dockerignore
+#4 [worker internal] load .dockerignore
 #4 transferring context: 143B done
 #4 DONE 0.0s
 
-#5 [api 1/5] FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim@sha256:e5b65587bce7de595f299855d7385fe7fca39b8a74baa261ba1b7147afa78e58
+#5 [migrate 1/5] FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim@sha256:e5b65587bce7de595f299855d7385fe7fca39b8a74baa261ba1b7147afa78e58
 #5 resolve ghcr.io/astral-sh/uv:python3.12-bookworm-slim@sha256:e5b65587bce7de595f299855d7385fe7fca39b8a74baa261ba1b7147afa78e58 0.0s done
 #5 DONE 0.0s
 
-#6 [bot internal] load build context
-#6 transferring context: 44.51kB 0.0s done
+#6 [api internal] load build context
+#6 transferring context: 14.99kB 0.0s done
 #6 DONE 0.0s
 
-#7 [worker 2/5] WORKDIR /app
+#7 [bot 4/5] RUN uv sync --frozen --no-dev
 #7 CACHED
 
-#8 [worker 3/5] COPY pyproject.toml uv.lock* ./
+#8 [bot 2/5] WORKDIR /app
 #8 CACHED
 
-#9 [worker 4/5] RUN uv sync --frozen --no-dev
+#9 [bot 3/5] COPY pyproject.toml uv.lock* ./
 #9 CACHED
 
 #10 [bot 5/5] COPY . .
-#10 DONE 0.0s
+#10 CACHED
 
-#11 [migrate] exporting to image
-#11 exporting layers 0.0s done
-#11 ...
-
-#12 [bot] exporting to image
-#12 exporting layers 0.0s done
-#12 exporting manifest sha256:43aba66a9b2a447546bcf5dbecaba2095f268dfb9f33bfd35b727e4890d2bfa7 done
-#12 exporting config sha256:687bec391bf8458b81d21001ff0e14aba7d3cee2da9afef0c0069968db2c147a done
-#12 exporting attestation manifest sha256:02c26903953681046f55824474aa94d5f03a6b44c4a227662af0a190273eaa83 0.0s done
-#12 exporting manifest list sha256:39e5764e31dbe94296a37a7ca9864a2810650b7f2eeaa759484de4aee64b472a done
-#12 naming to docker.io/library/ai-trading-os-bot:latest done
-#12 unpacking to docker.io/library/ai-trading-os-bot:latest 0.0s done
-#12 DONE 0.1s
-
-#11 [migrate] exporting to image
-#11 exporting manifest sha256:a58c88bd001391cf776061538fb981b2337cdacc6e6a62d29dd7290aa5faa1ce done
-#11 exporting config sha256:eae9ea615561564404e5f685694e57fa00760bfd9ed4caa886dbea39dfacddc0 done
-#11 exporting attestation manifest sha256:9061b9afafd917c94b94b79ad8e4428989a2735dd47c1b9243fc9a8a7621d710 0.0s done
-#11 exporting manifest list sha256:1805d71b4cf41f659f9d299b550bb65ff42f724086d199886d30913d28d77755 done
-#11 naming to docker.io/library/ai-trading-os-migrate:latest done
-#11 unpacking to docker.io/library/ai-trading-os-migrate:latest 0.0s done
+#11 [worker] exporting to image
+#11 exporting layers done
+#11 exporting manifest sha256:75d5970a128d594a79cf241ecc6822be4a6ecb087d47835a6d16434da5331e5d done
+#11 exporting config sha256:e58f38bc3916ca22e827b2c88659d1b6c0429642c1cf58a9764e6485c3251cec done
+#11 exporting attestation manifest sha256:326070a17427897e1297a4a853107bd683853ce7324c9c2c373f90b0b5f3109c 0.0s done
+#11 exporting manifest list sha256:3359dcb75c47a80668d76a99b995b9156480e9b8411e6595de0d7bb48cbe088f done
+#11 naming to docker.io/library/ai-trading-os-worker:latest done
+#11 unpacking to docker.io/library/ai-trading-os-worker:latest done
 #11 DONE 0.1s
 
-#13 [worker] exporting to image
-#13 exporting layers 0.0s done
-#13 exporting manifest sha256:f4d92ad8dae11637a807b3bba8d5f9c1418efd861fdee9c8695af80cb350c114 done
-#13 exporting config sha256:e2e4a34afcce9c1409a3ea26cb2b36ea58dbb2a2585dcefce4792610637d1527 done
-#13 exporting attestation manifest sha256:a4be337dd09c4d6ed7c35590d27295320ba7e201d589d8758a604f08489c968b 0.0s done
-#13 exporting manifest list sha256:2aa1c246eaff1c9ab9f2afc16b9d9e32d38d5a72a2649aab755d405b18ec5a07 done
-#13 naming to docker.io/library/ai-trading-os-worker:latest done
-#13 unpacking to docker.io/library/ai-trading-os-worker:latest 0.0s done
+#12 [api] exporting to image
+#12 exporting layers done
+#12 exporting manifest sha256:a0a3fad2cf870fe09f41e11d2e36c861d749ba1be07d9c396d4699d38c2f63f8 done
+#12 exporting config sha256:efd47a8301d0b468032ebe17b2cd6ae91dc7f25fec08b114007c8cd11bb5c103 done
+#12 exporting attestation manifest sha256:7125df21bb25e8eb26ae3e60fe90d6301553525740616e358a82006a9ba04dfc 0.0s done
+#12 exporting manifest list sha256:504fda9abbaab94f7adf9905d4490e3da5617b7232d15950aaf4563ec413c034 done
+#12 naming to docker.io/library/ai-trading-os-api:latest done
+#12 unpacking to docker.io/library/ai-trading-os-api:latest done
+#12 DONE 0.1s
+
+#13 [migrate] exporting to image
+#13 exporting layers done
+#13 exporting manifest sha256:1ec15e6b576705f0805ffe20dc4d050f40d0e4a66672a086c6eb0b990ed0aea8 done
+#13 exporting config sha256:0e97928144bf4db74de54f8908468fd887e9f7f15739be5b598dd2bc3df1752e done
+#13 exporting attestation manifest sha256:2ab67968ea3358e14300769819cd73c6c56596309054af4f2f5d8a655f57a54b 0.0s done
+#13 exporting manifest list sha256:acec5f773f5ebcdffc371ff596bfb38b146153ebdc72266380e465e964938fcd done
+#13 naming to docker.io/library/ai-trading-os-migrate:latest done
+#13 unpacking to docker.io/library/ai-trading-os-migrate:latest done
 #13 DONE 0.1s
 
-#14 [api] exporting to image
-#14 exporting layers 0.0s done
-#14 exporting manifest sha256:e02898c010daf10caf59d1e254ab2f58e689729998bb1e2036651aa74dfeb8fb done
-#14 exporting config sha256:70eed906624a9de6558aaaa9b5f47182f76d7e05ef863c25096d3c6eab8544be done
-#14 exporting attestation manifest sha256:52536710947363746606dcb2d6fd52a0aaabf703f24b592df27fe638fbf508c7 0.0s done
-#14 exporting manifest list sha256:933c5a6591d8ad4c63d3311186c3c44fab8db81c757061271d5f178cd105899f done
-#14 naming to docker.io/library/ai-trading-os-api:latest done
-#14 unpacking to docker.io/library/ai-trading-os-api:latest 0.0s done
+#14 [bot] exporting to image
+#14 exporting layers done
+#14 exporting manifest sha256:1a35cd6952c69a536e2a7063a3998e4fb39b11b03047e1096bd514898a96606d done
+#14 exporting config sha256:af538b39d44357aca9ea0ec49145559f0f80e9861a3eb5a6ccdf2dac9abb9d4f done
+#14 exporting attestation manifest sha256:2bb2799894f4be0a898acd05b2ef44c19a13355184042231ba488a308cf91118 0.0s done
+#14 exporting manifest list sha256:6580bf3b6b854c89cb2f6ad034cd6ce1ad3853abde86c1cbe496761910cc202a done
+#14 naming to docker.io/library/ai-trading-os-bot:latest done
+#14 unpacking to docker.io/library/ai-trading-os-bot:latest done
 #14 DONE 0.1s
 
-#15 [migrate] resolving provenance for metadata file
+#15 [api] resolving provenance for metadata file
 #15 DONE 0.0s
 
-#16 [worker] resolving provenance for metadata file
+#16 [bot] resolving provenance for metadata file
 #16 DONE 0.0s
 
-#17 [api] resolving provenance for metadata file
+#17 [migrate] resolving provenance for metadata file
 #17 DONE 0.0s
 
-#18 [bot] resolving provenance for metadata file
+#18 [worker] resolving provenance for metadata file
 #18 DONE 0.0s
- Image ai-trading-os-api Built 
- Image ai-trading-os-bot Built 
  Image ai-trading-os-migrate Built 
  Image ai-trading-os-worker Built 
+ Image ai-trading-os-api Built 
+ Image ai-trading-os-bot Built 
 ```
 
-#### `docker compose up -d postgres`
+### `docker compose up -d postgres`
 
 Exit code: `0`
 
@@ -513,7 +372,7 @@ Exit code: `0`
  Container ai-trading-os-postgres-1 Running 
 ```
 
-#### `docker compose run --rm migrate alembic current`
+### `docker compose run --rm migrate alembic current`
 
 Exit code: `0`
 
@@ -521,14 +380,14 @@ Exit code: `0`
  Container ai-trading-os-postgres-1 Running 
  Container ai-trading-os-postgres-1 Waiting 
  Container ai-trading-os-postgres-1 Healthy 
- Container ai-trading-os-migrate-run-28cc42cb064d Creating 
- Container ai-trading-os-migrate-run-28cc42cb064d Created 
+ Container ai-trading-os-migrate-run-79aec6754cb0 Creating 
+ Container ai-trading-os-migrate-run-79aec6754cb0 Created 
 INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
 INFO  [alembic.runtime.migration] Will assume transactional DDL.
 0002_phase2_data_constraints (head)
 ```
 
-#### `docker compose run --rm migrate alembic check`
+### `docker compose run --rm migrate alembic check`
 
 Exit code: `0`
 
@@ -536,8 +395,8 @@ Exit code: `0`
  Container ai-trading-os-postgres-1 Running 
  Container ai-trading-os-postgres-1 Waiting 
  Container ai-trading-os-postgres-1 Healthy 
- Container ai-trading-os-migrate-run-9fbfe34797b3 Creating 
- Container ai-trading-os-migrate-run-9fbfe34797b3 Created 
+ Container ai-trading-os-migrate-run-f83ab10c141c Creating 
+ Container ai-trading-os-migrate-run-f83ab10c141c Created 
 INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
 INFO  [alembic.runtime.migration] Will assume transactional DDL.
 INFO  [alembic.runtime.plugins] setting up autogenerate plugin alembic.autogenerate.schemas
@@ -549,7 +408,7 @@ INFO  [alembic.runtime.plugins] setting up autogenerate plugin alembic.autogener
 No new upgrade operations detected.
 ```
 
-#### `docker compose run --rm -e DATABASE_URL=postgresql+asyncpg://ai_trading_os:ai_trading_os@postgres:5432/ai_trading_os_test migrate alembic upgrade head`
+### `docker compose run --rm -e DATABASE_URL=postgresql+asyncpg://ai_trading_os:ai_trading_os@postgres:5432/ai_trading_os_test migrate alembic upgrade head`
 
 Exit code: `0`
 
@@ -557,19 +416,13 @@ Exit code: `0`
  Container ai-trading-os-postgres-1 Running 
  Container ai-trading-os-postgres-1 Waiting 
  Container ai-trading-os-postgres-1 Healthy 
- Container ai-trading-os-migrate-run-da2eba432463 Creating 
- Container ai-trading-os-migrate-run-da2eba432463 Created 
+ Container ai-trading-os-migrate-run-309708b1496e Creating 
+ Container ai-trading-os-migrate-run-309708b1496e Created 
 INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
 INFO  [alembic.runtime.migration] Will assume transactional DDL.
 ```
 
-#### First repeated integration run
-
-Command:
-
-```bash
-docker compose run --rm -e REQUIRE_INTEGRATION_TESTS=true -e TEST_DATABASE_URL=postgresql+asyncpg://ai_trading_os:ai_trading_os@postgres:5432/ai_trading_os_test migrate uv run pytest tests/integration/test_database_and_api.py
-```
+### `docker compose run --rm -e REQUIRE_INTEGRATION_TESTS=true -e TEST_DATABASE_URL=postgresql+asyncpg://ai_trading_os:ai_trading_os@postgres:5432/ai_trading_os_test migrate uv run pytest tests/integration/test_database_and_api.py`
 
 Exit code: `0`
 
@@ -577,59 +430,16 @@ Exit code: `0`
  Container ai-trading-os-postgres-1 Running 
  Container ai-trading-os-postgres-1 Waiting 
  Container ai-trading-os-postgres-1 Healthy 
- Container ai-trading-os-migrate-run-4d129c8ff4af Creating 
- Container ai-trading-os-migrate-run-4d129c8ff4af Created 
-Downloading ruff (10.5MiB)
-Downloading pygments (1.2MiB)
-Downloading mypy (13.1MiB)
- Downloaded pygments
- Downloaded ruff
- Downloaded mypy
-Installed 11 packages in 88ms
-Bytecode compiled 1963 files in 450ms
-============================= test session starts ==============================
-platform linux -- Python 3.12.12, pytest-8.4.2, pluggy-1.6.0
-rootdir: /app
-configfile: pyproject.toml
-plugins: anyio-4.14.1, asyncio-0.26.0
-asyncio: mode=Mode.AUTO, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
-collected 5 items
-
-tests/integration/test_database_and_api.py .....                         [100%]
-
-=============================== warnings summary ===============================
-.venv/lib/python3.12/site-packages/fastapi/testclient.py:1
-  /app/.venv/lib/python3.12/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
-    from starlette.testclient import TestClient as TestClient  # noqa
-
--- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
-========================= 5 passed, 1 warning in 0.32s =========================
-```
-
-#### Second repeated integration run
-
-Command:
-
-```bash
-docker compose run --rm -e REQUIRE_INTEGRATION_TESTS=true -e TEST_DATABASE_URL=postgresql+asyncpg://ai_trading_os:ai_trading_os@postgres:5432/ai_trading_os_test migrate uv run pytest tests/integration/test_database_and_api.py
-```
-
-Exit code: `0`
-
-```text
- Container ai-trading-os-postgres-1 Running 
- Container ai-trading-os-postgres-1 Waiting 
- Container ai-trading-os-postgres-1 Healthy 
- Container ai-trading-os-migrate-run-6ea94eb1656d Creating 
- Container ai-trading-os-migrate-run-6ea94eb1656d Created 
+ Container ai-trading-os-migrate-run-15672a776746 Creating 
+ Container ai-trading-os-migrate-run-15672a776746 Created 
 Downloading pygments (1.2MiB)
 Downloading mypy (13.1MiB)
 Downloading ruff (10.5MiB)
  Downloaded pygments
  Downloaded ruff
  Downloaded mypy
-Installed 11 packages in 37ms
-Bytecode compiled 1963 files in 429ms
+Installed 11 packages in 89ms
+Bytecode compiled 1963 files in 445ms
 ============================= test session starts ==============================
 platform linux -- Python 3.12.12, pytest-8.4.2, pluggy-1.6.0
 rootdir: /app
@@ -649,124 +459,42 @@ tests/integration/test_database_and_api.py .....                         [100%]
 ========================= 5 passed, 1 warning in 0.29s =========================
 ```
 
-### Repeatability Result
-
-Both Docker integration runs passed against the same `ai_trading_os_test` database without manual
-database dropping between runs.
-
-### `git diff --stat`
-
-```text
- AGENTS.md                                  |    7 +-
- PLANS.md                                   |   15 +-
- README.md                                  |   11 +-
- app/core/constants.py                      |    2 +-
- app/domain/entities/__init__.py            |   23 +-
- app/domain/interfaces/repositories.py      |   36 +
- app/domain/interfaces/unit_of_work.py      |   12 +
- app/persistence/repositories/__init__.py   |    4 +
- app/persistence/repositories/foundation.py |  199 +-
- app/persistence/unit_of_work.py            |   22 +
- docs/chatgpt-verification-packet.md        | 4102 +++++++++++++++-------------
- tests/integration/test_database_and_api.py |   76 +-
- tests/unit/test_unit_of_work_lifecycle.py  |    6 +
- 13 files changed, 2584 insertions(+), 1931 deletions(-)
-```
-
-### `git log --oneline -3`
-
-```text
-9d68709 Document Phase 2 runtime verification
-0848243 Complete Phase 2 data adapters
-```
-
-## Created Files
-
-- `app/domain/entities/data_quality.py`
-
-- `app/domain/replay.py`
-
-- `tests/unit/test_data_quality_foundation.py`
-
-
-## Modified Files
-
-- `AGENTS.md`
-
-- `PLANS.md`
-
-- `README.md`
-
-- `app/core/constants.py`
-
-- `app/domain/entities/__init__.py`
-
-- `app/domain/interfaces/repositories.py`
-
-- `app/domain/interfaces/unit_of_work.py`
-
-- `app/persistence/repositories/__init__.py`
-
-- `app/persistence/repositories/foundation.py`
-
-- `app/persistence/unit_of_work.py`
-
-- `tests/integration/test_database_and_api.py`
-
-- `tests/unit/test_unit_of_work_lifecycle.py`
-
-- `docs/chatgpt-verification-packet.md`
-
-
-## Verification Command Outputs
-
-This section reflects the latest successful Phase 3A verification results. Earlier environment
-fallback notes are superseded by these final outputs.
-
-### `uv run ruff format --check .`
+### `docker compose run --rm -e REQUIRE_INTEGRATION_TESTS=true -e TEST_DATABASE_URL=postgresql+asyncpg://ai_trading_os:ai_trading_os@postgres:5432/ai_trading_os_test migrate uv run pytest tests/integration/test_database_and_api.py`
 
 Exit code: `0`
 
 ```text
-88 files already formatted
+ Container ai-trading-os-postgres-1 Running 
+ Container ai-trading-os-postgres-1 Waiting 
+ Container ai-trading-os-postgres-1 Healthy 
+ Container ai-trading-os-migrate-run-b3fee6416b36 Creating 
+ Container ai-trading-os-migrate-run-b3fee6416b36 Created 
+Downloading pygments (1.2MiB)
+Downloading ruff (10.5MiB)
+Downloading mypy (13.1MiB)
+ Downloaded pygments
+ Downloaded ruff
+ Downloaded mypy
+Installed 11 packages in 46ms
+Bytecode compiled 1963 files in 402ms
+============================= test session starts ==============================
+platform linux -- Python 3.12.12, pytest-8.4.2, pluggy-1.6.0
+rootdir: /app
+configfile: pyproject.toml
+plugins: anyio-4.14.1, asyncio-0.26.0
+asyncio: mode=Mode.AUTO, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collected 5 items
+
+tests/integration/test_database_and_api.py .....                         [100%]
+
+=============================== warnings summary ===============================
+.venv/lib/python3.12/site-packages/fastapi/testclient.py:1
+  /app/.venv/lib/python3.12/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+========================= 5 passed, 1 warning in 0.31s =========================
 ```
-
-### `uv run ruff check .`
-
-Exit code: `0`
-
-```text
-All checks passed!
-```
-
-### `uv run mypy app`
-
-Exit code: `0`
-
-```text
-Success: no issues found in 63 source files
-```
-
-### `uv run pytest`
-
-Exit code: `0`
-
-```text
-145 passed, 5 skipped, 1 warning
-```
-
-### `uv run python scripts/security_check.py`
-
-Exit code: `0`
-
-```text
-```
-
-### Checks Not Repeated In The Final Update
-
-`uv lock --check` and `uv sync` were not part of the final repeatability-update verification
-request. Docker Alembic migration verification below remains the authoritative database migration
-verification for this packet.
 
 ### `docker compose config`
 
@@ -1060,68 +788,55 @@ volumes:
     name: ai-trading-os_postgres_data
 ```
 
-## Final Verification Status
 
-- Phase 3A changes are currently uncommitted.
-- `uv run ruff format --check .` passed with `88 files already formatted`.
-- `uv run ruff check .` passed with `All checks passed!`.
-- `uv run mypy app` passed with `Success: no issues found in 63 source files`.
-- `uv run pytest` passed with `145 passed, 5 skipped, 1 warning`.
-- `uv run python scripts/security_check.py` exited with code `0`.
-- `docker compose build` succeeded.
-- `docker compose run --rm migrate alembic current` returned
-  `0002_phase2_data_constraints (head)`.
-- `docker compose run --rm migrate alembic check` returned
-  `No new upgrade operations detected.`
-- The `ai_trading_os_test` database migration to head succeeded.
-- Docker integration tests were run twice against the same `ai_trading_os_test` database without
-  cleanup between runs; both runs passed with `5 passed, 1 warning`.
+## Skipped Checks
+
+- Default host `.venv/bin/pytest` skipped 5 integration tests because PostgreSQL integration tests are gated unless a test database is configured/required for that process.
+
+## Unavailable Checks
+
+- None for the current authoritative Phase 3B verification pass. Host `uv` checks, Docker build,
+  Alembic checks, test database migration, and repeated Docker integration tests are documented
+  above with successful outputs.
 
 ## Remaining Risks
 
-- Phase 3A adds no migration; it uses existing Phase 2 candle and economic event tables.
+- Phase 3B changes are currently uncommitted.
+- Phase 3B adds no migration and persists no feature snapshots; it computes deterministic in-memory snapshots from existing repository data.
 
 ## Phase Boundary Confirmation
 
-- Phase 3B was not started.
-
-- No strategy, signals, AI agents, OpenAI calls, broker APIs, paper trading, order execution, or real trading exist in this Phase 3A implementation.
-
-- Existing foundation-era signal, direction, agent, or paper-position schemas/tables remain inactive and were not used for decision-making.
+- Phase 3C was not started.
+- No strategy, signals, setup scoring, AI agents, OpenAI calls, broker APIs, paper trading, order execution, or real trading were added.
+- The feature engine produces descriptive values only and does not produce directions, recommendations, entries, stops, targets, or position decisions.
+- Existing signal, scan, agent-report, and paper-position schemas remain inactive.
 
 ## Traceability Table
 
 | Requirement | Implementation file | Test file | Verification result |
-
 |---|---|---|---|
-
-| Update project phase | `app/core/constants.py` | `tests/integration/test_database_and_api.py` | .venv mypy/pytest passed |
-
-| Persist normalized closed candles | `app/persistence/repositories/foundation.py` | `tests/integration/test_database_and_api.py` | Repository test present; default integration skipped without DB |
-
-| Persist normalized economic events | `app/persistence/repositories/foundation.py` | `tests/integration/test_database_and_api.py` | Repository test present; default integration skipped without DB |
-
-| Duplicate-safe upsert behavior | `app/persistence/repositories/foundation.py` | `tests/integration/test_database_and_api.py` | Upsert insert/update assertions added |
-
-| Deterministic data-quality checks | `app/domain/entities/data_quality.py` | `tests/unit/test_data_quality_foundation.py` | .venv pytest passed |
-
-| Read/query repositories | `app/domain/interfaces/repositories.py; app/persistence/repositories/foundation.py` | `tests/integration/test_database_and_api.py` | Query test present; default integration skipped without DB |
-
-| Feature-snapshot structures | `app/domain/entities/data_quality.py` | `tests/unit/test_data_quality_foundation.py` | .venv pytest passed |
-
-| Historical replay utilities | `app/domain/replay.py` | `tests/unit/test_data_quality_foundation.py` | .venv pytest passed |
-
-| Keep integrations disabled by default | `README.md; AGENTS.md; existing settings` | `tests/contract/test_provider_contracts.py` | .venv pytest passed |
-
-| No strategy/signals/trading activation | `No activation code added` | `tests/contract/test_safety_boundaries.py` | .venv security_check passed |
-
+| Project phase updated | `app/core/constants.py` | `tests/integration/test_database_and_api.py` | Docker integration tests passed twice |
+| Immutable feature models | `app/domain/entities/features.py` | `tests/unit/test_feature_engine_foundation.py` | `.venv/bin/pytest` passed |
+| UTC normalization | `app/domain/entities/features.py` | `tests/unit/test_feature_engine_foundation.py` | `.venv/bin/pytest` passed |
+| Deterministic closed-candle feature calculations | `app/domain/feature_engine.py` | `tests/unit/test_feature_engine_foundation.py` | `.venv/bin/pytest` passed |
+| Closed-candle-only enforcement | `app/domain/feature_engine.py` | `tests/unit/test_feature_engine_foundation.py` | `.venv/bin/pytest` passed |
+| No future leakage with `as_of` | `app/domain/feature_engine.py` | `tests/unit/test_feature_engine_foundation.py` | `.venv/bin/pytest` passed |
+| Duplicate candle detection | `app/domain/feature_engine.py` | `tests/unit/test_feature_engine_foundation.py` | `.venv/bin/pytest` passed |
+| Missing candle/gap detection | `app/domain/feature_engine.py` | `tests/unit/test_feature_engine_foundation.py` | `.venv/bin/pytest` passed |
+| Pair/timeframe mismatch detection | `app/domain/feature_engine.py` | `tests/unit/test_feature_engine_foundation.py` | `.venv/bin/pytest` passed |
+| Economic event impact/currency counts | `app/domain/feature_engine.py` | `tests/unit/test_feature_engine_foundation.py` | `.venv/bin/pytest` passed |
+| Empty/insufficient data behavior | `app/domain/feature_engine.py` | `tests/unit/test_feature_engine_foundation.py` | `.venv/bin/pytest` passed |
+| Service reads repository protocols | `app/services/feature_service.py` | `tests/unit/test_feature_engine_foundation.py` | `.venv/bin/pytest` passed |
+| Architecture boundaries | `app/domain/feature_engine.py`, `app/services/feature_service.py` | `tests/contract/test_architecture_boundaries.py` | `.venv/bin/pytest` passed |
+| No decision/execution behavior | New Phase 3B files | `tests/contract/test_safety_boundaries.py`, `scripts/security_check.py` | `.venv` safety checks passed |
+| Docker integration repeatability | `tests/integration/test_database_and_api.py` | `tests/integration/test_database_and_api.py` | Docker integration tests passed twice |
 
 ## Full Contents Of Changed Source Files
 
 ### `app/core/constants.py`
 
 ```python
-PROJECT_PHASE = "phase_3a_data_quality_foundation"
+PROJECT_PHASE = "phase_3b_feature_engine_foundation"
 STRATEGY_IMPLEMENTED = False
 REAL_TRADING_ENABLED = False
 
@@ -1132,7 +847,6 @@ SYSTEM_STATE_LAST_SUCCESSFUL_CALENDAR_FETCH = "last_successful_calendar_fetch"
 SYSTEM_STATE_LAST_ERROR = "last_error"
 
 DEFAULT_STRATEGY_VERSION = "foundation-v1"
-
 ```
 
 ### `app/domain/entities/__init__.py`
@@ -1147,55 +861,74 @@ from app.domain.entities.data_quality import (
     UpsertResult,
     build_feature_snapshot,
 )
+from app.domain.entities.features import (
+    CandleFeatureSummary,
+    CurrencyEventCount,
+    EconomicEventFeatureSummary,
+    EconomicImpactCount,
+    FeatureIssue,
+    FeatureIssueCode,
+    FeatureWindow,
+    MarketFeatureSnapshot,
+)
 from app.domain.entities.market_data import Candle, EconomicEvent, EconomicImpact, Timeframe
 
 __all__ = [
     "Candle",
     "CandleAvailability",
+    "CandleFeatureSummary",
+    "CurrencyEventCount",
     "DataQualityIssue",
     "DataQualityIssueCode",
     "EconomicEvent",
     "EconomicEventAvailability",
+    "EconomicEventFeatureSummary",
     "EconomicImpact",
+    "EconomicImpactCount",
+    "FeatureIssue",
+    "FeatureIssueCode",
     "FeatureSnapshot",
+    "FeatureWindow",
+    "MarketFeatureSnapshot",
     "Timeframe",
     "UpsertResult",
     "build_feature_snapshot",
 ]
-
 ```
 
-### `app/domain/entities/data_quality.py`
+### `app/domain/entities/features.py`
 
 ```python
-from collections import Counter
-from collections.abc import Sequence
-from datetime import datetime, timedelta
+from datetime import datetime
+from decimal import Decimal
 from enum import StrEnum
 from typing import Self
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from app.core.time import normalize_to_utc
-from app.domain.entities.market_data import Candle, EconomicEvent, EconomicImpact, Timeframe
+from app.domain.entities.data_quality import DataQualityIssue
+from app.domain.entities.market_data import EconomicImpact, Timeframe
 from app.domain.value_objects import CurrencyPair
 
-TIMEFRAME_TO_DELTA = {Timeframe.M15: timedelta(minutes=15), Timeframe.H1: timedelta(hours=1)}
 
-
-class DataQualityIssueCode(StrEnum):
+class FeatureIssueCode(StrEnum):
     NO_CANDLES = "NO_CANDLES"
+    INSUFFICIENT_CANDLES = "INSUFFICIENT_CANDLES"
     WINDOW_NOT_ALIGNED = "WINDOW_NOT_ALIGNED"
+    CANDLE_NOT_CLOSED = "CANDLE_NOT_CLOSED"
+    CANDLE_AFTER_AS_OF = "CANDLE_AFTER_AS_OF"
     CANDLE_OUT_OF_RANGE = "CANDLE_OUT_OF_RANGE"
     CANDLE_PAIR_MISMATCH = "CANDLE_PAIR_MISMATCH"
     CANDLE_TIMEFRAME_MISMATCH = "CANDLE_TIMEFRAME_MISMATCH"
     DUPLICATE_CANDLE = "DUPLICATE_CANDLE"
     MISSING_CANDLE = "MISSING_CANDLE"
+    EVENT_AFTER_AS_OF = "EVENT_AFTER_AS_OF"
     EVENT_OUT_OF_RANGE = "EVENT_OUT_OF_RANGE"
 
 
-class DataQualityIssue(BaseModel):
-    code: DataQualityIssueCode
+class FeatureIssue(BaseModel):
+    code: FeatureIssueCode
     description: str = Field(min_length=1)
     timestamp: datetime | None = None
 
@@ -1207,56 +940,16 @@ class DataQualityIssue(BaseModel):
         return normalize_to_utc(value) if value is not None else None
 
 
-class UpsertResult(BaseModel):
-    inserted: int = Field(ge=0)
-    updated: int = Field(ge=0)
-
-    model_config = ConfigDict(frozen=True)
-
-    @property
-    def total(self) -> int:
-        return self.inserted + self.updated
-
-
-class CandleAvailability(BaseModel):
-    expected_count: int = Field(ge=0)
-    observed_count: int = Field(ge=0)
-    missing_count: int = Field(ge=0)
-    first_open_time: datetime | None = None
-    last_close_time: datetime | None = None
-
-    model_config = ConfigDict(frozen=True)
-
-    @field_validator("first_open_time", "last_close_time")
-    @classmethod
-    def timestamps_must_be_utc(cls, value: datetime | None) -> datetime | None:
-        return normalize_to_utc(value) if value is not None else None
-
-    @property
-    def is_complete(self) -> bool:
-        return self.expected_count > 0 and self.observed_count == self.expected_count
-
-
-class EconomicEventAvailability(BaseModel):
-    event_count: int = Field(ge=0)
-    currencies: tuple[str, ...] = ()
-    high_impact_count: int = Field(default=0, ge=0)
-
-    model_config = ConfigDict(frozen=True)
-
-
-class FeatureSnapshot(BaseModel):
+class FeatureWindow(BaseModel):
     pair: CurrencyPair
     timeframe: Timeframe
     window_start: datetime
     window_end: datetime
-    candle_availability: CandleAvailability
-    economic_event_availability: EconomicEventAvailability
-    quality_issues: tuple[DataQualityIssue, ...] = ()
+    as_of: datetime
 
     model_config = ConfigDict(frozen=True)
 
-    @field_validator("window_start", "window_end")
+    @field_validator("window_start", "window_end", "as_of")
     @classmethod
     def timestamps_must_be_utc(cls, value: datetime) -> datetime:
         return normalize_to_utc(value)
@@ -1264,23 +957,288 @@ class FeatureSnapshot(BaseModel):
     @model_validator(mode="after")
     def validate_window(self) -> Self:
         if self.window_end <= self.window_start:
-            raise ValueError("snapshot window_end must be later than window_start")
+            raise ValueError("feature window_end must be later than window_start")
         return self
 
+
+class CandleFeatureSummary(BaseModel):
+    expected_candle_count: int = Field(ge=0)
+    input_candle_count: int = Field(ge=0)
+    used_candle_count: int = Field(ge=0)
+    latest_close: Decimal | None = None
+    first_candle_open_time: datetime | None = None
+    latest_candle_close_time: datetime | None = None
+    simple_return: Decimal | None = None
+    per_candle_returns: tuple[Decimal, ...] = ()
+    rolling_close_mean_window: int = Field(ge=1)
+    rolling_close_means: tuple[Decimal, ...] = ()
+    rolling_high_low_ranges: tuple[Decimal, ...] = ()
+    average_candle_range: Decimal | None = None
+    average_body_size: Decimal | None = None
+    volume_observed_count: int = Field(default=0, ge=0)
+    volume_sum: Decimal | None = None
+    volume_average: Decimal | None = None
+    true_ranges: tuple[Decimal, ...] = ()
+    average_true_range: Decimal | None = None
+    market_data_complete: bool
+
+    model_config = ConfigDict(frozen=True)
+
+    @field_validator("first_candle_open_time", "latest_candle_close_time")
+    @classmethod
+    def timestamps_must_be_utc(cls, value: datetime | None) -> datetime | None:
+        return normalize_to_utc(value) if value is not None else None
+
+
+class EconomicImpactCount(BaseModel):
+    impact: EconomicImpact
+    count: int = Field(ge=0)
+
+    model_config = ConfigDict(frozen=True)
+
+
+class CurrencyEventCount(BaseModel):
+    currency: str = Field(pattern=r"^[A-Z]{3}$")
+    count: int = Field(ge=0)
+
+    model_config = ConfigDict(frozen=True)
+
+
+class EconomicEventFeatureSummary(BaseModel):
+    input_event_count: int = Field(ge=0)
+    used_event_count: int = Field(ge=0)
+    counts_by_impact: tuple[EconomicImpactCount, ...] = ()
+    counts_by_currency: tuple[CurrencyEventCount, ...] = ()
+
+    model_config = ConfigDict(frozen=True)
+
+
+class MarketFeatureSnapshot(BaseModel):
+    window: FeatureWindow
+    candle_summary: CandleFeatureSummary
+    economic_event_summary: EconomicEventFeatureSummary
+    quality_issues: tuple[FeatureIssue, ...] = ()
+    data_quality_issues: tuple[DataQualityIssue, ...] = ()
+
+    model_config = ConfigDict(frozen=True)
+
     @property
-    def market_data_complete(self) -> bool:
-        blocking_codes = {
-            DataQualityIssueCode.NO_CANDLES,
-            DataQualityIssueCode.WINDOW_NOT_ALIGNED,
-            DataQualityIssueCode.CANDLE_OUT_OF_RANGE,
-            DataQualityIssueCode.CANDLE_PAIR_MISMATCH,
-            DataQualityIssueCode.CANDLE_TIMEFRAME_MISMATCH,
-            DataQualityIssueCode.DUPLICATE_CANDLE,
-            DataQualityIssueCode.MISSING_CANDLE,
-        }
-        return self.candle_availability.is_complete and not any(
-            issue.code in blocking_codes for issue in self.quality_issues
+    def quality_ok(self) -> bool:
+        return not self.quality_issues and not self.data_quality_issues
+```
+
+### `app/domain/feature_engine.py`
+
+```python
+from collections import Counter
+from collections.abc import Sequence
+from datetime import datetime
+from decimal import Decimal
+
+from app.core.time import normalize_to_utc
+from app.domain.entities.data_quality import TIMEFRAME_TO_DELTA, build_feature_snapshot
+from app.domain.entities.features import (
+    CandleFeatureSummary,
+    CurrencyEventCount,
+    EconomicEventFeatureSummary,
+    EconomicImpactCount,
+    FeatureIssue,
+    FeatureIssueCode,
+    FeatureWindow,
+    MarketFeatureSnapshot,
+)
+from app.domain.entities.market_data import Candle, EconomicEvent, Timeframe
+from app.domain.value_objects import CurrencyPair
+
+
+class MarketFeatureEngine:
+    def build_snapshot(
+        self,
+        *,
+        pair: CurrencyPair,
+        timeframe: Timeframe,
+        window_start: datetime,
+        window_end: datetime,
+        as_of: datetime,
+        candles: Sequence[Candle],
+        economic_events: Sequence[EconomicEvent] = (),
+        rolling_window_size: int = 3,
+    ) -> MarketFeatureSnapshot:
+        window = FeatureWindow(
+            pair=pair,
+            timeframe=timeframe,
+            window_start=window_start,
+            window_end=window_end,
+            as_of=as_of,
         )
+        if rolling_window_size < 1:
+            raise ValueError("rolling_window_size must be at least 1")
+
+        start_utc = window.window_start
+        end_utc = window.window_end
+        as_of_utc = window.as_of
+        expected_open_times = _expected_open_times(
+            timeframe=timeframe,
+            window_start=start_utc,
+            window_end=end_utc,
+        )
+        issues: list[FeatureIssue] = []
+        if _is_unaligned_window(timeframe=timeframe, start_at=start_utc, end_at=end_utc):
+            issues.append(
+                FeatureIssue(
+                    code=FeatureIssueCode.WINDOW_NOT_ALIGNED,
+                    description="Feature window is not an exact multiple of the timeframe.",
+                )
+            )
+
+        sorted_candles = sorted(candles, key=lambda candle: (candle.open_time, candle.provider))
+        usable_candidates: list[Candle] = []
+        for candle in sorted_candles:
+            if not candle.is_closed:
+                issues.append(
+                    FeatureIssue(
+                        code=FeatureIssueCode.CANDLE_NOT_CLOSED,
+                        description="Open candle excluded from feature calculation.",
+                        timestamp=candle.open_time,
+                    )
+                )
+                continue
+            if candle.pair != pair:
+                issues.append(
+                    FeatureIssue(
+                        code=FeatureIssueCode.CANDLE_PAIR_MISMATCH,
+                        description="Candle pair does not match the requested pair.",
+                        timestamp=candle.open_time,
+                    )
+                )
+                continue
+            if candle.timeframe != timeframe:
+                issues.append(
+                    FeatureIssue(
+                        code=FeatureIssueCode.CANDLE_TIMEFRAME_MISMATCH,
+                        description="Candle timeframe does not match the requested timeframe.",
+                        timestamp=candle.open_time,
+                    )
+                )
+                continue
+            if candle.open_time < start_utc or candle.close_time > end_utc:
+                issues.append(
+                    FeatureIssue(
+                        code=FeatureIssueCode.CANDLE_OUT_OF_RANGE,
+                        description="Candle is outside the requested feature window.",
+                        timestamp=candle.open_time,
+                    )
+                )
+                continue
+            if candle.close_time > as_of_utc:
+                issues.append(
+                    FeatureIssue(
+                        code=FeatureIssueCode.CANDLE_AFTER_AS_OF,
+                        description="Candle closes after the feature as_of timestamp.",
+                        timestamp=candle.close_time,
+                    )
+                )
+                continue
+            usable_candidates.append(candle)
+
+        duplicate_open_times = _duplicate_open_times(usable_candidates)
+        for open_time in duplicate_open_times:
+            issues.append(
+                FeatureIssue(
+                    code=FeatureIssueCode.DUPLICATE_CANDLE,
+                    description="Duplicate candle open time in feature window.",
+                    timestamp=open_time,
+                )
+            )
+
+        usable_candles = _dedupe_candles_by_open_time(usable_candidates)
+        observed_open_times = {candle.open_time for candle in usable_candles}
+        for expected_open_time in expected_open_times:
+            if expected_open_time not in observed_open_times:
+                issues.append(
+                    FeatureIssue(
+                        code=FeatureIssueCode.MISSING_CANDLE,
+                        description="Expected candle is missing from feature window.",
+                        timestamp=expected_open_time,
+                    )
+                )
+
+        if not usable_candles:
+            issues.append(
+                FeatureIssue(
+                    code=FeatureIssueCode.NO_CANDLES,
+                    description="No usable closed candles are available for feature calculation.",
+                )
+            )
+        elif len(usable_candles) < rolling_window_size:
+            issues.append(
+                FeatureIssue(
+                    code=FeatureIssueCode.INSUFFICIENT_CANDLES,
+                    description="Not enough candles are available for the rolling window.",
+                    timestamp=usable_candles[-1].close_time,
+                )
+            )
+
+        sorted_events = sorted(
+            economic_events,
+            key=lambda event: (event.scheduled_at, event.currency, event.provider_event_id),
+        )
+        usable_events: list[EconomicEvent] = []
+        for event in sorted_events:
+            if event.scheduled_at < start_utc or event.scheduled_at >= end_utc:
+                issues.append(
+                    FeatureIssue(
+                        code=FeatureIssueCode.EVENT_OUT_OF_RANGE,
+                        description="Economic event is outside the requested feature window.",
+                        timestamp=event.scheduled_at,
+                    )
+                )
+                continue
+            if event.scheduled_at > as_of_utc:
+                issues.append(
+                    FeatureIssue(
+                        code=FeatureIssueCode.EVENT_AFTER_AS_OF,
+                        description=(
+                            "Economic event is scheduled after the feature as_of timestamp."
+                        ),
+                        timestamp=event.scheduled_at,
+                    )
+                )
+                continue
+            usable_events.append(event)
+
+        data_quality_snapshot = build_feature_snapshot(
+            pair=pair,
+            timeframe=timeframe,
+            window_start=start_utc,
+            window_end=end_utc,
+            candles=candles,
+            economic_events=economic_events,
+        )
+        return MarketFeatureSnapshot(
+            window=window,
+            candle_summary=_build_candle_summary(
+                expected_candle_count=len(expected_open_times),
+                input_candle_count=len(candles),
+                candles=usable_candles,
+                rolling_window_size=rolling_window_size,
+                market_data_complete=_market_data_complete(issues),
+            ),
+            economic_event_summary=_build_event_summary(
+                input_event_count=len(economic_events),
+                events=usable_events,
+            ),
+            quality_issues=tuple(issues),
+            data_quality_issues=data_quality_snapshot.quality_issues,
+        )
+
+
+def _is_unaligned_window(*, timeframe: Timeframe, start_at: datetime, end_at: datetime) -> bool:
+    delta = TIMEFRAME_TO_DELTA[timeframe]
+    expected_count = len(
+        _expected_open_times(timeframe=timeframe, window_start=start_at, window_end=end_at)
+    )
+    return start_at + (expected_count * delta) != end_at
 
 
 def _expected_open_times(
@@ -1289,336 +1247,170 @@ def _expected_open_times(
     window_start: datetime,
     window_end: datetime,
 ) -> tuple[datetime, ...]:
+    start_utc = normalize_to_utc(window_start)
+    end_utc = normalize_to_utc(window_end)
     delta = TIMEFRAME_TO_DELTA[timeframe]
     expected: list[datetime] = []
-    cursor = window_start
-    while cursor + delta <= window_end:
+    cursor = start_utc
+    while cursor + delta <= end_utc:
         expected.append(cursor)
         cursor += delta
     return tuple(expected)
 
 
-def build_feature_snapshot(
+def _duplicate_open_times(candles: Sequence[Candle]) -> tuple[datetime, ...]:
+    counts = Counter(candle.open_time for candle in candles)
+    return tuple(sorted(open_time for open_time, count in counts.items() if count > 1))
+
+
+def _dedupe_candles_by_open_time(candles: Sequence[Candle]) -> tuple[Candle, ...]:
+    selected: dict[datetime, Candle] = {}
+    for candle in sorted(candles, key=lambda item: (item.open_time, item.provider)):
+        selected.setdefault(candle.open_time, candle)
+    return tuple(selected[open_time] for open_time in sorted(selected))
+
+
+def _build_candle_summary(
     *,
-    pair: CurrencyPair,
-    timeframe: Timeframe,
-    window_start: datetime,
-    window_end: datetime,
+    expected_candle_count: int,
+    input_candle_count: int,
     candles: Sequence[Candle],
-    economic_events: Sequence[EconomicEvent] = (),
-) -> FeatureSnapshot:
-    start_utc = normalize_to_utc(window_start)
-    end_utc = normalize_to_utc(window_end)
-    if end_utc <= start_utc:
-        raise ValueError("snapshot window_end must be later than window_start")
-
-    expected_times = _expected_open_times(
-        timeframe=timeframe,
-        window_start=start_utc,
-        window_end=end_utc,
+    rolling_window_size: int,
+    market_data_complete: bool,
+) -> CandleFeatureSummary:
+    candle_ranges = tuple(candle.high - candle.low for candle in candles)
+    body_sizes = tuple(abs(candle.close - candle.open) for candle in candles)
+    per_candle_returns = tuple((candle.close - candle.open) / candle.open for candle in candles)
+    volumes = tuple(candle.volume for candle in candles if candle.volume is not None)
+    true_ranges = _true_ranges(candles)
+    return CandleFeatureSummary(
+        expected_candle_count=expected_candle_count,
+        input_candle_count=input_candle_count,
+        used_candle_count=len(candles),
+        latest_close=candles[-1].close if candles else None,
+        first_candle_open_time=candles[0].open_time if candles else None,
+        latest_candle_close_time=candles[-1].close_time if candles else None,
+        simple_return=((candles[-1].close - candles[0].open) / candles[0].open)
+        if candles
+        else None,
+        per_candle_returns=per_candle_returns,
+        rolling_close_mean_window=rolling_window_size,
+        rolling_close_means=_rolling_close_means(candles, rolling_window_size),
+        rolling_high_low_ranges=_rolling_high_low_ranges(candles, rolling_window_size),
+        average_candle_range=_mean(candle_ranges),
+        average_body_size=_mean(body_sizes),
+        volume_observed_count=len(volumes),
+        volume_sum=sum(volumes) if volumes else None,
+        volume_average=_mean(volumes),
+        true_ranges=true_ranges,
+        average_true_range=_mean(true_ranges),
+        market_data_complete=market_data_complete,
     )
-    issues: list[DataQualityIssue] = []
-    delta = TIMEFRAME_TO_DELTA[timeframe]
-    if start_utc + (len(expected_times) * delta) != end_utc:
-        issues.append(
-            DataQualityIssue(
-                code=DataQualityIssueCode.WINDOW_NOT_ALIGNED,
-                description="Requested window is not an exact multiple of the timeframe.",
-            )
-        )
 
-    observed_times: list[datetime] = []
-    matching_candles: list[Candle] = []
+
+def _true_ranges(candles: Sequence[Candle]) -> tuple[Decimal, ...]:
+    ranges: list[Decimal] = []
+    previous_close: Decimal | None = None
     for candle in candles:
-        if candle.pair != pair:
-            issues.append(
-                DataQualityIssue(
-                    code=DataQualityIssueCode.CANDLE_PAIR_MISMATCH,
-                    description="Candle pair does not match the requested pair.",
-                    timestamp=candle.open_time,
-                )
+        high_low = candle.high - candle.low
+        if previous_close is None:
+            true_range = high_low
+        else:
+            true_range = max(
+                high_low,
+                abs(candle.high - previous_close),
+                abs(candle.low - previous_close),
             )
-            continue
-        if candle.timeframe != timeframe:
-            issues.append(
-                DataQualityIssue(
-                    code=DataQualityIssueCode.CANDLE_TIMEFRAME_MISMATCH,
-                    description="Candle timeframe does not match the requested timeframe.",
-                    timestamp=candle.open_time,
-                )
-            )
-            continue
-        if candle.open_time < start_utc or candle.close_time > end_utc:
-            issues.append(
-                DataQualityIssue(
-                    code=DataQualityIssueCode.CANDLE_OUT_OF_RANGE,
-                    description="Candle is not fully contained in the requested window.",
-                    timestamp=candle.open_time,
-                )
-            )
-            continue
-        matching_candles.append(candle)
-        observed_times.append(candle.open_time)
+        ranges.append(true_range)
+        previous_close = candle.close
+    return tuple(ranges)
 
-    duplicates = [open_time for open_time, count in Counter(observed_times).items() if count > 1]
-    for open_time in sorted(duplicates):
-        issues.append(
-            DataQualityIssue(
-                code=DataQualityIssueCode.DUPLICATE_CANDLE,
-                description="Duplicate candle open time in snapshot window.",
-                timestamp=open_time,
-            )
-        )
 
-    observed_unique = set(observed_times)
-    for open_time in expected_times:
-        if open_time not in observed_unique:
-            issues.append(
-                DataQualityIssue(
-                    code=DataQualityIssueCode.MISSING_CANDLE,
-                    description="Expected candle is missing from snapshot window.",
-                    timestamp=open_time,
-                )
-            )
+def _rolling_close_means(candles: Sequence[Candle], window_size: int) -> tuple[Decimal, ...]:
+    means: list[Decimal] = []
+    for index in range(window_size, len(candles) + 1):
+        window = candles[index - window_size : index]
+        means.append(sum(candle.close for candle in window) / Decimal(window_size))
+    return tuple(means)
 
-    if not matching_candles:
-        issues.append(
-            DataQualityIssue(
-                code=DataQualityIssueCode.NO_CANDLES,
-                description="No matching closed candles are available in the requested window.",
-            )
-        )
 
-    event_currencies: set[str] = set()
-    high_impact_count = 0
-    event_count = 0
-    for event in economic_events:
-        if event.scheduled_at < start_utc or event.scheduled_at >= end_utc:
-            issues.append(
-                DataQualityIssue(
-                    code=DataQualityIssueCode.EVENT_OUT_OF_RANGE,
-                    description="Economic event is outside the requested window.",
-                    timestamp=event.scheduled_at,
-                )
-            )
-            continue
-        event_count += 1
-        event_currencies.add(event.currency)
-        if event.impact == EconomicImpact.HIGH:
-            high_impact_count += 1
+def _rolling_high_low_ranges(candles: Sequence[Candle], window_size: int) -> tuple[Decimal, ...]:
+    ranges: list[Decimal] = []
+    for index in range(window_size, len(candles) + 1):
+        window = candles[index - window_size : index]
+        ranges.append(max(candle.high for candle in window) - min(candle.low for candle in window))
+    return tuple(ranges)
 
-    return FeatureSnapshot(
-        pair=pair,
-        timeframe=timeframe,
-        window_start=start_utc,
-        window_end=end_utc,
-        candle_availability=CandleAvailability(
-            expected_count=len(expected_times),
-            observed_count=len(observed_unique),
-            missing_count=max(len(expected_times) - len(observed_unique), 0),
-            first_open_time=min(observed_times) if observed_times else None,
-            last_close_time=max((candle.close_time for candle in matching_candles), default=None),
+
+def _mean(values: Sequence[Decimal]) -> Decimal | None:
+    if not values:
+        return None
+    return sum(values) / Decimal(len(values))
+
+
+def _build_event_summary(
+    *,
+    input_event_count: int,
+    events: Sequence[EconomicEvent],
+) -> EconomicEventFeatureSummary:
+    impact_counts = Counter(event.impact for event in events)
+    currency_counts = Counter(event.currency for event in events)
+    return EconomicEventFeatureSummary(
+        input_event_count=input_event_count,
+        used_event_count=len(events),
+        counts_by_impact=tuple(
+            EconomicImpactCount(impact=impact, count=impact_counts[impact])
+            for impact in sorted(impact_counts, key=lambda value: value.value)
         ),
-        economic_event_availability=EconomicEventAvailability(
-            event_count=event_count,
-            currencies=tuple(sorted(event_currencies)),
-            high_impact_count=high_impact_count,
+        counts_by_currency=tuple(
+            CurrencyEventCount(currency=currency, count=currency_counts[currency])
+            for currency in sorted(currency_counts)
         ),
-        quality_issues=tuple(issues),
     )
 
+
+def _market_data_complete(issues: Sequence[FeatureIssue]) -> bool:
+    blocking_codes = {
+        FeatureIssueCode.NO_CANDLES,
+        FeatureIssueCode.INSUFFICIENT_CANDLES,
+        FeatureIssueCode.WINDOW_NOT_ALIGNED,
+        FeatureIssueCode.CANDLE_NOT_CLOSED,
+        FeatureIssueCode.CANDLE_AFTER_AS_OF,
+        FeatureIssueCode.CANDLE_OUT_OF_RANGE,
+        FeatureIssueCode.CANDLE_PAIR_MISMATCH,
+        FeatureIssueCode.CANDLE_TIMEFRAME_MISMATCH,
+        FeatureIssueCode.DUPLICATE_CANDLE,
+        FeatureIssueCode.MISSING_CANDLE,
+    }
+    return not any(issue.code in blocking_codes for issue in issues)
 ```
 
-### `app/domain/interfaces/repositories.py`
+### `app/services/feature_service.py`
 
 ```python
-from collections.abc import Mapping
-from datetime import datetime
-from typing import Any, Protocol
-
-from app.domain.entities import Candle, EconomicEvent, Timeframe
-from app.domain.entities.data_quality import UpsertResult
-from app.domain.value_objects import CurrencyPair
-
-
-class SystemStateRepository(Protocol):
-    async def get(self, key: str) -> Any | None:
-        """Return one state value by key."""
-
-    async def set(self, key: str, value: Any) -> None:
-        """Persist one state value by key."""
-
-    async def get_all(self) -> dict[str, Any]:
-        """Return all persisted system state values."""
-
-
-class AuditLogRepository(Protocol):
-    async def add(
-        self,
-        *,
-        event_type: str,
-        entity_type: str | None = None,
-        entity_id: str | None = None,
-        actor: str | None = None,
-        before_json: Mapping[str, Any] | None = None,
-        after_json: Mapping[str, Any] | None = None,
-    ) -> None:
-        """Append an audit log event."""
-
-
-class ErrorEventRepository(Protocol):
-    async def add(
-        self,
-        *,
-        error_code: str,
-        severity: str,
-        component: str,
-        message_ru: str,
-        technical_details: str | None = None,
-        context_json: Mapping[str, Any] | None = None,
-        resolved: bool = False,
-    ) -> None:
-        """Append a structured error event."""
-
-
-class CandleRepository(Protocol):
-    async def upsert_many(self, candles: list[Candle]) -> UpsertResult:
-        """Insert or update normalized closed candles without creating duplicates."""
-
-    async def list_range(
-        self,
-        *,
-        pair: CurrencyPair,
-        timeframe: Timeframe,
-        start_at: datetime,
-        end_at: datetime,
-        provider: str | None = None,
-    ) -> list[Candle]:
-        """Return closed candles fully contained in the requested UTC window."""
-
-
-class EconomicEventRepository(Protocol):
-    async def upsert_many(self, events: list[EconomicEvent]) -> UpsertResult:
-        """Insert or update normalized economic events without creating duplicates."""
-
-    async def list_window(
-        self,
-        *,
-        start_at: datetime,
-        end_at: datetime,
-        currencies: list[str] | None = None,
-        provider: str | None = None,
-    ) -> list[EconomicEvent]:
-        """Return economic events satisfying start_at <= scheduled_at < end_at."""
-
-```
-
-### `app/domain/interfaces/unit_of_work.py`
-
-```python
-from types import TracebackType
-from typing import Protocol, Self
-
-from app.domain.interfaces.repositories import (
-    AuditLogRepository,
-    CandleRepository,
-    EconomicEventRepository,
-    ErrorEventRepository,
-    SystemStateRepository,
-)
-
-
-class UnitOfWork(Protocol):
-    @property
-    def system_state(self) -> SystemStateRepository:
-        """Repository for persisted system state."""
-        ...
-
-    @property
-    def audit_logs(self) -> AuditLogRepository:
-        """Repository for audit events."""
-        ...
-
-    @property
-    def error_events(self) -> ErrorEventRepository:
-        """Repository for structured error events."""
-        ...
-
-    @property
-    def candles(self) -> CandleRepository:
-        """Repository for normalized closed candles."""
-        ...
-
-    @property
-    def economic_events(self) -> EconomicEventRepository:
-        """Repository for normalized economic events."""
-        ...
-
-    async def __aenter__(self) -> Self:
-        """Open one asynchronous persistence boundary."""
-
-    async def __aexit__(
-        self,
-        exc_type: type[BaseException] | None,
-        exc: BaseException | None,
-        traceback: TracebackType | None,
-    ) -> None:
-        """Rollback uncommitted work and close resources."""
-
-    async def commit(self) -> None:
-        """Commit the current unit of work explicitly."""
-
-    async def rollback(self) -> None:
-        """Rollback the current unit of work."""
-
-```
-
-### `app/domain/replay.py`
-
-```python
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict, field_validator
-
-from app.core.time import normalize_to_utc
-from app.domain.entities.data_quality import FeatureSnapshot, build_feature_snapshot
-from app.domain.entities.market_data import Candle, EconomicEvent, Timeframe
+from app.domain.entities import Timeframe
+from app.domain.entities.features import MarketFeatureSnapshot
+from app.domain.feature_engine import MarketFeatureEngine
+from app.domain.interfaces.unit_of_work import UnitOfWork
 from app.domain.value_objects import CurrencyPair
 
-
-class HistoricalReplayFrame(BaseModel):
-    as_of: datetime
-    candles: tuple[Candle, ...]
-    economic_events: tuple[EconomicEvent, ...]
-    feature_snapshot: FeatureSnapshot
-
-    model_config = ConfigDict(frozen=True)
-
-    @field_validator("as_of")
-    @classmethod
-    def as_of_must_be_utc(cls, value: datetime) -> datetime:
-        return normalize_to_utc(value)
+UnitOfWorkFactory = Callable[[], UnitOfWork]
 
 
-class HistoricalReplay:
+class FeatureService:
     def __init__(
         self,
+        uow_factory: UnitOfWorkFactory,
         *,
-        candles: Sequence[Candle],
-        economic_events: Sequence[EconomicEvent] = (),
+        engine: MarketFeatureEngine | None = None,
     ) -> None:
-        self._candles = tuple(
-            sorted(candles, key=lambda candle: (candle.open_time, candle.provider))
-        )
-        self._economic_events = tuple(
-            sorted(
-                economic_events,
-                key=lambda event: (event.scheduled_at, event.currency, event.provider_event_id),
-            )
-        )
+        self._uow_factory = uow_factory
+        self._engine = engine or MarketFeatureEngine()
 
-    def frame(
+    async def build_market_snapshot(
         self,
         *,
         pair: CurrencyPair,
@@ -1627,245 +1419,366 @@ class HistoricalReplay:
         window_end: datetime,
         as_of: datetime,
         currencies: Sequence[str] | None = None,
-    ) -> HistoricalReplayFrame:
-        start_utc = normalize_to_utc(window_start)
-        end_utc = normalize_to_utc(window_end)
-        as_of_utc = normalize_to_utc(as_of)
-        currency_filter = set(currencies) if currencies is not None else None
-        candles = tuple(
-            candle
-            for candle in self._candles
-            if candle.pair == pair
-            and candle.timeframe == timeframe
-            and candle.open_time >= start_utc
-            and candle.close_time <= end_utc
-            and candle.close_time <= as_of_utc
+        provider: str | None = None,
+        rolling_window_size: int = 3,
+    ) -> MarketFeatureSnapshot:
+        event_currencies = (
+            list(currencies)
+            if currencies is not None
+            else [
+                pair.base_currency,
+                pair.quote_currency,
+            ]
         )
-        economic_events = tuple(
-            event
-            for event in self._economic_events
-            if event.scheduled_at >= start_utc
-            and event.scheduled_at < end_utc
-            and event.scheduled_at <= as_of_utc
-            and (currency_filter is None or event.currency in currency_filter)
-        )
-        snapshot = build_feature_snapshot(
+        async with self._uow_factory() as uow:
+            candles = await uow.candles.list_range(
+                pair=pair,
+                timeframe=timeframe,
+                start_at=window_start,
+                end_at=window_end,
+                provider=provider,
+            )
+            events = await uow.economic_events.list_window(
+                start_at=window_start,
+                end_at=window_end,
+                currencies=event_currencies,
+                provider=provider,
+            )
+        return self._engine.build_snapshot(
             pair=pair,
             timeframe=timeframe,
-            window_start=start_utc,
-            window_end=end_utc,
+            window_start=window_start,
+            window_end=window_end,
+            as_of=as_of,
             candles=candles,
-            economic_events=economic_events,
+            economic_events=events,
+            rolling_window_size=rolling_window_size,
         )
-        return HistoricalReplayFrame(
-            as_of=as_of_utc,
-            candles=candles,
-            economic_events=economic_events,
-            feature_snapshot=snapshot,
-        )
-
 ```
 
-### `app/persistence/repositories/__init__.py`
+
+## Full Contents Of New And Changed Tests
+
+### `tests/unit/test_feature_engine_foundation.py`
 
 ```python
-from app.persistence.repositories.foundation import (
-    SqlAlchemyAuditLogRepository,
-    SqlAlchemyCandleRepository,
-    SqlAlchemyEconomicEventRepository,
-    SqlAlchemyErrorEventRepository,
-    SqlAlchemySystemStateRepository,
-)
+from collections.abc import Sequence
+from datetime import UTC, datetime, timedelta, timezone
+from decimal import Decimal
+from types import TracebackType
+from typing import Self
 
-__all__ = [
-    "SqlAlchemyAuditLogRepository",
-    "SqlAlchemyCandleRepository",
-    "SqlAlchemyEconomicEventRepository",
-    "SqlAlchemyErrorEventRepository",
-    "SqlAlchemySystemStateRepository",
-]
+import pytest
+from pydantic import ValidationError
 
-```
-
-### `app/persistence/repositories/foundation.py`
-
-```python
-from collections.abc import Mapping
-from datetime import datetime
-from typing import Any
-
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
-
-from app.core.security import redact_text
-from app.core.time import normalize_to_utc, utc_now
 from app.domain.entities import Candle, EconomicEvent, EconomicImpact, Timeframe
-from app.domain.entities.data_quality import UpsertResult
+from app.domain.entities.features import FeatureIssueCode, MarketFeatureSnapshot
+from app.domain.feature_engine import MarketFeatureEngine
 from app.domain.value_objects import CurrencyPair
-from app.persistence.models import (
-    AuditLogModel,
-    CandleModel,
-    EconomicEventModel,
-    ErrorEventModel,
-    SystemStateModel,
-)
+from app.services.feature_service import FeatureService
+
+PAIR = CurrencyPair(value="EURUSD")
+OTHER_PAIR = CurrencyPair(value="GBPUSD")
+START = datetime(2026, 7, 8, 8, 0, tzinfo=UTC)
 
 
-def _candle_from_model(row: CandleModel) -> Candle:
+def _candle(
+    index: int,
+    *,
+    provider: str = "unit",
+    pair: CurrencyPair = PAIR,
+    timeframe: Timeframe = Timeframe.M15,
+    open_value: str = "100",
+    high: str = "110",
+    low: str = "95",
+    close: str = "105",
+    volume: str | None = "10",
+) -> Candle:
+    open_time = START + timedelta(minutes=15 * index)
     return Candle(
-        provider=row.provider,
-        pair=CurrencyPair(value=row.pair),
-        timeframe=Timeframe(row.timeframe),
-        open_time=row.open_time,
-        close_time=row.close_time,
-        open=row.open,
-        high=row.high,
-        low=row.low,
-        close=row.close,
-        volume=row.volume,
-        is_closed=row.is_closed,
+        provider=provider,
+        pair=pair,
+        timeframe=timeframe,
+        open_time=open_time,
+        close_time=open_time + timedelta(minutes=15),
+        open=Decimal(open_value),
+        high=Decimal(high),
+        low=Decimal(low),
+        close=Decimal(close),
+        volume=Decimal(volume) if volume is not None else None,
+        is_closed=True,
     )
 
 
-def _event_from_model(row: EconomicEventModel) -> EconomicEvent:
+def _event(
+    minutes: int,
+    *,
+    currency: str = "EUR",
+    impact: EconomicImpact = EconomicImpact.HIGH,
+    provider_event_id: str = "event",
+) -> EconomicEvent:
     return EconomicEvent(
-        provider=row.provider,
-        provider_event_id=row.provider_event_id,
-        title=row.title,
-        currency=row.currency,
-        country=row.country,
-        impact=EconomicImpact(row.impact),
-        scheduled_at=row.scheduled_at,
-        actual=row.actual,
-        forecast=row.forecast,
-        previous=row.previous,
-        actual_raw=row.actual_raw,
-        forecast_raw=row.forecast_raw,
-        previous_raw=row.previous_raw,
-        fetched_at=row.fetched_at,
+        provider="unit",
+        provider_event_id=provider_event_id,
+        title="Consumer Price Index",
+        currency=currency,
+        country="Eurozone",
+        impact=impact,
+        scheduled_at=START + timedelta(minutes=minutes),
+        actual=Decimal("2.2"),
+        forecast=Decimal("2.1"),
+        previous=Decimal("2.0"),
+        fetched_at=START,
     )
 
 
-class SqlAlchemySystemStateRepository:
-    def __init__(self, session: AsyncSession) -> None:
-        self._session = session
-
-    async def get(self, key: str) -> Any | None:
-        row = await self._session.get(SystemStateModel, key)
-        return None if row is None else row.value_json
-
-    async def set(self, key: str, value: Any) -> None:
-        row = await self._session.get(SystemStateModel, key)
-        if row is None:
-            self._session.add(SystemStateModel(key=key, value_json=value))
-            return
-        row.value_json = value
-        row.updated_at = utc_now()
-
-    async def get_all(self) -> dict[str, Any]:
-        result = await self._session.execute(select(SystemStateModel))
-        rows = result.scalars().all()
-        return {row.key: row.value_json for row in rows}
+def _engine() -> MarketFeatureEngine:
+    return MarketFeatureEngine()
 
 
-class SqlAlchemyAuditLogRepository:
-    def __init__(self, session: AsyncSession) -> None:
-        self._session = session
-
-    async def add(
-        self,
-        *,
-        event_type: str,
-        entity_type: str | None = None,
-        entity_id: str | None = None,
-        actor: str | None = None,
-        before_json: Mapping[str, Any] | None = None,
-        after_json: Mapping[str, Any] | None = None,
-    ) -> None:
-        self._session.add(
-            AuditLogModel(
-                event_type=event_type,
-                entity_type=entity_type,
-                entity_id=entity_id,
-                actor=actor,
-                before_json=dict(before_json) if before_json is not None else None,
-                after_json=dict(after_json) if after_json is not None else None,
-            )
-        )
+def _issue_codes(snapshot: MarketFeatureSnapshot) -> set[FeatureIssueCode]:
+    return {issue.code for issue in snapshot.quality_issues}
 
 
-class SqlAlchemyErrorEventRepository:
-    def __init__(self, session: AsyncSession) -> None:
-        self._session = session
+def test_feature_engine_calculates_exact_deterministic_decimal_features() -> None:
+    candles = [
+        _candle(2, open_value="110", high="115", low="108", close="112", volume=None),
+        _candle(0, open_value="100", high="110", low="95", close="105", volume="10"),
+        _candle(1, open_value="105", high="112", low="104", close="110", volume="20"),
+    ]
 
-    async def add(
-        self,
-        *,
-        error_code: str,
-        severity: str,
-        component: str,
-        message_ru: str,
-        technical_details: str | None = None,
-        context_json: Mapping[str, Any] | None = None,
-        resolved: bool = False,
-    ) -> None:
-        self._session.add(
-            ErrorEventModel(
-                error_code=error_code,
-                severity=severity,
-                component=component,
-                message_ru=message_ru,
-                technical_details=redact_text(technical_details) if technical_details else None,
-                context_json=dict(context_json) if context_json is not None else None,
-                resolved=resolved,
-            )
-        )
+    snapshot = _engine().build_snapshot(
+        pair=PAIR,
+        timeframe=Timeframe.M15,
+        window_start=START,
+        window_end=START + timedelta(minutes=45),
+        as_of=START + timedelta(minutes=45),
+        candles=candles,
+        rolling_window_size=2,
+    )
+
+    summary = snapshot.candle_summary
+    assert snapshot.quality_ok is True
+    assert summary.expected_candle_count == 3
+    assert summary.input_candle_count == 3
+    assert summary.used_candle_count == 3
+    assert summary.latest_close == Decimal("112")
+    assert summary.latest_candle_close_time == START + timedelta(minutes=45)
+    assert summary.simple_return == Decimal("0.12")
+    assert summary.per_candle_returns == (
+        Decimal("0.05"),
+        Decimal("5") / Decimal("105"),
+        Decimal("2") / Decimal("110"),
+    )
+    assert summary.rolling_close_mean_window == 2
+    assert summary.rolling_close_means == (Decimal("107.5"), Decimal("111"))
+    assert summary.rolling_high_low_ranges == (Decimal("17"), Decimal("11"))
+    assert summary.average_candle_range == Decimal("10")
+    assert summary.average_body_size == Decimal("4")
+    assert summary.volume_observed_count == 2
+    assert summary.volume_sum == Decimal("30")
+    assert summary.volume_average == Decimal("15")
+    assert summary.true_ranges == (Decimal("15"), Decimal("8"), Decimal("7"))
+    assert summary.average_true_range == Decimal("10")
+    assert summary.market_data_complete is True
 
 
-class SqlAlchemyCandleRepository:
-    def __init__(self, session: AsyncSession) -> None:
-        self._session = session
+def test_feature_models_normalize_datetimes_to_utc() -> None:
+    stockholm = timezone(timedelta(hours=2))
+    candle = _candle(0).model_copy(
+        update={
+            "open_time": datetime(2026, 7, 8, 10, 0, tzinfo=stockholm),
+            "close_time": datetime(2026, 7, 8, 10, 15, tzinfo=stockholm),
+        }
+    )
 
-    async def upsert_many(self, candles: list[Candle]) -> UpsertResult:
-        inserted = 0
-        updated = 0
-        for candle in candles:
-            result = await self._session.execute(
-                select(CandleModel).where(
-                    CandleModel.provider == candle.provider,
-                    CandleModel.pair == candle.pair.value,
-                    CandleModel.timeframe == candle.timeframe.value,
-                    CandleModel.open_time == candle.open_time,
-                )
-            )
-            row = result.scalar_one_or_none()
-            if row is None:
-                self._session.add(
-                    CandleModel(
-                        provider=candle.provider,
-                        pair=candle.pair.value,
-                        timeframe=candle.timeframe.value,
-                        open_time=candle.open_time,
-                        close_time=candle.close_time,
-                        open=candle.open,
-                        high=candle.high,
-                        low=candle.low,
-                        close=candle.close,
-                        volume=candle.volume,
-                        is_closed=True,
-                    )
-                )
-                inserted += 1
-                continue
-            row.close_time = candle.close_time
-            row.open = candle.open
-            row.high = candle.high
-            row.low = candle.low
-            row.close = candle.close
-            row.volume = candle.volume
-            row.is_closed = True
-            updated += 1
-        return UpsertResult(inserted=inserted, updated=updated)
+    snapshot = _engine().build_snapshot(
+        pair=PAIR,
+        timeframe=Timeframe.M15,
+        window_start=datetime(2026, 7, 8, 10, 0, tzinfo=stockholm),
+        window_end=datetime(2026, 7, 8, 10, 15, tzinfo=stockholm),
+        as_of=datetime(2026, 7, 8, 10, 15, tzinfo=stockholm),
+        candles=[candle],
+        rolling_window_size=1,
+    )
+
+    assert snapshot.window.window_start == START
+    assert snapshot.window.window_end == START + timedelta(minutes=15)
+    assert snapshot.window.as_of == START + timedelta(minutes=15)
+
+
+def test_feature_engine_excludes_future_candles_and_events_after_as_of() -> None:
+    snapshot = _engine().build_snapshot(
+        pair=PAIR,
+        timeframe=Timeframe.M15,
+        window_start=START,
+        window_end=START + timedelta(minutes=45),
+        as_of=START + timedelta(minutes=30),
+        candles=[_candle(0), _candle(1), _candle(2)],
+        economic_events=[
+            _event(20, provider_event_id="included"),
+            _event(40, provider_event_id="future"),
+        ],
+        rolling_window_size=2,
+    )
+
+    assert snapshot.candle_summary.used_candle_count == 2
+    assert snapshot.economic_event_summary.used_event_count == 1
+    assert FeatureIssueCode.CANDLE_AFTER_AS_OF in _issue_codes(snapshot)
+    assert FeatureIssueCode.EVENT_AFTER_AS_OF in _issue_codes(snapshot)
+
+
+def test_feature_engine_reports_duplicate_candles_without_weakening_upsert_semantics() -> None:
+    duplicate = _candle(0, provider="duplicate")
+
+    snapshot = _engine().build_snapshot(
+        pair=PAIR,
+        timeframe=Timeframe.M15,
+        window_start=START,
+        window_end=START + timedelta(minutes=30),
+        as_of=START + timedelta(minutes=30),
+        candles=[_candle(0), duplicate, _candle(1)],
+        rolling_window_size=2,
+    )
+
+    assert snapshot.candle_summary.used_candle_count == 2
+    assert FeatureIssueCode.DUPLICATE_CANDLE in _issue_codes(snapshot)
+    assert snapshot.candle_summary.market_data_complete is False
+
+
+def test_feature_engine_reports_missing_candle_gaps() -> None:
+    snapshot = _engine().build_snapshot(
+        pair=PAIR,
+        timeframe=Timeframe.M15,
+        window_start=START,
+        window_end=START + timedelta(minutes=45),
+        as_of=START + timedelta(minutes=45),
+        candles=[_candle(0), _candle(2)],
+        rolling_window_size=2,
+    )
+
+    assert snapshot.candle_summary.used_candle_count == 2
+    assert FeatureIssueCode.MISSING_CANDLE in _issue_codes(snapshot)
+    assert snapshot.candle_summary.market_data_complete is False
+
+
+def test_feature_engine_reports_mismatched_pair_and_timeframe() -> None:
+    snapshot = _engine().build_snapshot(
+        pair=PAIR,
+        timeframe=Timeframe.M15,
+        window_start=START,
+        window_end=START + timedelta(minutes=15),
+        as_of=START + timedelta(minutes=15),
+        candles=[
+            _candle(0, pair=OTHER_PAIR),
+            _candle(0, timeframe=Timeframe.H1),
+        ],
+        rolling_window_size=1,
+    )
+
+    assert snapshot.candle_summary.used_candle_count == 0
+    assert FeatureIssueCode.CANDLE_PAIR_MISMATCH in _issue_codes(snapshot)
+    assert FeatureIssueCode.CANDLE_TIMEFRAME_MISMATCH in _issue_codes(snapshot)
+    assert FeatureIssueCode.NO_CANDLES in _issue_codes(snapshot)
+
+
+def test_feature_engine_requires_closed_candles_only() -> None:
+    open_candle = _candle(0).model_copy(update={"is_closed": False})
+
+    snapshot = _engine().build_snapshot(
+        pair=PAIR,
+        timeframe=Timeframe.M15,
+        window_start=START,
+        window_end=START + timedelta(minutes=15),
+        as_of=START + timedelta(minutes=15),
+        candles=[open_candle],
+        rolling_window_size=1,
+    )
+
+    assert snapshot.candle_summary.used_candle_count == 0
+    assert FeatureIssueCode.CANDLE_NOT_CLOSED in _issue_codes(snapshot)
+    assert FeatureIssueCode.NO_CANDLES in _issue_codes(snapshot)
+
+
+def test_feature_engine_counts_economic_events_by_impact_and_currency() -> None:
+    snapshot = _engine().build_snapshot(
+        pair=PAIR,
+        timeframe=Timeframe.M15,
+        window_start=START,
+        window_end=START + timedelta(minutes=30),
+        as_of=START + timedelta(minutes=30),
+        candles=[_candle(0), _candle(1)],
+        economic_events=[
+            _event(5, currency="EUR", impact=EconomicImpact.HIGH, provider_event_id="1"),
+            _event(10, currency="USD", impact=EconomicImpact.LOW, provider_event_id="2"),
+            _event(20, currency="EUR", impact=EconomicImpact.HIGH, provider_event_id="3"),
+            _event(35, currency="EUR", impact=EconomicImpact.MEDIUM, provider_event_id="4"),
+        ],
+        rolling_window_size=2,
+    )
+
+    assert [
+        (item.impact, item.count) for item in snapshot.economic_event_summary.counts_by_impact
+    ] == [
+        (EconomicImpact.HIGH, 2),
+        (EconomicImpact.LOW, 1),
+    ]
+    assert [
+        (item.currency, item.count) for item in snapshot.economic_event_summary.counts_by_currency
+    ] == [("EUR", 2), ("USD", 1)]
+    assert snapshot.economic_event_summary.input_event_count == 4
+    assert snapshot.economic_event_summary.used_event_count == 3
+    assert FeatureIssueCode.EVENT_OUT_OF_RANGE in _issue_codes(snapshot)
+
+
+def test_feature_engine_handles_empty_and_insufficient_data_without_fake_values() -> None:
+    empty = _engine().build_snapshot(
+        pair=PAIR,
+        timeframe=Timeframe.M15,
+        window_start=START,
+        window_end=START + timedelta(minutes=30),
+        as_of=START + timedelta(minutes=30),
+        candles=[],
+        rolling_window_size=3,
+    )
+    assert empty.candle_summary.latest_close is None
+    assert empty.candle_summary.simple_return is None
+    assert empty.candle_summary.per_candle_returns == ()
+    assert empty.candle_summary.rolling_close_means == ()
+    assert FeatureIssueCode.NO_CANDLES in _issue_codes(empty)
+
+    insufficient = _engine().build_snapshot(
+        pair=PAIR,
+        timeframe=Timeframe.M15,
+        window_start=START,
+        window_end=START + timedelta(minutes=30),
+        as_of=START + timedelta(minutes=30),
+        candles=[_candle(0), _candle(1)],
+        rolling_window_size=3,
+    )
+    assert insufficient.candle_summary.rolling_close_means == ()
+    assert FeatureIssueCode.INSUFFICIENT_CANDLES in _issue_codes(insufficient)
+
+
+def test_feature_snapshot_models_are_immutable() -> None:
+    snapshot = _engine().build_snapshot(
+        pair=PAIR,
+        timeframe=Timeframe.M15,
+        window_start=START,
+        window_end=START + timedelta(minutes=15),
+        as_of=START + timedelta(minutes=15),
+        candles=[_candle(0)],
+        rolling_window_size=1,
+    )
+
+    with pytest.raises(ValidationError):
+        snapshot.candle_summary.latest_close = Decimal("999")
+
+
+class _FakeCandleRepository:
+    def __init__(self, candles: Sequence[Candle]) -> None:
+        self.candles = list(candles)
+        self.calls: list[dict[str, object]] = []
 
     async def list_range(
         self,
@@ -1876,73 +1789,22 @@ class SqlAlchemyCandleRepository:
         end_at: datetime,
         provider: str | None = None,
     ) -> list[Candle]:
-        start_utc = normalize_to_utc(start_at)
-        end_utc = normalize_to_utc(end_at)
-        query = select(CandleModel).where(
-            CandleModel.pair == pair.value,
-            CandleModel.timeframe == timeframe.value,
-            CandleModel.open_time >= start_utc,
-            CandleModel.close_time <= end_utc,
-            CandleModel.is_closed.is_(True),
+        self.calls.append(
+            {
+                "pair": pair,
+                "timeframe": timeframe,
+                "start_at": start_at,
+                "end_at": end_at,
+                "provider": provider,
+            }
         )
-        if provider is not None:
-            query = query.where(CandleModel.provider == provider)
-        result = await self._session.execute(
-            query.order_by(CandleModel.open_time.asc(), CandleModel.provider.asc())
-        )
-        return [_candle_from_model(row) for row in result.scalars().all()]
+        return list(self.candles)
 
 
-class SqlAlchemyEconomicEventRepository:
-    def __init__(self, session: AsyncSession) -> None:
-        self._session = session
-
-    async def upsert_many(self, events: list[EconomicEvent]) -> UpsertResult:
-        inserted = 0
-        updated = 0
-        for event in events:
-            result = await self._session.execute(
-                select(EconomicEventModel).where(
-                    EconomicEventModel.provider == event.provider,
-                    EconomicEventModel.provider_event_id == event.provider_event_id,
-                )
-            )
-            row = result.scalar_one_or_none()
-            if row is None:
-                self._session.add(
-                    EconomicEventModel(
-                        provider=event.provider,
-                        provider_event_id=event.provider_event_id,
-                        title=event.title,
-                        currency=event.currency,
-                        country=event.country,
-                        impact=event.impact.value,
-                        scheduled_at=event.scheduled_at,
-                        actual=event.actual,
-                        forecast=event.forecast,
-                        previous=event.previous,
-                        actual_raw=event.actual_raw,
-                        forecast_raw=event.forecast_raw,
-                        previous_raw=event.previous_raw,
-                        fetched_at=event.fetched_at,
-                    )
-                )
-                inserted += 1
-                continue
-            row.title = event.title
-            row.currency = event.currency
-            row.country = event.country
-            row.impact = event.impact.value
-            row.scheduled_at = event.scheduled_at
-            row.actual = event.actual
-            row.forecast = event.forecast
-            row.previous = event.previous
-            row.actual_raw = event.actual_raw
-            row.forecast_raw = event.forecast_raw
-            row.previous_raw = event.previous_raw
-            row.fetched_at = event.fetched_at
-            updated += 1
-        return UpsertResult(inserted=inserted, updated=updated)
+class _FakeEconomicEventRepository:
+    def __init__(self, events: Sequence[EconomicEvent]) -> None:
+        self.events = list(events)
+        self.calls: list[dict[str, object]] = []
 
     async def list_window(
         self,
@@ -1952,72 +1814,27 @@ class SqlAlchemyEconomicEventRepository:
         currencies: list[str] | None = None,
         provider: str | None = None,
     ) -> list[EconomicEvent]:
-        start_utc = normalize_to_utc(start_at)
-        end_utc = normalize_to_utc(end_at)
-        query = select(EconomicEventModel).where(
-            EconomicEventModel.scheduled_at >= start_utc,
-            EconomicEventModel.scheduled_at < end_utc,
+        self.calls.append(
+            {
+                "start_at": start_at,
+                "end_at": end_at,
+                "currencies": currencies,
+                "provider": provider,
+            }
         )
-        if currencies is not None:
-            query = query.where(EconomicEventModel.currency.in_(currencies))
-        if provider is not None:
-            query = query.where(EconomicEventModel.provider == provider)
-        result = await self._session.execute(
-            query.order_by(
-                EconomicEventModel.scheduled_at.asc(),
-                EconomicEventModel.currency.asc(),
-                EconomicEventModel.provider_event_id.asc(),
-            )
-        )
-        return [_event_from_model(row) for row in result.scalars().all()]
-
-```
-
-### `app/persistence/unit_of_work.py`
-
-```python
-from types import TracebackType
-from typing import Self
-
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
-
-from app.domain.interfaces.repositories import (
-    AuditLogRepository,
-    CandleRepository,
-    EconomicEventRepository,
-    ErrorEventRepository,
-    SystemStateRepository,
-)
-from app.persistence.repositories import (
-    SqlAlchemyAuditLogRepository,
-    SqlAlchemyCandleRepository,
-    SqlAlchemyEconomicEventRepository,
-    SqlAlchemyErrorEventRepository,
-    SqlAlchemySystemStateRepository,
-)
+        return list(self.events)
 
 
-class SqlAlchemyUnitOfWork:
-    def __init__(self, session_factory: async_sessionmaker[AsyncSession]) -> None:
-        self._session_factory = session_factory
-        self._session: AsyncSession | None = None
-        self._committed = False
-        self._system_state: SystemStateRepository | None = None
-        self._audit_logs: AuditLogRepository | None = None
-        self._error_events: ErrorEventRepository | None = None
-        self._candles: CandleRepository | None = None
-        self._economic_events: EconomicEventRepository | None = None
+class _FakeFeatureUnitOfWork:
+    def __init__(
+        self,
+        candle_repository: _FakeCandleRepository,
+        event_repository: _FakeEconomicEventRepository,
+    ) -> None:
+        self.candles = candle_repository
+        self.economic_events = event_repository
 
     async def __aenter__(self) -> Self:
-        if self._session is not None:
-            raise RuntimeError("unit of work is already active")
-        self._session = self._session_factory()
-        self._committed = False
-        self._system_state = SqlAlchemySystemStateRepository(self._session)
-        self._audit_logs = SqlAlchemyAuditLogRepository(self._session)
-        self._error_events = SqlAlchemyErrorEventRepository(self._session)
-        self._candles = SqlAlchemyCandleRepository(self._session)
-        self._economic_events = SqlAlchemyEconomicEventRepository(self._session)
         return self
 
     async def __aexit__(
@@ -2026,67 +1843,372 @@ class SqlAlchemyUnitOfWork:
         exc: BaseException | None,
         traceback: TracebackType | None,
     ) -> None:
-        if self._session is None:
-            return
-        try:
-            in_transaction = getattr(self._session, "in_transaction", lambda: False)
-            if exc_type is not None or not self._committed or in_transaction():
-                await self._session.rollback()
-        finally:
-            await self._session.close()
-            self._session = None
-            self._system_state = None
-            self._audit_logs = None
-            self._error_events = None
-            self._candles = None
-            self._economic_events = None
-            self._committed = False
+        return None
 
-    @property
-    def system_state(self) -> SystemStateRepository:
-        if self._session is None or self._system_state is None:
-            raise RuntimeError("unit of work has not been entered")
-        return self._system_state
 
-    @property
-    def audit_logs(self) -> AuditLogRepository:
-        if self._session is None or self._audit_logs is None:
-            raise RuntimeError("unit of work has not been entered")
-        return self._audit_logs
+class _FakeFeatureUnitOfWorkFactory:
+    def __init__(
+        self,
+        candle_repository: _FakeCandleRepository,
+        event_repository: _FakeEconomicEventRepository,
+    ) -> None:
+        self._candle_repository = candle_repository
+        self._event_repository = event_repository
 
-    @property
-    def error_events(self) -> ErrorEventRepository:
-        if self._session is None or self._error_events is None:
-            raise RuntimeError("unit of work has not been entered")
-        return self._error_events
+    def __call__(self) -> _FakeFeatureUnitOfWork:
+        return _FakeFeatureUnitOfWork(self._candle_repository, self._event_repository)
 
-    @property
-    def candles(self) -> CandleRepository:
-        if self._session is None or self._candles is None:
-            raise RuntimeError("unit of work has not been entered")
-        return self._candles
 
-    @property
-    def economic_events(self) -> EconomicEventRepository:
-        if self._session is None or self._economic_events is None:
-            raise RuntimeError("unit of work has not been entered")
-        return self._economic_events
+@pytest.mark.asyncio
+async def test_feature_service_reads_repositories_and_builds_snapshot() -> None:
+    candles = [_candle(0), _candle(1)]
+    events = [_event(5, currency="EUR", provider_event_id="service")]
+    candle_repository = _FakeCandleRepository(candles)
+    event_repository = _FakeEconomicEventRepository(events)
+    service = FeatureService(_FakeFeatureUnitOfWorkFactory(candle_repository, event_repository))
 
-    async def commit(self) -> None:
-        if self._session is None:
-            raise RuntimeError("unit of work has not been entered")
-        await self._session.commit()
-        self._committed = True
+    snapshot = await service.build_market_snapshot(
+        pair=PAIR,
+        timeframe=Timeframe.M15,
+        window_start=START,
+        window_end=START + timedelta(minutes=30),
+        as_of=START + timedelta(minutes=30),
+        provider="unit",
+        rolling_window_size=2,
+    )
 
-    async def rollback(self) -> None:
-        if self._session is None:
-            raise RuntimeError("unit of work has not been entered")
-        await self._session.rollback()
-        self._committed = False
-
+    assert snapshot.candle_summary.used_candle_count == 2
+    assert snapshot.economic_event_summary.used_event_count == 1
+    assert candle_repository.calls[0]["pair"] == PAIR
+    assert candle_repository.calls[0]["provider"] == "unit"
+    assert event_repository.calls[0]["currencies"] == ["EUR", "USD"]
+    assert event_repository.calls[0]["provider"] == "unit"
 ```
 
+### `tests/contract/test_safety_boundaries.py`
+
+```python
+from datetime import UTC, datetime
+from pathlib import Path
+
+import pytest
+
+from app.adapters.disabled import (
+    DisabledEconomicCalendarProvider,
+    DisabledLLMProvider,
+    DisabledMarketDataProvider,
+)
+from app.core.enums import Decision
+from app.core.exceptions import IntegrationDisabledError
+from app.domain.entities import Timeframe
+from app.domain.value_objects import CurrencyPair
+from scripts.security_check import scan_files, scan_production_code
+
+PHASE_3B_FILES = (
+    Path("app/domain/entities/features.py"),
+    Path("app/domain/feature_engine.py"),
+    Path("app/services/feature_service.py"),
+)
+PHASE_3B_FORBIDDEN_TERMS = (
+    "LONG",
+    "SHORT",
+    "BUY",
+    "SELL",
+    "NO_TRADE",
+    "signal",
+    "setup_score",
+    "recommendation",
+    "OpenAI",
+    "broker",
+    "paper_trading",
+    "order_execution",
+)
+
+
+def test_no_real_order_execution_code_exists() -> None:
+    findings = scan_production_code(Path.cwd())
+
+    assert findings == []
+
+
+def test_phase3b_feature_engine_files_do_not_add_decision_or_execution_terms() -> None:
+    offenders: list[str] = []
+    for file_path in PHASE_3B_FILES:
+        text = file_path.read_text(encoding="utf-8")
+        for term in PHASE_3B_FORBIDDEN_TERMS:
+            if term in text:
+                offenders.append(f"{file_path}: {term}")
+
+    assert offenders == []
+
+
+@pytest.mark.asyncio
+async def test_disabled_market_data_provider_fails_before_external_call() -> None:
+    with pytest.raises(IntegrationDisabledError):
+        await DisabledMarketDataProvider().get_closed_candles(
+            CurrencyPair(value="EURUSD"),
+            Timeframe.M15,
+            datetime.now(UTC),
+            datetime.now(UTC),
+        )
+
+
+@pytest.mark.asyncio
+async def test_disabled_calendar_provider_fails_explicitly() -> None:
+    with pytest.raises(IntegrationDisabledError):
+        await DisabledEconomicCalendarProvider().get_events(
+            datetime.now(UTC),
+            datetime.now(UTC),
+        )
+
+
+@pytest.mark.asyncio
+async def test_disabled_llm_provider_fails_explicitly() -> None:
+    with pytest.raises(IntegrationDisabledError):
+        await DisabledLLMProvider().explain(Decision.NO_TRADE, [])
+
+
+def test_safety_scanner_allows_analytical_code(tmp_path: Path) -> None:
+    file_path = tmp_path / "analysis.py"
+    file_path.write_text(
+        "def calculate_structure():\n    return {'bias': 'neutral'}\n",
+        encoding="utf-8",
+    )
+
+    assert scan_files([file_path]) == []
+
+
+def test_safety_scanner_allows_read_only_provider_code(tmp_path: Path) -> None:
+    file_path = tmp_path / "provider.py"
+    file_path.write_text(
+        "async def get_closed_candles(client):\n"
+        "    return await client.get('/candles?pair=EURUSD')\n",
+        encoding="utf-8",
+    )
+
+    assert scan_files([file_path]) == []
+
+
+def test_safety_scanner_rejects_order_execution_code(tmp_path: Path) -> None:
+    file_path = tmp_path / "bad.py"
+    file_path.write_text("async def place_order():\n    return None\n", encoding="utf-8")
+
+    assert scan_files([file_path])
+
+
+def test_safety_scanner_rejects_broker_execution_imports(tmp_path: Path) -> None:
+    file_path = tmp_path / "bad_import.py"
+    file_path.write_text("import ccxt\n", encoding="utf-8")
+
+    assert scan_files([file_path])
+
+
+def test_safety_scanner_rejects_execution_http_endpoints(tmp_path: Path) -> None:
+    file_path = tmp_path / "bad_endpoint.py"
+    file_path.write_text("ORDERS_URL = 'https://broker.example/v1/orders'\n", encoding="utf-8")
+
+    assert scan_files([file_path])
+```
+
+### `tests/integration/test_database_and_api.py`
+
+```python
+from datetime import UTC, datetime
+from decimal import Decimal
+from uuid import uuid4
+
+import pytest
+from fastapi.testclient import TestClient
+from sqlalchemy import delete
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
+
+from app.core.config import Settings
+from app.domain.entities import Candle, EconomicEvent, EconomicImpact, Timeframe
+from app.domain.value_objects import CurrencyPair
+from app.main import create_app
+from app.persistence.database import create_engine, create_session_factory
+from app.persistence.models import CandleModel, EconomicEventModel
+from app.persistence.session import build_uow_factory
+from app.services.system_state_service import SystemStateService
+
+_MARKET_CALENDAR_TEST_PROVIDER = "integration-phase3a-repository-test"
+
+
+async def _delete_market_calendar_test_rows(
+    session_factory: async_sessionmaker[AsyncSession],
+) -> None:
+    async with session_factory() as session:
+        await session.execute(
+            delete(CandleModel).where(CandleModel.provider == _MARKET_CALENDAR_TEST_PROVIDER)
+        )
+        await session.execute(
+            delete(EconomicEventModel).where(
+                EconomicEventModel.provider == _MARKET_CALENDAR_TEST_PROVIDER
+            )
+        )
+        await session.commit()
+
+
+@pytest.mark.integration
+@pytest.mark.asyncio
+async def test_system_state_persists_in_postgresql(postgres_database_url: str) -> None:
+    engine = create_engine(postgres_database_url)
+    try:
+        service = SystemStateService(build_uow_factory(create_session_factory(engine)))
+
+        await service.enable_scanning(actor="integration-test")
+        status = await service.get_full_status()
+
+        assert status["scan_enabled"] is True
+    finally:
+        await engine.dispose()
+
+
+@pytest.mark.integration
+@pytest.mark.asyncio
+async def test_unit_of_work_rolls_back_uncommitted_failure(postgres_database_url: str) -> None:
+    engine = create_engine(postgres_database_url)
+    key = f"rollback_{uuid4().hex}"
+    try:
+        uow_factory = build_uow_factory(create_session_factory(engine))
+
+        async def fail_inside_unit_of_work() -> None:
+            async with uow_factory() as uow:
+                await uow.system_state.set(key, {"value": "should_not_persist"})
+                raise RuntimeError("force rollback")
+
+        with pytest.raises(RuntimeError):
+            await fail_inside_unit_of_work()
+
+        async with uow_factory() as uow:
+            value = await uow.system_state.get(key)
+
+        assert value is None
+    finally:
+        await engine.dispose()
+
+
+@pytest.mark.integration
+def test_api_health_readiness_status_and_scan_state(postgres_database_url: str) -> None:
+    settings = Settings(_env_file=None, database_url=postgres_database_url)
+    app = create_app(settings)
+
+    with TestClient(app) as client:
+        health = client.get("/health")
+        ready = client.get("/ready")
+        status = client.get("/api/v1/system/status")
+        start = client.post(
+            "/api/v1/system/scanning/start",
+            headers={"X-Internal-API-Key": settings.internal_api_key.get_secret_value()},
+        )
+        stop = client.post(
+            "/api/v1/system/scanning/stop",
+            headers={"X-Internal-API-Key": settings.internal_api_key.get_secret_value()},
+        )
+
+    assert health.status_code == 200
+    assert health.json() == {"status": "alive", "service": "api"}
+    assert ready.status_code == 200
+    assert ready.json()["status"] == "ready"
+    assert status.status_code == 200
+    assert status.json()["project_phase"] == "phase_3b_feature_engine_foundation"
+    assert status.json()["trading_strategy_implemented"] is False
+    assert status.json()["real_trading_enabled"] is False
+    assert start.status_code == 200
+    assert start.json()["scan_enabled"] is True
+    assert stop.status_code == 200
+    assert stop.json()["scan_enabled"] is False
+
+
+@pytest.mark.integration
+def test_state_changing_endpoint_requires_internal_api_key(postgres_database_url: str) -> None:
+    settings = Settings(_env_file=None, database_url=postgres_database_url)
+    app = create_app(settings)
+
+    with TestClient(app) as client:
+        response = client.post("/api/v1/system/scanning/start")
+
+    assert response.status_code == 401
+    assert response.json()["error"]["code"] == "UNAUTHORIZED"
+
+
+@pytest.mark.integration
+@pytest.mark.asyncio
+async def test_market_and_calendar_repositories_upsert_and_query(
+    postgres_database_url: str,
+) -> None:
+    engine = create_engine(postgres_database_url)
+    session_factory = create_session_factory(engine)
+    try:
+        await _delete_market_calendar_test_rows(session_factory)
+        uow_factory = build_uow_factory(session_factory)
+        pair = CurrencyPair(value="EURUSD")
+        candle = Candle(
+            provider=_MARKET_CALENDAR_TEST_PROVIDER,
+            pair=pair,
+            timeframe=Timeframe.M15,
+            open_time=datetime(2026, 7, 8, 8, 0, tzinfo=UTC),
+            close_time=datetime(2026, 7, 8, 8, 15, tzinfo=UTC),
+            open=Decimal("1.1000"),
+            high=Decimal("1.1050"),
+            low=Decimal("1.0950"),
+            close=Decimal("1.1020"),
+            volume=Decimal("100"),
+            is_closed=True,
+        )
+        updated_candle = candle.model_copy(update={"close": Decimal("1.1030")})
+        event = EconomicEvent(
+            provider=_MARKET_CALENDAR_TEST_PROVIDER,
+            provider_event_id="phase3a-cpi-event",
+            title="Consumer Price Index",
+            currency="EUR",
+            country="Eurozone",
+            impact=EconomicImpact.HIGH,
+            scheduled_at=datetime(2026, 7, 8, 8, 5, tzinfo=UTC),
+            actual=Decimal("2.2"),
+            forecast=Decimal("2.1"),
+            previous=Decimal("2.0"),
+            fetched_at=datetime(2026, 7, 8, 8, 0, tzinfo=UTC),
+        )
+        updated_event = event.model_copy(update={"actual": Decimal("2.3")})
+
+        async with uow_factory() as uow:
+            candle_insert = await uow.candles.upsert_many([candle])
+            candle_update = await uow.candles.upsert_many([updated_candle])
+            event_insert = await uow.economic_events.upsert_many([event])
+            event_update = await uow.economic_events.upsert_many([updated_event])
+            await uow.commit()
+
+        async with uow_factory() as uow:
+            candles = await uow.candles.list_range(
+                pair=pair,
+                timeframe=Timeframe.M15,
+                start_at=datetime(2026, 7, 8, 8, 0, tzinfo=UTC),
+                end_at=datetime(2026, 7, 8, 8, 15, tzinfo=UTC),
+                provider=_MARKET_CALENDAR_TEST_PROVIDER,
+            )
+            events = await uow.economic_events.list_window(
+                start_at=datetime(2026, 7, 8, 8, 0, tzinfo=UTC),
+                end_at=datetime(2026, 7, 8, 8, 15, tzinfo=UTC),
+                currencies=["EUR"],
+                provider=_MARKET_CALENDAR_TEST_PROVIDER,
+            )
+
+        assert candle_insert.inserted == 1
+        assert candle_update.updated == 1
+        assert event_insert.inserted == 1
+        assert event_update.updated == 1
+        assert [stored.close for stored in candles] == [Decimal("1.1030000000")]
+        assert [stored.actual for stored in events] == [Decimal("2.300000")]
+    finally:
+        await _delete_market_calendar_test_rows(session_factory)
+        await engine.dispose()
+```
+
+
 ## Migration Contents
+
+No new migration was added for Phase 3B. Existing migration contents are included for verification.
 
 ### `migrations/versions/0001_foundation_schema.py`
 
@@ -2369,7 +2491,6 @@ def downgrade() -> None:
     op.drop_index("ix_audit_logs_created_at", table_name="audit_logs")
     op.drop_table("audit_logs")
     op.drop_table("system_state")
-
 ```
 
 ### `migrations/versions/0002_phase2_data_constraints.py`
@@ -2433,526 +2554,10 @@ def downgrade() -> None:
     op.drop_column("economic_events", "forecast_raw")
     op.drop_column("economic_events", "actual_raw")
     op.drop_column("economic_events", "country")
-
 ```
 
-## New And Changed Tests
 
-### `tests/unit/test_data_quality_foundation.py`
-
-```python
-from datetime import UTC, datetime
-from decimal import Decimal
-
-from app.domain.entities import (
-    Candle,
-    DataQualityIssueCode,
-    EconomicEvent,
-    EconomicImpact,
-    Timeframe,
-    build_feature_snapshot,
-)
-from app.domain.replay import HistoricalReplay
-from app.domain.value_objects import CurrencyPair
-
-
-def _candle(open_hour: int, open_minute: int = 0) -> Candle:
-    open_time = datetime(2026, 7, 8, open_hour, open_minute, tzinfo=UTC)
-    close_time = open_time.replace(minute=open_time.minute + 15)
-    return Candle(
-        provider="fixture",
-        pair=CurrencyPair(value="EURUSD"),
-        timeframe=Timeframe.M15,
-        open_time=open_time,
-        close_time=close_time,
-        open=Decimal("1.1000"),
-        high=Decimal("1.1050"),
-        low=Decimal("1.0950"),
-        close=Decimal("1.1020"),
-        volume=Decimal("100"),
-        is_closed=True,
-    )
-
-
-def _event(scheduled_at: datetime, currency: str = "EUR") -> EconomicEvent:
-    return EconomicEvent(
-        provider="fixture",
-        provider_event_id=f"{currency}-{scheduled_at.isoformat()}",
-        title="Consumer Price Index",
-        currency=currency,
-        country="Eurozone",
-        impact=EconomicImpact.HIGH,
-        scheduled_at=scheduled_at,
-        actual=Decimal("2.2"),
-        forecast=Decimal("2.1"),
-        previous=Decimal("2.0"),
-        fetched_at=datetime(2026, 7, 8, 7, 0, tzinfo=UTC),
-    )
-
-
-def test_feature_snapshot_reports_complete_market_data_window() -> None:
-    snapshot = build_feature_snapshot(
-        pair=CurrencyPair(value="EURUSD"),
-        timeframe=Timeframe.M15,
-        window_start=datetime(2026, 7, 8, 8, 0, tzinfo=UTC),
-        window_end=datetime(2026, 7, 8, 8, 30, tzinfo=UTC),
-        candles=[_candle(8, 0), _candle(8, 15)],
-        economic_events=[_event(datetime(2026, 7, 8, 8, 10, tzinfo=UTC))],
-    )
-
-    assert snapshot.market_data_complete is True
-    assert snapshot.candle_availability.expected_count == 2
-    assert snapshot.candle_availability.observed_count == 2
-    assert snapshot.economic_event_availability.event_count == 1
-    assert snapshot.economic_event_availability.currencies == ("EUR",)
-    assert snapshot.quality_issues == ()
-
-
-def test_feature_snapshot_reports_missing_duplicate_and_out_of_range_data() -> None:
-    outside = _candle(9, 0)
-    duplicate = _candle(8, 0)
-
-    snapshot = build_feature_snapshot(
-        pair=CurrencyPair(value="EURUSD"),
-        timeframe=Timeframe.M15,
-        window_start=datetime(2026, 7, 8, 8, 0, tzinfo=UTC),
-        window_end=datetime(2026, 7, 8, 8, 45, tzinfo=UTC),
-        candles=[_candle(8, 0), duplicate, outside],
-        economic_events=[_event(datetime(2026, 7, 8, 9, 0, tzinfo=UTC))],
-    )
-
-    issue_codes = [issue.code for issue in snapshot.quality_issues]
-    assert snapshot.market_data_complete is False
-    assert DataQualityIssueCode.DUPLICATE_CANDLE in issue_codes
-    assert DataQualityIssueCode.MISSING_CANDLE in issue_codes
-    assert DataQualityIssueCode.CANDLE_OUT_OF_RANGE in issue_codes
-    assert DataQualityIssueCode.EVENT_OUT_OF_RANGE in issue_codes
-
-
-def test_historical_replay_frame_is_deterministic_and_cutoff_based() -> None:
-    replay = HistoricalReplay(
-        candles=[_candle(8, 0), _candle(8, 15)],
-        economic_events=[
-            _event(datetime(2026, 7, 8, 8, 5, tzinfo=UTC)),
-            _event(datetime(2026, 7, 8, 8, 25, tzinfo=UTC), currency="USD"),
-        ],
-    )
-
-    frame = replay.frame(
-        pair=CurrencyPair(value="EURUSD"),
-        timeframe=Timeframe.M15,
-        window_start=datetime(2026, 7, 8, 8, 0, tzinfo=UTC),
-        window_end=datetime(2026, 7, 8, 8, 30, tzinfo=UTC),
-        as_of=datetime(2026, 7, 8, 8, 15, tzinfo=UTC),
-        currencies=["EUR"],
-    )
-
-    assert len(frame.candles) == 1
-    assert frame.candles[0].open_time == datetime(2026, 7, 8, 8, 0, tzinfo=UTC)
-    assert len(frame.economic_events) == 1
-    assert frame.economic_events[0].currency == "EUR"
-    assert frame.feature_snapshot.market_data_complete is False
-
-```
-
-### `tests/unit/test_unit_of_work_lifecycle.py`
-
-```python
-import pytest
-
-from app.persistence.unit_of_work import SqlAlchemyUnitOfWork
-
-
-class FakeSession:
-    def __init__(self) -> None:
-        self.commits = 0
-        self.rollbacks = 0
-        self.closes = 0
-
-    async def commit(self) -> None:
-        self.commits += 1
-
-    async def rollback(self) -> None:
-        self.rollbacks += 1
-
-    async def close(self) -> None:
-        self.closes += 1
-
-
-@pytest.mark.asyncio
-async def test_uncommitted_exit_rolls_back_and_closes() -> None:
-    session = FakeSession()
-    uow = SqlAlchemyUnitOfWork(lambda: session)  # type: ignore[arg-type]
-
-    async with uow:
-        _ = uow.system_state
-
-    assert session.rollbacks == 1
-    assert session.closes == 1
-
-
-@pytest.mark.asyncio
-async def test_explicit_commit_commits_and_closes() -> None:
-    session = FakeSession()
-    uow = SqlAlchemyUnitOfWork(lambda: session)  # type: ignore[arg-type]
-
-    async with uow:
-        await uow.commit()
-
-    assert session.commits == 1
-    assert session.closes == 1
-
-
-@pytest.mark.asyncio
-async def test_exception_exit_rolls_back() -> None:
-    session = FakeSession()
-    uow = SqlAlchemyUnitOfWork(lambda: session)  # type: ignore[arg-type]
-
-    with pytest.raises(RuntimeError):
-        async with uow:
-            raise RuntimeError("boom")
-
-    assert session.rollbacks == 1
-    assert session.closes == 1
-
-
-@pytest.mark.asyncio
-async def test_repository_access_after_exit_fails() -> None:
-    session = FakeSession()
-    uow = SqlAlchemyUnitOfWork(lambda: session)  # type: ignore[arg-type]
-
-    async with uow:
-        _ = uow.audit_logs
-        _ = uow.candles
-        _ = uow.economic_events
-
-    with pytest.raises(RuntimeError):
-        _ = uow.audit_logs
-    with pytest.raises(RuntimeError):
-        _ = uow.candles
-    with pytest.raises(RuntimeError):
-        _ = uow.economic_events
-
-
-@pytest.mark.asyncio
-async def test_repeated_active_entry_is_rejected() -> None:
-    session = FakeSession()
-    uow = SqlAlchemyUnitOfWork(lambda: session)  # type: ignore[arg-type]
-
-    async with uow:
-        with pytest.raises(RuntimeError):
-            await uow.__aenter__()
-
-
-@pytest.mark.asyncio
-async def test_work_after_commit_before_exception_rolls_back_open_transaction() -> None:
-    session = FakeSession()
-    uow = SqlAlchemyUnitOfWork(lambda: session)  # type: ignore[arg-type]
-
-    async def commit_then_fail() -> None:
-        async with uow:
-            await uow.commit()
-            _ = uow.system_state
-            raise RuntimeError("boom")
-
-    with pytest.raises(RuntimeError):
-        await commit_then_fail()
-
-    assert session.commits == 1
-    assert session.rollbacks == 1
-    assert session.closes == 1
-
-```
-
-### `tests/integration/test_database_and_api.py`
-
-```python
-from datetime import UTC, datetime
-from decimal import Decimal
-from uuid import uuid4
-
-import pytest
-from fastapi.testclient import TestClient
-
-from app.core.config import Settings
-from app.domain.entities import Candle, EconomicEvent, EconomicImpact, Timeframe
-from app.domain.value_objects import CurrencyPair
-from app.main import create_app
-from app.persistence.database import create_engine, create_session_factory
-from app.persistence.session import build_uow_factory
-from app.services.system_state_service import SystemStateService
-
-
-@pytest.mark.integration
-@pytest.mark.asyncio
-async def test_system_state_persists_in_postgresql(postgres_database_url: str) -> None:
-    engine = create_engine(postgres_database_url)
-    try:
-        service = SystemStateService(build_uow_factory(create_session_factory(engine)))
-
-        await service.enable_scanning(actor="integration-test")
-        status = await service.get_full_status()
-
-        assert status["scan_enabled"] is True
-    finally:
-        await engine.dispose()
-
-
-@pytest.mark.integration
-@pytest.mark.asyncio
-async def test_unit_of_work_rolls_back_uncommitted_failure(postgres_database_url: str) -> None:
-    engine = create_engine(postgres_database_url)
-    key = f"rollback_{uuid4().hex}"
-    try:
-        uow_factory = build_uow_factory(create_session_factory(engine))
-
-        async def fail_inside_unit_of_work() -> None:
-            async with uow_factory() as uow:
-                await uow.system_state.set(key, {"value": "should_not_persist"})
-                raise RuntimeError("force rollback")
-
-        with pytest.raises(RuntimeError):
-            await fail_inside_unit_of_work()
-
-        async with uow_factory() as uow:
-            value = await uow.system_state.get(key)
-
-        assert value is None
-    finally:
-        await engine.dispose()
-
-
-@pytest.mark.integration
-def test_api_health_readiness_status_and_scan_state(postgres_database_url: str) -> None:
-    settings = Settings(_env_file=None, database_url=postgres_database_url)
-    app = create_app(settings)
-
-    with TestClient(app) as client:
-        health = client.get("/health")
-        ready = client.get("/ready")
-        status = client.get("/api/v1/system/status")
-        start = client.post(
-            "/api/v1/system/scanning/start",
-            headers={"X-Internal-API-Key": settings.internal_api_key.get_secret_value()},
-        )
-        stop = client.post(
-            "/api/v1/system/scanning/stop",
-            headers={"X-Internal-API-Key": settings.internal_api_key.get_secret_value()},
-        )
-
-    assert health.status_code == 200
-    assert health.json() == {"status": "alive", "service": "api"}
-    assert ready.status_code == 200
-    assert ready.json()["status"] == "ready"
-    assert status.status_code == 200
-    assert status.json()["project_phase"] == "phase_3a_data_quality_foundation"
-    assert status.json()["trading_strategy_implemented"] is False
-    assert status.json()["real_trading_enabled"] is False
-    assert start.status_code == 200
-    assert start.json()["scan_enabled"] is True
-    assert stop.status_code == 200
-    assert stop.json()["scan_enabled"] is False
-
-
-@pytest.mark.integration
-def test_state_changing_endpoint_requires_internal_api_key(postgres_database_url: str) -> None:
-    settings = Settings(_env_file=None, database_url=postgres_database_url)
-    app = create_app(settings)
-
-    with TestClient(app) as client:
-        response = client.post("/api/v1/system/scanning/start")
-
-    assert response.status_code == 401
-    assert response.json()["error"]["code"] == "UNAUTHORIZED"
-
-
-@pytest.mark.integration
-@pytest.mark.asyncio
-async def test_market_and_calendar_repositories_upsert_and_query(
-    postgres_database_url: str,
-) -> None:
-    engine = create_engine(postgres_database_url)
-    try:
-        uow_factory = build_uow_factory(create_session_factory(engine))
-        pair = CurrencyPair(value="EURUSD")
-        candle = Candle(
-            provider="integration",
-            pair=pair,
-            timeframe=Timeframe.M15,
-            open_time=datetime(2026, 7, 8, 8, 0, tzinfo=UTC),
-            close_time=datetime(2026, 7, 8, 8, 15, tzinfo=UTC),
-            open=Decimal("1.1000"),
-            high=Decimal("1.1050"),
-            low=Decimal("1.0950"),
-            close=Decimal("1.1020"),
-            volume=Decimal("100"),
-            is_closed=True,
-        )
-        updated_candle = candle.model_copy(update={"close": Decimal("1.1030")})
-        event = EconomicEvent(
-            provider="integration",
-            provider_event_id=f"event-{uuid4().hex}",
-            title="Consumer Price Index",
-            currency="EUR",
-            country="Eurozone",
-            impact=EconomicImpact.HIGH,
-            scheduled_at=datetime(2026, 7, 8, 8, 5, tzinfo=UTC),
-            actual=Decimal("2.2"),
-            forecast=Decimal("2.1"),
-            previous=Decimal("2.0"),
-            fetched_at=datetime(2026, 7, 8, 8, 0, tzinfo=UTC),
-        )
-        updated_event = event.model_copy(update={"actual": Decimal("2.3")})
-
-        async with uow_factory() as uow:
-            candle_insert = await uow.candles.upsert_many([candle])
-            candle_update = await uow.candles.upsert_many([updated_candle])
-            event_insert = await uow.economic_events.upsert_many([event])
-            event_update = await uow.economic_events.upsert_many([updated_event])
-            await uow.commit()
-
-        async with uow_factory() as uow:
-            candles = await uow.candles.list_range(
-                pair=pair,
-                timeframe=Timeframe.M15,
-                start_at=datetime(2026, 7, 8, 8, 0, tzinfo=UTC),
-                end_at=datetime(2026, 7, 8, 8, 15, tzinfo=UTC),
-                provider="integration",
-            )
-            events = await uow.economic_events.list_window(
-                start_at=datetime(2026, 7, 8, 8, 0, tzinfo=UTC),
-                end_at=datetime(2026, 7, 8, 8, 15, tzinfo=UTC),
-                currencies=["EUR"],
-                provider="integration",
-            )
-
-        assert candle_insert.inserted == 1
-        assert candle_update.updated == 1
-        assert event_insert.inserted == 1
-        assert event_update.updated == 1
-        assert [stored.close for stored in candles] == [Decimal("1.1030000000")]
-        assert [stored.actual for stored in events] == [Decimal("2.300000")]
-    finally:
-        await engine.dispose()
-
-```
-
-## Documentation Files Changed
-
-### `AGENTS.md`
-
-```markdown
-# AI Trading OS Agent Guide
-
-AI Trading OS is a foundation for a future Forex analysis and paper-trading platform.
-
-Current project phase: phase_3a_data_quality_foundation.
-Phase 3A is limited to deterministic data storage, data-quality, feature-snapshot, and historical
-replay foundations. External integrations are disabled by default. The project contains no strategy,
-no signals, no broker order APIs, and no real trading.
-
-## Start and Checks
-
-- Install: `uv sync`
-- Start Docker stack: `docker compose up --build`
-- Migrate: `uv run alembic upgrade head`
-- Test: `uv run pytest`
-- Lint: `uv run ruff check .`
-- Format: `uv run ruff format .`
-- Type-check: `uv run mypy app`
-- Full check: `make check`
-
-## Repository Layout
-
-- `app/api`: API adapters.
-- `app/services`: application services.
-- `app/domain`: domain value objects and contracts.
-- `app/persistence`: database models, repositories, unit of work.
-- `app/telegram`: Telegram adapter.
-- `app/scheduler`: worker process.
-- `docs`: detailed project documentation.
-
-## Rules
-
-- Dependency direction is adapters -> application services -> domain.
-- Domain code must not import FastAPI, Telegram, SQLAlchemy, PostgreSQL, APScheduler, OpenAI, market-data providers, or calendar providers.
-- Use async SQLAlchemy sessions only; one `AsyncSession` per unit of work or task.
-- Use `Decimal` for financial values. Do not use binary floating point for money, prices, percentages, or risk.
-- Store timestamps in UTC; present user-facing time in Europe/Stockholm when needed.
-- Telegram user-facing text must be Russian.
-- Every Telegram message must contain exactly one semantic emoji at the beginning.
-- Never add real trading execution, broker order APIs, real account credentials, or live position management.
-- Never fabricate market data, calendar data, agent evidence, or scan results.
-- LLM output may explain deterministic results only; it must not change prices, scores, risk, or rejected decisions.
-- Update documentation when architecture or safety boundaries change.
-
-## Definition of Done
-
-Code is complete only when tests, formatting, linting, type checking, migrations, and relevant Docker checks have been run or a truthful limitation is documented in `docs/foundation-report.md`.
-
-```
-
-### `PLANS.md`
-
-```markdown
-# AI Trading OS Plans
-
-## Completed Foundation Scope
-
-- Project metadata and uv-compatible dependency management.
-- FastAPI health, readiness, system status, and scanning-state endpoints.
-- Async PostgreSQL models, Alembic migration, repositories, and unit of work.
-- Worker process with heartbeat and health-check jobs.
-- Telegram disabled mode, authorization, Russian text validation, and one-emoji formatting.
-- Future provider and agent contracts without live calls or analysis.
-- Safety scan for forbidden real-order execution concepts.
-- Documentation and tests for foundation behavior.
-- Phase 2 foundation hardening: Docker runtime defaults, internal API key security, redaction,
-  UTC normalization, UoW lifecycle hardening, architecture boundary tests, typed provider
-  contracts, disabled adapters, production Twelve Data/FMP adapters, and MockTransport-backed
-  provider contract tests.
-- Phase 3A data-quality foundation: duplicate-safe candle/event storage repositories,
-  deterministic data-quality snapshots, and historical replay utilities for tests.
-
-## Current Implementation Status
-
-The repository has completed the foundation phase, Phase 2 hardening/data adapters, and Phase 3A
-data-quality foundation. Production Twelve Data and FMP adapters exist, but live integrations remain
-disabled by default. Scanning state can be enabled or disabled, but no analytical engine is
-connected.
-
-## Future Phases
-
-- Phase 2: market-data and calendar adapters — completed as disabled-by-default factories plus
-  production adapters covered by MockTransport-backed contract tests
-- Phase 3A: data-quality foundation — completed without trading analysis or decisions
-- Phase 3B: feature engine and deterministic analysis
-- Phase 4: analytical agents and Decision Engine
-- Phase 5: Russian Chief AI explanations
-- Phase 6: Telegram signal delivery
-- Phase 7: backtesting and paper trading
-
-## Explicit Non-Goals
-
-- No broker execution.
-- No real trading.
-- No strategy logic.
-- No indicators or signal generation.
-- No OpenAI calls.
-- No fabricated market data or scan results.
-
-## Known Risks
-
-- Local Docker or PostgreSQL availability can affect verification.
-- Future provider adapters must preserve disabled-by-default behavior.
-- Telegram message validation is intentionally simple and should be tightened as message complexity grows.
-
-## Next Planned Task
-
-Phase 3B should add a feature-engine foundation for deterministic closed-candle feature extraction
-without signal generation, scoring, or trading recommendations.
-
-```
+## Documentation Contents
 
 ### `README.md`
 
@@ -2963,12 +2568,12 @@ AI Trading OS is a safety-first foundation for a future modular Forex analysis a
 
 ## Current Status
 
-- Current project phase: phase_3a_data_quality_foundation.
+- Current project phase: phase_3b_feature_engine_foundation.
 - Trading strategy: not implemented.
 - Real trading: disabled and unsupported.
 - External integrations: disabled by default.
 - Telegram: can run in disabled mode without a token.
-- Phase 3A: deterministic data-quality foundation only.
+- Phase 3B: deterministic feature engine foundation only.
 
 ## Safety Warning
 
@@ -2988,6 +2593,15 @@ Phase 3A adds duplicate-safe storage/query repositories for normalized closed ca
 events, deterministic data-quality snapshots, and historical replay utilities for tests. It does not
 add strategy, indicators, technical analysis, scoring, signals, AI agents, OpenAI calls, paper
 trading, broker APIs, order execution, or real trading.
+
+## Phase 3B Status
+
+Phase 3B adds a deterministic, closed-candle-only feature engine that transforms existing normalized
+Phase 3A candles and economic events into typed immutable feature snapshots. It computes descriptive
+features only, such as latest close, candle counts, simple returns, rolling close means, ranges,
+volume summaries, true ranges, economic-event counts, and quality issues. It does not produce
+trading decisions, setup scoring, directions, recommendations, signals, AI output, broker activity,
+paper trading, order execution, or real trading. Phase 3C has not started.
 
 ## Prerequisites
 
@@ -3076,7 +2690,7 @@ When `TELEGRAM_ENABLED=false`, the bot process starts and remains healthy withou
 
 ## Current Limitations
 
-- No strategy, indicators, signals, OpenAI calls, backtesting, position sizing, broker execution, or real trading.
+- No strategy, signals, OpenAI calls, backtesting, position sizing, broker execution, or real trading.
 - `/scan_now` explicitly reports that the analytical engine is not implemented.
 - Worker jobs only update heartbeat and run foundation health checks.
 
@@ -3091,5 +2705,124 @@ When `TELEGRAM_ENABLED=false`, the bot process starts and remains healthy withou
 - `app/scheduler`: worker process and jobs.
 - `docs`: product, architecture, database, operations, and implementation notes.
 - `tests`: unit, integration, and contract tests.
+```
 
+### `AGENTS.md`
+
+```markdown
+# AI Trading OS Agent Guide
+
+AI Trading OS is a foundation for a future Forex analysis and paper-trading platform.
+
+Current project phase: phase_3b_feature_engine_foundation.
+Phase 3B is limited to deterministic, closed-candle-only feature snapshots built from existing
+normalized Phase 3A market/calendar data. External integrations are disabled by default. The project
+contains no strategy, no signals, no broker order APIs, no paper trading, and no real trading.
+Phase 3C has not started.
+
+## Start and Checks
+
+- Install: `uv sync`
+- Start Docker stack: `docker compose up --build`
+- Migrate: `uv run alembic upgrade head`
+- Test: `uv run pytest`
+- Lint: `uv run ruff check .`
+- Format: `uv run ruff format .`
+- Type-check: `uv run mypy app`
+- Full check: `make check`
+
+## Repository Layout
+
+- `app/api`: API adapters.
+- `app/services`: application services.
+- `app/domain`: domain value objects and contracts.
+- `app/persistence`: database models, repositories, unit of work.
+- `app/telegram`: Telegram adapter.
+- `app/scheduler`: worker process.
+- `docs`: detailed project documentation.
+
+## Rules
+
+- Dependency direction is adapters -> application services -> domain.
+- Domain code must not import FastAPI, Telegram, SQLAlchemy, PostgreSQL, APScheduler, OpenAI, market-data providers, or calendar providers.
+- Use async SQLAlchemy sessions only; one `AsyncSession` per unit of work or task.
+- Use `Decimal` for financial values. Do not use binary floating point for money, prices, percentages, or risk.
+- Store timestamps in UTC; present user-facing time in Europe/Stockholm when needed.
+- Telegram user-facing text must be Russian.
+- Every Telegram message must contain exactly one semantic emoji at the beginning.
+- Never add real trading execution, broker order APIs, real account credentials, or live position management.
+- Never add strategy, setup scoring, LONG/SHORT direction, buy/sell recommendations, paper trading,
+  broker APIs, order execution, or real trading while working in Phase 3B.
+- Never fabricate market data, calendar data, agent evidence, or scan results.
+- LLM output may explain deterministic results only; it must not change prices, scores, risk, or rejected decisions.
+- Update documentation when architecture or safety boundaries change.
+
+## Definition of Done
+
+Code is complete only when tests, formatting, linting, type checking, migrations, and relevant Docker checks have been run or a truthful limitation is documented in `docs/foundation-report.md`.
+```
+
+### `PLANS.md`
+
+```markdown
+# AI Trading OS Plans
+
+## Completed Foundation Scope
+
+- Project metadata and uv-compatible dependency management.
+- FastAPI health, readiness, system status, and scanning-state endpoints.
+- Async PostgreSQL models, Alembic migration, repositories, and unit of work.
+- Worker process with heartbeat and health-check jobs.
+- Telegram disabled mode, authorization, Russian text validation, and one-emoji formatting.
+- Future provider and agent contracts without live calls or analysis.
+- Safety scan for forbidden real-order execution concepts.
+- Documentation and tests for foundation behavior.
+- Phase 2 foundation hardening: Docker runtime defaults, internal API key security, redaction,
+  UTC normalization, UoW lifecycle hardening, architecture boundary tests, typed provider
+  contracts, disabled adapters, production Twelve Data/FMP adapters, and MockTransport-backed
+  provider contract tests.
+- Phase 3A data-quality foundation: duplicate-safe candle/event storage repositories,
+  deterministic data-quality snapshots, and historical replay utilities for tests.
+- Phase 3B feature engine foundation: deterministic closed-candle feature models, feature
+  calculation engine, feature service over repository protocols, and safety tests confirming no
+  strategy/signals/trading activation.
+
+## Current Implementation Status
+
+The repository has completed the foundation phase, Phase 2 hardening/data adapters, Phase 3A
+data-quality foundation, and Phase 3B deterministic feature-engine foundation. Production Twelve
+Data and FMP adapters exist, but live integrations remain disabled by default. Scanning state can be
+enabled or disabled, but no strategy, signal generation, AI agent, paper-trading, or execution flow
+is connected.
+
+## Future Phases
+
+- Phase 2: market-data and calendar adapters — completed as disabled-by-default factories plus
+  production adapters covered by MockTransport-backed contract tests
+- Phase 3A: data-quality foundation — completed without trading analysis or decisions
+- Phase 3B: deterministic feature engine foundation — completed without trading decisions
+- Phase 3C: next phase if applicable; not started
+- Phase 4: analytical agents and Decision Engine
+- Phase 5: Russian Chief AI explanations
+- Phase 6: Telegram signal delivery
+- Phase 7: backtesting and paper trading
+
+## Explicit Non-Goals
+
+- No broker execution.
+- No real trading.
+- No strategy logic.
+- No indicators or signal generation.
+- No OpenAI calls.
+- No fabricated market data or scan results.
+
+## Known Risks
+
+- Local Docker or PostgreSQL availability can affect verification.
+- Future provider adapters must preserve disabled-by-default behavior.
+- Telegram message validation is intentionally simple and should be tightened as message complexity grows.
+
+## Next Planned Task
+
+Phase 3C is the next phase if applicable. It has not started, and no Phase 3C behavior is active.
 ```

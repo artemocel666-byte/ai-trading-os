@@ -14,11 +14,42 @@ from app.domain.entities import Timeframe
 from app.domain.value_objects import CurrencyPair
 from scripts.security_check import scan_files, scan_production_code
 
+PHASE_3B_FILES = (
+    Path("app/domain/entities/features.py"),
+    Path("app/domain/feature_engine.py"),
+    Path("app/services/feature_service.py"),
+)
+PHASE_3B_FORBIDDEN_TERMS = (
+    "LONG",
+    "SHORT",
+    "BUY",
+    "SELL",
+    "NO_TRADE",
+    "signal",
+    "setup_score",
+    "recommendation",
+    "OpenAI",
+    "broker",
+    "paper_trading",
+    "order_execution",
+)
+
 
 def test_no_real_order_execution_code_exists() -> None:
     findings = scan_production_code(Path.cwd())
 
     assert findings == []
+
+
+def test_phase3b_feature_engine_files_do_not_add_decision_or_execution_terms() -> None:
+    offenders: list[str] = []
+    for file_path in PHASE_3B_FILES:
+        text = file_path.read_text(encoding="utf-8")
+        for term in PHASE_3B_FORBIDDEN_TERMS:
+            if term in text:
+                offenders.append(f"{file_path}: {term}")
+
+    assert offenders == []
 
 
 @pytest.mark.asyncio
