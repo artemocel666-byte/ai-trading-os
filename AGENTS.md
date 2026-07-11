@@ -2,9 +2,10 @@
 
 AI Trading OS is a foundation for a future Forex analysis and paper-trading platform.
 
-Current project phase: phase_2_data_adapters.
-Phase 3 has not started. External integrations are disabled by default. The project contains no
-strategy, no signals, no broker order APIs, and no real trading.
+Current project phase: phase_3a_data_quality_foundation.
+Phase 3A is limited to deterministic data storage, data-quality, feature-snapshot, and historical
+replay foundations. External integrations are disabled by default. The project contains no strategy,
+no signals, no broker order APIs, and no real trading.
 
 ## Start and Checks
 

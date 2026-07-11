@@ -4,12 +4,12 @@ AI Trading OS is a safety-first foundation for a future modular Forex analysis a
 
 ## Current Status
 
-- Current project phase: phase_2_data_adapters.
+- Current project phase: phase_3a_data_quality_foundation.
 - Trading strategy: not implemented.
 - Real trading: disabled and unsupported.
 - External integrations: disabled by default.
 - Telegram: can run in disabled mode without a token.
-- Phase 3: not started.
+- Phase 3A: deterministic data-quality foundation only.
 
 ## Safety Warning
 
@@ -22,6 +22,13 @@ Phase 2 adds hardened runtime defaults, stronger secret redaction, strict UTC no
 adapters, production Twelve Data and FMP adapters tested through `httpx.MockTransport`, and
 architecture/safety verification. It still does not add strategy, indicators, analysis, signals,
 OpenAI calls, or trading execution.
+
+## Phase 3A Status
+
+Phase 3A adds duplicate-safe storage/query repositories for normalized closed candles and economic
+events, deterministic data-quality snapshots, and historical replay utilities for tests. It does not
+add strategy, indicators, technical analysis, scoring, signals, AI agents, OpenAI calls, paper
+trading, broker APIs, order execution, or real trading.
 
 ## Prerequisites
 

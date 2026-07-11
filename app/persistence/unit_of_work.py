@@ -5,11 +5,15 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from app.domain.interfaces.repositories import (
     AuditLogRepository,
+    CandleRepository,
+    EconomicEventRepository,
     ErrorEventRepository,
     SystemStateRepository,
 )
 from app.persistence.repositories import (
     SqlAlchemyAuditLogRepository,
+    SqlAlchemyCandleRepository,
+    SqlAlchemyEconomicEventRepository,
     SqlAlchemyErrorEventRepository,
     SqlAlchemySystemStateRepository,
 )
@@ -23,6 +27,8 @@ class SqlAlchemyUnitOfWork:
         self._system_state: SystemStateRepository | None = None
         self._audit_logs: AuditLogRepository | None = None
         self._error_events: ErrorEventRepository | None = None
+        self._candles: CandleRepository | None = None
+        self._economic_events: EconomicEventRepository | None = None
 
     async def __aenter__(self) -> Self:
         if self._session is not None:
@@ -32,6 +38,8 @@ class SqlAlchemyUnitOfWork:
         self._system_state = SqlAlchemySystemStateRepository(self._session)
         self._audit_logs = SqlAlchemyAuditLogRepository(self._session)
         self._error_events = SqlAlchemyErrorEventRepository(self._session)
+        self._candles = SqlAlchemyCandleRepository(self._session)
+        self._economic_events = SqlAlchemyEconomicEventRepository(self._session)
         return self
 
     async def __aexit__(
@@ -52,6 +60,8 @@ class SqlAlchemyUnitOfWork:
             self._system_state = None
             self._audit_logs = None
             self._error_events = None
+            self._candles = None
+            self._economic_events = None
             self._committed = False
 
     @property
@@ -71,6 +81,18 @@ class SqlAlchemyUnitOfWork:
         if self._session is None or self._error_events is None:
             raise RuntimeError("unit of work has not been entered")
         return self._error_events
+
+    @property
+    def candles(self) -> CandleRepository:
+        if self._session is None or self._candles is None:
+            raise RuntimeError("unit of work has not been entered")
+        return self._candles
+
+    @property
+    def economic_events(self) -> EconomicEventRepository:
+        if self._session is None or self._economic_events is None:
+            raise RuntimeError("unit of work has not been entered")
+        return self._economic_events
 
     async def commit(self) -> None:
         if self._session is None:

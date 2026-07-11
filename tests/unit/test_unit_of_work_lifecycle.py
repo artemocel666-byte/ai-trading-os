@@ -63,9 +63,15 @@ async def test_repository_access_after_exit_fails() -> None:
 
     async with uow:
         _ = uow.audit_logs
+        _ = uow.candles
+        _ = uow.economic_events
 
     with pytest.raises(RuntimeError):
         _ = uow.audit_logs
+    with pytest.raises(RuntimeError):
+        _ = uow.candles
+    with pytest.raises(RuntimeError):
+        _ = uow.economic_events
 
 
 @pytest.mark.asyncio

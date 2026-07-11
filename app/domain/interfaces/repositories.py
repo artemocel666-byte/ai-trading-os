@@ -1,5 +1,10 @@
 from collections.abc import Mapping
+from datetime import datetime
 from typing import Any, Protocol
+
+from app.domain.entities import Candle, EconomicEvent, Timeframe
+from app.domain.entities.data_quality import UpsertResult
+from app.domain.value_objects import CurrencyPair
 
 
 class SystemStateRepository(Protocol):
@@ -40,3 +45,34 @@ class ErrorEventRepository(Protocol):
         resolved: bool = False,
     ) -> None:
         """Append a structured error event."""
+
+
+class CandleRepository(Protocol):
+    async def upsert_many(self, candles: list[Candle]) -> UpsertResult:
+        """Insert or update normalized closed candles without creating duplicates."""
+
+    async def list_range(
+        self,
+        *,
+        pair: CurrencyPair,
+        timeframe: Timeframe,
+        start_at: datetime,
+        end_at: datetime,
+        provider: str | None = None,
+    ) -> list[Candle]:
+        """Return closed candles fully contained in the requested UTC window."""
+
+
+class EconomicEventRepository(Protocol):
+    async def upsert_many(self, events: list[EconomicEvent]) -> UpsertResult:
+        """Insert or update normalized economic events without creating duplicates."""
+
+    async def list_window(
+        self,
+        *,
+        start_at: datetime,
+        end_at: datetime,
+        currencies: list[str] | None = None,
+        provider: str | None = None,
+    ) -> list[EconomicEvent]:
+        """Return economic events satisfying start_at <= scheduled_at < end_at."""

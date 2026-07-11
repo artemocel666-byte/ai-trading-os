@@ -3,6 +3,8 @@ from typing import Protocol, Self
 
 from app.domain.interfaces.repositories import (
     AuditLogRepository,
+    CandleRepository,
+    EconomicEventRepository,
     ErrorEventRepository,
     SystemStateRepository,
 )
@@ -22,6 +24,16 @@ class UnitOfWork(Protocol):
     @property
     def error_events(self) -> ErrorEventRepository:
         """Repository for structured error events."""
+        ...
+
+    @property
+    def candles(self) -> CandleRepository:
+        """Repository for normalized closed candles."""
+        ...
+
+    @property
+    def economic_events(self) -> EconomicEventRepository:
+        """Repository for normalized economic events."""
         ...
 
     async def __aenter__(self) -> Self:

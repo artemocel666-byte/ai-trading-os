@@ -14,19 +14,22 @@
   UTC normalization, UoW lifecycle hardening, architecture boundary tests, typed provider
   contracts, disabled adapters, production Twelve Data/FMP adapters, and MockTransport-backed
   provider contract tests.
+- Phase 3A data-quality foundation: duplicate-safe candle/event storage repositories,
+  deterministic data-quality snapshots, and historical replay utilities for tests.
 
 ## Current Implementation Status
 
-The repository has completed the foundation phase plus Phase 2 hardening and disabled-by-default
-market-data/calendar adapter factories. Production Twelve Data and FMP adapters exist, but live
-integrations remain disabled by default. Scanning state can be enabled or disabled, but no analytical
-engine is connected.
+The repository has completed the foundation phase, Phase 2 hardening/data adapters, and Phase 3A
+data-quality foundation. Production Twelve Data and FMP adapters exist, but live integrations remain
+disabled by default. Scanning state can be enabled or disabled, but no analytical engine is
+connected.
 
 ## Future Phases
 
 - Phase 2: market-data and calendar adapters — completed as disabled-by-default factories plus
   production adapters covered by MockTransport-backed contract tests
-- Phase 3: feature engine and deterministic analysis
+- Phase 3A: data-quality foundation — completed without trading analysis or decisions
+- Phase 3B: feature engine and deterministic analysis
 - Phase 4: analytical agents and Decision Engine
 - Phase 5: Russian Chief AI explanations
 - Phase 6: Telegram signal delivery
@@ -49,5 +52,5 @@ engine is connected.
 
 ## Next Planned Task
 
-Phase 3 should add a feature-engine foundation for deterministic closed-candle feature extraction
+Phase 3B should add a feature-engine foundation for deterministic closed-candle feature extraction
 without signal generation, scoring, or trading recommendations.

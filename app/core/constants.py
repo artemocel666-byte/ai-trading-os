@@ -1,4 +1,4 @@
-PROJECT_PHASE = "phase_2_data_adapters"
+PROJECT_PHASE = "phase_3a_data_quality_foundation"
 STRATEGY_IMPLEMENTED = False
 REAL_TRADING_ENABLED = False
 
