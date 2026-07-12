@@ -4,12 +4,12 @@ AI Trading OS is a safety-first foundation for a future modular Forex analysis a
 
 ## Current Status
 
-- Current project phase: phase_3c_indicator_context_foundation.
+- Current project phase: phase_3d_analysis_snapshot_foundation.
 - Trading strategy: not implemented.
 - Real trading: disabled and unsupported.
 - External integrations: disabled by default.
 - Telegram: can run in disabled mode without a token.
-- Phase 3C: deterministic indicator/context foundation only.
+- Phase 3D: deterministic analysis snapshot/readiness report foundation only.
 
 ## Safety Warning
 
@@ -46,7 +46,16 @@ feature engine. It produces typed immutable context snapshots with descriptive c
 return distribution summaries, moving averages, range and candle-shape summaries, event metadata,
 time context, and deterministic data-quality issues. It does not produce strategy decisions, setup
 scoring, confidence scoring, trade directions, recommendations, signals, AI output, broker activity,
-paper trading, order execution, or real trading. Phase 3D has not started.
+paper trading, order execution, or real trading.
+
+## Phase 3D Status
+
+Phase 3D adds deterministic analysis snapshots and readiness reports over the Phase 3A storage,
+Phase 3B feature, and Phase 3C context foundations. It answers neutral infrastructure questions
+about window completeness, source inputs, excluded data, quality/context issues, attached summaries,
+and no-future-data proof. It does not produce strategy decisions, setup scoring, confidence scoring,
+trade directions, recommendations, signals, AI output, broker activity, paper trading, order
+execution, or real trading. Phase 3E has not started.
 
 ## Prerequisites
 
@@ -136,7 +145,7 @@ When `TELEGRAM_ENABLED=false`, the bot process starts and remains healthy withou
 ## Current Limitations
 
 - No strategy, signals, OpenAI calls, backtesting, position sizing, broker execution, or real trading.
-- `/scan_now` explicitly reports that the analytical engine is not implemented.
+- `/scan_now` explicitly remains disconnected from analysis snapshots and does not fabricate a scan result.
 - Worker jobs only update heartbeat and run foundation health checks.
 
 ## Directory Overview

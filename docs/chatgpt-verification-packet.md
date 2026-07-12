@@ -1,14 +1,14 @@
-# AI Trading OS - Phase 3C Verification Packet
+# AI Trading OS - Phase 3D Verification Packet
 
-Generated at: `2026-07-12T11:30:38Z`
+Generated at: `2026-07-12T11:50:39Z`
 
 ## Scope
 
-This packet documents Phase 3C: deterministic indicator/context foundation. Phase 3C builds typed,
-immutable, descriptive context snapshots from already-normalized Phase 3A closed candles, Phase 3B
-feature snapshots, and normalized economic events.
+This packet documents Phase 3D: deterministic analysis snapshot/readiness report foundation. Phase
+3D builds typed, immutable, JSON-serializable analysis snapshots from existing Phase 3A storage,
+Phase 3B feature snapshots, and Phase 3C context snapshots.
 
-Phase 3C is uncommitted at packet generation time. Phase 3D was not started.
+Phase 3D is uncommitted at packet generation time. Phase 3E was not started.
 
 No strategy, signals, setup scoring, confidence scoring, AI agents, OpenAI calls, broker APIs,
 paper trading, order execution, or real trading were added or activated. Existing foundation-era
@@ -17,7 +17,7 @@ signal/trading/paper schemas remain inactive.
 ## Git Metadata
 
 - Branch: `main`
-- Current commit hash: `a6f44f0e3276c99e7685e59be5dd8b01bb2aa263`
+- Current commit hash: `60e6e5363cdfb1fc8c8b432cb475d1657976e6a5`
 
 ### `git status --short`
 
@@ -27,33 +27,35 @@ signal/trading/paper schemas remain inactive.
  M README.md
  M app/core/constants.py
  M app/domain/entities/__init__.py
+ M app/services/analysis_service.py
  M docs/chatgpt-verification-packet.md
  M tests/contract/test_safety_boundaries.py
  M tests/integration/test_database_and_api.py
-?? app/domain/context_engine.py
-?? app/domain/entities/context.py
-?? app/services/context_service.py
-?? docs/phase3c-verification-report.md
-?? tests/unit/test_context_engine_foundation.py
+?? app/domain/analysis_engine.py
+?? app/domain/entities/analysis.py
+?? docs/phase3d-verification-report.md
+?? tests/unit/test_analysis_snapshot_foundation.py
 ```
 
 ### `git diff --stat`
 
 ```text
  AGENTS.md                                  |   12 +-
- PLANS.md                                   |   16 +-
- README.md                                  |   15 +-
+ PLANS.md                                   |   15 +-
+ README.md                                  |   17 +-
  app/core/constants.py                      |    2 +-
- app/domain/entities/__init__.py            |   28 +
- docs/chatgpt-verification-packet.md        | 3343 +++++++++++++---------------
- tests/contract/test_safety_boundaries.py   |   42 +
+ app/domain/entities/__init__.py            |   22 +
+ app/services/analysis_service.py           |  101 +-
+ docs/chatgpt-verification-packet.md        | 1815 ++++++++++++++--------------
+ tests/contract/test_safety_boundaries.py   |   47 +
  tests/integration/test_database_and_api.py |    2 +-
- 8 files changed, 1704 insertions(+), 1756 deletions(-)
+ 9 files changed, 1087 insertions(+), 946 deletions(-)
 ```
 
-### `git log --oneline -4`
+### `git log --oneline -5`
 
 ```text
+60e6e53 Add Phase 3C indicator context foundation
 a6f44f0 Add Phase 3B feature engine foundation
 03c3acd Add Phase 3A data quality foundation
 9d68709 Document Phase 2 runtime verification
@@ -62,11 +64,10 @@ a6f44f0 Add Phase 3B feature engine foundation
 
 ## Created Files
 
-- `app/domain/context_engine.py`
-- `app/domain/entities/context.py`
-- `app/services/context_service.py`
-- `docs/phase3c-verification-report.md`
-- `tests/unit/test_context_engine_foundation.py`
+- `app/domain/analysis_engine.py`
+- `app/domain/entities/analysis.py`
+- `docs/phase3d-verification-report.md`
+- `tests/unit/test_analysis_snapshot_foundation.py`
 
 ## Modified Files
 
@@ -75,24 +76,25 @@ a6f44f0 Add Phase 3B feature engine foundation
 - `README.md`
 - `app/core/constants.py`
 - `app/domain/entities/__init__.py`
+- `app/services/analysis_service.py`
 - `docs/chatgpt-verification-packet.md`
 - `tests/contract/test_safety_boundaries.py`
 - `tests/integration/test_database_and_api.py`
 
 ## Implementation Summary
 
-- Updated `PROJECT_PHASE` to `phase_3c_indicator_context_foundation`.
-- Added immutable Phase 3C context models in `app/domain/entities/context.py`.
-- Added deterministic closed-candle context calculation in `app/domain/context_engine.py`.
-- Added `ContextService` in `app/services/context_service.py`, depending on UnitOfWork protocols.
-- Reused the Phase 3B feature engine as a descriptive input layer.
-- Added unit/service tests for exact Decimal calculations, UTC normalization, closed-candle-only
-  behavior, no future leakage, duplicate/gap/mismatch issues, empty/insufficient data behavior,
-  moving averages, range and candle-shape summaries, event context, immutability, and fake-repo
-  service behavior.
-- Added safety coverage confirming Phase 3C context files do not introduce decision/execution terms.
-- No migration was added; Phase 3C reads existing Phase 2/3A tables only.
-- No API route, trading endpoint, signal endpoint, network call, provider call, secret, or API key was added.
+- Updated `PROJECT_PHASE` to `phase_3d_analysis_snapshot_foundation`.
+- Added immutable Phase 3D analysis models in `app/domain/entities/analysis.py`.
+- Added deterministic analysis snapshot assembly in `app/domain/analysis_engine.py`.
+- Updated `AnalysisService` in `app/services/analysis_service.py` to build neutral snapshots/reports
+  from repository protocols while keeping `/scan_now` disconnected.
+- Reused Phase 3C `MarketContextEngine` and Phase 3B `MarketFeatureSnapshot` as descriptive inputs.
+- Added unit/service tests for exact deterministic assembly, UTC normalization, JSON serialization,
+  readiness status values, no-after-`as_of` proof, issue aggregation, empty/small input behavior,
+  immutability, deterministic repeated output, and fake-repo service behavior.
+- Added safety coverage confirming Phase 3D files do not introduce decision/execution terms.
+- No migration was added; Phase 3D reads existing Phase 2/3A tables only.
+- No API route, signal endpoint, network call, provider call, secret, or API key was added.
 
 ## Verification Command Outputs
 
@@ -101,7 +103,7 @@ a6f44f0 Add Phase 3B feature engine foundation
 Exit code: `0`
 
 ```text
-Resolved 46 packages in 15ms
+Resolved 46 packages in 18ms
 ```
 
 ### `uv sync`
@@ -109,8 +111,8 @@ Resolved 46 packages in 15ms
 Exit code: `0`
 
 ```text
-Resolved 46 packages in 3ms
-Checked 43 packages in 14ms
+Resolved 46 packages in 2ms
+Checked 43 packages in 10ms
 ```
 
 ### `uv run ruff format --check .`
@@ -118,7 +120,7 @@ Checked 43 packages in 14ms
 Exit code: `0`
 
 ```text
-96 files already formatted
+99 files already formatted
 ```
 
 ### `uv run ruff check .`
@@ -134,7 +136,7 @@ All checks passed!
 Exit code: `0`
 
 ```text
-Success: no issues found in 69 source files
+Success: no issues found in 71 source files
 ```
 
 ### `uv run pytest`
@@ -149,25 +151,26 @@ configfile: pyproject.toml
 testpaths: tests
 plugins: anyio-4.14.1, asyncio-0.26.0
 asyncio: mode=Mode.AUTO, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
-collected 176 items
+collected 187 items
 
 tests/contract/test_agent_contracts.py ......                            [  3%]
 tests/contract/test_api_error_schema.py .                                [  3%]
-tests/contract/test_architecture_boundaries.py ..                        [  5%]
-tests/contract/test_provider_contracts.py .............................. [ 22%]
-...............................                                          [ 39%]
-tests/contract/test_safety_boundaries.py ...........                     [ 46%]
-tests/integration/test_database_and_api.py sssss                         [ 48%]
-tests/unit/test_context_engine_foundation.py .............               [ 56%]
-tests/unit/test_data_quality_foundation.py ...                           [ 57%]
-tests/unit/test_domain_market_models.py ..................               [ 68%]
-tests/unit/test_errors_and_redaction.py .......                          [ 72%]
-tests/unit/test_feature_engine_foundation.py ...........                 [ 78%]
-tests/unit/test_internal_api_key.py ....                                 [ 80%]
-tests/unit/test_settings.py .........                                    [ 85%]
-tests/unit/test_system_state_service.py .....                            [ 88%]
-tests/unit/test_telegram_commands.py ..                                  [ 89%]
-tests/unit/test_telegram_policy.py .....                                 [ 92%]
+tests/contract/test_architecture_boundaries.py ..                        [  4%]
+tests/contract/test_provider_contracts.py .............................. [ 20%]
+...............................                                          [ 37%]
+tests/contract/test_safety_boundaries.py ............                    [ 43%]
+tests/integration/test_database_and_api.py sssss                         [ 46%]
+tests/unit/test_analysis_snapshot_foundation.py ..........               [ 51%]
+tests/unit/test_context_engine_foundation.py .............               [ 58%]
+tests/unit/test_data_quality_foundation.py ...                           [ 60%]
+tests/unit/test_domain_market_models.py ..................               [ 70%]
+tests/unit/test_errors_and_redaction.py .......                          [ 73%]
+tests/unit/test_feature_engine_foundation.py ...........                 [ 79%]
+tests/unit/test_internal_api_key.py ....                                 [ 81%]
+tests/unit/test_settings.py .........                                    [ 86%]
+tests/unit/test_system_state_service.py .....                            [ 89%]
+tests/unit/test_telegram_commands.py ..                                  [ 90%]
+tests/unit/test_telegram_policy.py .....                                 [ 93%]
 tests/unit/test_time.py ...                                              [ 94%]
 tests/unit/test_unit_of_work_lifecycle.py ......                         [ 97%]
 tests/unit/test_value_objects_and_enums.py ....                          [100%]
@@ -178,7 +181,7 @@ tests/unit/test_value_objects_and_enums.py ....                          [100%]
     from starlette.testclient import TestClient as TestClient  # noqa
 
 -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
-================== 171 passed, 5 skipped, 1 warning in 0.75s ===================
+================== 182 passed, 5 skipped, 1 warning in 0.72s ===================
 ```
 
 ### `uv run python scripts/security_check.py`
@@ -203,95 +206,92 @@ Exit code: `0`
 #1 reading from stdin 1.91kB done
 #1 DONE 0.0s
 
-#2 [migrate internal] load build definition from Dockerfile
+#2 [worker internal] load build definition from Dockerfile
 #2 transferring dockerfile: 411B done
 #2 DONE 0.0s
 
-#3 [migrate internal] load metadata for ghcr.io/astral-sh/uv:python3.12-bookworm-slim
-#3 DONE 1.0s
+#3 [api internal] load metadata for ghcr.io/astral-sh/uv:python3.12-bookworm-slim
+#3 DONE 0.7s
 
-#4 [worker internal] load .dockerignore
+#4 [bot internal] load .dockerignore
 #4 transferring context: 143B done
 #4 DONE 0.0s
 
-#5 [api 1/5] FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim@sha256:e5b65587bce7de595f299855d7385fe7fca39b8a74baa261ba1b7147afa78e58
+#5 [bot 1/5] FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim@sha256:e5b65587bce7de595f299855d7385fe7fca39b8a74baa261ba1b7147afa78e58
 #5 resolve ghcr.io/astral-sh/uv:python3.12-bookworm-slim@sha256:e5b65587bce7de595f299855d7385fe7fca39b8a74baa261ba1b7147afa78e58 0.0s done
 #5 DONE 0.0s
 
-#6 [api internal] load build context
-#6 transferring context: 330.44kB 0.0s done
+#6 [worker internal] load build context
+#6 transferring context: 16.07kB 0.0s done
 #6 DONE 0.0s
 
-#7 [worker 2/5] WORKDIR /app
+#7 [migrate 4/5] RUN uv sync --frozen --no-dev
 #7 CACHED
 
-#8 [worker 3/5] COPY pyproject.toml uv.lock* ./
+#8 [migrate 2/5] WORKDIR /app
 #8 CACHED
 
-#9 [worker 4/5] RUN uv sync --frozen --no-dev
+#9 [migrate 3/5] COPY pyproject.toml uv.lock* ./
 #9 CACHED
 
-#10 [worker 5/5] COPY . .
-#10 DONE 0.0s
+#10 [migrate 5/5] COPY . .
+#10 CACHED
 
 #11 [migrate] exporting to image
-#11 exporting layers 0.0s done
-#11 ...
-
-#12 [worker] exporting to image
-#12 exporting layers 0.0s done
-#12 exporting manifest sha256:1ade8280b565b0d720d55ffb6dc756c9a8c9eeffef7040f2f8dd4eec6e61fc94 done
-#12 exporting config sha256:8908017fe840805f64a75fc7dc4a0b7c6504da52e6d7af7b20bc606e3b820ea2 done
-#12 exporting attestation manifest sha256:4e90926576a66f536708b51223e9daae6449709ea6798be8abf033fdb7be8cf9 0.0s done
-#12 exporting manifest list sha256:bbe283817bdf6b830415d8debb45357472f01ad02b5e9ce44d5c4badee6fe827 done
-#12 naming to docker.io/library/ai-trading-os-worker:latest done
-#12 unpacking to docker.io/library/ai-trading-os-worker:latest 0.0s done
-#12 DONE 0.1s
-
-#11 [migrate] exporting to image
-#11 exporting manifest sha256:d2a4408f75060409c5ebdba017a991d58b2121a9499c0aaf82688581b45f84ca done
-#11 exporting config sha256:1bdee32edd39031a6bbf8316b198e6b24c4533f0194541b56d74628a193da29a done
-#11 exporting attestation manifest sha256:3fab60fc3572b7df9fdb6df1b7ce7b59b4183b613f18f0db0df2f45054442b3a 0.0s done
-#11 exporting manifest list sha256:2e57cbce9806bf85fe422ba246c9a793ce829fb8bd2472f0cb7f82397798d062 done
+#11 exporting layers done
+#11 exporting manifest sha256:3bee3053a84e071913b1158a2012e73d0b1850e4e2612c542fecb8372619148f done
+#11 exporting config sha256:c80f38957abedd3590298e0a50ac7bed830269f399f83bf9d43fd61aceb2eb28 done
+#11 exporting attestation manifest sha256:0bb46bb4666445d99081611f86730de91eb42e0820241104f45561c72db17cd4 0.0s done
+#11 exporting manifest list sha256:ca0917795e87c62e8a0b4fbfa3c3dd6f6aec1daa732c758d9b1c2620d6fc0f9b done
 #11 naming to docker.io/library/ai-trading-os-migrate:latest done
-#11 unpacking to docker.io/library/ai-trading-os-migrate:latest 0.0s done
+#11 unpacking to docker.io/library/ai-trading-os-migrate:latest done
 #11 DONE 0.1s
 
+#12 [bot] exporting to image
+#12 exporting layers done
+#12 exporting manifest sha256:5b8aacfa434bf57c5e02a1bdc3c971da949874b2ab55f773e2b30daab46b5fca done
+#12 exporting config sha256:cbbfbf1c628feeadeacb8bdd097be493d2d81823832171c2ffda0e0eda973298 done
+#12 exporting attestation manifest sha256:c438bb139243f733999cdb04a8afa8baf1292abb587c2ca907d34a1751df4b6e 0.0s done
+#12 exporting manifest list sha256:e4e8a7c9c0924cf18c00158729d7700d53e22d1c0b93c0e1a59fbd2cfe3a4172 done
+#12 naming to docker.io/library/ai-trading-os-bot:latest done
+#12 unpacking to docker.io/library/ai-trading-os-bot:latest done
+#12 DONE 0.1s
+
 #13 [api] exporting to image
-#13 exporting layers 0.0s done
-#13 exporting manifest sha256:07c8ac92f4eff42ba722080ae4d5812120c9f471f75c8d6570e9200db0cfc89a done
-#13 exporting config sha256:685e968a6e2b42b5a7207126bfcc3eb4d53d7aa62b9fe18f9813a705b0d81c06 done
-#13 exporting attestation manifest sha256:57c3aec052d8b07adc19d4f25ec8544f5409a3179c65903cdaa0eb71fa0f4216 0.0s done
-#13 exporting manifest list sha256:6bc8803107b31d7cbf0f10c9e0ce671a50ef7037a80ebaa00d4d73281aa2e7ef done
+#13 exporting layers done
+#13 exporting manifest sha256:00b1745579dfd9286431479c0b598867431fa0ff7647f56ba61f62d90dbf20e5 done
+#13 exporting config sha256:77c4c777fdbc8c1b446d925c10a268613b82cf2037a8286f5cb31bc6dd7ffe5c done
+#13 exporting attestation manifest sha256:977c5996aa9e9a499a4ac2550e3892e238499f566ad405fe41b3f5773d53b2fe 0.0s done
+#13 exporting manifest list sha256:bef95dafb4f67de16ac837bcfa2d9536ea2f76f29bd05cbda4d1916744e4d533 done
 #13 naming to docker.io/library/ai-trading-os-api:latest done
-#13 unpacking to docker.io/library/ai-trading-os-api:latest 0.0s done
+#13 unpacking to docker.io/library/ai-trading-os-api:latest done
 #13 DONE 0.1s
 
-#14 [bot] exporting to image
-#14 exporting layers 0.0s done
-#14 exporting manifest sha256:89d0c68d66bb11599e81912d8e62214b455569abaded59f66b4abc4c239c476f done
-#14 exporting config sha256:6726986c2faab2cd6c5f7b27f30e7ead46c6526c55540ae8759a1154f7738146 done
-#14 exporting attestation manifest sha256:fce4cb405b07bdb668018e868067655c291b3be31a34f2cc4a78e478fb1b0547 0.0s done
-#14 exporting manifest list sha256:a8f9ff68d10b16d61c6cfa6e90c0eacfcf141aab20cc0904392adf835b6906a1 done
-#14 naming to docker.io/library/ai-trading-os-bot:latest done
-#14 unpacking to docker.io/library/ai-trading-os-bot:latest 0.0s done
+#14 [worker] exporting to image
+#14 exporting layers done
+#14 exporting manifest sha256:4dc40106e6f0f6728c89d0650058b6632da059f5d776e1dd2ea997adde70eb4d done
+#14 exporting config sha256:1627c4680525880037e4260beb5a5771a4ab611f7dab28693f14645cfe3cac8d done
+#14 exporting attestation manifest sha256:113c72d816845c07d326452e919a1d35d814b191b73255625e5a9a145caa99b1 0.0s done
+#14 exporting manifest list sha256:028f4f3ec651db16c2c04c05b4776b5bfb31585cbd0e10f2fef52a1286b80245 done
+#14 naming to docker.io/library/ai-trading-os-worker:latest done
+#14 unpacking to docker.io/library/ai-trading-os-worker:latest done
 #14 DONE 0.1s
 
 #15 [worker] resolving provenance for metadata file
 #15 DONE 0.0s
 
-#16 [bot] resolving provenance for metadata file
+#16 [migrate] resolving provenance for metadata file
 #16 DONE 0.0s
 
-#17 [migrate] resolving provenance for metadata file
+#17 [api] resolving provenance for metadata file
 #17 DONE 0.0s
 
-#18 [api] resolving provenance for metadata file
+#18 [bot] resolving provenance for metadata file
 #18 DONE 0.0s
- Image ai-trading-os-migrate Built 
  Image ai-trading-os-worker Built 
  Image ai-trading-os-api Built 
  Image ai-trading-os-bot Built 
+ Image ai-trading-os-migrate Built 
 ```
 
 ### `docker compose up -d postgres`
@@ -299,12 +299,7 @@ Exit code: `0`
 Exit code: `0`
 
 ```text
- Network ai-trading-os_default Creating 
- Network ai-trading-os_default Created 
- Container ai-trading-os-postgres-1 Creating 
- Container ai-trading-os-postgres-1 Created 
- Container ai-trading-os-postgres-1 Starting 
- Container ai-trading-os-postgres-1 Started 
+ Container ai-trading-os-postgres-1 Running 
 ```
 
 ### `docker compose run --rm migrate alembic current`
@@ -315,8 +310,8 @@ Exit code: `0`
  Container ai-trading-os-postgres-1 Running 
  Container ai-trading-os-postgres-1 Waiting 
  Container ai-trading-os-postgres-1 Healthy 
- Container ai-trading-os-migrate-run-abb9409cd4b2 Creating 
- Container ai-trading-os-migrate-run-abb9409cd4b2 Created 
+ Container ai-trading-os-migrate-run-56e7166b4cf8 Creating 
+ Container ai-trading-os-migrate-run-56e7166b4cf8 Created 
 INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
 INFO  [alembic.runtime.migration] Will assume transactional DDL.
 0002_phase2_data_constraints (head)
@@ -330,8 +325,8 @@ Exit code: `0`
  Container ai-trading-os-postgres-1 Running 
  Container ai-trading-os-postgres-1 Waiting 
  Container ai-trading-os-postgres-1 Healthy 
- Container ai-trading-os-migrate-run-a2bcebb328ff Creating 
- Container ai-trading-os-migrate-run-a2bcebb328ff Created 
+ Container ai-trading-os-migrate-run-2e5b54fe39c8 Creating 
+ Container ai-trading-os-migrate-run-2e5b54fe39c8 Created 
 INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
 INFO  [alembic.runtime.migration] Will assume transactional DDL.
 INFO  [alembic.runtime.plugins] setting up autogenerate plugin alembic.autogenerate.schemas
@@ -351,19 +346,13 @@ Exit code: `0`
  Container ai-trading-os-postgres-1 Running 
  Container ai-trading-os-postgres-1 Waiting 
  Container ai-trading-os-postgres-1 Healthy 
- Container ai-trading-os-migrate-run-c46aceeaa50c Creating 
- Container ai-trading-os-migrate-run-c46aceeaa50c Created 
+ Container ai-trading-os-migrate-run-f94553fbd847 Creating 
+ Container ai-trading-os-migrate-run-f94553fbd847 Created 
 INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
 INFO  [alembic.runtime.migration] Will assume transactional DDL.
 ```
 
-### Docker integration run #1
-
-Command:
-
-```text
-docker compose run --rm -e REQUIRE_INTEGRATION_TESTS=true -e TEST_DATABASE_URL=postgresql+asyncpg://ai_trading_os:ai_trading_os@postgres:5432/ai_trading_os_test migrate uv run pytest tests/integration/test_database_and_api.py
-```
+### `docker integration run #1`
 
 Exit code: `0`
 
@@ -371,16 +360,16 @@ Exit code: `0`
  Container ai-trading-os-postgres-1 Running 
  Container ai-trading-os-postgres-1 Waiting 
  Container ai-trading-os-postgres-1 Healthy 
- Container ai-trading-os-migrate-run-459bd2223678 Creating 
- Container ai-trading-os-migrate-run-459bd2223678 Created 
-Downloading pygments (1.2MiB)
+ Container ai-trading-os-migrate-run-41cb03219fb2 Creating 
+ Container ai-trading-os-migrate-run-41cb03219fb2 Created 
 Downloading ruff (10.5MiB)
+Downloading pygments (1.2MiB)
 Downloading mypy (13.1MiB)
- Downloaded ruff
  Downloaded pygments
+ Downloaded ruff
  Downloaded mypy
-Installed 11 packages in 79ms
-Bytecode compiled 1963 files in 501ms
+Installed 11 packages in 44ms
+Bytecode compiled 1963 files in 377ms
 ============================= test session starts ==============================
 platform linux -- Python 3.12.12, pytest-8.4.2, pluggy-1.6.0
 rootdir: /app
@@ -397,16 +386,10 @@ tests/integration/test_database_and_api.py .....                         [100%]
     from starlette.testclient import TestClient as TestClient  # noqa
 
 -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
-========================= 5 passed, 1 warning in 0.32s =========================
+========================= 5 passed, 1 warning in 0.31s =========================
 ```
 
-### Docker integration run #2
-
-Command:
-
-```text
-docker compose run --rm -e REQUIRE_INTEGRATION_TESTS=true -e TEST_DATABASE_URL=postgresql+asyncpg://ai_trading_os:ai_trading_os@postgres:5432/ai_trading_os_test migrate uv run pytest tests/integration/test_database_and_api.py
-```
+### `docker integration run #2`
 
 Exit code: `0`
 
@@ -414,16 +397,16 @@ Exit code: `0`
  Container ai-trading-os-postgres-1 Running 
  Container ai-trading-os-postgres-1 Waiting 
  Container ai-trading-os-postgres-1 Healthy 
- Container ai-trading-os-migrate-run-17eecdde01cd Creating 
- Container ai-trading-os-migrate-run-17eecdde01cd Created 
+ Container ai-trading-os-migrate-run-5cc363cc16b2 Creating 
+ Container ai-trading-os-migrate-run-5cc363cc16b2 Created 
 Downloading pygments (1.2MiB)
-Downloading ruff (10.5MiB)
 Downloading mypy (13.1MiB)
+Downloading ruff (10.5MiB)
  Downloaded pygments
  Downloaded ruff
  Downloaded mypy
-Installed 11 packages in 45ms
-Bytecode compiled 1963 files in 415ms
+Installed 11 packages in 37ms
+Bytecode compiled 1963 files in 384ms
 ============================= test session starts ==============================
 platform linux -- Python 3.12.12, pytest-8.4.2, pluggy-1.6.0
 rootdir: /app
@@ -440,8 +423,9 @@ tests/integration/test_database_and_api.py .....                         [100%]
     from starlette.testclient import TestClient as TestClient  # noqa
 
 -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
-========================= 5 passed, 1 warning in 0.29s =========================
+========================= 5 passed, 1 warning in 0.31s =========================
 ```
+
 ### `docker compose config`
 
 Exit code: `0`
@@ -734,50 +718,50 @@ volumes:
     name: ai-trading-os_postgres_data
 ```
 
-
 ## Skipped Checks
 
 - Host integration tests in `uv run pytest` were skipped because `REQUIRE_INTEGRATION_TESTS` was not
   enabled for the host run. The PostgreSQL integration suite was run inside Docker twice against the
   same `ai_trading_os_test` database without cleanup, and both runs passed.
-- Full API stack `/ready` probing was not rerun for Phase 3C because the requested Docker verification
+- Full API stack `/ready` probing was not rerun for Phase 3D because the requested Docker verification
   set was PostgreSQL, Alembic, integration tests, and compose configuration.
 
 ## Unavailable Checks
 
-- None for the requested Phase 3C verification commands. Host `uv` and Docker were available.
+- None for the requested Phase 3D verification commands. Host `uv` and Docker were available.
 
 ## Remaining Risks
 
-- Phase 3C changes are uncommitted at packet generation time.
-- Context snapshots are deterministic in-memory structures and are not persisted by design.
-- Existing foundation-era database names and environment variables may still mention future trading
-  concepts, but Phase 3C did not activate them or use them for decisions.
+- Phase 3D changes are uncommitted at packet generation time.
+- Analysis snapshots are deterministic in-memory structures and are not persisted by design.
+- Existing foundation-era database names and environment variables may still mention future execution
+  concepts, but Phase 3D did not activate them or use them for decisions.
 
 ## Phase Boundary Confirmation
 
-- Phase 3D was not started.
+- Phase 3E was not started.
 - No strategy was added.
 - No signals were added.
 - No setup scoring or confidence scoring was added.
 - No AI agents, OpenAI calls, or LLM calls were added.
 - No broker APIs, paper trading, order execution, or real trading were added.
-- Feature and context engines produce descriptive deterministic structures only.
+- Analysis snapshots and reports produce neutral deterministic readiness structures only.
 
 ## Traceability
 
 | Requirement | Implementation file | Test file | Verification result |
 | --- | --- | --- | --- |
-| Update project phase to Phase 3C | `app/core/constants.py` | `tests/integration/test_database_and_api.py` | Host pytest and Docker integration tests passed |
-| Typed immutable context snapshots | `app/domain/entities/context.py` | `tests/unit/test_context_engine_foundation.py` | Host pytest passed |
-| Closed-candle-only context engine | `app/domain/context_engine.py` | `tests/unit/test_context_engine_foundation.py` | Host pytest passed |
-| Exact deterministic Decimal calculations | `app/domain/context_engine.py` | `tests/unit/test_context_engine_foundation.py` | Host pytest passed |
-| UTC normalization and no future leakage | `app/domain/entities/context.py`, `app/domain/context_engine.py` | `tests/unit/test_context_engine_foundation.py` | Host pytest passed |
-| Duplicate/gap/mismatch and insufficient-data issues | `app/domain/context_engine.py` | `tests/unit/test_context_engine_foundation.py` | Host pytest passed |
-| Moving averages, ranges, candle shape, event context, time context | `app/domain/context_engine.py` | `tests/unit/test_context_engine_foundation.py` | Host pytest passed |
-| Service uses UnitOfWork/repository protocols | `app/services/context_service.py` | `tests/unit/test_context_engine_foundation.py` | Host pytest and mypy passed |
+| Update project phase to Phase 3D | `app/core/constants.py` | `tests/integration/test_database_and_api.py` | Host pytest and Docker integration tests passed |
+| Typed immutable analysis models | `app/domain/entities/analysis.py` | `tests/unit/test_analysis_snapshot_foundation.py` | Host pytest passed |
+| Deterministic analysis snapshot assembly | `app/domain/analysis_engine.py` | `tests/unit/test_analysis_snapshot_foundation.py` | Host pytest passed |
+| UTC normalization and JSON serialization | `app/domain/entities/analysis.py` | `tests/unit/test_analysis_snapshot_foundation.py` | Host pytest passed |
+| Readiness status READY/INCOMPLETE/BLOCKED | `app/domain/analysis_engine.py` | `tests/unit/test_analysis_snapshot_foundation.py` | Host pytest passed |
+| No-after-as_of proof | `app/domain/analysis_engine.py` | `tests/unit/test_analysis_snapshot_foundation.py` | Host pytest passed |
+| Issue aggregation from feature/context/data-quality snapshots | `app/domain/analysis_engine.py` | `tests/unit/test_analysis_snapshot_foundation.py` | Host pytest passed |
+| Empty/small input handling | `app/domain/analysis_engine.py` | `tests/unit/test_analysis_snapshot_foundation.py` | Host pytest passed |
+| Service uses UnitOfWork/repository protocols | `app/services/analysis_service.py` | `tests/unit/test_analysis_snapshot_foundation.py` | Host pytest and mypy passed |
 | Preserve PostgreSQL repeatability | existing repositories and integration tests | `tests/integration/test_database_and_api.py` | Docker integration tests passed twice without DB cleanup |
-| Preserve safety boundary | `app/domain/entities/context.py`, `app/domain/context_engine.py`, `app/services/context_service.py` | `tests/contract/test_safety_boundaries.py`, `scripts/security_check.py` | Ruff, pytest, and security check passed |
+| Preserve safety boundary | `app/domain/entities/analysis.py`, `app/domain/analysis_engine.py`, `app/services/analysis_service.py` | `tests/contract/test_safety_boundaries.py`, `scripts/security_check.py` | Ruff, pytest, and security check passed |
 | Avoid new migrations | no new migration file | `docker compose run --rm migrate alembic check` | No new upgrade operations detected |
 
 ## Full Contents of Changed Source Files
@@ -785,7 +769,7 @@ volumes:
 ### `app/core/constants.py`
 
 ```python
-PROJECT_PHASE = "phase_3c_indicator_context_foundation"
+PROJECT_PHASE = "phase_3d_analysis_snapshot_foundation"
 STRATEGY_IMPLEMENTED = False
 REAL_TRADING_ENABLED = False
 
@@ -801,6 +785,18 @@ DEFAULT_STRATEGY_VERSION = "foundation-v1"
 ### `app/domain/entities/__init__.py`
 
 ```python
+from app.domain.entities.analysis import (
+    AnalysisInputAudit,
+    AnalysisIssue,
+    AnalysisIssueCode,
+    AnalysisIssueCount,
+    AnalysisNumericSummary,
+    AnalysisReadinessStatus,
+    AnalysisReport,
+    AnalysisSnapshot,
+    AnalysisSnapshotMetadata,
+    AnalysisWindow,
+)
 from app.domain.entities.context import (
     CandleShapeSummary,
     ContextCurrencyCount,
@@ -838,6 +834,16 @@ from app.domain.entities.features import (
 from app.domain.entities.market_data import Candle, EconomicEvent, EconomicImpact, Timeframe
 
 __all__ = [
+    "AnalysisInputAudit",
+    "AnalysisIssue",
+    "AnalysisIssueCode",
+    "AnalysisIssueCount",
+    "AnalysisNumericSummary",
+    "AnalysisReadinessStatus",
+    "AnalysisReport",
+    "AnalysisSnapshot",
+    "AnalysisSnapshotMetadata",
+    "AnalysisWindow",
     "Candle",
     "CandleAvailability",
     "CandleFeatureSummary",
@@ -873,23 +879,31 @@ __all__ = [
 ]
 ```
 
-### `app/domain/entities/context.py`
+### `app/domain/entities/analysis.py`
 
 ```python
 from datetime import datetime
 from decimal import Decimal
 from enum import StrEnum
-from typing import Self
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from app.core.time import normalize_to_utc
+from app.domain.entities.context import MarketContextSnapshot
 from app.domain.entities.features import MarketFeatureSnapshot
-from app.domain.entities.market_data import EconomicImpact, Timeframe
+from app.domain.entities.market_data import Timeframe
 from app.domain.value_objects import CurrencyPair
 
 
-class ContextIssueCode(StrEnum):
+class AnalysisReadinessStatus(StrEnum):
+    READY = "READY"
+    INCOMPLETE = "INCOMPLETE"
+    BLOCKED = "BLOCKED"
+
+
+class AnalysisIssueCode(StrEnum):
+    INVALID_WINDOW = "INVALID_WINDOW"
+    NO_USABLE_CANDLES = "NO_USABLE_CANDLES"
     NO_CANDLES = "NO_CANDLES"
     INSUFFICIENT_CANDLES = "INSUFFICIENT_CANDLES"
     WINDOW_NOT_ALIGNED = "WINDOW_NOT_ALIGNED"
@@ -902,22 +916,11 @@ class ContextIssueCode(StrEnum):
     MISSING_CANDLE = "MISSING_CANDLE"
     EVENT_AFTER_AS_OF = "EVENT_AFTER_AS_OF"
     EVENT_OUT_OF_RANGE = "EVENT_OUT_OF_RANGE"
+    DATA_QUALITY_ISSUE = "DATA_QUALITY_ISSUE"
+    SNAPSHOT_WINDOW_MISMATCH = "SNAPSHOT_WINDOW_MISMATCH"
 
 
-class ContextIssue(BaseModel):
-    code: ContextIssueCode
-    description: str = Field(min_length=1)
-    timestamp: datetime | None = None
-
-    model_config = ConfigDict(frozen=True)
-
-    @field_validator("timestamp")
-    @classmethod
-    def timestamp_must_be_utc(cls, value: datetime | None) -> datetime | None:
-        return normalize_to_utc(value) if value is not None else None
-
-
-class IndicatorWindow(BaseModel):
+class AnalysisWindow(BaseModel):
     pair: CurrencyPair
     timeframe: Timeframe
     window_start: datetime
@@ -931,160 +934,140 @@ class IndicatorWindow(BaseModel):
     def timestamps_must_be_utc(cls, value: datetime) -> datetime:
         return normalize_to_utc(value)
 
-    @model_validator(mode="after")
-    def validate_window(self) -> Self:
-        if self.window_end <= self.window_start:
-            raise ValueError("context window_end must be later than window_start")
-        return self
 
-
-class ReturnDistributionSummary(BaseModel):
-    close_values: tuple[Decimal, ...] = ()
-    close_change_values: tuple[Decimal, ...] = ()
-    per_candle_returns: tuple[Decimal, ...] = ()
-    cumulative_return: Decimal | None = None
-    mean_return: Decimal | None = None
-    median_return: Decimal | None = None
-    min_return: Decimal | None = None
-    max_return: Decimal | None = None
-    return_standard_deviation: Decimal | None = None
-    realized_volatility: Decimal | None = None
-    max_close_to_close_drawdown: Decimal | None = None
+class AnalysisIssue(BaseModel):
+    code: AnalysisIssueCode
+    description: str = Field(min_length=1)
+    source: str = Field(min_length=1)
+    timestamp: datetime | None = None
 
     model_config = ConfigDict(frozen=True)
 
-
-class MovingAverageSeries(BaseModel):
-    window_size: int = Field(ge=1)
-    values: tuple[Decimal, ...] = ()
-
-    model_config = ConfigDict(frozen=True)
-
-
-class MovingAverageSummary(BaseModel):
-    close_mean_series: tuple[MovingAverageSeries, ...] = ()
-    return_mean_series: tuple[MovingAverageSeries, ...] = ()
-
-    model_config = ConfigDict(frozen=True)
-
-
-class RangeContextSummary(BaseModel):
-    true_range_values: tuple[Decimal, ...] = ()
-    average_true_range: Decimal | None = None
-    candle_range_values: tuple[Decimal, ...] = ()
-    average_candle_range: Decimal | None = None
-    range_change_ratios: tuple[Decimal | None, ...] = ()
-
-    model_config = ConfigDict(frozen=True)
-
-
-class CandleShapeSummary(BaseModel):
-    body_sizes: tuple[Decimal, ...] = ()
-    average_body_size: Decimal | None = None
-    upper_wick_sizes: tuple[Decimal, ...] = ()
-    lower_wick_sizes: tuple[Decimal, ...] = ()
-    average_upper_wick_size: Decimal | None = None
-    average_lower_wick_size: Decimal | None = None
-    body_to_range_ratios: tuple[Decimal | None, ...] = ()
-    close_location_in_range_values: tuple[Decimal | None, ...] = ()
-
-    model_config = ConfigDict(frozen=True)
-
-
-class ContextImpactCount(BaseModel):
-    impact: EconomicImpact
-    count: int = Field(ge=0)
-
-    model_config = ConfigDict(frozen=True)
-
-
-class ContextCurrencyCount(BaseModel):
-    currency: str = Field(pattern=r"^[A-Z]{3}$")
-    count: int = Field(ge=0)
-
-    model_config = ConfigDict(frozen=True)
-
-
-class EventContextSummary(BaseModel):
-    input_event_count: int = Field(ge=0)
-    used_event_count: int = Field(ge=0)
-    counts_by_impact: tuple[ContextImpactCount, ...] = ()
-    counts_by_currency: tuple[ContextCurrencyCount, ...] = ()
-    latest_event_time: datetime | None = None
-    minutes_since_latest_event: Decimal | None = None
-
-    model_config = ConfigDict(frozen=True)
-
-    @field_validator("latest_event_time")
+    @field_validator("timestamp")
     @classmethod
-    def latest_event_time_must_be_utc(cls, value: datetime | None) -> datetime | None:
+    def timestamp_must_be_utc(cls, value: datetime | None) -> datetime | None:
         return normalize_to_utc(value) if value is not None else None
 
 
-class TimeContextSummary(BaseModel):
-    as_of_utc_hour: int = Field(ge=0, le=23)
-    as_of_utc_weekday: int = Field(ge=0, le=6)
-    window_minutes: Decimal = Field(ge=Decimal("0"))
-    candle_count: int = Field(ge=0)
+class AnalysisIssueCount(BaseModel):
+    source: str = Field(min_length=1)
+    code: AnalysisIssueCode
+    count: int = Field(ge=0)
 
     model_config = ConfigDict(frozen=True)
 
 
-class MarketContextSnapshot(BaseModel):
-    window: IndicatorWindow
-    feature_snapshot: MarketFeatureSnapshot
-    return_distribution: ReturnDistributionSummary
-    moving_average_summary: MovingAverageSummary
-    range_context: RangeContextSummary
-    candle_shape: CandleShapeSummary
-    event_context: EventContextSummary
-    time_context: TimeContextSummary
-    context_issues: tuple[ContextIssue, ...] = ()
+class AnalysisInputAudit(BaseModel):
+    requested_pair: CurrencyPair
+    requested_timeframe: Timeframe
+    provider: str | None = None
+    requested_currencies: tuple[str, ...] = ()
+    input_candle_count: int = Field(ge=0)
+    used_candle_count: int = Field(ge=0)
+    input_event_count: int = Field(ge=0)
+    used_event_count: int = Field(ge=0)
+    input_candles_after_as_of_count: int = Field(ge=0)
+    input_events_after_as_of_count: int = Field(ge=0)
+    excluded_issue_counts: tuple[AnalysisIssueCount, ...] = ()
+    as_of: datetime
+    latest_used_candle_close_time: datetime | None = None
+    latest_used_event_time: datetime | None = None
+    no_candles_after_as_of_used: bool
+    no_events_after_as_of_used: bool
 
     model_config = ConfigDict(frozen=True)
 
-    @property
-    def quality_ok(self) -> bool:
-        return (
-            not self.context_issues
-            and not self.feature_snapshot.quality_issues
-            and not self.feature_snapshot.data_quality_issues
-        )
+    @field_validator("as_of", "latest_used_candle_close_time", "latest_used_event_time")
+    @classmethod
+    def timestamps_must_be_utc(cls, value: datetime | None) -> datetime | None:
+        return normalize_to_utc(value) if value is not None else None
+
+
+class AnalysisSnapshotMetadata(BaseModel):
+    project_phase: str = Field(min_length=1)
+    snapshot_id: str = Field(min_length=64, max_length=64)
+    feature_snapshot_id: str | None = Field(default=None, min_length=64, max_length=64)
+    context_snapshot_id: str | None = Field(default=None, min_length=64, max_length=64)
+    built_at: datetime
+    source_layer: str = Field(min_length=1)
+
+    model_config = ConfigDict(frozen=True)
+
+    @field_validator("built_at")
+    @classmethod
+    def built_at_must_be_utc(cls, value: datetime) -> datetime:
+        return normalize_to_utc(value)
+
+
+class AnalysisSnapshot(BaseModel):
+    window: AnalysisWindow
+    metadata: AnalysisSnapshotMetadata
+    input_audit: AnalysisInputAudit
+    readiness_status: AnalysisReadinessStatus
+    readiness_issues: tuple[AnalysisIssue, ...] = ()
+    feature_snapshot: MarketFeatureSnapshot | None = None
+    context_snapshot: MarketContextSnapshot | None = None
+
+    model_config = ConfigDict(frozen=True)
+
+
+class AnalysisReport(BaseModel):
+    snapshot: AnalysisSnapshot
+    ready_for_review: bool
+    issue_count: int = Field(ge=0)
+    used_candle_count: int = Field(ge=0)
+    used_event_count: int = Field(ge=0)
+    generated_at: datetime
+
+    model_config = ConfigDict(frozen=True)
+
+    @field_validator("generated_at")
+    @classmethod
+    def generated_at_must_be_utc(cls, value: datetime) -> datetime:
+        return normalize_to_utc(value)
+
+
+class AnalysisNumericSummary(BaseModel):
+    value: Decimal | None = None
+
+    model_config = ConfigDict(frozen=True)
 ```
 
-### `app/domain/context_engine.py`
+### `app/domain/analysis_engine.py`
 
 ```python
+import hashlib
+import json
 from collections import Counter
 from collections.abc import Sequence
 from datetime import datetime
-from decimal import Decimal
 
+from pydantic import BaseModel
+
+from app.core import constants
 from app.core.time import normalize_to_utc
-from app.domain.entities.context import (
-    CandleShapeSummary,
-    ContextCurrencyCount,
-    ContextImpactCount,
-    ContextIssue,
-    ContextIssueCode,
-    EventContextSummary,
-    IndicatorWindow,
-    MarketContextSnapshot,
-    MovingAverageSeries,
-    MovingAverageSummary,
-    RangeContextSummary,
-    ReturnDistributionSummary,
-    TimeContextSummary,
+from app.domain.context_engine import MarketContextEngine
+from app.domain.entities.analysis import (
+    AnalysisInputAudit,
+    AnalysisIssue,
+    AnalysisIssueCode,
+    AnalysisIssueCount,
+    AnalysisReadinessStatus,
+    AnalysisReport,
+    AnalysisSnapshot,
+    AnalysisSnapshotMetadata,
+    AnalysisWindow,
 )
-from app.domain.entities.features import FeatureIssue
+from app.domain.entities.context import ContextIssue, MarketContextSnapshot
+from app.domain.entities.data_quality import DataQualityIssue
+from app.domain.entities.features import FeatureIssue, MarketFeatureSnapshot
 from app.domain.entities.market_data import Candle, EconomicEvent, Timeframe
-from app.domain.feature_engine import MarketFeatureEngine
 from app.domain.value_objects import CurrencyPair
 
 
-class MarketContextEngine:
-    def __init__(self, *, feature_engine: MarketFeatureEngine | None = None) -> None:
-        self._feature_engine = feature_engine or MarketFeatureEngine()
+class AnalysisEngine:
+    def __init__(self, *, context_engine: MarketContextEngine | None = None) -> None:
+        self._context_engine = context_engine or MarketContextEngine()
 
     def build_snapshot(
         self,
@@ -1094,356 +1077,420 @@ class MarketContextEngine:
         window_start: datetime,
         window_end: datetime,
         as_of: datetime,
-        candles: Sequence[Candle],
+        candles: Sequence[Candle] = (),
         economic_events: Sequence[EconomicEvent] = (),
+        currencies: Sequence[str] | None = None,
+        provider: str | None = None,
+        feature_snapshot: MarketFeatureSnapshot | None = None,
+        context_snapshot: MarketContextSnapshot | None = None,
         moving_average_windows: Sequence[int] = (3, 5),
-    ) -> MarketContextSnapshot:
-        window = IndicatorWindow(
+    ) -> AnalysisSnapshot:
+        window = AnalysisWindow(
             pair=pair,
             timeframe=timeframe,
             window_start=window_start,
             window_end=window_end,
             as_of=as_of,
         )
-        normalized_windows = _normalize_windows(moving_average_windows)
-        feature_snapshot = self._feature_engine.build_snapshot(
-            pair=pair,
-            timeframe=timeframe,
-            window_start=window.window_start,
-            window_end=window.window_end,
-            as_of=window.as_of,
+        requested_currencies = _requested_currencies(pair=pair, currencies=currencies)
+        invalid_window_issue = _invalid_window_issue(window)
+        if invalid_window_issue is None and context_snapshot is None:
+            context_snapshot = self._context_engine.build_snapshot(
+                pair=pair,
+                timeframe=timeframe,
+                window_start=window.window_start,
+                window_end=window.window_end,
+                as_of=window.as_of,
+                candles=candles,
+                economic_events=economic_events,
+                moving_average_windows=moving_average_windows,
+            )
+        if context_snapshot is not None and feature_snapshot is None:
+            feature_snapshot = context_snapshot.feature_snapshot
+
+        issues = _analysis_issues(
+            window=window,
+            invalid_window_issue=invalid_window_issue,
+            feature_snapshot=feature_snapshot,
+            context_snapshot=context_snapshot,
+        )
+        input_audit = _input_audit(
+            window=window,
+            provider=provider,
+            requested_currencies=requested_currencies,
             candles=candles,
             economic_events=economic_events,
-            rolling_window_size=min(normalized_windows),
+            feature_snapshot=feature_snapshot,
+            context_snapshot=context_snapshot,
+            issues=issues,
         )
-        usable_candles = _select_candles(
+        readiness_status = _readiness_status(issues=issues, input_audit=input_audit)
+        metadata = _metadata(
+            window=window,
+            input_audit=input_audit,
+            issues=issues,
+            readiness_status=readiness_status,
+            feature_snapshot=feature_snapshot,
+            context_snapshot=context_snapshot,
+        )
+        return AnalysisSnapshot(
+            window=window,
+            metadata=metadata,
+            input_audit=input_audit,
+            readiness_status=readiness_status,
+            readiness_issues=issues,
+            feature_snapshot=feature_snapshot,
+            context_snapshot=context_snapshot,
+        )
+
+    def build_report(
+        self,
+        *,
+        pair: CurrencyPair,
+        timeframe: Timeframe,
+        window_start: datetime,
+        window_end: datetime,
+        as_of: datetime,
+        candles: Sequence[Candle] = (),
+        economic_events: Sequence[EconomicEvent] = (),
+        currencies: Sequence[str] | None = None,
+        provider: str | None = None,
+        feature_snapshot: MarketFeatureSnapshot | None = None,
+        context_snapshot: MarketContextSnapshot | None = None,
+        moving_average_windows: Sequence[int] = (3, 5),
+    ) -> AnalysisReport:
+        snapshot = self.build_snapshot(
             pair=pair,
             timeframe=timeframe,
-            start_at=window.window_start,
-            end_at=window.window_end,
-            as_of=window.as_of,
+            window_start=window_start,
+            window_end=window_end,
+            as_of=as_of,
             candles=candles,
-        )
-        usable_events = _select_events(
-            start_at=window.window_start,
-            end_at=window.window_end,
-            as_of=window.as_of,
-            events=economic_events,
-        )
-        context_issues = tuple(_context_issue(issue) for issue in feature_snapshot.quality_issues)
-        return MarketContextSnapshot(
-            window=window,
+            economic_events=economic_events,
+            currencies=currencies,
+            provider=provider,
             feature_snapshot=feature_snapshot,
-            return_distribution=_return_distribution(usable_candles),
-            moving_average_summary=_moving_average_summary(
-                candles=usable_candles,
-                windows=normalized_windows,
-            ),
-            range_context=_range_context(usable_candles),
-            candle_shape=_candle_shape(usable_candles),
-            event_context=_event_context(
-                input_event_count=len(economic_events),
-                events=usable_events,
-                as_of=window.as_of,
-            ),
-            time_context=_time_context(window=window, candle_count=len(usable_candles)),
-            context_issues=context_issues,
+            context_snapshot=context_snapshot,
+            moving_average_windows=moving_average_windows,
+        )
+        return AnalysisReport(
+            snapshot=snapshot,
+            ready_for_review=snapshot.readiness_status == AnalysisReadinessStatus.READY,
+            issue_count=len(snapshot.readiness_issues),
+            used_candle_count=snapshot.input_audit.used_candle_count,
+            used_event_count=snapshot.input_audit.used_event_count,
+            generated_at=snapshot.window.as_of,
         )
 
 
-def _normalize_windows(windows: Sequence[int]) -> tuple[int, ...]:
-    if not windows:
-        raise ValueError("at least one moving average window is required")
-    unique = tuple(sorted(set(windows)))
-    if any(window < 1 for window in unique):
-        raise ValueError("moving average windows must be positive")
-    return unique
-
-
-def _context_issue(issue: FeatureIssue) -> ContextIssue:
-    return ContextIssue(
-        code=ContextIssueCode[issue.code.name],
-        description=issue.description,
-        timestamp=issue.timestamp,
-    )
-
-
-def _select_candles(
+def _requested_currencies(
     *,
     pair: CurrencyPair,
-    timeframe: Timeframe,
-    start_at: datetime,
-    end_at: datetime,
-    as_of: datetime,
-    candles: Sequence[Candle],
-) -> tuple[Candle, ...]:
-    start_utc = normalize_to_utc(start_at)
-    end_utc = normalize_to_utc(end_at)
-    as_of_utc = normalize_to_utc(as_of)
-    selected: dict[datetime, Candle] = {}
-    for candle in sorted(candles, key=lambda item: (item.open_time, item.provider)):
-        if (
-            candle.is_closed
-            and candle.pair == pair
-            and candle.timeframe == timeframe
-            and candle.open_time >= start_utc
-            and candle.close_time <= end_utc
-            and candle.close_time <= as_of_utc
-        ):
-            selected.setdefault(candle.open_time, candle)
-    return tuple(selected[open_time] for open_time in sorted(selected))
+    currencies: Sequence[str] | None,
+) -> tuple[str, ...]:
+    if currencies is None:
+        return (pair.base_currency, pair.quote_currency)
+    return tuple(sorted(set(currencies)))
 
 
-def _select_events(
+def _invalid_window_issue(window: AnalysisWindow) -> AnalysisIssue | None:
+    if window.window_end > window.window_start:
+        return None
+    return AnalysisIssue(
+        code=AnalysisIssueCode.INVALID_WINDOW,
+        description="Analysis window end must be later than analysis window start.",
+        source="analysis",
+        timestamp=window.window_start,
+    )
+
+
+def _analysis_issues(
     *,
-    start_at: datetime,
-    end_at: datetime,
-    as_of: datetime,
-    events: Sequence[EconomicEvent],
-) -> tuple[EconomicEvent, ...]:
-    start_utc = normalize_to_utc(start_at)
-    end_utc = normalize_to_utc(end_at)
-    as_of_utc = normalize_to_utc(as_of)
+    window: AnalysisWindow,
+    invalid_window_issue: AnalysisIssue | None,
+    feature_snapshot: MarketFeatureSnapshot | None,
+    context_snapshot: MarketContextSnapshot | None,
+) -> tuple[AnalysisIssue, ...]:
+    issues: list[AnalysisIssue] = []
+    if invalid_window_issue is not None:
+        issues.append(invalid_window_issue)
+    if feature_snapshot is not None:
+        issues.extend(_feature_issues(feature_snapshot.quality_issues))
+        issues.extend(_data_quality_issues(feature_snapshot.data_quality_issues))
+        issues.extend(_feature_window_issues(window=window, snapshot=feature_snapshot))
+    if context_snapshot is not None:
+        issues.extend(_context_issues(context_snapshot.context_issues))
+        issues.extend(_context_window_issues(window=window, snapshot=context_snapshot))
+    return tuple(issues)
+
+
+def _feature_issues(issues: Sequence[FeatureIssue]) -> tuple[AnalysisIssue, ...]:
     return tuple(
-        event
-        for event in sorted(
-            events,
-            key=lambda item: (item.scheduled_at, item.currency, item.provider_event_id),
+        AnalysisIssue(
+            code=_analysis_code(issue.code.name),
+            description=issue.description,
+            source="feature",
+            timestamp=issue.timestamp,
         )
-        if start_utc <= event.scheduled_at < end_utc and event.scheduled_at <= as_of_utc
+        for issue in issues
     )
 
 
-def _return_distribution(candles: Sequence[Candle]) -> ReturnDistributionSummary:
-    close_values = tuple(candle.close for candle in candles)
-    close_changes = tuple(
-        close_values[index] - close_values[index - 1] for index in range(1, len(close_values))
-    )
-    per_candle_returns = tuple((candle.close - candle.open) / candle.open for candle in candles)
-    deviation = _population_standard_deviation(per_candle_returns)
-    return ReturnDistributionSummary(
-        close_values=close_values,
-        close_change_values=close_changes,
-        per_candle_returns=per_candle_returns,
-        cumulative_return=_cumulative_return(close_values),
-        mean_return=_mean(per_candle_returns),
-        median_return=_median(per_candle_returns),
-        min_return=min(per_candle_returns) if per_candle_returns else None,
-        max_return=max(per_candle_returns) if per_candle_returns else None,
-        return_standard_deviation=deviation,
-        realized_volatility=deviation,
-        max_close_to_close_drawdown=_max_close_to_close_drawdown(close_values),
+def _context_issues(issues: Sequence[ContextIssue]) -> tuple[AnalysisIssue, ...]:
+    return tuple(
+        AnalysisIssue(
+            code=_analysis_code(issue.code.name),
+            description=issue.description,
+            source="context",
+            timestamp=issue.timestamp,
+        )
+        for issue in issues
     )
 
 
-def _moving_average_summary(
+def _data_quality_issues(issues: Sequence[DataQualityIssue]) -> tuple[AnalysisIssue, ...]:
+    return tuple(
+        AnalysisIssue(
+            code=_analysis_code(issue.code.name),
+            description=issue.description,
+            source="data_quality",
+            timestamp=issue.timestamp,
+        )
+        for issue in issues
+    )
+
+
+def _feature_window_issues(
     *,
-    candles: Sequence[Candle],
-    windows: Sequence[int],
-) -> MovingAverageSummary:
-    close_values = tuple(candle.close for candle in candles)
-    per_candle_returns = tuple((candle.close - candle.open) / candle.open for candle in candles)
-    return MovingAverageSummary(
-        close_mean_series=tuple(
-            MovingAverageSeries(window_size=window, values=_moving_means(close_values, window))
-            for window in windows
-        ),
-        return_mean_series=tuple(
-            MovingAverageSeries(
-                window_size=window,
-                values=_moving_means(per_candle_returns, window),
-            )
-            for window in windows
-        ),
-    )
-
-
-def _range_context(candles: Sequence[Candle]) -> RangeContextSummary:
-    range_values = tuple(candle.high - candle.low for candle in candles)
-    true_range_values = _true_ranges(candles)
-    return RangeContextSummary(
-        true_range_values=true_range_values,
-        average_true_range=_mean(true_range_values),
-        candle_range_values=range_values,
-        average_candle_range=_mean(range_values),
-        range_change_ratios=_range_change_ratios(range_values),
-    )
-
-
-def _candle_shape(candles: Sequence[Candle]) -> CandleShapeSummary:
-    body_sizes = tuple(abs(candle.close - candle.open) for candle in candles)
-    upper_wicks = tuple(candle.high - max(candle.open, candle.close) for candle in candles)
-    lower_wicks = tuple(min(candle.open, candle.close) - candle.low for candle in candles)
-    range_values = tuple(candle.high - candle.low for candle in candles)
-    return CandleShapeSummary(
-        body_sizes=body_sizes,
-        average_body_size=_mean(body_sizes),
-        upper_wick_sizes=upper_wicks,
-        lower_wick_sizes=lower_wicks,
-        average_upper_wick_size=_mean(upper_wicks),
-        average_lower_wick_size=_mean(lower_wicks),
-        body_to_range_ratios=tuple(
-            None if range_value == 0 else body_size / range_value
-            for body_size, range_value in zip(body_sizes, range_values, strict=True)
-        ),
-        close_location_in_range_values=tuple(
-            None if range_value == 0 else (candle.close - candle.low) / range_value
-            for candle, range_value in zip(candles, range_values, strict=True)
-        ),
-    )
-
-
-def _event_context(
-    *,
-    input_event_count: int,
-    events: Sequence[EconomicEvent],
-    as_of: datetime,
-) -> EventContextSummary:
-    impact_counts = Counter(event.impact for event in events)
-    currency_counts = Counter(event.currency for event in events)
-    latest_event_time = max((event.scheduled_at for event in events), default=None)
-    return EventContextSummary(
-        input_event_count=input_event_count,
-        used_event_count=len(events),
-        counts_by_impact=tuple(
-            ContextImpactCount(impact=impact, count=impact_counts[impact])
-            for impact in sorted(impact_counts, key=lambda value: value.value)
-        ),
-        counts_by_currency=tuple(
-            ContextCurrencyCount(currency=currency, count=currency_counts[currency])
-            for currency in sorted(currency_counts)
-        ),
-        latest_event_time=latest_event_time,
-        minutes_since_latest_event=_minutes_between(latest_event_time, as_of)
-        if latest_event_time is not None
-        else None,
-    )
-
-
-def _time_context(*, window: IndicatorWindow, candle_count: int) -> TimeContextSummary:
-    return TimeContextSummary(
-        as_of_utc_hour=window.as_of.hour,
-        as_of_utc_weekday=window.as_of.weekday(),
-        window_minutes=_minutes_between(window.window_start, window.window_end) or Decimal("0"),
-        candle_count=candle_count,
-    )
-
-
-def _cumulative_return(close_values: Sequence[Decimal]) -> Decimal | None:
-    if len(close_values) < 2:
-        return None
-    return (close_values[-1] - close_values[0]) / close_values[0]
-
-
-def _mean(values: Sequence[Decimal]) -> Decimal | None:
-    if not values:
-        return None
-    return sum(values, Decimal("0")) / Decimal(len(values))
-
-
-def _median(values: Sequence[Decimal]) -> Decimal | None:
-    if not values:
-        return None
-    ordered = sorted(values)
-    midpoint = len(ordered) // 2
-    if len(ordered) % 2 == 1:
-        return ordered[midpoint]
-    return (ordered[midpoint - 1] + ordered[midpoint]) / Decimal("2")
-
-
-def _population_standard_deviation(values: Sequence[Decimal]) -> Decimal | None:
-    mean = _mean(values)
-    if mean is None:
-        return None
-    variance = sum(((value - mean) ** 2 for value in values), Decimal("0")) / Decimal(len(values))
-    return variance.sqrt()
-
-
-def _max_close_to_close_drawdown(close_values: Sequence[Decimal]) -> Decimal | None:
-    if len(close_values) < 2:
-        return None
-    peak = close_values[0]
-    largest = Decimal("0")
-    for close_value in close_values[1:]:
-        if close_value > peak:
-            peak = close_value
-            continue
-        current = (peak - close_value) / peak
-        if current > largest:
-            largest = current
-    return largest
-
-
-def _moving_means(values: Sequence[Decimal], window_size: int) -> tuple[Decimal, ...]:
-    means: list[Decimal] = []
-    for index in range(window_size, len(values) + 1):
-        window = values[index - window_size : index]
-        means.append(sum(window, Decimal("0")) / Decimal(window_size))
-    return tuple(means)
-
-
-def _true_ranges(candles: Sequence[Candle]) -> tuple[Decimal, ...]:
-    ranges: list[Decimal] = []
-    previous_close: Decimal | None = None
-    for candle in candles:
-        high_low = candle.high - candle.low
-        if previous_close is None:
-            true_range = high_low
-        else:
-            true_range = max(
-                high_low,
-                abs(candle.high - previous_close),
-                abs(candle.low - previous_close),
-            )
-        ranges.append(true_range)
-        previous_close = candle.close
-    return tuple(ranges)
-
-
-def _range_change_ratios(values: Sequence[Decimal]) -> tuple[Decimal | None, ...]:
-    if not values:
+    window: AnalysisWindow,
+    snapshot: MarketFeatureSnapshot,
+) -> tuple[AnalysisIssue, ...]:
+    if (
+        snapshot.window.pair == window.pair
+        and snapshot.window.timeframe == window.timeframe
+        and snapshot.window.window_start == window.window_start
+        and snapshot.window.window_end == window.window_end
+        and snapshot.window.as_of == window.as_of
+    ):
         return ()
-    ratios: list[Decimal | None] = [None]
-    for index in range(1, len(values)):
-        previous = values[index - 1]
-        ratios.append(None if previous == 0 else (values[index] - previous) / previous)
-    return tuple(ratios)
+    return (
+        AnalysisIssue(
+            code=AnalysisIssueCode.SNAPSHOT_WINDOW_MISMATCH,
+            description="Feature snapshot window does not match the requested analysis window.",
+            source="analysis",
+        ),
+    )
 
 
-def _minutes_between(start_at: datetime | None, end_at: datetime) -> Decimal | None:
-    if start_at is None:
+def _context_window_issues(
+    *,
+    window: AnalysisWindow,
+    snapshot: MarketContextSnapshot,
+) -> tuple[AnalysisIssue, ...]:
+    if (
+        snapshot.window.pair == window.pair
+        and snapshot.window.timeframe == window.timeframe
+        and snapshot.window.window_start == window.window_start
+        and snapshot.window.window_end == window.window_end
+        and snapshot.window.as_of == window.as_of
+    ):
+        return ()
+    return (
+        AnalysisIssue(
+            code=AnalysisIssueCode.SNAPSHOT_WINDOW_MISMATCH,
+            description="Context snapshot window does not match the requested analysis window.",
+            source="analysis",
+        ),
+    )
+
+
+def _input_audit(
+    *,
+    window: AnalysisWindow,
+    provider: str | None,
+    requested_currencies: tuple[str, ...],
+    candles: Sequence[Candle],
+    economic_events: Sequence[EconomicEvent],
+    feature_snapshot: MarketFeatureSnapshot | None,
+    context_snapshot: MarketContextSnapshot | None,
+    issues: Sequence[AnalysisIssue],
+) -> AnalysisInputAudit:
+    used_candle_count = (
+        feature_snapshot.candle_summary.used_candle_count if feature_snapshot is not None else 0
+    )
+    used_event_count = (
+        feature_snapshot.economic_event_summary.used_event_count
+        if feature_snapshot is not None
+        else 0
+    )
+    latest_used_candle_close_time = (
+        feature_snapshot.candle_summary.latest_candle_close_time
+        if feature_snapshot is not None
+        else None
+    )
+    latest_used_event_time = (
+        context_snapshot.event_context.latest_event_time if context_snapshot is not None else None
+    )
+    return AnalysisInputAudit(
+        requested_pair=window.pair,
+        requested_timeframe=window.timeframe,
+        provider=provider,
+        requested_currencies=requested_currencies,
+        input_candle_count=_input_candle_count(candles, feature_snapshot),
+        used_candle_count=used_candle_count,
+        input_event_count=_input_event_count(economic_events, feature_snapshot),
+        used_event_count=used_event_count,
+        input_candles_after_as_of_count=sum(
+            1 for candle in candles if candle.close_time > window.as_of
+        ),
+        input_events_after_as_of_count=sum(
+            1 for event in economic_events if event.scheduled_at > window.as_of
+        ),
+        excluded_issue_counts=_issue_counts(issues),
+        as_of=window.as_of,
+        latest_used_candle_close_time=latest_used_candle_close_time,
+        latest_used_event_time=latest_used_event_time,
+        no_candles_after_as_of_used=_not_after(latest_used_candle_close_time, window.as_of),
+        no_events_after_as_of_used=_not_after(latest_used_event_time, window.as_of),
+    )
+
+
+def _input_candle_count(
+    candles: Sequence[Candle],
+    feature_snapshot: MarketFeatureSnapshot | None,
+) -> int:
+    if candles:
+        return len(candles)
+    if feature_snapshot is not None:
+        return feature_snapshot.candle_summary.input_candle_count
+    return 0
+
+
+def _input_event_count(
+    economic_events: Sequence[EconomicEvent],
+    feature_snapshot: MarketFeatureSnapshot | None,
+) -> int:
+    if economic_events:
+        return len(economic_events)
+    if feature_snapshot is not None:
+        return feature_snapshot.economic_event_summary.input_event_count
+    return 0
+
+
+def _issue_counts(issues: Sequence[AnalysisIssue]) -> tuple[AnalysisIssueCount, ...]:
+    counts = Counter((issue.source, issue.code) for issue in issues)
+    return tuple(
+        AnalysisIssueCount(source=source, code=code, count=counts[(source, code)])
+        for source, code in sorted(counts, key=lambda item: (item[0], item[1].value))
+    )
+
+
+def _not_after(value: datetime | None, as_of: datetime) -> bool:
+    return value is None or normalize_to_utc(value) <= normalize_to_utc(as_of)
+
+
+def _readiness_status(
+    *,
+    issues: Sequence[AnalysisIssue],
+    input_audit: AnalysisInputAudit,
+) -> AnalysisReadinessStatus:
+    if _has_blocking_issue(issues) or input_audit.used_candle_count == 0:
+        return AnalysisReadinessStatus.BLOCKED
+    if issues:
+        return AnalysisReadinessStatus.INCOMPLETE
+    return AnalysisReadinessStatus.READY
+
+
+def _has_blocking_issue(issues: Sequence[AnalysisIssue]) -> bool:
+    blocking_codes = {
+        AnalysisIssueCode.INVALID_WINDOW,
+        AnalysisIssueCode.NO_USABLE_CANDLES,
+        AnalysisIssueCode.NO_CANDLES,
+        AnalysisIssueCode.CANDLE_AFTER_AS_OF,
+        AnalysisIssueCode.EVENT_AFTER_AS_OF,
+        AnalysisIssueCode.CANDLE_PAIR_MISMATCH,
+        AnalysisIssueCode.CANDLE_TIMEFRAME_MISMATCH,
+        AnalysisIssueCode.DUPLICATE_CANDLE,
+        AnalysisIssueCode.SNAPSHOT_WINDOW_MISMATCH,
+    }
+    return any(issue.code in blocking_codes for issue in issues)
+
+
+def _metadata(
+    *,
+    window: AnalysisWindow,
+    input_audit: AnalysisInputAudit,
+    issues: Sequence[AnalysisIssue],
+    readiness_status: AnalysisReadinessStatus,
+    feature_snapshot: MarketFeatureSnapshot | None,
+    context_snapshot: MarketContextSnapshot | None,
+) -> AnalysisSnapshotMetadata:
+    feature_snapshot_id = _model_hash(feature_snapshot)
+    context_snapshot_id = _model_hash(context_snapshot)
+    snapshot_id = _hash_json(
+        {
+            "window": window.model_dump(mode="json"),
+            "input_audit": input_audit.model_dump(mode="json"),
+            "issues": [issue.model_dump(mode="json") for issue in issues],
+            "readiness_status": readiness_status.value,
+            "feature_snapshot_id": feature_snapshot_id,
+            "context_snapshot_id": context_snapshot_id,
+        }
+    )
+    return AnalysisSnapshotMetadata(
+        project_phase=constants.PROJECT_PHASE,
+        snapshot_id=snapshot_id,
+        feature_snapshot_id=feature_snapshot_id,
+        context_snapshot_id=context_snapshot_id,
+        built_at=window.as_of,
+        source_layer="phase_3d_analysis_snapshot_foundation",
+    )
+
+
+def _analysis_code(name: str) -> AnalysisIssueCode:
+    if name in AnalysisIssueCode.__members__:
+        return AnalysisIssueCode[name]
+    return AnalysisIssueCode.DATA_QUALITY_ISSUE
+
+
+def _model_hash(model: BaseModel | None) -> str | None:
+    if model is None:
         return None
-    delta = normalize_to_utc(end_at) - normalize_to_utc(start_at)
-    microseconds = (delta.days * 86_400 + delta.seconds) * 1_000_000 + delta.microseconds
-    return Decimal(microseconds) / Decimal("60000000")
+    return _hash_json(model.model_dump(mode="json"))
+
+
+def _hash_json(payload: object) -> str:
+    canonical = json.dumps(payload, sort_keys=True, separators=(",", ":"))
+    return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
 ```
 
-### `app/services/context_service.py`
+### `app/services/analysis_service.py`
 
 ```python
 from collections.abc import Callable, Sequence
 from datetime import datetime
 
-from app.domain.context_engine import MarketContextEngine
+from app.core.exceptions import NotImplementedFeatureError
+from app.domain.analysis_engine import AnalysisEngine
 from app.domain.entities import Timeframe
-from app.domain.entities.context import MarketContextSnapshot
+from app.domain.entities.analysis import AnalysisReport, AnalysisSnapshot
 from app.domain.interfaces.unit_of_work import UnitOfWork
 from app.domain.value_objects import CurrencyPair
 
 UnitOfWorkFactory = Callable[[], UnitOfWork]
 
 
-class ContextService:
+class AnalysisService:
     def __init__(
         self,
-        uow_factory: UnitOfWorkFactory,
+        uow_factory: UnitOfWorkFactory | None = None,
         *,
-        engine: MarketContextEngine | None = None,
+        engine: AnalysisEngine | None = None,
     ) -> None:
         self._uow_factory = uow_factory
-        self._engine = engine or MarketContextEngine()
+        self._engine = engine or AnalysisEngine()
 
-    async def build_market_context(
+    async def build_snapshot(
         self,
         *,
         pair: CurrencyPair,
@@ -1454,7 +1501,7 @@ class ContextService:
         currencies: Sequence[str] | None = None,
         provider: str | None = None,
         moving_average_windows: Sequence[int] = (3, 5),
-    ) -> MarketContextSnapshot:
+    ) -> AnalysisSnapshot:
         event_currencies = (
             list(currencies)
             if currencies is not None
@@ -1463,6 +1510,8 @@ class ContextService:
                 pair.quote_currency,
             ]
         )
+        if self._uow_factory is None:
+            raise ValueError("unit of work factory is required")
         async with self._uow_factory() as uow:
             candles = await uow.candles.list_range(
                 pair=pair,
@@ -1485,13 +1534,49 @@ class ContextService:
             as_of=as_of,
             candles=candles,
             economic_events=events,
+            currencies=event_currencies,
+            provider=provider,
             moving_average_windows=moving_average_windows,
         )
+
+    async def build_report(
+        self,
+        *,
+        pair: CurrencyPair,
+        timeframe: Timeframe,
+        window_start: datetime,
+        window_end: datetime,
+        as_of: datetime,
+        currencies: Sequence[str] | None = None,
+        provider: str | None = None,
+        moving_average_windows: Sequence[int] = (3, 5),
+    ) -> AnalysisReport:
+        snapshot = await self.build_snapshot(
+            pair=pair,
+            timeframe=timeframe,
+            window_start=window_start,
+            window_end=window_end,
+            as_of=as_of,
+            currencies=currencies,
+            provider=provider,
+            moving_average_windows=moving_average_windows,
+        )
+        return AnalysisReport(
+            snapshot=snapshot,
+            ready_for_review=snapshot.readiness_status.value == "READY",
+            issue_count=len(snapshot.readiness_issues),
+            used_candle_count=snapshot.input_audit.used_candle_count,
+            used_event_count=snapshot.input_audit.used_event_count,
+            generated_at=snapshot.window.as_of,
+        )
+
+    async def scan_now(self) -> None:
+        raise NotImplementedFeatureError("analysis_engine")
 ```
 
 ## Migration Contents
 
-No new migration was added for Phase 3C. Existing migration contents are included below.
+No new migration was added for Phase 3D. Existing migration contents are included below.
 
 ### `migrations/versions/0001_foundation_schema.py`
 
@@ -1841,10 +1926,10 @@ def downgrade() -> None:
 
 ## New and Modified Tests
 
-### `tests/unit/test_context_engine_foundation.py`
+### `tests/unit/test_analysis_snapshot_foundation.py`
 
 ```python
-from collections.abc import Sequence
+from collections.abc import AsyncIterator, Sequence
 from contextlib import asynccontextmanager
 from datetime import UTC, datetime, timedelta, timezone
 from decimal import Decimal
@@ -1852,382 +1937,234 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from app.domain.context_engine import MarketContextEngine
+from app.core import constants
+from app.domain.analysis_engine import AnalysisEngine
 from app.domain.entities import Candle, EconomicEvent, EconomicImpact, Timeframe
-from app.domain.entities.context import ContextIssueCode, MarketContextSnapshot
+from app.domain.entities.analysis import AnalysisIssueCode, AnalysisReadinessStatus
 from app.domain.value_objects import CurrencyPair
-from app.services.context_service import ContextService
+from app.services.analysis_service import AnalysisService
 
 PAIR = CurrencyPair(value="EURUSD")
-OTHER_PAIR = CurrencyPair(value="GBPUSD")
-START = datetime(2026, 7, 8, 8, 0, tzinfo=UTC)
+BASE_TIME = datetime(2026, 7, 8, 8, 0, tzinfo=UTC)
+OPEN_VALUES = (Decimal("100"), Decimal("110"), Decimal("121"))
+CLOSE_VALUES = (Decimal("110"), Decimal("121"), Decimal("133.1"))
+HIGH_VALUES = (Decimal("112"), Decimal("123"), Decimal("135"))
+LOW_VALUES = (Decimal("98"), Decimal("109"), Decimal("120"))
 
 
 def _candle(
     index: int,
     *,
-    provider: str = "unit",
+    provider: str = "phase3d-provider",
     pair: CurrencyPair = PAIR,
     timeframe: Timeframe = Timeframe.M15,
-    open_value: str = "100",
-    high: str = "110",
-    low: str = "95",
-    close: str = "105",
-    volume: str | None = "10",
 ) -> Candle:
-    open_time = START + timedelta(minutes=15 * index)
+    open_time = BASE_TIME + timedelta(minutes=15 * index)
     return Candle(
         provider=provider,
         pair=pair,
         timeframe=timeframe,
         open_time=open_time,
         close_time=open_time + timedelta(minutes=15),
-        open=Decimal(open_value),
-        high=Decimal(high),
-        low=Decimal(low),
-        close=Decimal(close),
-        volume=Decimal(volume) if volume is not None else None,
+        open=OPEN_VALUES[index],
+        high=HIGH_VALUES[index],
+        low=LOW_VALUES[index],
+        close=CLOSE_VALUES[index],
+        volume=Decimal("100"),
         is_closed=True,
     )
 
 
 def _event(
-    minutes: int,
+    minutes_after_base: int,
     *,
+    provider: str = "phase3d-provider",
+    provider_event_id: str = "event-1",
     currency: str = "EUR",
-    impact: EconomicImpact = EconomicImpact.HIGH,
-    provider_event_id: str = "event",
 ) -> EconomicEvent:
     return EconomicEvent(
-        provider="unit",
+        provider=provider,
         provider_event_id=provider_event_id,
         title="Consumer Price Index",
         currency=currency,
         country="Eurozone",
-        impact=impact,
-        scheduled_at=START + timedelta(minutes=minutes),
+        impact=EconomicImpact.HIGH,
+        scheduled_at=BASE_TIME + timedelta(minutes=minutes_after_base),
         actual=Decimal("2.2"),
         forecast=Decimal("2.1"),
         previous=Decimal("2.0"),
-        fetched_at=START,
+        fetched_at=BASE_TIME,
     )
 
 
-def _engine() -> MarketContextEngine:
-    return MarketContextEngine()
+def _engine() -> AnalysisEngine:
+    return AnalysisEngine()
 
 
-def _issue_codes(snapshot: MarketContextSnapshot) -> set[ContextIssueCode]:
-    return {issue.code for issue in snapshot.context_issues}
-
-
-def test_context_engine_calculates_exact_decimal_context() -> None:
-    candles = [
-        _candle(2, open_value="90", high="100", low="89", close="99"),
-        _candle(0, open_value="100", high="112", low="99", close="110"),
-        _candle(1, open_value="80", high="90", low="79", close="88"),
-    ]
-
-    snapshot = _engine().build_snapshot(
+def _snapshot(
+    candles: Sequence[Candle] | None = None,
+    events: Sequence[EconomicEvent] | None = None,
+    *,
+    window_start: datetime = BASE_TIME,
+    window_end: datetime = BASE_TIME + timedelta(minutes=45),
+    as_of: datetime = BASE_TIME + timedelta(minutes=45),
+    moving_average_windows: Sequence[int] = (2,),
+):
+    return _engine().build_snapshot(
         pair=PAIR,
         timeframe=Timeframe.M15,
-        window_start=START,
-        window_end=START + timedelta(minutes=45),
-        as_of=START + timedelta(minutes=45),
-        candles=candles,
-        moving_average_windows=(2, 3),
+        window_start=window_start,
+        window_end=window_end,
+        as_of=as_of,
+        candles=list(candles) if candles is not None else [_candle(0), _candle(1), _candle(2)],
+        economic_events=list(events) if events is not None else [_event(10)],
+        moving_average_windows=moving_average_windows,
     )
 
-    assert snapshot.quality_ok is True
-    assert snapshot.return_distribution.close_values == (
-        Decimal("110"),
-        Decimal("88"),
-        Decimal("99"),
-    )
-    assert snapshot.return_distribution.close_change_values == (
-        Decimal("-22"),
-        Decimal("11"),
-    )
-    assert snapshot.return_distribution.per_candle_returns == (
-        Decimal("0.1"),
-        Decimal("0.1"),
-        Decimal("0.1"),
-    )
-    assert snapshot.return_distribution.cumulative_return == Decimal("-0.1")
-    assert snapshot.return_distribution.mean_return == Decimal("0.1")
-    assert snapshot.return_distribution.median_return == Decimal("0.1")
-    assert snapshot.return_distribution.min_return == Decimal("0.1")
-    assert snapshot.return_distribution.max_return == Decimal("0.1")
-    assert snapshot.return_distribution.return_standard_deviation == Decimal("0")
-    assert snapshot.return_distribution.realized_volatility == Decimal("0")
-    assert snapshot.return_distribution.max_close_to_close_drawdown == Decimal("0.2")
+
+def _issue_codes(snapshot) -> set[AnalysisIssueCode]:
+    return {issue.code for issue in snapshot.readiness_issues}
 
 
-def test_context_models_normalize_times_to_utc() -> None:
-    stockholm = timezone(timedelta(hours=2))
-    candle = _candle(0).model_copy(
-        update={
-            "open_time": datetime(2026, 7, 8, 10, 0, tzinfo=stockholm),
-            "close_time": datetime(2026, 7, 8, 10, 15, tzinfo=stockholm),
-        }
-    )
+def test_analysis_snapshot_assembly_is_exact_and_neutral() -> None:
+    snapshot = _snapshot()
 
-    snapshot = _engine().build_snapshot(
-        pair=PAIR,
-        timeframe=Timeframe.M15,
-        window_start=datetime(2026, 7, 8, 10, 0, tzinfo=stockholm),
-        window_end=datetime(2026, 7, 8, 10, 15, tzinfo=stockholm),
-        as_of=datetime(2026, 7, 8, 10, 15, tzinfo=stockholm),
-        candles=[candle],
-        moving_average_windows=(1,),
+    assert snapshot.readiness_status == AnalysisReadinessStatus.READY
+    assert snapshot.metadata.project_phase == constants.PROJECT_PHASE
+    assert snapshot.input_audit.input_candle_count == 3
+    assert snapshot.input_audit.used_candle_count == 3
+    assert snapshot.input_audit.input_event_count == 1
+    assert snapshot.input_audit.used_event_count == 1
+    assert snapshot.input_audit.no_candles_after_as_of_used is True
+    assert snapshot.input_audit.no_events_after_as_of_used is True
+    assert snapshot.feature_snapshot is not None
+    assert snapshot.context_snapshot is not None
+    assert snapshot.feature_snapshot.candle_summary.latest_close == Decimal("133.1")
+    assert snapshot.context_snapshot.return_distribution.mean_return == Decimal("0.1")
+    assert snapshot.context_snapshot.return_distribution.cumulative_return == Decimal("0.21")
+    assert snapshot.context_snapshot.return_distribution.return_standard_deviation == Decimal("0.0")
+    assert snapshot.context_snapshot.event_context.used_event_count == 1
+    assert snapshot.metadata.snapshot_id
+
+
+def test_analysis_window_normalizes_to_utc() -> None:
+    offset = timezone(timedelta(hours=2))
+    snapshot = _snapshot(
+        window_start=datetime(2026, 7, 8, 10, 0, tzinfo=offset),
+        window_end=datetime(2026, 7, 8, 10, 45, tzinfo=offset),
+        as_of=datetime(2026, 7, 8, 10, 45, tzinfo=offset),
     )
 
-    assert snapshot.window.window_start == START
-    assert snapshot.window.window_end == START + timedelta(minutes=15)
-    assert snapshot.window.as_of == START + timedelta(minutes=15)
+    assert snapshot.window.window_start == BASE_TIME
+    assert snapshot.window.window_end == BASE_TIME + timedelta(minutes=45)
+    assert snapshot.window.as_of == BASE_TIME + timedelta(minutes=45)
 
 
-def test_context_engine_excludes_items_after_as_of() -> None:
-    snapshot = _engine().build_snapshot(
-        pair=PAIR,
-        timeframe=Timeframe.M15,
-        window_start=START,
-        window_end=START + timedelta(minutes=45),
-        as_of=START + timedelta(minutes=30),
-        candles=[_candle(0), _candle(1), _candle(2)],
-        economic_events=[
-            _event(20, provider_event_id="included"),
-            _event(40, provider_event_id="later"),
-        ],
-        moving_average_windows=(2,),
-    )
+def test_analysis_snapshot_is_json_serializable() -> None:
+    snapshot = _snapshot()
 
-    assert snapshot.time_context.candle_count == 2
-    assert snapshot.event_context.used_event_count == 1
-    assert ContextIssueCode.CANDLE_AFTER_AS_OF in _issue_codes(snapshot)
-    assert ContextIssueCode.EVENT_AFTER_AS_OF in _issue_codes(snapshot)
+    data = snapshot.model_dump(mode="json")
+    text = snapshot.model_dump_json()
+
+    assert data["metadata"]["project_phase"] == "phase_3d_analysis_snapshot_foundation"
+    assert "phase_3d_analysis_snapshot_foundation" in text
+    assert data["context_snapshot"]["return_distribution"]["mean_return"] == "0.1"
 
 
-def test_context_engine_reports_duplicate_candles() -> None:
-    duplicate = _candle(0, provider="duplicate")
-
-    snapshot = _engine().build_snapshot(
-        pair=PAIR,
-        timeframe=Timeframe.M15,
-        window_start=START,
-        window_end=START + timedelta(minutes=30),
-        as_of=START + timedelta(minutes=30),
-        candles=[_candle(0), duplicate, _candle(1)],
-        moving_average_windows=(2,),
-    )
-
-    assert snapshot.time_context.candle_count == 2
-    assert ContextIssueCode.DUPLICATE_CANDLE in _issue_codes(snapshot)
-    assert snapshot.quality_ok is False
-
-
-def test_context_engine_reports_missing_candle_gaps() -> None:
-    snapshot = _engine().build_snapshot(
-        pair=PAIR,
-        timeframe=Timeframe.M15,
-        window_start=START,
-        window_end=START + timedelta(minutes=45),
-        as_of=START + timedelta(minutes=45),
-        candles=[_candle(0), _candle(2)],
-        moving_average_windows=(2,),
-    )
-
-    assert snapshot.time_context.candle_count == 2
-    assert ContextIssueCode.MISSING_CANDLE in _issue_codes(snapshot)
-    assert snapshot.quality_ok is False
-
-
-def test_context_engine_reports_mismatched_pair_and_timeframe() -> None:
-    snapshot = _engine().build_snapshot(
-        pair=PAIR,
-        timeframe=Timeframe.M15,
-        window_start=START,
-        window_end=START + timedelta(minutes=15),
-        as_of=START + timedelta(minutes=15),
+def test_readiness_statuses_are_ready_incomplete_and_blocked() -> None:
+    ready = _snapshot()
+    incomplete = _snapshot(candles=[_candle(0), _candle(2)])
+    blocked = _snapshot(
         candles=[
-            _candle(0, pair=OTHER_PAIR),
-            _candle(0, timeframe=Timeframe.H1),
-        ],
-        moving_average_windows=(1,),
+            _candle(0),
+            _candle(0, provider="phase3d-provider-b"),
+            _candle(1),
+            _candle(2),
+        ]
     )
 
-    assert snapshot.time_context.candle_count == 0
-    assert ContextIssueCode.CANDLE_PAIR_MISMATCH in _issue_codes(snapshot)
-    assert ContextIssueCode.CANDLE_TIMEFRAME_MISMATCH in _issue_codes(snapshot)
-    assert ContextIssueCode.NO_CANDLES in _issue_codes(snapshot)
+    assert ready.readiness_status == AnalysisReadinessStatus.READY
+    assert incomplete.readiness_status == AnalysisReadinessStatus.INCOMPLETE
+    assert AnalysisIssueCode.MISSING_CANDLE in _issue_codes(incomplete)
+    assert blocked.readiness_status == AnalysisReadinessStatus.BLOCKED
+    assert AnalysisIssueCode.DUPLICATE_CANDLE in _issue_codes(blocked)
 
 
-def test_context_engine_requires_closed_candles_only() -> None:
-    open_candle = _candle(0).model_copy(update={"is_closed": False})
-
-    snapshot = _engine().build_snapshot(
-        pair=PAIR,
-        timeframe=Timeframe.M15,
-        window_start=START,
-        window_end=START + timedelta(minutes=15),
-        as_of=START + timedelta(minutes=15),
-        candles=[open_candle],
-        moving_average_windows=(1,),
+def test_as_of_proof_excludes_later_inputs_from_used_data() -> None:
+    snapshot = _snapshot(
+        events=[_event(10), _event(35, provider_event_id="event-2")],
+        as_of=BASE_TIME + timedelta(minutes=30),
     )
 
-    assert snapshot.time_context.candle_count == 0
-    assert ContextIssueCode.CANDLE_NOT_CLOSED in _issue_codes(snapshot)
-    assert ContextIssueCode.NO_CANDLES in _issue_codes(snapshot)
+    assert snapshot.readiness_status == AnalysisReadinessStatus.BLOCKED
+    assert AnalysisIssueCode.CANDLE_AFTER_AS_OF in _issue_codes(snapshot)
+    assert AnalysisIssueCode.EVENT_AFTER_AS_OF in _issue_codes(snapshot)
+    assert snapshot.input_audit.input_candles_after_as_of_count == 1
+    assert snapshot.input_audit.input_events_after_as_of_count == 1
+    assert snapshot.input_audit.no_candles_after_as_of_used is True
+    assert snapshot.input_audit.no_events_after_as_of_used is True
+    assert snapshot.input_audit.latest_used_candle_close_time == BASE_TIME + timedelta(minutes=30)
+    assert snapshot.input_audit.latest_used_event_time == BASE_TIME + timedelta(minutes=10)
 
 
-def test_context_engine_handles_empty_and_small_input_without_fake_values() -> None:
-    empty = _engine().build_snapshot(
-        pair=PAIR,
-        timeframe=Timeframe.M15,
-        window_start=START,
-        window_end=START + timedelta(minutes=30),
-        as_of=START + timedelta(minutes=30),
-        candles=[],
-        moving_average_windows=(3,),
-    )
+def test_issues_are_aggregated_from_source_snapshots() -> None:
+    snapshot = _snapshot(candles=[_candle(0), _candle(2)])
+    counts = {
+        (item.source, item.code): item.count for item in snapshot.input_audit.excluded_issue_counts
+    }
 
-    assert empty.return_distribution.close_values == ()
-    assert empty.return_distribution.cumulative_return is None
-    assert empty.return_distribution.return_standard_deviation is None
-    assert empty.range_context.average_true_range is None
-    assert empty.candle_shape.average_body_size is None
-    assert ContextIssueCode.NO_CANDLES in _issue_codes(empty)
-
-    small = _engine().build_snapshot(
-        pair=PAIR,
-        timeframe=Timeframe.M15,
-        window_start=START,
-        window_end=START + timedelta(minutes=30),
-        as_of=START + timedelta(minutes=30),
-        candles=[_candle(0), _candle(1)],
-        moving_average_windows=(3,),
-    )
-    assert small.moving_average_summary.close_mean_series[0].values == ()
-    assert ContextIssueCode.INSUFFICIENT_CANDLES in _issue_codes(small)
+    assert counts[("feature", AnalysisIssueCode.MISSING_CANDLE)] == 1
+    assert counts[("context", AnalysisIssueCode.MISSING_CANDLE)] == 1
+    assert counts[("data_quality", AnalysisIssueCode.MISSING_CANDLE)] == 1
 
 
-def test_context_engine_calculates_moving_averages() -> None:
-    candles = [
-        _candle(0, open_value="100", high="101", low="99", close="100"),
-        _candle(1, open_value="100", high="111", low="99", close="110"),
-        _candle(2, open_value="100", high="121", low="99", close="120"),
-        _candle(3, open_value="100", high="131", low="99", close="130"),
-        _candle(4, open_value="100", high="141", low="99", close="140"),
-    ]
-
-    snapshot = _engine().build_snapshot(
-        pair=PAIR,
-        timeframe=Timeframe.M15,
-        window_start=START,
-        window_end=START + timedelta(minutes=75),
-        as_of=START + timedelta(minutes=75),
-        candles=candles,
-        moving_average_windows=(3, 5),
-    )
-
-    assert snapshot.moving_average_summary.close_mean_series[0].values == (
-        Decimal("110"),
-        Decimal("120"),
-        Decimal("130"),
-    )
-    assert snapshot.moving_average_summary.close_mean_series[1].values == (Decimal("120"),)
-    assert snapshot.moving_average_summary.return_mean_series[0].values == (
-        Decimal("0.1"),
-        Decimal("0.2"),
-        Decimal("0.3"),
-    )
-
-
-def test_context_engine_calculates_range_and_shape_values() -> None:
-    candles = [
-        _candle(0, open_value="100", high="110", low="95", close="105"),
-        _candle(1, open_value="105", high="112", low="104", close="110"),
-    ]
-
-    snapshot = _engine().build_snapshot(
-        pair=PAIR,
-        timeframe=Timeframe.M15,
-        window_start=START,
-        window_end=START + timedelta(minutes=30),
-        as_of=START + timedelta(minutes=30),
-        candles=candles,
-        moving_average_windows=(2,),
-    )
-
-    assert snapshot.range_context.true_range_values == (Decimal("15"), Decimal("8"))
-    assert snapshot.range_context.average_true_range == Decimal("11.5")
-    assert snapshot.range_context.candle_range_values == (Decimal("15"), Decimal("8"))
-    assert snapshot.range_context.range_change_ratios == (None, Decimal("-7") / Decimal("15"))
-    assert snapshot.candle_shape.body_sizes == (Decimal("5"), Decimal("5"))
-    assert snapshot.candle_shape.upper_wick_sizes == (Decimal("5"), Decimal("2"))
-    assert snapshot.candle_shape.lower_wick_sizes == (Decimal("5"), Decimal("1"))
-    assert snapshot.candle_shape.average_upper_wick_size == Decimal("3.5")
-    assert snapshot.candle_shape.average_lower_wick_size == Decimal("3")
-    assert snapshot.candle_shape.body_to_range_ratios == (
-        Decimal("1") / Decimal("3"),
-        Decimal("5") / Decimal("8"),
-    )
-    assert snapshot.candle_shape.close_location_in_range_values == (
-        Decimal("2") / Decimal("3"),
-        Decimal("3") / Decimal("4"),
-    )
-
-
-def test_context_engine_calculates_event_context() -> None:
-    snapshot = _engine().build_snapshot(
-        pair=PAIR,
-        timeframe=Timeframe.M15,
-        window_start=START,
-        window_end=START + timedelta(minutes=45),
-        as_of=START + timedelta(minutes=30),
-        candles=[_candle(0), _candle(1), _candle(2)],
-        economic_events=[
-            _event(5, currency="EUR", impact=EconomicImpact.HIGH, provider_event_id="1"),
-            _event(20, currency="USD", impact=EconomicImpact.LOW, provider_event_id="2"),
-            _event(40, currency="EUR", impact=EconomicImpact.MEDIUM, provider_event_id="3"),
-        ],
-        moving_average_windows=(2,),
-    )
-
-    assert snapshot.event_context.input_event_count == 3
-    assert snapshot.event_context.used_event_count == 2
-    assert [(item.impact, item.count) for item in snapshot.event_context.counts_by_impact] == [
-        (EconomicImpact.HIGH, 1),
-        (EconomicImpact.LOW, 1),
-    ]
-    assert [(item.currency, item.count) for item in snapshot.event_context.counts_by_currency] == [
-        ("EUR", 1),
-        ("USD", 1),
-    ]
-    assert snapshot.event_context.latest_event_time == START + timedelta(minutes=20)
-    assert snapshot.event_context.minutes_since_latest_event == Decimal("10")
-    assert ContextIssueCode.EVENT_AFTER_AS_OF in _issue_codes(snapshot)
-
-
-def test_context_models_are_immutable() -> None:
-    snapshot = _engine().build_snapshot(
-        pair=PAIR,
-        timeframe=Timeframe.M15,
-        window_start=START,
-        window_end=START + timedelta(minutes=15),
-        as_of=START + timedelta(minutes=15),
+def test_empty_and_small_inputs_are_handled_safely() -> None:
+    empty = _snapshot(candles=[], events=[])
+    small = _snapshot(
         candles=[_candle(0)],
-        moving_average_windows=(1,),
+        events=[],
+        window_end=BASE_TIME + timedelta(minutes=15),
+        moving_average_windows=(3,),
     )
+
+    assert empty.readiness_status == AnalysisReadinessStatus.BLOCKED
+    assert AnalysisIssueCode.NO_CANDLES in _issue_codes(empty)
+    assert empty.input_audit.used_candle_count == 0
+    assert small.readiness_status == AnalysisReadinessStatus.INCOMPLETE
+    assert AnalysisIssueCode.INSUFFICIENT_CANDLES in _issue_codes(small)
+
+
+def test_analysis_models_are_immutable() -> None:
+    snapshot = _snapshot()
 
     with pytest.raises(ValidationError):
-        snapshot.return_distribution.close_values = (Decimal("999"),)
+        snapshot.input_audit.used_candle_count = 99
 
 
-class _ContextCandleRepository:
+def test_analysis_output_is_deterministic_for_same_input() -> None:
+    first = _snapshot()
+    second = _snapshot()
+
+    assert first.model_dump(mode="json") == second.model_dump(mode="json")
+    assert first.metadata.snapshot_id == second.metadata.snapshot_id
+
+
+@asynccontextmanager
+async def _analysis_scope(
+    candle_repository,
+    event_repository,
+) -> AsyncIterator[object]:
+    class Repositories:
+        candles = candle_repository
+        economic_events = event_repository
+
+    yield Repositories()
+
+
+class _CandleRepository:
     def __init__(self, candles: Sequence[Candle]) -> None:
-        self.candles = list(candles)
-        self.calls: list[dict[str, object]] = []
+        self._candles = list(candles)
+        self.provider: str | None = None
 
     async def list_range(
         self,
@@ -2238,22 +2175,22 @@ class _ContextCandleRepository:
         end_at: datetime,
         provider: str | None = None,
     ) -> list[Candle]:
-        self.calls.append(
-            {
-                "pair": pair,
-                "timeframe": timeframe,
-                "start_at": start_at,
-                "end_at": end_at,
-                "provider": provider,
-            }
-        )
-        return list(self.candles)
+        self.provider = provider
+        return [
+            candle
+            for candle in self._candles
+            if candle.pair == pair
+            and candle.timeframe == timeframe
+            and candle.open_time >= start_at
+            and candle.close_time <= end_at
+        ]
 
 
-class _ContextEventRepository:
+class _EventRepository:
     def __init__(self, events: Sequence[EconomicEvent]) -> None:
-        self.events = list(events)
-        self.calls: list[dict[str, object]] = []
+        self._events = list(events)
+        self.currencies: list[str] | None = None
+        self.provider: str | None = None
 
     async def list_window(
         self,
@@ -2263,70 +2200,51 @@ class _ContextEventRepository:
         currencies: list[str] | None = None,
         provider: str | None = None,
     ) -> list[EconomicEvent]:
-        self.calls.append(
-            {
-                "start_at": start_at,
-                "end_at": end_at,
-                "currencies": currencies,
-                "provider": provider,
-            }
-        )
-        return list(self.events)
+        self.currencies = currencies
+        self.provider = provider
+        return [
+            event
+            for event in self._events
+            if start_at <= event.scheduled_at < end_at
+            and (currencies is None or event.currency in currencies)
+        ]
 
 
-class _ContextRepositories:
+class _UnitOfWorkFactory:
     def __init__(
         self,
-        candle_repository: _ContextCandleRepository,
-        event_repository: _ContextEventRepository,
-    ) -> None:
-        self.candles = candle_repository
-        self.economic_events = event_repository
-
-
-@asynccontextmanager
-async def _context_repositories(
-    candle_repository: _ContextCandleRepository,
-    event_repository: _ContextEventRepository,
-):
-    yield _ContextRepositories(candle_repository, event_repository)
-
-
-class _ContextUnitOfWorkFactory:
-    def __init__(
-        self,
-        candle_repository: _ContextCandleRepository,
-        event_repository: _ContextEventRepository,
+        candle_repository: _CandleRepository,
+        event_repository: _EventRepository,
     ) -> None:
         self._candle_repository = candle_repository
         self._event_repository = event_repository
 
     def __call__(self):
-        return _context_repositories(self._candle_repository, self._event_repository)
+        return _analysis_scope(self._candle_repository, self._event_repository)
 
 
 @pytest.mark.asyncio
-async def test_context_service_reads_repositories_and_builds_snapshot() -> None:
-    candle_repository = _ContextCandleRepository([_candle(0), _candle(1)])
-    event_repository = _ContextEventRepository([_event(5, provider_event_id="service")])
-    service = ContextService(_ContextUnitOfWorkFactory(candle_repository, event_repository))
+async def test_analysis_service_uses_repository_protocols() -> None:
+    candle_repository = _CandleRepository([_candle(0), _candle(1), _candle(2)])
+    event_repository = _EventRepository([_event(10)])
+    service = AnalysisService(_UnitOfWorkFactory(candle_repository, event_repository))
 
-    snapshot = await service.build_market_context(
+    report = await service.build_report(
         pair=PAIR,
         timeframe=Timeframe.M15,
-        window_start=START,
-        window_end=START + timedelta(minutes=30),
-        as_of=START + timedelta(minutes=30),
-        provider="unit",
-        moving_average_windows=(2,),
+        window_start=BASE_TIME,
+        window_end=BASE_TIME + timedelta(minutes=45),
+        as_of=BASE_TIME + timedelta(minutes=45),
+        provider="phase3d-provider",
     )
 
-    assert snapshot.time_context.candle_count == 2
-    assert snapshot.event_context.used_event_count == 1
-    assert candle_repository.calls[0]["pair"] == PAIR
-    assert candle_repository.calls[0]["provider"] == "unit"
-    assert event_repository.calls[0]["currencies"] == ["EUR", "USD"]
-    assert event_repository.calls[0]["provider"] == "unit"
+    assert report.snapshot.readiness_status == AnalysisReadinessStatus.READY
+    assert report.ready_for_review is True
+    assert report.used_candle_count == 3
+    assert report.used_event_count == 1
+    assert candle_repository.provider == "phase3d-provider"
+    assert event_repository.provider == "phase3d-provider"
+    assert event_repository.currencies == ["EUR", "USD"]
 ```
 
 ### `tests/contract/test_safety_boundaries.py`
@@ -2398,6 +2316,41 @@ PHASE_3C_FORBIDDEN_TERMS = (
     "paper_trading",
     "order_execution",
 )
+PHASE_3D_FILES = (
+    Path("app/domain/entities/analysis.py"),
+    Path("app/domain/analysis_engine.py"),
+    Path("app/services/analysis_service.py"),
+    Path("tests/unit/test_analysis_snapshot_foundation.py"),
+)
+PHASE_3D_FORBIDDEN_TERMS = (
+    "bullish",
+    "bearish",
+    "strong",
+    "weak",
+    "overbought",
+    "oversold",
+    "breakout",
+    "reversal",
+    "trend signal",
+    "entry",
+    "exit",
+    "buy",
+    "sell",
+    "long",
+    "short",
+    "recommendation",
+    "setup",
+    "score",
+    "confidence",
+    "trade",
+    "trading",
+    "strategy",
+    "signal",
+    "OpenAI",
+    "broker",
+    "paper_trading",
+    "order_execution",
+)
 
 
 def test_no_real_order_execution_code_exists() -> None:
@@ -2423,6 +2376,18 @@ def test_phase3c_context_files_do_not_add_decision_or_execution_terms() -> None:
         text = file_path.read_text(encoding="utf-8")
         for term in PHASE_3C_FORBIDDEN_TERMS:
             if term in text:
+                offenders.append(f"{file_path}: {term}")
+
+    assert offenders == []
+
+
+def test_phase3d_analysis_files_do_not_add_decision_or_execution_terms() -> None:
+    offenders: list[str] = []
+    for file_path in PHASE_3D_FILES:
+        text = file_path.read_text(encoding="utf-8")
+        lowered = text.lower()
+        for term in PHASE_3D_FORBIDDEN_TERMS:
+            if term.lower() in lowered:
                 offenders.append(f"{file_path}: {term}")
 
     assert offenders == []
@@ -2597,7 +2562,7 @@ def test_api_health_readiness_status_and_scan_state(postgres_database_url: str) 
     assert ready.status_code == 200
     assert ready.json()["status"] == "ready"
     assert status.status_code == 200
-    assert status.json()["project_phase"] == "phase_3c_indicator_context_foundation"
+    assert status.json()["project_phase"] == "phase_3d_analysis_snapshot_foundation"
     assert status.json()["trading_strategy_implemented"] is False
     assert status.json()["real_trading_enabled"] is False
     assert start.status_code == 200

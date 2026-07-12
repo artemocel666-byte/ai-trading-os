@@ -1,3 +1,15 @@
+from app.domain.entities.analysis import (
+    AnalysisInputAudit,
+    AnalysisIssue,
+    AnalysisIssueCode,
+    AnalysisIssueCount,
+    AnalysisNumericSummary,
+    AnalysisReadinessStatus,
+    AnalysisReport,
+    AnalysisSnapshot,
+    AnalysisSnapshotMetadata,
+    AnalysisWindow,
+)
 from app.domain.entities.context import (
     CandleShapeSummary,
     ContextCurrencyCount,
@@ -35,6 +47,16 @@ from app.domain.entities.features import (
 from app.domain.entities.market_data import Candle, EconomicEvent, EconomicImpact, Timeframe
 
 __all__ = [
+    "AnalysisInputAudit",
+    "AnalysisIssue",
+    "AnalysisIssueCode",
+    "AnalysisIssueCount",
+    "AnalysisNumericSummary",
+    "AnalysisReadinessStatus",
+    "AnalysisReport",
+    "AnalysisSnapshot",
+    "AnalysisSnapshotMetadata",
+    "AnalysisWindow",
     "Candle",
     "CandleAvailability",
     "CandleFeatureSummary",
