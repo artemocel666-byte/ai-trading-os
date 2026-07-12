@@ -19,14 +19,17 @@
 - Phase 3B feature engine foundation: deterministic closed-candle feature models, feature
   calculation engine, feature service over repository protocols, and safety tests confirming no
   strategy/signals/trading activation.
+- Phase 3C indicator/context foundation: deterministic closed-candle context models, context
+  calculation engine over Phase 3B features, context service over repository protocols, and safety
+  tests confirming no strategy/signals/trading activation.
 
 ## Current Implementation Status
 
 The repository has completed the foundation phase, Phase 2 hardening/data adapters, Phase 3A
-data-quality foundation, and Phase 3B deterministic feature-engine foundation. Production Twelve
-Data and FMP adapters exist, but live integrations remain disabled by default. Scanning state can be
-enabled or disabled, but no strategy, signal generation, AI agent, paper-trading, or execution flow
-is connected.
+data-quality foundation, Phase 3B deterministic feature-engine foundation, and Phase 3C
+deterministic indicator/context foundation. Production Twelve Data and FMP adapters exist, but live
+integrations remain disabled by default. Scanning state can be enabled or disabled, but no strategy,
+signal generation, AI agent, paper-trading, or execution flow is connected.
 
 ## Future Phases
 
@@ -34,7 +37,8 @@ is connected.
   production adapters covered by MockTransport-backed contract tests
 - Phase 3A: data-quality foundation — completed without trading analysis or decisions
 - Phase 3B: deterministic feature engine foundation — completed without trading decisions
-- Phase 3C: next phase if applicable; not started
+- Phase 3C: deterministic indicator/context foundation — completed without trading decisions
+- Phase 3D: next phase if applicable; not started
 - Phase 4: analytical agents and Decision Engine
 - Phase 5: Russian Chief AI explanations
 - Phase 6: Telegram signal delivery
@@ -57,4 +61,4 @@ is connected.
 
 ## Next Planned Task
 
-Phase 3C is the next phase if applicable. It has not started, and no Phase 3C behavior is active.
+Phase 3D is the next phase if applicable. It has not started, and no Phase 3D behavior is active.

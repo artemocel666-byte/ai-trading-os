@@ -2,11 +2,11 @@
 
 AI Trading OS is a foundation for a future Forex analysis and paper-trading platform.
 
-Current project phase: phase_3b_feature_engine_foundation.
-Phase 3B is limited to deterministic, closed-candle-only feature snapshots built from existing
-normalized Phase 3A market/calendar data. External integrations are disabled by default. The project
-contains no strategy, no signals, no broker order APIs, no paper trading, and no real trading.
-Phase 3C has not started.
+Current project phase: phase_3c_indicator_context_foundation.
+Phase 3C is limited to deterministic, closed-candle-only indicator/context snapshots built from
+existing normalized Phase 3A/3B market/calendar data. External integrations are disabled by default.
+The project contains no strategy, no signals, no broker order APIs, no paper trading, and no real
+trading. Phase 3D has not started.
 
 ## Start and Checks
 
@@ -40,7 +40,7 @@ Phase 3C has not started.
 - Every Telegram message must contain exactly one semantic emoji at the beginning.
 - Never add real trading execution, broker order APIs, real account credentials, or live position management.
 - Never add strategy, setup scoring, LONG/SHORT direction, buy/sell recommendations, paper trading,
-  broker APIs, order execution, or real trading while working in Phase 3B.
+  broker APIs, order execution, or real trading while working in Phase 3C.
 - Never fabricate market data, calendar data, agent evidence, or scan results.
 - LLM output may explain deterministic results only; it must not change prices, scores, risk, or rejected decisions.
 - Update documentation when architecture or safety boundaries change.

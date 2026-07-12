@@ -1,4 +1,4 @@
-PROJECT_PHASE = "phase_3b_feature_engine_foundation"
+PROJECT_PHASE = "phase_3c_indicator_context_foundation"
 STRATEGY_IMPLEMENTED = False
 REAL_TRADING_ENABLED = False
 

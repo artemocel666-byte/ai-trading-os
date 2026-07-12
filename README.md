@@ -4,12 +4,12 @@ AI Trading OS is a safety-first foundation for a future modular Forex analysis a
 
 ## Current Status
 
-- Current project phase: phase_3b_feature_engine_foundation.
+- Current project phase: phase_3c_indicator_context_foundation.
 - Trading strategy: not implemented.
 - Real trading: disabled and unsupported.
 - External integrations: disabled by default.
 - Telegram: can run in disabled mode without a token.
-- Phase 3B: deterministic feature engine foundation only.
+- Phase 3C: deterministic indicator/context foundation only.
 
 ## Safety Warning
 
@@ -37,7 +37,16 @@ Phase 3A candles and economic events into typed immutable feature snapshots. It 
 features only, such as latest close, candle counts, simple returns, rolling close means, ranges,
 volume summaries, true ranges, economic-event counts, and quality issues. It does not produce
 trading decisions, setup scoring, directions, recommendations, signals, AI output, broker activity,
-paper trading, order execution, or real trading. Phase 3C has not started.
+paper trading, order execution, or real trading.
+
+## Phase 3C Status
+
+Phase 3C adds a deterministic, closed-candle-only indicator/context foundation over the Phase 3B
+feature engine. It produces typed immutable context snapshots with descriptive close statistics,
+return distribution summaries, moving averages, range and candle-shape summaries, event metadata,
+time context, and deterministic data-quality issues. It does not produce strategy decisions, setup
+scoring, confidence scoring, trade directions, recommendations, signals, AI output, broker activity,
+paper trading, order execution, or real trading. Phase 3D has not started.
 
 ## Prerequisites
 

@@ -33,6 +33,37 @@ PHASE_3B_FORBIDDEN_TERMS = (
     "paper_trading",
     "order_execution",
 )
+PHASE_3C_FILES = (
+    Path("app/domain/entities/context.py"),
+    Path("app/domain/context_engine.py"),
+    Path("app/services/context_service.py"),
+)
+PHASE_3C_FORBIDDEN_TERMS = (
+    "bullish",
+    "bearish",
+    "strong",
+    "weak",
+    "overbought",
+    "oversold",
+    "breakout",
+    "reversal",
+    "trend",
+    "entry",
+    "exit",
+    "buy",
+    "sell",
+    "long",
+    "short",
+    "recommendation",
+    "setup",
+    "score",
+    "confidence",
+    "signal",
+    "OpenAI",
+    "broker",
+    "paper_trading",
+    "order_execution",
+)
 
 
 def test_no_real_order_execution_code_exists() -> None:
@@ -46,6 +77,17 @@ def test_phase3b_feature_engine_files_do_not_add_decision_or_execution_terms() -
     for file_path in PHASE_3B_FILES:
         text = file_path.read_text(encoding="utf-8")
         for term in PHASE_3B_FORBIDDEN_TERMS:
+            if term in text:
+                offenders.append(f"{file_path}: {term}")
+
+    assert offenders == []
+
+
+def test_phase3c_context_files_do_not_add_decision_or_execution_terms() -> None:
+    offenders: list[str] = []
+    for file_path in PHASE_3C_FILES:
+        text = file_path.read_text(encoding="utf-8")
+        for term in PHASE_3C_FORBIDDEN_TERMS:
             if term in text:
                 offenders.append(f"{file_path}: {term}")
 
