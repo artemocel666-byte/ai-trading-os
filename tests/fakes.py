@@ -1,11 +1,16 @@
 from types import TracebackType
 from typing import Any, Self
 
+from app.domain.entities import Candle, EconomicEvent, Timeframe
+from app.domain.entities.data_quality import UpsertResult
 from app.domain.interfaces.repositories import (
     AuditLogRepository,
+    CandleRepository,
+    EconomicEventRepository,
     ErrorEventRepository,
     SystemStateRepository,
 )
+from app.domain.value_objects import CurrencyPair
 
 
 class FakeSystemStateRepository:
@@ -76,11 +81,71 @@ class FakeErrorEventRepository:
         )
 
 
+class FakeCandleRepository:
+    def __init__(self, candles: list[Candle]) -> None:
+        self._candles = candles
+
+    async def upsert_many(self, candles: list[Candle]) -> UpsertResult:
+        self._candles.extend(candles)
+        return UpsertResult(inserted=len(candles), updated=0)
+
+    async def list_range(
+        self,
+        *,
+        pair: CurrencyPair,
+        timeframe: Timeframe,
+        start_at: Any,
+        end_at: Any,
+        provider: str | None = None,
+    ) -> list[Candle]:
+        return [
+            candle
+            for candle in self._candles
+            if candle.pair == pair
+            and candle.timeframe == timeframe
+            and candle.open_time >= start_at
+            and candle.close_time <= end_at
+            and (provider is None or candle.provider == provider)
+        ]
+
+
+class FakeEconomicEventRepository:
+    def __init__(self, events: list[EconomicEvent]) -> None:
+        self._events = events
+
+    async def upsert_many(self, events: list[EconomicEvent]) -> UpsertResult:
+        self._events.extend(events)
+        return UpsertResult(inserted=len(events), updated=0)
+
+    async def list_window(
+        self,
+        *,
+        start_at: Any,
+        end_at: Any,
+        currencies: list[str] | None = None,
+        provider: str | None = None,
+    ) -> list[EconomicEvent]:
+        return [
+            event
+            for event in self._events
+            if start_at <= event.scheduled_at < end_at
+            and (currencies is None or event.currency in currencies)
+            and (provider is None or event.provider == provider)
+        ]
+
+
 class FakeUnitOfWork:
-    def __init__(self, state: dict[str, Any]) -> None:
+    def __init__(
+        self,
+        state: dict[str, Any],
+        candles: list[Candle],
+        events: list[EconomicEvent],
+    ) -> None:
         self.system_state: SystemStateRepository = FakeSystemStateRepository(state)
         self.audit_logs: AuditLogRepository = FakeAuditLogRepository()
         self.error_events: ErrorEventRepository = FakeErrorEventRepository()
+        self.candles: CandleRepository = FakeCandleRepository(candles)
+        self.economic_events: EconomicEventRepository = FakeEconomicEventRepository(events)
         self.committed = False
         self.rolled_back = False
 
@@ -104,11 +169,18 @@ class FakeUnitOfWork:
 
 
 class FakeUnitOfWorkFactory:
-    def __init__(self, state: dict[str, Any] | None = None) -> None:
+    def __init__(
+        self,
+        state: dict[str, Any] | None = None,
+        candles: list[Candle] | None = None,
+        events: list[EconomicEvent] | None = None,
+    ) -> None:
         self.state = state or {}
+        self.candles = candles or []
+        self.events = events or []
         self.instances: list[FakeUnitOfWork] = []
 
     def __call__(self) -> FakeUnitOfWork:
-        uow = FakeUnitOfWork(self.state)
+        uow = FakeUnitOfWork(self.state, self.candles, self.events)
         self.instances.append(uow)
         return uow

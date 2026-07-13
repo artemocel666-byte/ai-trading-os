@@ -1,15 +1,22 @@
+from datetime import datetime, timedelta
 from typing import Any, cast
 
+from pydantic import ValidationError
 from telegram import Update
 from telegram.ext import Application, CommandHandler, ContextTypes
 
 from app.core.config import Settings
 from app.core.enums import MessageType
 from app.core.exceptions import NotImplementedFeatureError
+from app.core.time import normalize_to_utc, utc_now
+from app.domain.entities import Timeframe
+from app.domain.value_objects import CurrencyPair
 from app.services.analysis_service import AnalysisService
 from app.services.system_state_service import SystemStateService
 from app.telegram.authorization import TelegramIdentity, is_authorized
 from app.telegram.formatter import TelegramFormatter
+
+DEFAULT_SNAPSHOT_CANDLE_COUNT = 12
 
 
 def _identity(update: Update) -> TelegramIdentity:
@@ -84,7 +91,10 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         update,
         context,
         MessageType.EDUCATION,
-        "Доступные команды: /start, /help, /status, /start_scan, /stop_scan, /scan_now.",
+        (
+            "Доступные команды: /start, /help, /status, /start_scan, "
+            "/stop_scan, /scan_now, /snapshot."
+        ),
     )
 
 
@@ -140,6 +150,67 @@ async def scan_now_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -
         )
 
 
+async def snapshot_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    if not await _ensure_authorized(update, context):
+        return
+    try:
+        pair, timeframe = _parse_snapshot_command(update)
+    except (ValueError, ValidationError):
+        await _reply(
+            update,
+            context,
+            MessageType.REJECTED,
+            "Формат команды: /snapshot EURUSD M15. Поддерживаются M15 и H1.",
+        )
+        return
+
+    window_start, window_end, as_of = _default_snapshot_window(timeframe)
+    try:
+        snapshot = await _analysis_service(context).build_snapshot(
+            pair=pair,
+            timeframe=timeframe,
+            window_start=window_start,
+            window_end=window_end,
+            as_of=as_of,
+        )
+    except Exception:
+        await _reply(
+            update,
+            context,
+            MessageType.DATA_UNAVAILABLE,
+            "Отчёт готовности сейчас недоступен. Проверьте базу данных и настройки сервиса.",
+        )
+        return
+
+    body = _formatter(context).format_analysis_readiness_body(snapshot)
+    await _reply(update, context, MessageType.REPORT, body)
+
+
+def _parse_snapshot_command(update: Update) -> tuple[CurrencyPair, Timeframe]:
+    text = (
+        update.effective_message.text
+        if update.effective_message is not None and update.effective_message.text is not None
+        else ""
+    )
+    parts = text.split()
+    if len(parts) != 3:
+        raise ValueError("snapshot command requires pair and timeframe")
+    return CurrencyPair(value=parts[1].upper()), Timeframe(parts[2].upper())
+
+
+def _default_snapshot_window(timeframe: Timeframe) -> tuple[datetime, datetime, datetime]:
+    as_of = normalize_to_utc(utc_now())
+    if timeframe == Timeframe.M15:
+        minute = (as_of.minute // 15) * 15
+        window_end = as_of.replace(minute=minute, second=0, microsecond=0)
+        step_minutes = 15
+    else:
+        window_end = as_of.replace(minute=0, second=0, microsecond=0)
+        step_minutes = 60
+    window_start = window_end - timedelta(minutes=DEFAULT_SNAPSHOT_CANDLE_COUNT * step_minutes)
+    return window_start, window_end, window_end
+
+
 def add_handlers(application: Application[Any, Any, Any, Any, Any, Any]) -> None:
     application.add_handler(CommandHandler("start", start_command))
     application.add_handler(CommandHandler("help", help_command))
@@ -147,3 +218,4 @@ def add_handlers(application: Application[Any, Any, Any, Any, Any, Any]) -> None
     application.add_handler(CommandHandler("start_scan", start_scan_command))
     application.add_handler(CommandHandler("stop_scan", stop_scan_command))
     application.add_handler(CommandHandler("scan_now", scan_now_command))
+    application.add_handler(CommandHandler("snapshot", snapshot_command))

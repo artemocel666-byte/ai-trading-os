@@ -36,7 +36,7 @@ async def run_enabled_bot() -> None:
     application = ApplicationBuilder().token(token.get_secret_value()).build()
     application.bot_data["settings"] = settings
     application.bot_data["system_state_service"] = SystemStateService(uow_factory)
-    application.bot_data["analysis_service"] = AnalysisService()
+    application.bot_data["analysis_service"] = AnalysisService(uow_factory)
     application.bot_data["formatter"] = TelegramFormatter()
     add_handlers(application)
 

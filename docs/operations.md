@@ -58,6 +58,88 @@ Application processes emit structured JSON logs with service, component, event, 
 
 The default `.env.example` disables Telegram, OpenAI, market data, calendar, and scanning. Disabled providers raise typed errors before external calls.
 
+## Local Telegram Readiness Demo
+
+Phase 3E can run a local readiness report without live market or calendar integrations. Start
+PostgreSQL, migrate the schema, seed deterministic local demo data, and then use `/snapshot EURUSD
+M15` in the authorized Telegram chat.
+
+```bash
+docker compose up -d postgres
+docker compose run --rm migrate alembic upgrade head
+docker compose run --rm api python -m scripts.seed_local_snapshot_data
+```
+
+To use a real Telegram chat, create a bot token with BotFather, set `TELEGRAM_ENABLED=true`,
+`TELEGRAM_BOT_TOKEN`, `TELEGRAM_ALLOWED_USER_ID`, and `TELEGRAM_ALLOWED_CHAT_ID` in `.env`, then
+start the bot service. The `/snapshot` command returns readiness reports only; it does not produce
+trading guidance or paper-trading actions.
+
+## Telegram Bot Local Setup
+
+Create the bot in Telegram before enabling the `bot` service:
+
+1. Open `@BotFather`.
+2. Send `/newbot`.
+3. Choose a display name, for example `AI Trading OS Local`.
+4. Choose a username ending in `bot`, for example `ai_trading_os_local_bot`.
+5. Copy the token. Telegram bot tokens look like `1234567890:AA...`; keep this value secret and
+   never commit it.
+
+Find the allowed Telegram identity:
+
+- `TELEGRAM_ALLOWED_USER_ID`: send `/start` to `@userinfobot` or `@getmyid_bot` and copy the
+  numeric `Id`.
+- `TELEGRAM_ALLOWED_CHAT_ID`: for a direct private chat with the bot, this is usually the same as
+  `TELEGRAM_ALLOWED_USER_ID`.
+- To confirm the chat ID, send `/start` to your new bot and open
+  `https://api.telegram.org/bot<TELEGRAM_BOT_TOKEN>/getUpdates` in a browser. Use the numeric
+  `message.chat.id` value from the JSON response.
+
+Create a local `.env` file in the repository root. Do not commit `.env`.
+
+```env
+APP_ENV=development
+DATABASE_URL=postgresql+asyncpg://ai_trading_os:ai_trading_os@postgres:5432/ai_trading_os
+INTERNAL_API_KEY=development-internal-key-change-me
+
+TELEGRAM_ENABLED=true
+TELEGRAM_BOT_TOKEN=1234567890:AA_REPLACE_WITH_REAL_SECRET
+TELEGRAM_ALLOWED_USER_ID=123456789
+TELEGRAM_ALLOWED_CHAT_ID=123456789
+
+OPENAI_ENABLED=false
+MARKET_DATA_ENABLED=false
+CALENDAR_ENABLED=false
+SCAN_ENABLED=false
+```
+
+Prepare the local database and demo data:
+
+```bash
+docker compose up -d postgres
+docker compose run --rm migrate alembic upgrade head
+docker compose run --rm api python -m scripts.seed_local_snapshot_data
+```
+
+Start only the Telegram bot service:
+
+```bash
+docker compose up --build bot
+```
+
+Then send these commands to the bot in Telegram:
+
+```text
+/start
+/status
+/snapshot EURUSD M15
+```
+
+Expected behavior: `/snapshot EURUSD M15` returns a Russian readiness report with one leading emoji.
+It must not contain LONG/SHORT directions, entry guidance, buy/sell recommendations, or paper-trade
+actions.
+
 ## Common Failure Cases
 
 - Missing Telegram token while Telegram is enabled: configuration validation fails.

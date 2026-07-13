@@ -4,12 +4,13 @@ AI Trading OS is a safety-first foundation for a future modular Forex analysis a
 
 ## Current Status
 
-- Current project phase: phase_3d_analysis_snapshot_foundation.
+- Current project phase: phase_3e_telegram_readiness_foundation.
 - Trading strategy: not implemented.
 - Real trading: disabled and unsupported.
 - External integrations: disabled by default.
 - Telegram: can run in disabled mode without a token.
 - Phase 3D: deterministic analysis snapshot/readiness report foundation only.
+- Phase 3E: local Telegram readiness reports only.
 
 ## Safety Warning
 
@@ -55,7 +56,17 @@ Phase 3B feature, and Phase 3C context foundations. It answers neutral infrastru
 about window completeness, source inputs, excluded data, quality/context issues, attached summaries,
 and no-future-data proof. It does not produce strategy decisions, setup scoring, confidence scoring,
 trade directions, recommendations, signals, AI output, broker activity, paper trading, order
-execution, or real trading. Phase 3E has not started.
+execution, or real trading.
+
+## Phase 3E Status
+
+Phase 3E adds a local Telegram readiness-report slice over the deterministic Phase 3D analysis
+snapshot foundation. It wires the Telegram bot to the real UnitOfWork-backed analysis service,
+adds `/snapshot EURUSD M15`, formats Russian readiness reports with exactly one leading semantic
+emoji, and provides `scripts/seed_local_snapshot_data.py` for local demo candles/events. It still
+does not produce strategy decisions, setup scoring, confidence scoring, trade directions,
+recommendations, signals, AI output, broker activity, paper trading, order execution, or real
+trading.
 
 ## Prerequisites
 
@@ -141,11 +152,14 @@ The default development key is rejected when `APP_ENV` is not `development`.
 ## Telegram Disabled Mode
 
 When `TELEGRAM_ENABLED=false`, the bot process starts and remains healthy without creating a Telegram client or making network calls. When enabled, a bot token, allowed user ID, and allowed chat ID are required.
+For a local live Telegram test, see `docs/operations.md` and configure `TELEGRAM_BOT_TOKEN`,
+`TELEGRAM_ALLOWED_USER_ID`, and `TELEGRAM_ALLOWED_CHAT_ID` in an uncommitted `.env` file.
 
 ## Current Limitations
 
 - No strategy, signals, OpenAI calls, backtesting, position sizing, broker execution, or real trading.
 - `/scan_now` explicitly remains disconnected from analysis snapshots and does not fabricate a scan result.
+- `/snapshot` returns readiness reports only and does not produce trading guidance.
 - Worker jobs only update heartbeat and run foundation health checks.
 
 ## Directory Overview
