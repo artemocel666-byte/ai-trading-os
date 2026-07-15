@@ -34,6 +34,9 @@
 - Phase 3G Telegram digest command foundation: manual `/digest` command wiring over the existing
   readiness digest service, default EURUSD M15/H1 digest arguments, and safety tests confirming no
   strategy/signals/trading activation.
+- Phase 3H scheduled digest delivery foundation: disabled-by-default scheduled readiness digest
+  due checks, mockable notification sending, deduplication records, and safety tests confirming no
+  strategy/signals/trading activation.
 
 ## Current Implementation Status
 
@@ -42,9 +45,11 @@ data-quality foundation, Phase 3B deterministic feature-engine foundation, Phase
 indicator/context foundation, Phase 3D deterministic analysis snapshot/readiness report foundation,
 Phase 3E local Telegram readiness-report foundation, and Phase 3F deterministic readiness
 scheduler/snapshot digest foundation, and Phase 3G manual Telegram digest command foundation.
-Production Twelve Data and FMP adapters exist, but live integrations remain disabled by default.
-Scanning state can be enabled or disabled, and Telegram can request readiness reports and readiness
-digests, but no strategy, signal generation, AI agent, paper-trading, or execution flow is connected.
+scheduler/snapshot digest foundation, Phase 3G manual Telegram digest command foundation, and Phase
+3H neutral scheduled digest delivery foundation. Production Twelve Data and FMP adapters exist, but
+live integrations remain disabled by default. Scanning state can be enabled or disabled, Telegram can
+request readiness reports and readiness digests, and scheduled digest orchestration remains disabled
+by default. No strategy, signal generation, AI agent, paper-trading, or execution flow is connected.
 
 ## Future Phases
 
@@ -57,6 +62,7 @@ digests, but no strategy, signal generation, AI agent, paper-trading, or executi
 - Phase 3E: local Telegram readiness reports — completed without trading decisions
 - Phase 3F: neutral readiness scheduler/snapshot digest foundation — completed without trading decisions
 - Phase 3G: manual Telegram digest command foundation — completed without trading decisions
+- Phase 3H: neutral scheduled digest delivery foundation — completed without trading decisions
 - Phase 4: analytical agents and Decision Engine
 - Phase 5: Russian Chief AI explanations
 - Phase 6: Telegram signal delivery

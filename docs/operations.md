@@ -85,6 +85,12 @@ returns the default EURUSD M15/H1 readiness digest, and `/digest EURUSD M15` ret
 pair/timeframe digest. The command remains read-only and neutral; it does not schedule automatic
 delivery, call providers, call AI services, contact brokers, or produce trading guidance.
 
+Phase 3H adds a neutral scheduled digest delivery foundation. It can decide whether a digest is due,
+build the same readiness payload, pass it to a mockable notification sender, and skip duplicate
+deduplication keys. It is disabled by default with `SCHEDULED_DIGEST_ENABLED=false`, and the worker
+does not register an automatic scheduled digest job. It does not call providers, AI services, or
+brokers, and it does not produce trading guidance.
+
 ## Telegram Bot Local Setup
 
 Create the bot in Telegram before enabling the `bot` service:
@@ -122,6 +128,8 @@ OPENAI_ENABLED=false
 MARKET_DATA_ENABLED=false
 CALENDAR_ENABLED=false
 SCAN_ENABLED=false
+SCHEDULED_DIGEST_ENABLED=false
+SCHEDULED_DIGEST_INTERVAL_MINUTES=60
 ```
 
 Prepare the local database and demo data:

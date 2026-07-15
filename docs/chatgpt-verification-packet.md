@@ -1,110 +1,137 @@
-# ChatGPT Verification Packet - Phase 3G
+# ChatGPT Verification Packet - Phase 3H
 ## Generation Metadata
-- Generation timestamp: 2026-07-15T17:43:10Z
+- Generation timestamp: 2026-07-15T18:10:00Z
 - Repository: `/Users/artem.otsel/Documents/ai-trading-os`
 - Git branch: `main`
-- Current git commit hash: `40473bdfa967831da953be26971e429bb757c7e2`
-- Latest committed baseline: `40473bd Add Phase 3F readiness scheduler foundation`
-- Phase 3G state: uncommitted at packet generation time
+- Current git commit hash: `ab4aafbb2bf598cce9b3da14764e78b1ab0d3b28`
+- Latest committed baseline observed locally: `ab4aafb phase 3G done`
+- User prompt expected Phase 3G commit: `463d77 Add Phase 3G Telegram digest command foundation`; local clean baseline differs by hash/message but is Phase 3G.
+- Phase 3H state: uncommitted at packet generation time
 - Phase 4: not started
 - Migration created: none
 - Runtime note: host `uv` was available at `/Users/artem.otsel/.local/bin/uv`; commands were run with that directory on PATH.
 
 ## Scope Confirmation
-- Implemented Phase 3G only: manual Telegram `/digest` readiness digest command foundation.
-- `/digest` uses the existing Phase 3F `ReadinessDigestService` and `readiness_digest_text`.
-- `/snapshot` remains active and tested.
-- Integrations remain disabled by default.
-- No strategy, signals, setup scoring, AI agents, OpenAI calls, broker APIs, paper trading, order execution, or real trading were added.
-- Feature/analysis/readiness flows remain descriptive and deterministic only.
+- Implemented Phase 3H only: neutral scheduled readiness digest delivery foundation.
+- Scheduled delivery remains disabled by default through `scheduled_digest_enabled=False` / `SCHEDULED_DIGEST_ENABLED=false`.
+- A worker callable exists, but `register_jobs` does not register an automatic scheduled digest loop.
+- Existing `/snapshot` and `/digest` commands remain active and tested.
+- No strategy, signals, setup scoring, confidence scoring, AI agents, OpenAI calls, broker APIs, paper trading, order execution, or real trading were added.
+- Feature/analysis/readiness/delivery flows remain descriptive and deterministic only.
 
 ## Changed Files
 Created files:
-- `docs/phase3g-verification-report.md`
+- `app/domain/entities/scheduled_digest.py`
+- `app/domain/interfaces/notifications.py`
+- `app/services/scheduled_digest_delivery_service.py`
+- `docs/phase3h-verification-report.md`
+- `tests/unit/test_scheduled_digest_delivery_foundation.py`
 
 Modified files:
+- `.env.example`
 - `AGENTS.md`
 - `PLANS.md`
 - `README.md`
+- `app/core/config.py`
 - `app/core/constants.py`
-- `app/telegram/bot.py`
-- `app/telegram/commands.py`
-- `docs/operations.md`
+- `app/domain/entities/__init__.py`
+- `app/scheduler/jobs.py`
 - `docs/chatgpt-verification-packet.md`
+- `docs/operations.md`
 - `tests/contract/test_safety_boundaries.py`
 - `tests/integration/test_database_and_api.py`
 - `tests/unit/test_analysis_snapshot_foundation.py`
 - `tests/unit/test_readiness_scheduler_foundation.py`
-- `tests/unit/test_telegram_commands.py`
+- `tests/unit/test_settings.py`
 
 ## Implementation Summary
-- Updated `PROJECT_PHASE` to `phase_3g_telegram_digest_command_foundation`.
-- Added `DEFAULT_DIGEST_ITEMS` for EURUSD M15 and EURUSD H1.
-- Added `/digest` parsing: no arguments uses defaults; `PAIR TIMEFRAME` builds one schedule item.
-- Added Telegram error handling for invalid `/digest` arguments and unavailable local data.
-- Wired `ReadinessDigestService` into Telegram bot application state without creating provider clients or network calls.
-- Registered `/digest` while keeping `/snapshot`.
-- Updated docs for Phase 3G status and operational usage.
+- Updated `PROJECT_PHASE` to `phase_3h_scheduled_digest_delivery_foundation`.
+- Added disabled-by-default scheduled digest settings.
+- Added immutable Pydantic scheduled digest config, tick, decision, record, and result models.
+- Added mockable `NotificationSender` and `ScheduledDigestDeliveryStore` protocols.
+- Added scheduled digest delivery service with deterministic due checks, build-only-when-due behavior, duplicate skip, build-failed skip, and in-memory foundation store.
+- Added a worker callable without automatic worker registration.
+- Updated safety, settings, phase, and integration tests.
+- Updated README, AGENTS, PLANS, operations, and Phase 3H verification docs.
 
-## New Or Updated Tests
-- `tests/unit/test_telegram_commands.py::test_add_handlers_keeps_snapshot_and_registers_digest`
-- `tests/unit/test_telegram_commands.py::test_digest_command_returns_default_readiness_digest`
-- `tests/unit/test_telegram_commands.py::test_digest_command_accepts_single_snapshot_identity`
-- `tests/unit/test_telegram_commands.py::test_digest_command_rejects_invalid_arguments`
-- `tests/contract/test_safety_boundaries.py::test_phase3g_digest_command_does_not_add_decision_or_execution_terms`
-- Updated project phase assertions in analysis, readiness, and integration tests.
+## New Tests
+- `tests/unit/test_scheduled_digest_delivery_foundation.py::test_scheduled_digest_disabled_skip`
+- `tests/unit/test_scheduled_digest_delivery_foundation.py::test_scheduled_digest_not_due_skip`
+- `tests/unit/test_scheduled_digest_delivery_foundation.py::test_scheduled_digest_due_builds_payload_and_sends_once`
+- `tests/unit/test_scheduled_digest_delivery_foundation.py::test_scheduled_digest_duplicate_dedup_key_skip`
+- `tests/unit/test_scheduled_digest_delivery_foundation.py::test_scheduled_digest_no_items_skip`
+- `tests/unit/test_scheduled_digest_delivery_foundation.py::test_scheduled_digest_build_failed_skip`
+- `tests/unit/test_scheduled_digest_delivery_foundation.py::test_scheduled_digest_tick_is_json_serializable_and_immutable`
+- `tests/unit/test_scheduled_digest_delivery_foundation.py::test_scheduled_digest_tick_normalizes_utc`
+- `tests/unit/test_scheduled_digest_delivery_foundation.py::test_scheduled_digest_due_policy_is_deterministic`
+- `tests/unit/test_scheduled_digest_delivery_foundation.py::test_worker_callable_can_run_without_auto_registration`
+- `tests/unit/test_scheduled_digest_delivery_foundation.py::test_register_jobs_does_not_start_scheduled_digest_delivery_loop`
+- `tests/contract/test_safety_boundaries.py::test_phase3h_scheduled_digest_files_do_not_add_decision_or_execution_terms`
 
 ## Traceability Table
 | Requirement | Implementation file | Test file | Verification result |
 |---|---|---|---|
-| Set Phase 3G project phase | app/core/constants.py | tests/integration/test_database_and_api.py; tests/unit/test_analysis_snapshot_foundation.py; tests/unit/test_readiness_scheduler_foundation.py | Host pytest passed; Docker integration tests passed twice |
-| Add manual `/digest` command | app/telegram/commands.py | tests/unit/test_telegram_commands.py | Host pytest passed |
-| Use existing readiness digest service | app/telegram/commands.py; app/telegram/bot.py | tests/unit/test_telegram_commands.py | Host pytest passed |
-| Keep `/snapshot` working | app/telegram/commands.py | tests/unit/test_telegram_commands.py | Host pytest passed |
-| Reject invalid digest args | app/telegram/commands.py | tests/unit/test_telegram_commands.py | Host pytest passed |
-| Keep Telegram output neutral and Russian | app/services/readiness_digest_service.py; app/telegram/formatter.py; app/telegram/commands.py | tests/unit/test_telegram_commands.py; tests/contract/test_safety_boundaries.py | Host pytest and security check passed |
-| No automatic delivery/provider/OpenAI/broker calls | app/telegram/bot.py; app/telegram/commands.py | tests/contract/test_safety_boundaries.py; scripts/security_check.py | Security check exit code 0 |
-| Integration repeatability | tests/integration/test_database_and_api.py | tests/integration/test_database_and_api.py | Docker integration run 1 and run 2 both passed |
+| Set Phase 3H project phase | app/core/constants.py | tests/integration/test_database_and_api.py; tests/unit/test_analysis_snapshot_foundation.py; tests/unit/test_readiness_scheduler_foundation.py | Host pytest passed; Docker integration tests passed twice |
+| Disabled-by-default scheduled delivery setting | app/core/config.py; .env.example | tests/unit/test_settings.py | Host pytest passed |
+| Immutable scheduled digest models with UTC normalization | app/domain/entities/scheduled_digest.py | tests/unit/test_scheduled_digest_delivery_foundation.py | Host pytest passed |
+| Mockable notification sender and dedup store protocols | app/domain/interfaces/notifications.py; app/services/scheduled_digest_delivery_service.py | tests/unit/test_scheduled_digest_delivery_foundation.py | Host pytest passed |
+| Due/not-due deterministic interval policy | app/services/scheduled_digest_delivery_service.py | tests/unit/test_scheduled_digest_delivery_foundation.py | Host pytest passed |
+| Build payload only when enabled and due | app/services/scheduled_digest_delivery_service.py | tests/unit/test_scheduled_digest_delivery_foundation.py | Host pytest passed |
+| Duplicate dedup key skip | app/services/scheduled_digest_delivery_service.py | tests/unit/test_scheduled_digest_delivery_foundation.py | Host pytest passed |
+| No automatic worker loop | app/scheduler/jobs.py | tests/unit/test_scheduled_digest_delivery_foundation.py | Host pytest passed |
+| Keep `/snapshot` and `/digest` working | app/telegram/commands.py | tests/unit/test_telegram_commands.py | Host pytest passed |
+| No strategy/signals/AI/broker/execution additions | app/domain/entities/scheduled_digest.py; app/services/scheduled_digest_delivery_service.py; app/scheduler/jobs.py | tests/contract/test_safety_boundaries.py; scripts/security_check.py | Safety tests and security check passed |
 | No migration required | none | docker compose run --rm migrate alembic check | No new upgrade operations detected |
 
 ## Git Metadata
 ### git status --short
 
 ```
+ M .env.example
  M AGENTS.md
  M PLANS.md
  M README.md
+ M app/core/config.py
  M app/core/constants.py
- M app/telegram/bot.py
- M app/telegram/commands.py
+ M app/domain/entities/__init__.py
+ M app/scheduler/jobs.py
+ M docs/chatgpt-verification-packet.md
  M docs/operations.md
  M tests/contract/test_safety_boundaries.py
  M tests/integration/test_database_and_api.py
  M tests/unit/test_analysis_snapshot_foundation.py
  M tests/unit/test_readiness_scheduler_foundation.py
- M tests/unit/test_telegram_commands.py
-?? docs/phase3g-verification-report.md
+ M tests/unit/test_settings.py
+?? app/domain/entities/scheduled_digest.py
+?? app/domain/interfaces/notifications.py
+?? app/services/scheduled_digest_delivery_service.py
+?? docs/phase3h-verification-report.md
+?? tests/unit/test_scheduled_digest_delivery_foundation.py
 ```
 ### git diff --stat
 
 ```
-AGENTS.md                                         | 15 ++--
-PLANS.md                                          | 12 ++-
-README.md                                         | 12 ++-
+.env.example                                      |  2 ++
+AGENTS.md                                         | 16 +++++----
+PLANS.md                                          | 12 +++++--
+README.md                                         | 17 ++++++++--
+app/core/config.py                                |  2 ++
 app/core/constants.py                             |  2 +-
-app/telegram/bot.py                               |  5 +-
-app/telegram/commands.py                          | 73 +++++++++++++++++-
-docs/operations.md                                | 11 ++-
-tests/contract/test_safety_boundaries.py          | 33 +++++++++
+app/domain/entities/__init__.py                   | 14 ++++++++
+app/scheduler/jobs.py                             | 20 +++++++++++
+docs/chatgpt-verification-packet.md               | regenerated for Phase 3H
+docs/operations.md                                |  8 +++++
+tests/contract/test_safety_boundaries.py          | 41 +++++++++++++++++++++++
 tests/integration/test_database_and_api.py        |  2 +-
-tests/unit/test_analysis_snapshot_foundation.py   |  4 +-
+tests/unit/test_analysis_snapshot_foundation.py   |  4 +--
 tests/unit/test_readiness_scheduler_foundation.py |  2 +-
-tests/unit/test_telegram_commands.py              | 90 ++++++++++++++++++++++-
-12 files changed, 236 insertions(+), 25 deletions(-)
+tests/unit/test_settings.py                       |  2 ++
+14 tracked files changed before packet regeneration; new untracked files are listed in git status.
 ```
-### git log --oneline -7
+### git log --oneline -8
 
 ```
+ab4aafb phase 3G done
 40473bd Add Phase 3F readiness scheduler foundation
 588ab6a Phase 3E DONE
 8166820 phase 3C DONE
@@ -123,13 +150,13 @@ Resolved 46 packages in 3ms
 ### uv sync
 
 ```
-Resolved 46 packages in 3ms
-Checked 43 packages in 6ms
+Resolved 46 packages in 2ms
+Checked 43 packages in 0.89ms
 ```
 ### uv run ruff format --check .
 
 ```
-104 files already formatted
+108 files already formatted
 ```
 ### uv run ruff check .
 
@@ -139,7 +166,7 @@ All checks passed!
 ### uv run mypy app
 
 ```
-Success: no issues found in 74 source files
+Success: no issues found in 77 source files
 ```
 ### uv run pytest
 
@@ -151,24 +178,25 @@ configfile: pyproject.toml
 testpaths: tests
 plugins: anyio-4.14.1, asyncio-0.26.0
 asyncio: mode=Mode.AUTO, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
-collected 204 items
+collected 216 items
 
 tests/contract/test_agent_contracts.py ......                            [  2%]
 tests/contract/test_api_error_schema.py .                                [  3%]
 tests/contract/test_architecture_boundaries.py ..                        [  4%]
-tests/contract/test_provider_contracts.py .............................. [ 19%]
-...............................                                          [ 34%]
-tests/contract/test_safety_boundaries.py ..............                  [ 41%]
-tests/integration/test_database_and_api.py sssss                         [ 43%]
-tests/unit/test_analysis_snapshot_foundation.py ..........               [ 48%]
-tests/unit/test_context_engine_foundation.py .............               [ 54%]
-tests/unit/test_data_quality_foundation.py ...                           [ 56%]
-tests/unit/test_domain_market_models.py ..................               [ 65%]
-tests/unit/test_errors_and_redaction.py .......                          [ 68%]
-tests/unit/test_feature_engine_foundation.py ...........                 [ 74%]
-tests/unit/test_internal_api_key.py ....                                 [ 75%]
-tests/unit/test_readiness_scheduler_foundation.py .........              [ 80%]
-tests/unit/test_settings.py .........                                    [ 84%]
+tests/contract/test_provider_contracts.py .............................. [ 18%]
+...............................                                          [ 32%]
+tests/contract/test_safety_boundaries.py ...............                 [ 39%]
+tests/integration/test_database_and_api.py sssss                         [ 41%]
+tests/unit/test_analysis_snapshot_foundation.py ..........               [ 46%]
+tests/unit/test_context_engine_foundation.py .............               [ 52%]
+tests/unit/test_data_quality_foundation.py ...                           [ 53%]
+tests/unit/test_domain_market_models.py ..................               [ 62%]
+tests/unit/test_errors_and_redaction.py .......                          [ 65%]
+tests/unit/test_feature_engine_foundation.py ...........                 [ 70%]
+tests/unit/test_internal_api_key.py ....                                 [ 72%]
+tests/unit/test_readiness_scheduler_foundation.py .........              [ 76%]
+tests/unit/test_scheduled_digest_delivery_foundation.py ...........      [ 81%]
+tests/unit/test_settings.py .........                                    [ 85%]
 tests/unit/test_system_state_service.py .....                            [ 87%]
 tests/unit/test_telegram_commands.py ........                            [ 91%]
 tests/unit/test_telegram_policy.py .....                                 [ 93%]
@@ -182,7 +210,7 @@ tests/unit/test_value_objects_and_enums.py ....                          [100%]
     from starlette.testclient import TestClient as TestClient  # noqa
 
 -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
-================== 199 passed, 5 skipped, 1 warning in 0.81s ===================
+================== 211 passed, 5 skipped, 1 warning in 0.83s ===================
 ```
 ### uv run python scripts/security_check.py
 
@@ -193,92 +221,94 @@ Output: <no output>
 ### docker compose build
 
 ```
-Image ai-trading-os-migrate Building 
- Image ai-trading-os-api Building 
+Image ai-trading-os-api Building 
  Image ai-trading-os-worker Building 
  Image ai-trading-os-bot Building 
+ Image ai-trading-os-migrate Building 
 #1 [internal] load local bake definitions
 #1 reading from stdin 1.91kB done
 #1 DONE 0.0s
 
-#2 [worker internal] load build definition from Dockerfile
+#2 [api internal] load build definition from Dockerfile
 #2 transferring dockerfile: 411B done
 #2 DONE 0.0s
 
-#3 [bot internal] load metadata for ghcr.io/astral-sh/uv:python3.12-bookworm-slim
-#3 DONE 1.0s
+#3 [worker internal] load metadata for ghcr.io/astral-sh/uv:python3.12-bookworm-slim
+#3 DONE 1.1s
 
 #4 [api internal] load .dockerignore
 #4 transferring context: 143B done
 #4 DONE 0.0s
 
-#5 [api 1/5] FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim@sha256:e5b65587bce7de595f299855d7385fe7fca39b8a74baa261ba1b7147afa78e58
+#5 [bot 1/5] FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim@sha256:e5b65587bce7de595f299855d7385fe7fca39b8a74baa261ba1b7147afa78e58
 #5 resolve ghcr.io/astral-sh/uv:python3.12-bookworm-slim@sha256:e5b65587bce7de595f299855d7385fe7fca39b8a74baa261ba1b7147afa78e58 0.0s done
 #5 DONE 0.0s
 
 #6 [worker internal] load build context
-#6 transferring context: 377.31kB 0.0s done
+#6 transferring context: 446.40kB 0.0s done
 #6 DONE 0.0s
 
-#7 [worker 2/5] WORKDIR /app
+#7 [migrate 2/5] WORKDIR /app
 #7 CACHED
 
-#8 [worker 3/5] COPY pyproject.toml uv.lock* ./
+#8 [migrate 3/5] COPY pyproject.toml uv.lock* ./
 #8 CACHED
 
-#9 [bot 4/5] RUN uv sync --frozen --no-dev
+#9 [migrate 4/5] RUN uv sync --frozen --no-dev
 #9 CACHED
 
-#10 [migrate 5/5] COPY . .
-#10 DONE 0.0s
+#10 [worker 5/5] COPY . .
+#10 DONE 0.1s
 
 #11 [bot] exporting to image
+#11 exporting layers
 #11 exporting layers 0.0s done
-#11 exporting manifest sha256:562b41f768d9fd141a1ea89a8ca1da3d7f8e5a9153cc43a508d8dd2f1012c4a5 done
-#11 exporting config sha256:959ed25815ae45ffd3ecf83cfb6c72ab7aa61f26b84fbf346bbd067ae45834dd done
-#11 exporting attestation manifest sha256:80c6423fac3c545f82c9a868dff2f3d53880cae6294539652e038fef0b00c20e 0.0s done
-#11 exporting manifest list sha256:d3218f66011fa39cef51f7ac4f8a97fd96e147db2a81da6c7436d49b6e09ad4a done
+#11 exporting manifest sha256:873b59e21a784cd9cac3fa064dac626786711c5b954828a565ef96f605eae3c1 done
+#11 exporting config sha256:dcc8aba89b33ab6d6d3c3de7197afa6b0792c83680a360482fb4dccc2021a1bd 0.0s done
+#11 exporting attestation manifest sha256:e900b639e5b4919e5d22a15810a15b754610d3ed7c6dc157bbd8e22d749da5c7 0.0s done
+#11 exporting manifest list sha256:fd3d32bb7d3f2ecf4a913c8f94123cb3a66776197d85b39cf6824dc63da71942
+#11 exporting manifest list sha256:fd3d32bb7d3f2ecf4a913c8f94123cb3a66776197d85b39cf6824dc63da71942 done
 #11 naming to docker.io/library/ai-trading-os-bot:latest done
 #11 unpacking to docker.io/library/ai-trading-os-bot:latest 0.0s done
-#11 DONE 0.1s
+#11 DONE 0.2s
 
 #12 [worker] exporting to image
 #12 exporting layers 0.0s done
-#12 exporting manifest sha256:7fccf25ec4e32e8197ab2042a1a2ec8f2ab4fea02c82111dda960dbb97c9efb1 done
-#12 exporting config sha256:88fcd90c9c550359514a5974f419da289ec29b2be8d6ac42e64e9d9f94270061 done
-#12 exporting attestation manifest sha256:66ae8ddaa8f72cab5b753e5d97e4e72e37738ab0a17283edb68b08889145c216 0.0s done
-#12 exporting manifest list sha256:2c34bea6ca838fb069e2d84d2c2ae24bd0e6bbf0231a4c19ab1576362e157772 done
+#12 exporting manifest sha256:a67574b20bdf73940d5a2cfcab2de3a59f500f305dea983d5123c1ac00734ed4 done
+#12 exporting config sha256:48e284755a59dc6c2dffe8c26bc0992d9990cc93df9be805181c5a61c74b6e6f 0.0s done
+#12 exporting attestation manifest sha256:2f6159457022213953c44f2fdc35b79f01595ec1a225031dc3b250924557a218 0.0s done
+#12 exporting manifest list sha256:3b067319363d9ee7d71198f5fc61d3cbe241ca4dd4d57972acd532c779654845 done
 #12 naming to docker.io/library/ai-trading-os-worker:latest done
 #12 unpacking to docker.io/library/ai-trading-os-worker:latest 0.0s done
 #12 DONE 0.2s
 
-#13 [migrate] exporting to image
+#13 [api] exporting to image
 #13 exporting layers 0.0s done
-#13 exporting manifest sha256:c74ca706a0dbbc62782a893b60b2afcdcc251aeb4fc04a13f1b105f1fd9acc7b done
-#13 exporting config sha256:5a5934f00c5abe340c07101b3b6a396921a394cbb0874e8c65b06813d5fe0995 done
-#13 exporting attestation manifest sha256:db84c7007763606685badd4f084f33b809ca362c773bf648055b6533f8f6edbf 0.0s done
-#13 exporting manifest list sha256:31d402eec27a60dcec57f4b3dc2e8368829c403c9c5d697be643ee02dd5522cc done
-#13 naming to docker.io/library/ai-trading-os-migrate:latest done
-#13 unpacking to docker.io/library/ai-trading-os-migrate:latest 0.0s done
+#13 exporting manifest sha256:19dd8ce1838f252def88e4eb7d77ba1a9ee8bcad32c3ca7c3402ed6b4d2a1254 0.0s done
+#13 exporting config sha256:95bc4aab192e2ead3ae9d7edc7a29f32c115558641e58ed9073934f9b0764f9c done
+#13 exporting attestation manifest sha256:640d9d6d386b94d329ef7e5d6896f51eb2d15fffdc30d87236e023ba92304c6d 0.0s done
+#13 exporting manifest list sha256:cb4726db4d1aa1b5fa82d7a80ae0e42529142c5a479911e963de94f48e9934e0 done
+#13 naming to docker.io/library/ai-trading-os-api:latest done
+#13 unpacking to docker.io/library/ai-trading-os-api:latest 0.0s done
 #13 DONE 0.2s
 
-#14 [api] exporting to image
+#14 [migrate] exporting to image
 #14 exporting layers 0.0s done
-#14 exporting manifest sha256:6cc66e038c527114dc701a8925c4086d9abed137bd44dcff9041ece0aa7ca415 done
-#14 exporting config sha256:1e0e84c7a5adf3c6c7f4b660cd85fc0cf985f69306890ec87feaf99a8e79acad done
-#14 exporting attestation manifest sha256:da04695e06e65c891ad1e527785ecbb9a6e6c3e29194a0a47e19d10d81607c80 0.0s done
-#14 exporting manifest list sha256:9bc696d9a8f023c04596a31759b55c126cfd7846eeead0d65727bd74702751d0 done
-#14 naming to docker.io/library/ai-trading-os-api:latest done
-#14 unpacking to docker.io/library/ai-trading-os-api:latest 0.0s done
+#14 exporting manifest sha256:b6394bb7164077b903b4dfcae1c02f422483832b0a42c53c681c5c6aade3fd98 done
+#14 exporting config sha256:2892f262a9c1a49c2c03b73ade90d87a81c09c851a5bd0ad9ac274dea787085a done
+#14 exporting attestation manifest sha256:52cbfdf48b88c53991bb1e112c718b373f705e3a58ac34c29ce9cbb1ed58f5e5 0.0s done
+#14 exporting manifest list sha256:86a31a7c5142c3d04081aa9c06a757df7fa978f3116e9d7d00ae89b8b63f7952 done
+#14 naming to docker.io/library/ai-trading-os-migrate:latest done
+#14 unpacking to docker.io/library/ai-trading-os-migrate:latest 0.0s done
 #14 DONE 0.2s
 
-#15 [api] resolving provenance for metadata file
+#15 [bot] resolving provenance for metadata file
 #15 DONE 0.0s
 
-#16 [worker] resolving provenance for metadata file
+#16 [api] resolving provenance for metadata file
 #16 DONE 0.0s
 
-#17 [bot] resolving provenance for metadata file
+#17 [worker] resolving provenance for metadata file
 #17 DONE 0.0s
 
 #18 [migrate] resolving provenance for metadata file
@@ -291,10 +321,12 @@ Image ai-trading-os-migrate Building
 ### docker compose up -d postgres
 
 ```
-Network ai-trading-os_default Created
-Container ai-trading-os-postgres-1 Created
+Network ai-trading-os_default Creating 
+Network ai-trading-os_default Created 
+Container ai-trading-os-postgres-1 Creating 
+Container ai-trading-os-postgres-1 Created 
+Container ai-trading-os-postgres-1 Starting 
 Container ai-trading-os-postgres-1 Started
-Exit code: 0
 ```
 ### docker compose ps postgres
 
@@ -305,9 +337,11 @@ ai-trading-os-postgres-1   postgres:16-alpine   "docker-entrypoint.s…"   postg
 ### docker compose run --rm migrate alembic current
 
 ```
-Container ai-trading-os-postgres-1 Running
-Container ai-trading-os-postgres-1 Waiting
-Container ai-trading-os-postgres-1 Healthy
+Container ai-trading-os-postgres-1 Running 
+Container ai-trading-os-postgres-1 Waiting 
+Container ai-trading-os-postgres-1 Healthy 
+Container ai-trading-os-migrate-run-c3c71a3af6d0 Creating 
+Container ai-trading-os-migrate-run-c3c71a3af6d0 Created 
 INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
 INFO  [alembic.runtime.migration] Will assume transactional DDL.
 0002_phase2_data_constraints (head)
@@ -315,9 +349,11 @@ INFO  [alembic.runtime.migration] Will assume transactional DDL.
 ### docker compose run --rm migrate alembic check
 
 ```
-Container ai-trading-os-postgres-1 Running
-Container ai-trading-os-postgres-1 Waiting
-Container ai-trading-os-postgres-1 Healthy
+Container ai-trading-os-postgres-1 Running 
+Container ai-trading-os-postgres-1 Waiting 
+Container ai-trading-os-postgres-1 Healthy 
+Container ai-trading-os-migrate-run-9b86b06663c9 Creating 
+Container ai-trading-os-migrate-run-9b86b06663c9 Created 
 INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
 INFO  [alembic.runtime.migration] Will assume transactional DDL.
 INFO  [alembic.runtime.plugins] setting up autogenerate plugin alembic.autogenerate.schemas
@@ -328,21 +364,37 @@ INFO  [alembic.runtime.plugins] setting up autogenerate plugin alembic.autogener
 INFO  [alembic.runtime.plugins] setting up autogenerate plugin alembic.autogenerate.comments
 No new upgrade operations detected.
 ```
-### docker compose run --rm -e DATABASE_URL=postgresql+asyncpg://ai_trading_os:ai_trading_os@postgres:5432/ai_trading_os_test migrate alembic upgrade head
+### test database migration
 
 ```
-Container ai-trading-os-postgres-1 Running
-Container ai-trading-os-postgres-1 Waiting
-Container ai-trading-os-postgres-1 Healthy
+docker compose run --rm -e DATABASE_URL=postgresql+asyncpg://ai_trading_os:ai_trading_os@postgres:5432/ai_trading_os_test migrate alembic upgrade head
+
+Container ai-trading-os-postgres-1 Running 
+Container ai-trading-os-postgres-1 Waiting 
+Container ai-trading-os-postgres-1 Healthy 
+Container ai-trading-os-migrate-run-af8c55ea470b Creating 
+Container ai-trading-os-migrate-run-af8c55ea470b Created 
 INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
 INFO  [alembic.runtime.migration] Will assume transactional DDL.
-Exit code: 0
 ```
 ### docker integration run 1
 
 ```
 docker compose run --rm -e REQUIRE_INTEGRATION_TESTS=true -e TEST_DATABASE_URL=postgresql+asyncpg://ai_trading_os:ai_trading_os@postgres:5432/ai_trading_os_test migrate uv run pytest tests/integration/test_database_and_api.py
 
+Container ai-trading-os-postgres-1 Running 
+Container ai-trading-os-postgres-1 Waiting 
+Container ai-trading-os-postgres-1 Healthy 
+Container ai-trading-os-migrate-run-795958161608 Creating 
+Container ai-trading-os-migrate-run-795958161608 Created 
+Downloading pygments (1.2MiB)
+Downloading mypy (13.1MiB)
+Downloading ruff (10.5MiB)
+ Downloaded pygments
+ Downloaded ruff
+ Downloaded mypy
+Installed 11 packages in 81ms
+Bytecode compiled 1963 files in 538ms
 ============================= test session starts ==============================
 platform linux -- Python 3.12.12, pytest-8.4.2, pluggy-1.6.0
 rootdir: /app
@@ -366,6 +418,19 @@ tests/integration/test_database_and_api.py .....                         [100%]
 ```
 docker compose run --rm -e REQUIRE_INTEGRATION_TESTS=true -e TEST_DATABASE_URL=postgresql+asyncpg://ai_trading_os:ai_trading_os@postgres:5432/ai_trading_os_test migrate uv run pytest tests/integration/test_database_and_api.py
 
+Container ai-trading-os-postgres-1 Running 
+Container ai-trading-os-postgres-1 Waiting 
+Container ai-trading-os-postgres-1 Healthy 
+Container ai-trading-os-migrate-run-e6ebffd9eeb4 Creating 
+Container ai-trading-os-migrate-run-e6ebffd9eeb4 Created 
+Downloading pygments (1.2MiB)
+Downloading mypy (13.1MiB)
+Downloading ruff (10.5MiB)
+ Downloaded pygments
+ Downloaded ruff
+ Downloaded mypy
+Installed 11 packages in 49ms
+Bytecode compiled 1963 files in 406ms
 ============================= test session starts ==============================
 platform linux -- Python 3.12.12, pytest-8.4.2, pluggy-1.6.0
 rootdir: /app
@@ -382,7 +447,7 @@ tests/integration/test_database_and_api.py .....                         [100%]
     from starlette.testclient import TestClient as TestClient  # noqa
 
 -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
-========================= 5 passed, 1 warning in 0.31s =========================
+========================= 5 passed, 1 warning in 0.32s =========================
 ```
 ### docker compose config
 
@@ -676,24 +741,226 @@ volumes:
 
 ## Skipped Checks
 - Host `uv run pytest` skipped 5 integration tests because those require explicit PostgreSQL integration settings.
-- Those integration tests were run separately in Docker with `REQUIRE_INTEGRATION_TESTS=true`; both repeated Docker runs passed.
+- The PostgreSQL integration tests were run separately in Docker with `REQUIRE_INTEGRATION_TESTS=true`; both repeated Docker runs passed.
 
 ## Unavailable Checks
-- None for the requested Phase 3G verification set. Docker, PostgreSQL, Alembic, host uv, and Docker integration checks were available and ran successfully.
+- None for the requested Phase 3H verification set. Docker, PostgreSQL, Alembic, host uv, and Docker integration checks were available and ran successfully.
 
 ## Remaining Risks
-- Live Telegram API behavior was not tested with a real bot token; Phase 3G tests use local fakes and application wiring.
-- Provider integrations remain disabled and were not called during Phase 3G verification.
-- `docker compose config` output includes existing environment defaults such as future-phase configuration placeholders; Phase 3G did not activate them.
+- Live Telegram API behavior was not tested with a real bot token; Phase 3H tests use fakes and protocols.
+- Scheduled digest deduplication persistence is in-memory foundation behavior in Phase 3H; no durable delivery table was added.
+- Provider integrations remain disabled and were not called during Phase 3H verification.
+- `docker compose config` output includes existing future-phase environment placeholders; Phase 3H did not activate them.
 
 ## Migration Contents
-No migration was added for Phase 3G. Current Alembic head remains `0002_phase2_data_constraints (head)`, and `alembic check` reported `No new upgrade operations detected.`
+No migration was added for Phase 3H. Current Alembic head remains `0002_phase2_data_constraints (head)`, and `alembic check` reported `No new upgrade operations detected.`
 
 ## Full Contents Of Changed Source Files
+### .env.example
+
+```dotenv
+APP_NAME=AI Trading OS
+APP_ENV=development
+APP_TIMEZONE=Europe/Stockholm
+STORAGE_TIMEZONE=UTC
+LOG_LEVEL=INFO
+
+DATABASE_URL=postgresql+asyncpg://ai_trading_os:ai_trading_os@postgres:5432/ai_trading_os
+TEST_DATABASE_URL=postgresql+asyncpg://ai_trading_os:ai_trading_os@localhost:5432/ai_trading_os_test
+INTERNAL_API_KEY=development-internal-key-change-me
+
+TELEGRAM_ENABLED=false
+TELEGRAM_BOT_TOKEN=
+TELEGRAM_ALLOWED_USER_ID=
+TELEGRAM_ALLOWED_CHAT_ID=
+
+OPENAI_ENABLED=false
+OPENAI_API_KEY=
+OPENAI_MODEL=gpt-4.1
+
+MARKET_DATA_ENABLED=false
+TWELVE_DATA_API_KEY=
+TWELVE_DATA_BASE_URL=https://api.twelvedata.com
+
+CALENDAR_ENABLED=false
+FMP_API_KEY=
+FMP_BASE_URL=https://financialmodelingprep.com
+
+PROVIDER_CONNECT_TIMEOUT_SECONDS=5
+PROVIDER_READ_TIMEOUT_SECONDS=10
+PROVIDER_WRITE_TIMEOUT_SECONDS=5
+PROVIDER_POOL_TIMEOUT_SECONDS=5
+PROVIDER_RETRY_COUNT=2
+PROVIDER_RETRY_BACKOFF_SECONDS=0.1
+PROVIDER_MAX_REQUEST_RANGE_DAYS=31
+REQUIRE_INTEGRATION_TESTS=false
+
+SCAN_ENABLED=false
+SCHEDULED_DIGEST_ENABLED=false
+SCHEDULED_DIGEST_INTERVAL_MINUTES=60
+SETUP_SCORE_THRESHOLD=85
+
+PAPER_ACCOUNT_CURRENCY=EUR
+PAPER_ACCOUNT_BALANCE=10000
+PAPER_RISK_PERCENT=0.5
+MAX_OPEN_RISK_PERCENT=1.0
+MAX_DAILY_LOSS_PERCENT=1.5
+MAX_WEEKLY_LOSS_PERCENT=4.0
+MAX_CONSECUTIVE_LOSSES=3
+
+SIGNAL_VALID_MINUTES=30
+```
+### app/core/config.py
+
+```python
+from decimal import Decimal
+from functools import lru_cache
+from typing import Any
+
+from pydantic import Field, SecretStr, field_validator, model_validator
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+DEFAULT_DEVELOPMENT_INTERNAL_API_KEY = "development-internal-key-change-me"
+
+
+class Settings(BaseSettings):
+    app_name: str = "AI Trading OS"
+    app_env: str = "development"
+    app_timezone: str = "Europe/Stockholm"
+    storage_timezone: str = "UTC"
+    log_level: str = "INFO"
+
+    database_url: SecretStr = SecretStr(
+        "postgresql+asyncpg://ai_trading_os:ai_trading_os@postgres:5432/ai_trading_os"
+    )
+    test_database_url: SecretStr | None = SecretStr(
+        "postgresql+asyncpg://ai_trading_os:ai_trading_os@localhost:5432/ai_trading_os_test"
+    )
+    internal_api_key: SecretStr = SecretStr(DEFAULT_DEVELOPMENT_INTERNAL_API_KEY)
+
+    telegram_enabled: bool = False
+    telegram_bot_token: SecretStr | None = None
+    telegram_allowed_user_id: int | None = None
+    telegram_allowed_chat_id: int | None = None
+
+    openai_enabled: bool = False
+    openai_api_key: SecretStr | None = None
+    openai_model: str = "gpt-4.1"
+
+    market_data_enabled: bool = False
+    twelve_data_api_key: SecretStr | None = None
+    twelve_data_base_url: str = "https://api.twelvedata.com"
+
+    calendar_enabled: bool = False
+    fmp_api_key: SecretStr | None = None
+    fmp_base_url: str = "https://financialmodelingprep.com"
+
+    provider_connect_timeout_seconds: float = Field(default=5.0, gt=0, le=30)
+    provider_read_timeout_seconds: float = Field(default=10.0, gt=0, le=60)
+    provider_write_timeout_seconds: float = Field(default=5.0, gt=0, le=30)
+    provider_pool_timeout_seconds: float = Field(default=5.0, gt=0, le=30)
+    provider_retry_count: int = Field(default=2, ge=0, le=5)
+    provider_retry_backoff_seconds: float = Field(default=0.1, ge=0, le=5)
+    provider_max_request_range_days: int = Field(default=31, ge=1, le=370)
+    require_integration_tests: bool = False
+
+    scan_enabled: bool = False
+    scheduled_digest_enabled: bool = False
+    scheduled_digest_interval_minutes: int = Field(default=60, ge=1, le=1440)
+    setup_score_threshold: int = Field(default=85, ge=0, le=100)
+
+    paper_account_currency: str = "EUR"
+    paper_account_balance: Decimal = Field(default=Decimal("10000"), gt=Decimal("0"))
+    paper_risk_percent: Decimal = Field(default=Decimal("0.5"), ge=Decimal("0"))
+    max_open_risk_percent: Decimal = Field(default=Decimal("1.0"), ge=Decimal("0"))
+    max_daily_loss_percent: Decimal = Field(default=Decimal("1.5"), ge=Decimal("0"))
+    max_weekly_loss_percent: Decimal = Field(default=Decimal("4.0"), ge=Decimal("0"))
+    max_consecutive_losses: int = Field(default=3, ge=0)
+
+    signal_valid_minutes: int = Field(default=30, ge=1)
+
+    model_config = SettingsConfigDict(
+        case_sensitive=False,
+        env_file=".env",
+        env_file_encoding="utf-8",
+        extra="ignore",
+    )
+
+    @field_validator(
+        "telegram_bot_token",
+        "telegram_allowed_user_id",
+        "telegram_allowed_chat_id",
+        "openai_api_key",
+        "twelve_data_api_key",
+        "fmp_api_key",
+        "test_database_url",
+        mode="before",
+    )
+    @classmethod
+    def empty_string_to_none(cls, value: Any) -> Any:
+        if value == "":
+            return None
+        return value
+
+    @field_validator("paper_account_currency")
+    @classmethod
+    def currency_code_must_be_uppercase(cls, value: str) -> str:
+        if len(value) != 3 or not value.isalpha() or value.upper() != value:
+            raise ValueError("paper account currency must be a three-letter uppercase code")
+        return value
+
+    @model_validator(mode="after")
+    def validate_conditional_settings(self) -> "Settings":
+        errors: list[str] = []
+        if not self.internal_api_key.get_secret_value().strip():
+            errors.append("INTERNAL_API_KEY is required")
+        if self.storage_timezone != "UTC":
+            errors.append("STORAGE_TIMEZONE must be UTC")
+        if (
+            self.app_env != "development"
+            and self.internal_api_key.get_secret_value() == DEFAULT_DEVELOPMENT_INTERNAL_API_KEY
+        ):
+            errors.append("Default development INTERNAL_API_KEY is rejected outside development")
+        if self.telegram_enabled:
+            if not self.telegram_bot_token:
+                errors.append("TELEGRAM_BOT_TOKEN is required when TELEGRAM_ENABLED=true")
+            if self.telegram_allowed_user_id is None:
+                errors.append("TELEGRAM_ALLOWED_USER_ID is required when TELEGRAM_ENABLED=true")
+            if self.telegram_allowed_chat_id is None:
+                errors.append("TELEGRAM_ALLOWED_CHAT_ID is required when TELEGRAM_ENABLED=true")
+        if self.openai_enabled and not self.openai_api_key:
+            errors.append("OPENAI_API_KEY is required when OPENAI_ENABLED=true")
+        if self.market_data_enabled and not self.twelve_data_api_key:
+            errors.append("TWELVE_DATA_API_KEY is required when MARKET_DATA_ENABLED=true")
+        if self.calendar_enabled and not self.fmp_api_key:
+            errors.append("FMP_API_KEY is required when CALENDAR_ENABLED=true")
+        if errors:
+            raise ValueError("; ".join(errors))
+        return self
+
+    def database_dsn(self) -> str:
+        return self.database_url.get_secret_value()
+
+    def test_database_dsn(self) -> str | None:
+        return self.test_database_url.get_secret_value() if self.test_database_url else None
+
+    def enabled_integrations(self) -> dict[str, bool]:
+        return {
+            "telegram": self.telegram_enabled,
+            "openai": self.openai_enabled,
+            "market_data": self.market_data_enabled,
+            "calendar": self.calendar_enabled,
+        }
+
+
+@lru_cache
+def get_settings() -> Settings:
+    return Settings()
+```
 ### app/core/constants.py
 
 ```python
-PROJECT_PHASE = "phase_3g_telegram_digest_command_foundation"
+PROJECT_PHASE = "phase_3h_scheduled_digest_delivery_foundation"
 STRATEGY_IMPLEMENTED = False
 REAL_TRADING_ENABLED = False
 
@@ -705,382 +972,815 @@ SYSTEM_STATE_LAST_ERROR = "last_error"
 
 DEFAULT_STRATEGY_VERSION = "foundation-v1"
 ```
-### app/telegram/bot.py
+### app/domain/entities/__init__.py
 
 ```python
-import asyncio
+from app.domain.entities.analysis import (
+    AnalysisInputAudit,
+    AnalysisIssue,
+    AnalysisIssueCode,
+    AnalysisIssueCount,
+    AnalysisNumericSummary,
+    AnalysisReadinessStatus,
+    AnalysisReport,
+    AnalysisSnapshot,
+    AnalysisSnapshotMetadata,
+    AnalysisWindow,
+)
+from app.domain.entities.context import (
+    CandleShapeSummary,
+    ContextCurrencyCount,
+    ContextImpactCount,
+    ContextIssue,
+    ContextIssueCode,
+    EventContextSummary,
+    IndicatorWindow,
+    MarketContextSnapshot,
+    MovingAverageSeries,
+    MovingAverageSummary,
+    RangeContextSummary,
+    ReturnDistributionSummary,
+    TimeContextSummary,
+)
+from app.domain.entities.data_quality import (
+    CandleAvailability,
+    DataQualityIssue,
+    DataQualityIssueCode,
+    EconomicEventAvailability,
+    FeatureSnapshot,
+    UpsertResult,
+    build_feature_snapshot,
+)
+from app.domain.entities.features import (
+    CandleFeatureSummary,
+    CurrencyEventCount,
+    EconomicEventFeatureSummary,
+    EconomicImpactCount,
+    FeatureIssue,
+    FeatureIssueCode,
+    FeatureWindow,
+    MarketFeatureSnapshot,
+)
+from app.domain.entities.market_data import Candle, EconomicEvent, EconomicImpact, Timeframe
+from app.domain.entities.readiness import (
+    SnapshotDigest,
+    SnapshotDigestIssueCount,
+    SnapshotDigestItem,
+    SnapshotDigestStatus,
+    SnapshotNotificationDedupKey,
+    SnapshotNotificationPayload,
+    SnapshotScheduleItem,
+    SnapshotSchedulePlan,
+    SnapshotWindow,
+    digest_status_from_analysis,
+)
+from app.domain.entities.scheduled_digest import (
+    ScheduledDigestConfig,
+    ScheduledDigestDecision,
+    ScheduledDigestDecisionReason,
+    ScheduledDigestDeliveryRecord,
+    ScheduledDigestDeliveryResult,
+    ScheduledDigestTick,
+)
+
+__all__ = [
+    "AnalysisInputAudit",
+    "AnalysisIssue",
+    "AnalysisIssueCode",
+    "AnalysisIssueCount",
+    "AnalysisNumericSummary",
+    "AnalysisReadinessStatus",
+    "AnalysisReport",
+    "AnalysisSnapshot",
+    "AnalysisSnapshotMetadata",
+    "AnalysisWindow",
+    "Candle",
+    "CandleAvailability",
+    "CandleFeatureSummary",
+    "CandleShapeSummary",
+    "ContextCurrencyCount",
+    "ContextImpactCount",
+    "ContextIssue",
+    "ContextIssueCode",
+    "CurrencyEventCount",
+    "DataQualityIssue",
+    "DataQualityIssueCode",
+    "EconomicEvent",
+    "EconomicEventAvailability",
+    "EconomicEventFeatureSummary",
+    "EconomicImpact",
+    "EconomicImpactCount",
+    "EventContextSummary",
+    "FeatureIssue",
+    "FeatureIssueCode",
+    "FeatureSnapshot",
+    "FeatureWindow",
+    "IndicatorWindow",
+    "MarketContextSnapshot",
+    "MarketFeatureSnapshot",
+    "MovingAverageSeries",
+    "MovingAverageSummary",
+    "RangeContextSummary",
+    "ReturnDistributionSummary",
+    "ScheduledDigestConfig",
+    "ScheduledDigestDecision",
+    "ScheduledDigestDecisionReason",
+    "ScheduledDigestDeliveryRecord",
+    "ScheduledDigestDeliveryResult",
+    "ScheduledDigestTick",
+    "SnapshotDigest",
+    "SnapshotDigestIssueCount",
+    "SnapshotDigestItem",
+    "SnapshotDigestStatus",
+    "SnapshotNotificationDedupKey",
+    "SnapshotNotificationPayload",
+    "SnapshotScheduleItem",
+    "SnapshotSchedulePlan",
+    "SnapshotWindow",
+    "TimeContextSummary",
+    "Timeframe",
+    "UpsertResult",
+    "build_feature_snapshot",
+    "digest_status_from_analysis",
+]
+```
+### app/domain/entities/scheduled_digest.py
+
+```python
+from datetime import datetime
+from enum import StrEnum
+from typing import Self
+
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+
+from app.core import constants
+from app.core.time import normalize_to_utc
+from app.domain.entities.readiness import (
+    SnapshotNotificationDedupKey,
+    SnapshotNotificationPayload,
+    SnapshotScheduleItem,
+)
+
+
+class ScheduledDigestDecisionReason(StrEnum):
+    DISABLED = "DISABLED"
+    NOT_DUE = "NOT_DUE"
+    DUE = "DUE"
+    DUPLICATE = "DUPLICATE"
+    NO_ITEMS = "NO_ITEMS"
+    BUILD_FAILED = "BUILD_FAILED"
+    DELIVERED = "DELIVERED"
+
+
+class ScheduledDigestConfig(BaseModel):
+    project_phase: str = Field(default_factory=lambda: constants.PROJECT_PHASE, min_length=1)
+    enabled: bool = False
+    interval_minutes: int = Field(default=60, ge=1, le=1440)
+    items: tuple[SnapshotScheduleItem, ...] = ()
+
+    model_config = ConfigDict(frozen=True)
+
+
+class ScheduledDigestTick(BaseModel):
+    project_phase: str = Field(default_factory=lambda: constants.PROJECT_PHASE, min_length=1)
+    as_of: datetime
+
+    model_config = ConfigDict(frozen=True)
+
+    @field_validator("as_of")
+    @classmethod
+    def as_of_must_be_utc(cls, value: datetime) -> datetime:
+        return normalize_to_utc(value)
+
+
+class ScheduledDigestDecision(BaseModel):
+    project_phase: str = Field(default_factory=lambda: constants.PROJECT_PHASE, min_length=1)
+    enabled: bool
+    is_due: bool
+    should_build: bool
+    reason: ScheduledDigestDecisionReason
+    item_count: int = Field(ge=0)
+    tick_as_of: datetime
+    dedup_key: SnapshotNotificationDedupKey | None = None
+
+    model_config = ConfigDict(frozen=True)
+
+    @field_validator("tick_as_of")
+    @classmethod
+    def tick_as_of_must_be_utc(cls, value: datetime) -> datetime:
+        return normalize_to_utc(value)
+
+    @model_validator(mode="after")
+    def validate_decision(self) -> Self:
+        if self.should_build and not self.is_due:
+            raise ValueError("scheduled digest cannot build when tick is not due")
+        if self.should_build and not self.enabled:
+            raise ValueError("scheduled digest cannot build while disabled")
+        return self
+
+
+class ScheduledDigestDeliveryRecord(BaseModel):
+    project_phase: str = Field(default_factory=lambda: constants.PROJECT_PHASE, min_length=1)
+    dedup_key: SnapshotNotificationDedupKey
+    delivered_at: datetime
+    sender_name: str = Field(min_length=1)
+
+    model_config = ConfigDict(frozen=True)
+
+    @field_validator("delivered_at")
+    @classmethod
+    def delivered_at_must_be_utc(cls, value: datetime) -> datetime:
+        return normalize_to_utc(value)
+
+
+class ScheduledDigestDeliveryResult(BaseModel):
+    project_phase: str = Field(default_factory=lambda: constants.PROJECT_PHASE, min_length=1)
+    tick: ScheduledDigestTick
+    decision: ScheduledDigestDecision
+    delivered: bool
+    skipped: bool
+    dedup_key: SnapshotNotificationDedupKey | None = None
+    payload: SnapshotNotificationPayload | None = None
+    record: ScheduledDigestDeliveryRecord | None = None
+
+    model_config = ConfigDict(frozen=True)
+
+    @model_validator(mode="after")
+    def validate_result(self) -> Self:
+        if self.delivered == self.skipped:
+            raise ValueError("scheduled digest result must be either delivered or skipped")
+        if self.delivered and self.record is None:
+            raise ValueError("delivered scheduled digest result requires a record")
+        if self.skipped and self.record is not None:
+            raise ValueError("skipped scheduled digest result must not include a record")
+        return self
+```
+### app/domain/interfaces/notifications.py
+
+```python
+from typing import Protocol
+
+from app.domain.entities.readiness import SnapshotNotificationDedupKey, SnapshotNotificationPayload
+from app.domain.entities.scheduled_digest import ScheduledDigestDeliveryRecord
+
+
+class NotificationSender(Protocol):
+    async def send(self, payload: SnapshotNotificationPayload) -> None:
+        """Deliver a neutral readiness notification payload."""
+
+
+class ScheduledDigestDeliveryStore(Protocol):
+    async def exists(self, dedup_key: SnapshotNotificationDedupKey) -> bool:
+        """Return whether a scheduled digest deduplication key is already recorded."""
+
+    async def record(self, record: ScheduledDigestDeliveryRecord) -> None:
+        """Record a delivered scheduled digest deduplication key."""
+```
+### app/scheduler/jobs.py
+
+```python
 import logging
-import signal
+from datetime import datetime
+from typing import Any
 
-from telegram.ext import ApplicationBuilder
-
-from app.core.config import get_settings
-from app.core.logging import configure_logging
-from app.persistence.database import create_engine, create_session_factory
-from app.persistence.session import build_uow_factory
-from app.services.analysis_service import AnalysisService
-from app.services.readiness_digest_service import ReadinessDigestService
+from app.core.time import utc_now
+from app.domain.entities import ScheduledDigestDeliveryResult
+from app.observability.health_checks import run_application_health_check
+from app.services.health_service import HealthService
+from app.services.scheduled_digest_delivery_service import ScheduledDigestDeliveryService
 from app.services.system_state_service import SystemStateService
-from app.telegram.commands import add_handlers
-from app.telegram.formatter import TelegramFormatter
 
 logger = logging.getLogger(__name__)
 
 
-async def run_disabled_mode() -> None:
-    settings = get_settings()
-    configure_logging("bot", settings.log_level)
-    logger.info("telegram_disabled_mode_started")
-    await asyncio.Event().wait()
+async def update_worker_heartbeat_job(service: SystemStateService) -> None:
+    await service.update_worker_heartbeat()
+    logger.info("worker_heartbeat_updated")
 
 
-async def run_enabled_bot() -> None:
-    settings = get_settings()
-    configure_logging("bot", settings.log_level)
-    token = settings.telegram_bot_token
-    if token is None:
-        raise RuntimeError("telegram token is required when Telegram is enabled")
-
-    engine = create_engine(settings.database_dsn())
-    session_factory = create_session_factory(engine)
-    uow_factory = build_uow_factory(session_factory)
-    application = ApplicationBuilder().token(token.get_secret_value()).build()
-    analysis_service = AnalysisService(uow_factory)
-    application.bot_data["settings"] = settings
-    application.bot_data["system_state_service"] = SystemStateService(uow_factory)
-    application.bot_data["analysis_service"] = analysis_service
-    application.bot_data["readiness_digest_service"] = ReadinessDigestService(analysis_service)
-    application.bot_data["formatter"] = TelegramFormatter()
-    add_handlers(application)
-
-    stop_event = asyncio.Event()
-    loop = asyncio.get_running_loop()
-    for sig in (signal.SIGINT, signal.SIGTERM):
-        loop.add_signal_handler(sig, stop_event.set)
-
-    try:
-        logger.info("telegram_bot_starting")
-        await application.initialize()
-        await application.start()
-        if application.updater is None:
-            raise RuntimeError("telegram updater is unavailable")
-        await application.updater.start_polling()
-        logger.info("telegram_bot_started")
-        await stop_event.wait()
-    finally:
-        logger.info("telegram_bot_stopping")
-        if application.updater is not None:
-            await application.updater.stop()
-        await application.stop()
-        await application.shutdown()
-        await engine.dispose()
-        logger.info("telegram_bot_stopped")
+async def application_health_check_job(health_service: HealthService) -> None:
+    result = await run_application_health_check(health_service)
+    logger.info("worker_health_check_completed", extra={"database_status": result["database"]})
 
 
-def main() -> None:
-    settings = get_settings()
-    if settings.telegram_enabled:
-        asyncio.run(run_enabled_bot())
-    else:
-        asyncio.run(run_disabled_mode())
+async def scheduled_digest_delivery_job(
+    service: ScheduledDigestDeliveryService,
+    *,
+    as_of: datetime | None = None,
+) -> ScheduledDigestDeliveryResult:
+    result = await service.run_tick(as_of=as_of or utc_now())
+    logger.info(
+        "scheduled_digest_delivery_checked",
+        extra={
+            "delivered": result.delivered,
+            "reason": result.decision.reason.value,
+        },
+    )
+    return result
 
 
-if __name__ == "__main__":
-    main()
+def register_jobs(
+    scheduler: Any,
+    *,
+    system_state_service: SystemStateService,
+    health_service: HealthService,
+) -> None:
+    scheduler.add_job(
+        update_worker_heartbeat_job,
+        "interval",
+        seconds=30,
+        args=[system_state_service],
+        id="worker_heartbeat",
+        max_instances=1,
+        coalesce=True,
+        replace_existing=True,
+    )
+    scheduler.add_job(
+        application_health_check_job,
+        "interval",
+        seconds=60,
+        args=[health_service],
+        id="application_health_check",
+        max_instances=1,
+        coalesce=True,
+        replace_existing=True,
+    )
 ```
-### app/telegram/commands.py
+### app/services/scheduled_digest_delivery_service.py
 
 ```python
-from datetime import datetime, timedelta
+from datetime import datetime
+from typing import Protocol
+
+from app.core.time import normalize_to_utc
+from app.domain.entities.readiness import (
+    SnapshotNotificationDedupKey,
+    SnapshotNotificationPayload,
+    SnapshotScheduleItem,
+)
+from app.domain.entities.scheduled_digest import (
+    ScheduledDigestConfig,
+    ScheduledDigestDecision,
+    ScheduledDigestDecisionReason,
+    ScheduledDigestDeliveryRecord,
+    ScheduledDigestDeliveryResult,
+    ScheduledDigestTick,
+)
+from app.domain.interfaces.notifications import NotificationSender, ScheduledDigestDeliveryStore
+
+
+class ReadinessDigestPayloadBuilder(Protocol):
+    async def build_payload(
+        self,
+        *,
+        items: tuple[SnapshotScheduleItem, ...],
+        as_of: datetime,
+    ) -> SnapshotNotificationPayload:
+        """Build a neutral readiness digest payload for scheduled delivery."""
+
+
+class InMemoryScheduledDigestDeliveryStore:
+    def __init__(self) -> None:
+        self._records: dict[str, ScheduledDigestDeliveryRecord] = {}
+
+    async def exists(self, dedup_key: SnapshotNotificationDedupKey) -> bool:
+        return dedup_key.value in self._records
+
+    async def record(self, record: ScheduledDigestDeliveryRecord) -> None:
+        self._records[record.dedup_key.value] = record
+
+
+class ScheduledDigestDeliveryService:
+    def __init__(
+        self,
+        *,
+        config: ScheduledDigestConfig,
+        readiness_digest_service: ReadinessDigestPayloadBuilder,
+        sender: NotificationSender,
+        delivery_store: ScheduledDigestDeliveryStore,
+        sender_name: str = "notification_sender",
+    ) -> None:
+        self._config = config
+        self._readiness_digest_service = readiness_digest_service
+        self._sender = sender
+        self._delivery_store = delivery_store
+        self._sender_name = sender_name
+
+    async def run_tick(self, *, as_of: datetime) -> ScheduledDigestDeliveryResult:
+        tick = ScheduledDigestTick(as_of=as_of)
+        base_decision = self._decide(tick)
+        if not base_decision.should_build:
+            return _skipped_result(tick=tick, decision=base_decision)
+
+        try:
+            payload = await self._readiness_digest_service.build_payload(
+                items=self._config.items,
+                as_of=tick.as_of,
+            )
+        except Exception:
+            return _skipped_result(
+                tick=tick,
+                decision=_decision(
+                    config=self._config,
+                    tick=tick,
+                    reason=ScheduledDigestDecisionReason.BUILD_FAILED,
+                    is_due=True,
+                    should_build=False,
+                ),
+            )
+
+        if await self._delivery_store.exists(payload.dedup_key):
+            return _skipped_result(
+                tick=tick,
+                decision=_decision(
+                    config=self._config,
+                    tick=tick,
+                    reason=ScheduledDigestDecisionReason.DUPLICATE,
+                    is_due=True,
+                    should_build=False,
+                    dedup_key=payload.dedup_key,
+                ),
+                dedup_key=payload.dedup_key,
+                payload=payload,
+            )
+
+        await self._sender.send(payload)
+        record = ScheduledDigestDeliveryRecord(
+            dedup_key=payload.dedup_key,
+            delivered_at=tick.as_of,
+            sender_name=self._sender_name,
+        )
+        await self._delivery_store.record(record)
+        return ScheduledDigestDeliveryResult(
+            tick=tick,
+            decision=_decision(
+                config=self._config,
+                tick=tick,
+                reason=ScheduledDigestDecisionReason.DELIVERED,
+                is_due=True,
+                should_build=True,
+                dedup_key=payload.dedup_key,
+            ),
+            delivered=True,
+            skipped=False,
+            dedup_key=payload.dedup_key,
+            payload=payload,
+            record=record,
+        )
+
+    def _decide(self, tick: ScheduledDigestTick) -> ScheduledDigestDecision:
+        if not self._config.enabled:
+            return _decision(
+                config=self._config,
+                tick=tick,
+                reason=ScheduledDigestDecisionReason.DISABLED,
+                is_due=False,
+                should_build=False,
+            )
+        if not self._config.items:
+            return _decision(
+                config=self._config,
+                tick=tick,
+                reason=ScheduledDigestDecisionReason.NO_ITEMS,
+                is_due=False,
+                should_build=False,
+            )
+        is_due = is_scheduled_digest_due(
+            as_of=tick.as_of,
+            interval_minutes=self._config.interval_minutes,
+        )
+        if not is_due:
+            return _decision(
+                config=self._config,
+                tick=tick,
+                reason=ScheduledDigestDecisionReason.NOT_DUE,
+                is_due=False,
+                should_build=False,
+            )
+        return _decision(
+            config=self._config,
+            tick=tick,
+            reason=ScheduledDigestDecisionReason.DUE,
+            is_due=True,
+            should_build=True,
+        )
+
+
+def is_scheduled_digest_due(*, as_of: datetime, interval_minutes: int) -> bool:
+    if interval_minutes < 1:
+        raise ValueError("scheduled digest interval must be at least one minute")
+    as_of_utc = normalize_to_utc(as_of)
+    if as_of_utc.second != 0 or as_of_utc.microsecond != 0:
+        return False
+    minutes_since_midnight = (as_of_utc.hour * 60) + as_of_utc.minute
+    return minutes_since_midnight % interval_minutes == 0
+
+
+def _decision(
+    *,
+    config: ScheduledDigestConfig,
+    tick: ScheduledDigestTick,
+    reason: ScheduledDigestDecisionReason,
+    is_due: bool,
+    should_build: bool,
+    dedup_key: SnapshotNotificationDedupKey | None = None,
+) -> ScheduledDigestDecision:
+    return ScheduledDigestDecision(
+        enabled=config.enabled,
+        is_due=is_due,
+        should_build=should_build,
+        reason=reason,
+        item_count=len(config.items),
+        tick_as_of=tick.as_of,
+        dedup_key=dedup_key,
+    )
+
+
+def _skipped_result(
+    *,
+    tick: ScheduledDigestTick,
+    decision: ScheduledDigestDecision,
+    dedup_key: SnapshotNotificationDedupKey | None = None,
+    payload: SnapshotNotificationPayload | None = None,
+) -> ScheduledDigestDeliveryResult:
+    return ScheduledDigestDeliveryResult(
+        tick=tick,
+        decision=decision,
+        delivered=False,
+        skipped=True,
+        dedup_key=dedup_key,
+        payload=payload,
+        record=None,
+    )
+```
+
+## Full Contents Of New Tests
+### tests/unit/test_scheduled_digest_delivery_foundation.py
+
+```python
+from datetime import UTC, datetime, timedelta, timezone
+from decimal import Decimal
 from typing import Any, cast
 
+import pytest
 from pydantic import ValidationError
-from telegram import Update
-from telegram.ext import Application, CommandHandler, ContextTypes
 
-from app.core.config import Settings
-from app.core.enums import MessageType
-from app.core.exceptions import NotImplementedFeatureError
-from app.core.time import normalize_to_utc, utc_now
-from app.domain.entities import SnapshotScheduleItem, Timeframe
-from app.domain.value_objects import CurrencyPair
-from app.services.analysis_service import AnalysisService
-from app.services.readiness_digest_service import ReadinessDigestService
-from app.services.system_state_service import SystemStateService
-from app.telegram.authorization import TelegramIdentity, is_authorized
-from app.telegram.formatter import TelegramFormatter
-
-DEFAULT_SNAPSHOT_CANDLE_COUNT = 12
-DEFAULT_DIGEST_ITEMS = (
-    SnapshotScheduleItem(
-        pair=CurrencyPair(value="EURUSD"),
-        timeframe=Timeframe.M15,
-        lookback_candle_count=DEFAULT_SNAPSHOT_CANDLE_COUNT,
-    ),
-    SnapshotScheduleItem(
-        pair=CurrencyPair(value="EURUSD"),
-        timeframe=Timeframe.H1,
-        lookback_candle_count=DEFAULT_SNAPSHOT_CANDLE_COUNT,
-    ),
+from app.core import constants
+from app.domain.entities import Candle, Timeframe
+from app.domain.entities.readiness import SnapshotNotificationPayload, SnapshotScheduleItem
+from app.domain.entities.scheduled_digest import (
+    ScheduledDigestConfig,
+    ScheduledDigestDecisionReason,
+    ScheduledDigestTick,
 )
+from app.domain.value_objects import CurrencyPair
+from app.scheduler.jobs import register_jobs, scheduled_digest_delivery_job
+from app.services.analysis_service import AnalysisService
+from app.services.health_service import HealthService
+from app.services.readiness_digest_service import ReadinessDigestService
+from app.services.scheduled_digest_delivery_service import (
+    InMemoryScheduledDigestDeliveryStore,
+    ScheduledDigestDeliveryService,
+    is_scheduled_digest_due,
+)
+from app.services.system_state_service import SystemStateService
+from tests.fakes import FakeUnitOfWorkFactory
+
+PAIR = CurrencyPair(value="EURUSD")
+BASE_TIME = datetime(2026, 7, 15, 8, 0, tzinfo=UTC)
 
 
-def _identity(update: Update) -> TelegramIdentity:
-    user = update.effective_user
-    chat = update.effective_chat
-    return TelegramIdentity(
-        user_id=user.id if user is not None else None,
-        chat_id=chat.id if chat is not None else None,
-    )
+class FakeNotificationSender:
+    def __init__(self) -> None:
+        self.payloads: list[SnapshotNotificationPayload] = []
+
+    async def send(self, payload: SnapshotNotificationPayload) -> None:
+        self.payloads.append(payload)
 
 
-def _settings(context: ContextTypes.DEFAULT_TYPE) -> Settings:
-    return cast(Settings, context.application.bot_data["settings"])
+class FailingReadinessDigestService:
+    async def build_payload(
+        self,
+        *,
+        items: tuple[SnapshotScheduleItem, ...],
+        as_of: datetime,
+    ) -> SnapshotNotificationPayload:
+        raise RuntimeError("forced digest build failure")
 
 
-def _system_state_service(context: ContextTypes.DEFAULT_TYPE) -> SystemStateService:
-    return cast(SystemStateService, context.application.bot_data["system_state_service"])
+class FakeScheduler:
+    def __init__(self) -> None:
+        self.job_ids: list[str] = []
+
+    def add_job(self, *args: Any, **kwargs: Any) -> None:
+        self.job_ids.append(str(kwargs["id"]))
 
 
-def _analysis_service(context: ContextTypes.DEFAULT_TYPE) -> AnalysisService:
-    return cast(AnalysisService, context.application.bot_data["analysis_service"])
-
-
-def _readiness_digest_service(context: ContextTypes.DEFAULT_TYPE) -> ReadinessDigestService:
-    return cast(ReadinessDigestService, context.application.bot_data["readiness_digest_service"])
-
-
-def _formatter(context: ContextTypes.DEFAULT_TYPE) -> TelegramFormatter:
-    return cast(TelegramFormatter, context.application.bot_data["formatter"])
-
-
-async def _reply(
-    update: Update,
-    context: ContextTypes.DEFAULT_TYPE,
-    message_type: MessageType,
-    body_ru: str,
-) -> None:
-    if update.effective_message is None:
-        return
-    await update.effective_message.reply_text(_formatter(context).format(message_type, body_ru))
-
-
-async def _ensure_authorized(update: Update, context: ContextTypes.DEFAULT_TYPE) -> bool:
-    identity = _identity(update)
-    command = (
-        update.effective_message.text
-        if update.effective_message and update.effective_message.text
-        else "unknown"
-    )
-    if is_authorized(_settings(context), identity):
-        return True
-    await _system_state_service(context).record_unauthorized_telegram_access(
-        user_id=identity.user_id,
-        chat_id=identity.chat_id,
-        command=command.split()[0],
-    )
-    await _reply(update, context, MessageType.REJECTED, "Доступ запрещён.")
-    return False
-
-
-async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    if not await _ensure_authorized(update, context):
-        return
-    await _reply(
-        update,
-        context,
-        MessageType.EDUCATION,
-        "AI Trading OS находится в foundation-фазе и режиме разработки бумажной аналитики.",
-    )
-
-
-async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    if not await _ensure_authorized(update, context):
-        return
-    await _reply(
-        update,
-        context,
-        MessageType.EDUCATION,
-        (
-            "Доступные команды: /start, /help, /status, /start_scan, "
-            "/stop_scan, /scan_now, /snapshot, /digest."
+def _schedule_config(*, enabled: bool = True, interval_minutes: int = 15) -> ScheduledDigestConfig:
+    return ScheduledDigestConfig(
+        enabled=enabled,
+        interval_minutes=interval_minutes,
+        items=(
+            SnapshotScheduleItem(
+                pair=PAIR,
+                timeframe=Timeframe.M15,
+                lookback_candle_count=3,
+            ),
         ),
     )
 
 
-async def status_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    if not await _ensure_authorized(update, context):
-        return
-    status = await _system_state_service(context).get_full_status()
-    scan_text = "включено" if status["scan_enabled"] else "выключено"
-    heartbeat = status["worker_heartbeat"] or "ещё не получен"
-    await _reply(
-        update,
-        context,
-        MessageType.SYSTEM_STATUS,
-        (
-            "Статус системы: foundation-фаза. "
-            f"Сканирование: {scan_text}. "
-            f"Пульс worker: {heartbeat}. "
-            "Реальная торговля отключена."
-        ),
+def _candle(index: int) -> Candle:
+    open_time = BASE_TIME + timedelta(minutes=15 * index)
+    open_price = Decimal("1.1000") + (Decimal("0.0001") * Decimal(index))
+    close_price = open_price + Decimal("0.0001")
+    return Candle(
+        provider="scheduled-digest-test",
+        pair=PAIR,
+        timeframe=Timeframe.M15,
+        open_time=open_time,
+        close_time=open_time + timedelta(minutes=15),
+        open=open_price,
+        high=close_price + Decimal("0.0002"),
+        low=open_price - Decimal("0.0002"),
+        close=close_price,
+        volume=Decimal("100"),
+        is_closed=True,
     )
 
 
-async def start_scan_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    if not await _ensure_authorized(update, context):
-        return
-    await _system_state_service(context).enable_scanning(actor="telegram")
-    await _reply(
-        update,
-        context,
-        MessageType.APPROVED,
-        "Состояние сканирования включено, но аналитическая стратегия ещё не подключена.",
-    )
-
-
-async def stop_scan_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    if not await _ensure_authorized(update, context):
-        return
-    await _system_state_service(context).disable_scanning(actor="telegram")
-    await _reply(update, context, MessageType.CANCELLED, "Состояние сканирования выключено.")
-
-
-async def scan_now_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    if not await _ensure_authorized(update, context):
-        return
-    try:
-        await _analysis_service(context).scan_now()
-    except NotImplementedFeatureError:
-        await _reply(
-            update,
-            context,
-            MessageType.DATA_UNAVAILABLE,
-            "Аналитический движок не реализован в foundation-фазе. Результат не создан.",
-        )
-
-
-async def snapshot_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    if not await _ensure_authorized(update, context):
-        return
-    try:
-        pair, timeframe = _parse_snapshot_command(update)
-    except (ValueError, ValidationError):
-        await _reply(
-            update,
-            context,
-            MessageType.REJECTED,
-            "Формат команды: /snapshot EURUSD M15. Поддерживаются M15 и H1.",
-        )
-        return
-
-    window_start, window_end, as_of = _default_snapshot_window(timeframe)
-    try:
-        snapshot = await _analysis_service(context).build_snapshot(
-            pair=pair,
-            timeframe=timeframe,
-            window_start=window_start,
-            window_end=window_end,
-            as_of=as_of,
-        )
-    except Exception:
-        await _reply(
-            update,
-            context,
-            MessageType.DATA_UNAVAILABLE,
-            "Отчёт готовности сейчас недоступен. Проверьте базу данных и настройки сервиса.",
-        )
-        return
-
-    body = _formatter(context).format_analysis_readiness_body(snapshot)
-    await _reply(update, context, MessageType.REPORT, body)
-
-
-async def digest_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    if not await _ensure_authorized(update, context):
-        return
-    try:
-        items = _parse_digest_command(update)
-    except (ValueError, ValidationError):
-        await _reply(
-            update,
-            context,
-            MessageType.REJECTED,
-            "Формат команды: /digest или /digest EURUSD M15. Поддерживаются M15 и H1.",
-        )
-        return
-
-    try:
-        payload = await _readiness_digest_service(context).build_payload(
-            items=items,
-            as_of=normalize_to_utc(utc_now()),
-        )
-    except Exception:
-        await _reply(
-            update,
-            context,
-            MessageType.DATA_UNAVAILABLE,
-            "Дайджест готовности сейчас недоступен. Проверьте базу данных и настройки сервиса.",
-        )
-        return
-
-    await _reply(update, context, MessageType.REPORT, payload.text)
-
-
-def _parse_snapshot_command(update: Update) -> tuple[CurrencyPair, Timeframe]:
-    text = (
-        update.effective_message.text
-        if update.effective_message is not None and update.effective_message.text is not None
-        else ""
-    )
-    parts = text.split()
-    if len(parts) != 3:
-        raise ValueError("snapshot command requires pair and timeframe")
-    return CurrencyPair(value=parts[1].upper()), Timeframe(parts[2].upper())
-
-
-def _parse_digest_command(update: Update) -> tuple[SnapshotScheduleItem, ...]:
-    text = (
-        update.effective_message.text
-        if update.effective_message is not None and update.effective_message.text is not None
-        else ""
-    )
-    parts = text.split()
-    if len(parts) == 1:
-        return DEFAULT_DIGEST_ITEMS
-    if len(parts) != 3:
-        raise ValueError("digest command expects no arguments or pair and timeframe")
+def _service(
+    *,
+    config: ScheduledDigestConfig | None = None,
+    sender: FakeNotificationSender | None = None,
+    store: InMemoryScheduledDigestDeliveryStore | None = None,
+) -> tuple[ScheduledDigestDeliveryService, FakeNotificationSender]:
+    notification_sender = sender or FakeNotificationSender()
+    factory = FakeUnitOfWorkFactory(candles=[_candle(0), _candle(1), _candle(2)])
+    readiness_service = ReadinessDigestService(AnalysisService(factory))
     return (
-        SnapshotScheduleItem(
-            pair=CurrencyPair(value=parts[1].upper()),
-            timeframe=Timeframe(parts[2].upper()),
-            lookback_candle_count=DEFAULT_SNAPSHOT_CANDLE_COUNT,
+        ScheduledDigestDeliveryService(
+            config=config or _schedule_config(),
+            readiness_digest_service=readiness_service,
+            sender=notification_sender,
+            delivery_store=store or InMemoryScheduledDigestDeliveryStore(),
+            sender_name="fake_sender",
         ),
+        notification_sender,
     )
 
 
-def _default_snapshot_window(timeframe: Timeframe) -> tuple[datetime, datetime, datetime]:
-    as_of = normalize_to_utc(utc_now())
-    if timeframe == Timeframe.M15:
-        minute = (as_of.minute // 15) * 15
-        window_end = as_of.replace(minute=minute, second=0, microsecond=0)
-        step_minutes = 15
-    else:
-        window_end = as_of.replace(minute=0, second=0, microsecond=0)
-        step_minutes = 60
-    window_start = window_end - timedelta(minutes=DEFAULT_SNAPSHOT_CANDLE_COUNT * step_minutes)
-    return window_start, window_end, window_end
+@pytest.mark.asyncio
+async def test_scheduled_digest_disabled_skip() -> None:
+    service, sender = _service(config=_schedule_config(enabled=False))
+
+    result = await service.run_tick(as_of=BASE_TIME + timedelta(minutes=45))
+
+    assert result.skipped is True
+    assert result.delivered is False
+    assert result.decision.reason == ScheduledDigestDecisionReason.DISABLED
+    assert result.payload is None
+    assert sender.payloads == []
 
 
-def add_handlers(application: Application[Any, Any, Any, Any, Any, Any]) -> None:
-    application.add_handler(CommandHandler("start", start_command))
-    application.add_handler(CommandHandler("help", help_command))
-    application.add_handler(CommandHandler("status", status_command))
-    application.add_handler(CommandHandler("start_scan", start_scan_command))
-    application.add_handler(CommandHandler("stop_scan", stop_scan_command))
-    application.add_handler(CommandHandler("scan_now", scan_now_command))
-    application.add_handler(CommandHandler("snapshot", snapshot_command))
-    application.add_handler(CommandHandler("digest", digest_command))
+@pytest.mark.asyncio
+async def test_scheduled_digest_not_due_skip() -> None:
+    service, sender = _service(config=_schedule_config(interval_minutes=60))
+
+    result = await service.run_tick(as_of=BASE_TIME + timedelta(minutes=45))
+
+    assert result.skipped is True
+    assert result.decision.reason == ScheduledDigestDecisionReason.NOT_DUE
+    assert result.decision.is_due is False
+    assert sender.payloads == []
+
+
+@pytest.mark.asyncio
+async def test_scheduled_digest_due_builds_payload_and_sends_once() -> None:
+    service, sender = _service()
+
+    result = await service.run_tick(as_of=BASE_TIME + timedelta(minutes=45))
+
+    assert result.delivered is True
+    assert result.skipped is False
+    assert result.decision.reason == ScheduledDigestDecisionReason.DELIVERED
+    assert result.payload is not None
+    assert result.record is not None
+    assert result.dedup_key == result.payload.dedup_key
+    assert len(sender.payloads) == 1
+    assert sender.payloads[0] == result.payload
+    assert "Системный отчёт готовности" in result.payload.text
+    assert "Решений и указаний нет." in result.payload.text
+    data = result.model_dump(mode="json")
+    assert data["project_phase"] == constants.PROJECT_PHASE
+    assert data["payload"]["project_phase"] == constants.PROJECT_PHASE
+    with pytest.raises(ValidationError):
+        result.delivered = False
+
+
+@pytest.mark.asyncio
+async def test_scheduled_digest_duplicate_dedup_key_skip() -> None:
+    store = InMemoryScheduledDigestDeliveryStore()
+    sender = FakeNotificationSender()
+    service, _ = _service(store=store, sender=sender)
+    as_of = BASE_TIME + timedelta(minutes=45)
+
+    first = await service.run_tick(as_of=as_of)
+    second = await service.run_tick(as_of=as_of)
+
+    assert first.delivered is True
+    assert second.skipped is True
+    assert second.decision.reason == ScheduledDigestDecisionReason.DUPLICATE
+    assert second.dedup_key == first.dedup_key
+    assert len(sender.payloads) == 1
+
+
+@pytest.mark.asyncio
+async def test_scheduled_digest_no_items_skip() -> None:
+    service, sender = _service(config=ScheduledDigestConfig(enabled=True, items=()))
+
+    result = await service.run_tick(as_of=BASE_TIME + timedelta(minutes=45))
+
+    assert result.skipped is True
+    assert result.decision.reason == ScheduledDigestDecisionReason.NO_ITEMS
+    assert sender.payloads == []
+
+
+@pytest.mark.asyncio
+async def test_scheduled_digest_build_failed_skip() -> None:
+    sender = FakeNotificationSender()
+    service = ScheduledDigestDeliveryService(
+        config=_schedule_config(),
+        readiness_digest_service=FailingReadinessDigestService(),
+        sender=sender,
+        delivery_store=InMemoryScheduledDigestDeliveryStore(),
+    )
+
+    result = await service.run_tick(as_of=BASE_TIME + timedelta(minutes=45))
+
+    assert result.skipped is True
+    assert result.decision.reason == ScheduledDigestDecisionReason.BUILD_FAILED
+    assert result.payload is None
+    assert sender.payloads == []
+
+
+def test_scheduled_digest_tick_is_json_serializable_and_immutable() -> None:
+    tick = ScheduledDigestTick(as_of=datetime(2026, 7, 15, 10, 45, tzinfo=UTC))
+
+    data = tick.model_dump(mode="json")
+
+    assert data["project_phase"] == constants.PROJECT_PHASE
+    assert data["as_of"] == "2026-07-15T10:45:00Z"
+    with pytest.raises(ValidationError):
+        tick.as_of = BASE_TIME
+
+
+def test_scheduled_digest_tick_normalizes_utc() -> None:
+    tick = ScheduledDigestTick(
+        as_of=datetime(2026, 7, 15, 12, 45, tzinfo=timezone(timedelta(hours=2)))
+    )
+
+    assert tick.as_of == datetime(2026, 7, 15, 10, 45, tzinfo=UTC)
+
+
+def test_scheduled_digest_due_policy_is_deterministic() -> None:
+    assert is_scheduled_digest_due(
+        as_of=datetime(2026, 7, 15, 10, 45, tzinfo=UTC),
+        interval_minutes=15,
+    )
+    assert not is_scheduled_digest_due(
+        as_of=datetime(2026, 7, 15, 10, 46, tzinfo=UTC),
+        interval_minutes=15,
+    )
+    assert not is_scheduled_digest_due(
+        as_of=datetime(2026, 7, 15, 10, 45, 1, tzinfo=UTC),
+        interval_minutes=15,
+    )
+
+
+@pytest.mark.asyncio
+async def test_worker_callable_can_run_without_auto_registration() -> None:
+    service, sender = _service()
+
+    result = await scheduled_digest_delivery_job(
+        service,
+        as_of=BASE_TIME + timedelta(minutes=45),
+    )
+
+    assert result.delivered is True
+    assert len(sender.payloads) == 1
+
+
+def test_register_jobs_does_not_start_scheduled_digest_delivery_loop() -> None:
+    scheduler = FakeScheduler()
+
+    register_jobs(
+        scheduler,
+        system_state_service=cast(SystemStateService, object()),
+        health_service=cast(HealthService, object()),
+    )
+
+    assert scheduler.job_ids == ["worker_heartbeat", "application_health_check"]
 ```
 
 ## Full Contents Of Changed Test Files
@@ -1249,6 +1949,35 @@ PHASE_3G_FORBIDDEN_TERMS = (
     "paper_trading",
     "order_execution",
 )
+PHASE_3H_FILES = (
+    Path("app/domain/entities/scheduled_digest.py"),
+    Path("app/domain/interfaces/notifications.py"),
+    Path("app/services/scheduled_digest_delivery_service.py"),
+    Path("app/scheduler/jobs.py"),
+)
+PHASE_3H_FORBIDDEN_TERMS = (
+    "bullish",
+    "bearish",
+    "overbought",
+    "oversold",
+    "breakout",
+    "reversal",
+    "trend signal",
+    "entry",
+    "exit",
+    "buy",
+    "sell",
+    "long",
+    "short",
+    "recommendation",
+    "setup",
+    "score",
+    "confidence",
+    "OpenAI",
+    "broker",
+    "paper_trading",
+    "order_execution",
+)
 
 
 def test_no_real_order_execution_code_exists() -> None:
@@ -1307,6 +2036,18 @@ def test_phase3g_digest_command_does_not_add_decision_or_execution_terms() -> No
     source = inspect.getsource(digest_command).lower()
 
     offenders = [term for term in PHASE_3G_FORBIDDEN_TERMS if term.lower() in source]
+
+    assert offenders == []
+
+
+def test_phase3h_scheduled_digest_files_do_not_add_decision_or_execution_terms() -> None:
+    offenders: list[str] = []
+    for file_path in PHASE_3H_FILES:
+        text = file_path.read_text(encoding="utf-8")
+        lowered = text.lower()
+        for term in PHASE_3H_FORBIDDEN_TERMS:
+            if term.lower() in lowered:
+                offenders.append(f"{file_path}: {term}")
 
     assert offenders == []
 
@@ -1479,7 +2220,7 @@ def test_api_health_readiness_status_and_scan_state(postgres_database_url: str) 
     assert ready.status_code == 200
     assert ready.json()["status"] == "ready"
     assert status.status_code == 200
-    assert status.json()["project_phase"] == "phase_3g_telegram_digest_command_foundation"
+    assert status.json()["project_phase"] == "phase_3h_scheduled_digest_delivery_foundation"
     assert status.json()["trading_strategy_implemented"] is False
     assert status.json()["real_trading_enabled"] is False
     assert start.status_code == 200
@@ -1712,8 +2453,8 @@ def test_analysis_snapshot_is_json_serializable() -> None:
     data = snapshot.model_dump(mode="json")
     text = snapshot.model_dump_json()
 
-    assert data["metadata"]["project_phase"] == "phase_3g_telegram_digest_command_foundation"
-    assert "phase_3g_telegram_digest_command_foundation" in text
+    assert data["metadata"]["project_phase"] == "phase_3h_scheduled_digest_delivery_foundation"
+    assert "phase_3h_scheduled_digest_delivery_foundation" in text
     assert data["context_snapshot"]["return_distribution"]["mean_return"] == "0.1"
 
 
@@ -2076,7 +2817,7 @@ def test_digest_payload_is_json_serializable_and_immutable() -> None:
 
     data = digest.model_dump(mode="json")
     assert data["items"][0]["readiness_status"] == "READY"
-    assert "phase_3g_telegram_digest_command_foundation" in digest.model_dump_json()
+    assert "phase_3h_scheduled_digest_delivery_foundation" in digest.model_dump_json()
     with pytest.raises(ValidationError):
         digest.ready_count = 99
 
@@ -2114,253 +2855,72 @@ async def test_digest_service_uses_repository_protocols() -> None:
     assert payload.dedup_key == payload.digest.dedup_key
     assert "EURUSD M15: READY" in payload.text
 ```
-### tests/unit/test_telegram_commands.py
+### tests/unit/test_settings.py
 
 ```python
-from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 
 import pytest
+from pydantic import ValidationError
 
 from app.core.config import Settings
-from app.domain.entities import Candle, Timeframe
-from app.domain.value_objects import CurrencyPair
-from app.services.analysis_service import AnalysisService
-from app.services.readiness_digest_service import ReadinessDigestService
-from app.telegram import commands
-from app.telegram.commands import (
-    digest_command,
-    scan_now_command,
-    snapshot_command,
-    start_scan_command,
+
+
+def test_default_settings_keep_external_integrations_disabled() -> None:
+    settings = Settings(_env_file=None)
+
+    assert settings.telegram_enabled is False
+    assert settings.openai_enabled is False
+    assert settings.market_data_enabled is False
+    assert settings.calendar_enabled is False
+    assert settings.scan_enabled is False
+    assert settings.scheduled_digest_enabled is False
+    assert settings.scheduled_digest_interval_minutes == 60
+    assert settings.paper_account_balance == Decimal("10000")
+
+
+@pytest.mark.parametrize(
+    ("field", "enabled_kwargs"),
+    [
+        ("TELEGRAM_BOT_TOKEN", {"telegram_enabled": True}),
+        ("OPENAI_API_KEY", {"openai_enabled": True}),
+        ("TWELVE_DATA_API_KEY", {"market_data_enabled": True}),
+        ("FMP_API_KEY", {"calendar_enabled": True}),
+    ],
 )
-from app.telegram.formatter import TelegramFormatter
-from tests.fakes import FakeUnitOfWorkFactory
+def test_conditional_secret_requirements(field: str, enabled_kwargs: dict[str, bool]) -> None:
+    with pytest.raises(ValidationError) as exc_info:
+        Settings(_env_file=None, **enabled_kwargs)
 
-PAIR = CurrencyPair(value="EURUSD")
-BASE_TIME = datetime(2026, 7, 13, 9, 0, tzinfo=UTC)
-
-
-class FakeUser:
-    def __init__(self, user_id: int) -> None:
-        self.id = user_id
+    assert field in str(exc_info.value)
 
 
-class FakeChat:
-    def __init__(self, chat_id: int) -> None:
-        self.id = chat_id
+def test_telegram_enabled_requires_allowed_identity() -> None:
+    with pytest.raises(ValidationError) as exc_info:
+        Settings(_env_file=None, telegram_enabled=True, telegram_bot_token="token")
+
+    assert "TELEGRAM_ALLOWED_USER_ID" in str(exc_info.value)
+    assert "TELEGRAM_ALLOWED_CHAT_ID" in str(exc_info.value)
 
 
-class FakeMessage:
-    def __init__(self, text: str) -> None:
-        self.text = text
-        self.replies: list[str] = []
+def test_enabled_integrations_are_safe_booleans() -> None:
+    settings = Settings(_env_file=None, telegram_enabled=False, openai_enabled=False)
 
-    async def reply_text(self, text: str) -> None:
-        self.replies.append(text)
-
-
-class FakeUpdate:
-    def __init__(self, *, user_id: int, chat_id: int, text: str) -> None:
-        self.effective_user = FakeUser(user_id)
-        self.effective_chat = FakeChat(chat_id)
-        self.effective_message = FakeMessage(text)
+    assert settings.enabled_integrations() == {
+        "telegram": False,
+        "openai": False,
+        "market_data": False,
+        "calendar": False,
+    }
 
 
-class FakeApplication:
-    def __init__(self, bot_data: dict[str, object]) -> None:
-        self.bot_data = bot_data
+def test_storage_timezone_must_be_utc() -> None:
+    with pytest.raises(ValidationError):
+        Settings(_env_file=None, storage_timezone="Europe/Stockholm")
 
 
-class FakeContext:
-    def __init__(self, bot_data: dict[str, object]) -> None:
-        self.application = FakeApplication(bot_data)
-
-
-class FakeHandlerApplication:
-    def __init__(self) -> None:
-        self.handlers: list[FakeCommandHandler] = []
-
-    def add_handler(self, handler: "FakeCommandHandler") -> None:
-        self.handlers.append(handler)
-
-
-class FakeCommandHandler:
-    def __init__(self, command: str, callback: object) -> None:
-        self.command = command
-        self.callback = callback
-
-
-def _context(factory: FakeUnitOfWorkFactory) -> FakeContext:
-    settings = Settings(
-        _env_file=None,
-        telegram_enabled=True,
-        telegram_bot_token="token",
-        telegram_allowed_user_id=1,
-        telegram_allowed_chat_id=2,
-    )
-    analysis_service = AnalysisService(factory)
-    return FakeContext(
-        {
-            "settings": settings,
-            "system_state_service": __import__(
-                "app.services.system_state_service",
-                fromlist=["SystemStateService"],
-            ).SystemStateService(factory),
-            "analysis_service": analysis_service,
-            "readiness_digest_service": ReadinessDigestService(analysis_service),
-            "formatter": TelegramFormatter(),
-        }
-    )
-
-
-def _candle(index: int) -> Candle:
-    open_time = BASE_TIME + timedelta(minutes=15 * index)
-    open_price = Decimal("1.1000") + (Decimal("0.0005") * Decimal(index))
-    close_price = open_price + Decimal("0.0002")
-    return Candle(
-        provider="telegram-test",
-        pair=PAIR,
-        timeframe=Timeframe.M15,
-        open_time=open_time,
-        close_time=open_time + timedelta(minutes=15),
-        open=open_price,
-        high=close_price + Decimal("0.0003"),
-        low=open_price - Decimal("0.0003"),
-        close=close_price,
-        volume=Decimal("100"),
-        is_closed=True,
-    )
-
-
-@pytest.mark.asyncio
-async def test_unauthorized_user_cannot_change_scan_state() -> None:
-    factory = FakeUnitOfWorkFactory()
-    context = _context(factory)
-    update = FakeUpdate(user_id=99, chat_id=2, text="/start_scan")
-
-    await start_scan_command(update, context)
-
-    assert "scan_enabled" not in factory.state
-    assert update.effective_message.replies == ["❌ Доступ запрещён."]
-
-
-@pytest.mark.asyncio
-async def test_scan_now_command_reports_not_implemented_without_fabrication() -> None:
-    factory = FakeUnitOfWorkFactory()
-    context = _context(factory)
-    update = FakeUpdate(user_id=1, chat_id=2, text="/scan_now")
-
-    await scan_now_command(update, context)
-
-    assert len(update.effective_message.replies) == 1
-    assert "Аналитический движок не реализован" in update.effective_message.replies[0]
-    assert "LONG" not in update.effective_message.replies[0]
-    assert "SHORT" not in update.effective_message.replies[0]
-
-
-@pytest.mark.asyncio
-async def test_snapshot_command_returns_readiness_report(monkeypatch: pytest.MonkeyPatch) -> None:
-    factory = FakeUnitOfWorkFactory(candles=[_candle(index) for index in range(12)])
-    context = _context(factory)
-    update = FakeUpdate(user_id=1, chat_id=2, text="/snapshot EURUSD M15")
-    monkeypatch.setattr(commands, "utc_now", lambda: BASE_TIME + timedelta(hours=3))
-
-    await snapshot_command(update, context)
-
-    assert len(update.effective_message.replies) == 1
-    reply = update.effective_message.replies[0]
-    assert reply.startswith("📊 ")
-    assert "Отчёт готовности EURUSD M15" in reply
-    assert "Статус: готово" in reply
-    assert "Свечей использовано: 12 из 12" in reply
-    forbidden_terms = (
-        "LONG",
-        "SHORT",
-        "buy",
-        "sell",
-        "рекомендую",
-        "войти",
-        "шортить",
-    )
-    assert not any(term in reply for term in forbidden_terms)
-
-
-@pytest.mark.asyncio
-async def test_snapshot_command_rejects_invalid_arguments() -> None:
-    factory = FakeUnitOfWorkFactory()
-    context = _context(factory)
-    update = FakeUpdate(user_id=1, chat_id=2, text="/snapshot EURUSD M5")
-
-    await snapshot_command(update, context)
-
-    assert update.effective_message.replies == [
-        "❌ Формат команды: /snapshot EURUSD M15. Поддерживаются M15 и H1."
-    ]
-
-
-def test_add_handlers_keeps_snapshot_and_registers_digest(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    application = FakeHandlerApplication()
-    monkeypatch.setattr(commands, "CommandHandler", FakeCommandHandler)
-
-    commands.add_handlers(application)
-
-    registered = {handler.command: handler.callback for handler in application.handlers}
-    assert registered["snapshot"] is snapshot_command
-    assert registered["digest"] is digest_command
-
-
-@pytest.mark.asyncio
-async def test_digest_command_returns_default_readiness_digest(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    factory = FakeUnitOfWorkFactory(candles=[_candle(index) for index in range(12)])
-    context = _context(factory)
-    update = FakeUpdate(user_id=1, chat_id=2, text="/digest")
-    monkeypatch.setattr(commands, "utc_now", lambda: BASE_TIME + timedelta(hours=3))
-
-    await digest_command(update, context)
-
-    assert len(update.effective_message.replies) == 1
-    reply = update.effective_message.replies[0]
-    assert reply.startswith("📊 ")
-    assert "Системный отчёт готовности" in reply
-    assert "EURUSD M15: READY" in reply
-    assert "EURUSD H1: BLOCKED" in reply
-    assert "Решений и указаний нет." in reply
-
-
-@pytest.mark.asyncio
-async def test_digest_command_accepts_single_snapshot_identity(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    factory = FakeUnitOfWorkFactory(candles=[_candle(index) for index in range(12)])
-    context = _context(factory)
-    update = FakeUpdate(user_id=1, chat_id=2, text="/digest EURUSD M15")
-    monkeypatch.setattr(commands, "utc_now", lambda: BASE_TIME + timedelta(hours=3))
-
-    await digest_command(update, context)
-
-    assert len(update.effective_message.replies) == 1
-    reply = update.effective_message.replies[0]
-    assert "EURUSD M15: READY" in reply
-    assert "EURUSD H1" not in reply
-    assert "Решений и указаний нет." in reply
-
-
-@pytest.mark.asyncio
-async def test_digest_command_rejects_invalid_arguments() -> None:
-    factory = FakeUnitOfWorkFactory()
-    context = _context(factory)
-    update = FakeUpdate(user_id=1, chat_id=2, text="/digest EURUSD M5")
-
-    await digest_command(update, context)
-
-    assert update.effective_message.replies == [
-        "❌ Формат команды: /digest или /digest EURUSD M15. Поддерживаются M15 и H1."
-    ]
+def test_require_integration_tests_defaults_to_false() -> None:
+    assert Settings(_env_file=None).require_integration_tests is False
 ```
 
 ## Updated Documentation Files
@@ -2373,7 +2933,7 @@ AI Trading OS is a safety-first foundation for a future modular Forex analysis a
 
 ## Current Status
 
-- Current project phase: phase_3g_telegram_digest_command_foundation.
+- Current project phase: phase_3h_scheduled_digest_delivery_foundation.
 - Trading strategy: not implemented.
 - Real trading: disabled and unsupported.
 - External integrations: disabled by default.
@@ -2382,6 +2942,7 @@ AI Trading OS is a safety-first foundation for a future modular Forex analysis a
 - Phase 3E: local Telegram readiness reports only.
 - Phase 3F: neutral readiness scheduler/snapshot digest foundation only.
 - Phase 3G: manual Telegram `/digest` readiness digest command only.
+- Phase 3H: neutral scheduled digest delivery foundation only, disabled by default.
 
 ## Safety Warning
 
@@ -2454,8 +3015,16 @@ Phase 3G adds a manual Telegram `/digest` command over the Phase 3F readiness di
 command returns Russian, neutral readiness digest text for the default EURUSD M15/H1 schedule or a
 single requested pair/timeframe. It does not add automatic Telegram delivery, provider calls,
 strategy decisions, setup scoring, confidence scoring, trade directions, recommendations, signals,
-AI output, broker activity, paper trading, order execution, or real trading. Phase 4 has not
-started.
+AI output, broker activity, paper trading, order execution, or real trading.
+
+## Phase 3H Status
+
+Phase 3H adds a neutral scheduled digest delivery foundation. It can decide whether a readiness
+digest is due on a tick, build the existing readiness digest payload, pass it to a mockable
+notification sender, and skip duplicate deduplication keys. Scheduled delivery is disabled by
+default and no automatic delivery loop is registered in the worker. It does not add provider calls,
+AI output, strategy decisions, setup scoring, confidence scoring, trade directions, recommendations,
+signals, broker activity, paper trading, order execution, or real trading. Phase 4 has not started.
 
 ## Prerequisites
 
@@ -2505,6 +3074,7 @@ OPENAI_ENABLED=false
 MARKET_DATA_ENABLED=false
 CALENDAR_ENABLED=false
 SCAN_ENABLED=false
+SCHEDULED_DIGEST_ENABLED=false
 ```
 
 Secrets are required only when the matching integration is enabled.
@@ -2550,6 +3120,7 @@ For a local live Telegram test, see `docs/operations.md` and configure `TELEGRAM
 - `/scan_now` explicitly remains disconnected from analysis snapshots and does not fabricate a scan result.
 - `/snapshot` returns readiness reports only and does not produce trading guidance.
 - `/digest` returns manual readiness digests only and does not produce trading guidance.
+- Scheduled digest delivery is disabled by default and has no automatic worker loop.
 - Worker jobs only update heartbeat and run foundation health checks.
 
 ## Directory Overview
@@ -2571,10 +3142,11 @@ For a local live Telegram test, see `docs/operations.md` and configure `TELEGRAM
 
 AI Trading OS is a foundation for a future Forex analysis and paper-trading platform.
 
-Current project phase: phase_3g_telegram_digest_command_foundation.
-Phase 3G is limited to the manual Telegram `/digest` command over the existing Phase 3F readiness
-digest service. External integrations are disabled by default. The project contains no strategy, no
-signals, no broker order APIs, no paper trading, and no real trading. Phase 4 has not started.
+Current project phase: phase_3h_scheduled_digest_delivery_foundation.
+Phase 3H is limited to neutral scheduled readiness digest delivery orchestration over existing
+Phase 3F/3G readiness digest payloads. External integrations are disabled by default. The project
+contains no strategy, no signals, no broker order APIs, no paper trading, and no real trading.
+Phase 4 has not started.
 
 ## Start and Checks
 
@@ -2609,9 +3181,10 @@ signals, no broker order APIs, no paper trading, and no real trading. Phase 4 ha
 - Never add real trading execution, broker order APIs, real account credentials, or live position management.
 - Never add strategy, setup scoring, LONG/SHORT direction, buy/sell recommendations, paper trading,
   broker APIs, order execution, or real trading while working in foundation phases.
-- While working in Phase 3G, Telegram output is limited to manual readiness reports and readiness
-  digests. Do not add Telegram trading signals, entry guidance, LONG/SHORT advice, buy/sell
-  recommendations, automatic digest delivery, or paper-trading actions.
+- While working in Phase 3H, output is limited to neutral readiness reports and readiness digests.
+  Scheduled delivery must remain disabled by default. Do not add Telegram trading signals, entry
+  guidance, LONG/SHORT advice, buy/sell recommendations, automatic runtime loops, or paper-trading
+  actions.
 - Never fabricate market data, calendar data, agent evidence, or scan results.
 - LLM output may explain deterministic results only; it must not change prices, scores, risk, or rejected decisions.
 - Update documentation when architecture or safety boundaries change.
@@ -2659,6 +3232,9 @@ Code is complete only when tests, formatting, linting, type checking, migrations
 - Phase 3G Telegram digest command foundation: manual `/digest` command wiring over the existing
   readiness digest service, default EURUSD M15/H1 digest arguments, and safety tests confirming no
   strategy/signals/trading activation.
+- Phase 3H scheduled digest delivery foundation: disabled-by-default scheduled readiness digest
+  due checks, mockable notification sending, deduplication records, and safety tests confirming no
+  strategy/signals/trading activation.
 
 ## Current Implementation Status
 
@@ -2667,9 +3243,11 @@ data-quality foundation, Phase 3B deterministic feature-engine foundation, Phase
 indicator/context foundation, Phase 3D deterministic analysis snapshot/readiness report foundation,
 Phase 3E local Telegram readiness-report foundation, and Phase 3F deterministic readiness
 scheduler/snapshot digest foundation, and Phase 3G manual Telegram digest command foundation.
-Production Twelve Data and FMP adapters exist, but live integrations remain disabled by default.
-Scanning state can be enabled or disabled, and Telegram can request readiness reports and readiness
-digests, but no strategy, signal generation, AI agent, paper-trading, or execution flow is connected.
+scheduler/snapshot digest foundation, Phase 3G manual Telegram digest command foundation, and Phase
+3H neutral scheduled digest delivery foundation. Production Twelve Data and FMP adapters exist, but
+live integrations remain disabled by default. Scanning state can be enabled or disabled, Telegram can
+request readiness reports and readiness digests, and scheduled digest orchestration remains disabled
+by default. No strategy, signal generation, AI agent, paper-trading, or execution flow is connected.
 
 ## Future Phases
 
@@ -2682,6 +3260,7 @@ digests, but no strategy, signal generation, AI agent, paper-trading, or executi
 - Phase 3E: local Telegram readiness reports — completed without trading decisions
 - Phase 3F: neutral readiness scheduler/snapshot digest foundation — completed without trading decisions
 - Phase 3G: manual Telegram digest command foundation — completed without trading decisions
+- Phase 3H: neutral scheduled digest delivery foundation — completed without trading decisions
 - Phase 4: analytical agents and Decision Engine
 - Phase 5: Russian Chief AI explanations
 - Phase 6: Telegram signal delivery
@@ -2796,6 +3375,12 @@ returns the default EURUSD M15/H1 readiness digest, and `/digest EURUSD M15` ret
 pair/timeframe digest. The command remains read-only and neutral; it does not schedule automatic
 delivery, call providers, call AI services, contact brokers, or produce trading guidance.
 
+Phase 3H adds a neutral scheduled digest delivery foundation. It can decide whether a digest is due,
+build the same readiness payload, pass it to a mockable notification sender, and skip duplicate
+deduplication keys. It is disabled by default with `SCHEDULED_DIGEST_ENABLED=false`, and the worker
+does not register an automatic scheduled digest job. It does not call providers, AI services, or
+brokers, and it does not produce trading guidance.
+
 ## Telegram Bot Local Setup
 
 Create the bot in Telegram before enabling the `bot` service:
@@ -2833,6 +3418,8 @@ OPENAI_ENABLED=false
 MARKET_DATA_ENABLED=false
 CALENDAR_ENABLED=false
 SCAN_ENABLED=false
+SCHEDULED_DIGEST_ENABLED=false
+SCHEDULED_DIGEST_INTERVAL_MINUTES=60
 ```
 
 Prepare the local database and demo data:
@@ -2878,27 +3465,28 @@ LONG/SHORT directions, entry guidance, buy/sell recommendations, or paper-trade 
 4. Run `uv run alembic upgrade head`.
 5. Recheck `/ready` and `/api/v1/system/status`.
 ```
-### docs/phase3g-verification-report.md
+### docs/phase3h-verification-report.md
 
 ```markdown
-# Phase 3G Verification Report
+# Phase 3H Verification Report
 
-Generated at: 2026-07-15T17:43:10Z
+Generated at: 2026-07-15T18:10:00Z
 
 ## Scope
 
-Phase 3G implemented the manual Telegram `/digest` readiness digest command foundation.
+Phase 3H implemented the neutral scheduled digest delivery foundation.
 
-- `PROJECT_PHASE = "phase_3g_telegram_digest_command_foundation"`.
-- `/digest` uses the existing Phase 3F `ReadinessDigestService`.
-- `/digest` defaults to EURUSD M15 and EURUSD H1 readiness windows.
-- `/digest EURUSD M15` supports a single requested pair/timeframe.
-- `/snapshot` remains available and covered by tests.
-- Telegram output remains Russian, neutral, and readiness-only.
-- No automatic Telegram digest delivery was added.
-- No provider calls, OpenAI calls, broker APIs, paper trading, order execution, real trading, strategy, scoring, recommendations, or signals were added.
-- No database migration was required.
+- `PROJECT_PHASE = "phase_3h_scheduled_digest_delivery_foundation"`.
+- Scheduled digest delivery is disabled by default.
+- The service decides whether a readiness digest is due on a tick.
+- The service builds existing Phase 3F/3G readiness digest payloads only when enabled and due.
+- Delivery uses a mockable notification sender protocol.
+- Duplicate deterministic deduplication keys are skipped.
+- A worker callable exists, but no automatic scheduled digest worker loop is registered.
+- Existing `/snapshot` and `/digest` commands remain unchanged and covered by tests.
+- No migration was required.
 - Phase 4 was not started.
+- No strategy, signals, setup scoring, confidence scoring, AI agents, OpenAI calls, broker APIs, paper trading, order execution, or real trading were added.
 
 ## Verification Results
 
@@ -2906,10 +3494,10 @@ Host verification:
 
 - `uv lock --check` -> passed.
 - `uv sync` -> passed.
-- `uv run ruff format --check .` -> `104 files already formatted`.
+- `uv run ruff format --check .` -> `108 files already formatted`.
 - `uv run ruff check .` -> `All checks passed!`.
-- `uv run mypy app` -> `Success: no issues found in 74 source files`.
-- `uv run pytest` -> `199 passed, 5 skipped, 1 warning`.
+- `uv run mypy app` -> `Success: no issues found in 77 source files`.
+- `uv run pytest` -> `211 passed, 5 skipped, 1 warning`.
 - `uv run python scripts/security_check.py` -> exit code 0.
 
 Docker verification:
@@ -2926,16 +3514,20 @@ Docker verification:
 
 ## Tests Added Or Updated
 
-- Added `/digest` default command coverage.
-- Added `/digest EURUSD M15` single snapshot identity coverage.
-- Added `/digest` invalid-argument rejection coverage.
-- Added handler registration coverage confirming `/snapshot` remains registered and `/digest` is registered.
-- Added Phase 3G safety-boundary coverage for the digest command source.
-- Updated project phase assertions to `phase_3g_telegram_digest_command_foundation`.
+- Added scheduled digest disabled skip coverage.
+- Added not-due skip coverage.
+- Added due payload build and fake sender delivery coverage.
+- Added duplicate deduplication key skip coverage.
+- Added no-items and build-failed skip coverage.
+- Added delivery result JSON serialization and immutability coverage.
+- Added UTC normalization coverage.
+- Added worker callable coverage without automatic registration.
+- Added Phase 3H safety-boundary coverage.
+- Updated project phase assertions to `phase_3h_scheduled_digest_delivery_foundation`.
 
 ## Remaining Risks
 
-- Real Telegram delivery was not exercised with a live Telegram API token, by design.
-- Provider integrations remain disabled by default and were not called during Phase 3G verification.
-- Docker integration tests cover API/database behavior and repeatability, not a live Telegram chat.
+- Live Telegram API behavior was not tested and no real Telegram network calls were made.
+- Provider integrations remain disabled by default and were not called during Phase 3H verification.
+- Scheduled delivery persistence uses an in-memory foundation store in this phase; no database migration was added.
 ```

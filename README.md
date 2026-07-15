@@ -4,7 +4,7 @@ AI Trading OS is a safety-first foundation for a future modular Forex analysis a
 
 ## Current Status
 
-- Current project phase: phase_3g_telegram_digest_command_foundation.
+- Current project phase: phase_3h_scheduled_digest_delivery_foundation.
 - Trading strategy: not implemented.
 - Real trading: disabled and unsupported.
 - External integrations: disabled by default.
@@ -13,6 +13,7 @@ AI Trading OS is a safety-first foundation for a future modular Forex analysis a
 - Phase 3E: local Telegram readiness reports only.
 - Phase 3F: neutral readiness scheduler/snapshot digest foundation only.
 - Phase 3G: manual Telegram `/digest` readiness digest command only.
+- Phase 3H: neutral scheduled digest delivery foundation only, disabled by default.
 
 ## Safety Warning
 
@@ -85,8 +86,16 @@ Phase 3G adds a manual Telegram `/digest` command over the Phase 3F readiness di
 command returns Russian, neutral readiness digest text for the default EURUSD M15/H1 schedule or a
 single requested pair/timeframe. It does not add automatic Telegram delivery, provider calls,
 strategy decisions, setup scoring, confidence scoring, trade directions, recommendations, signals,
-AI output, broker activity, paper trading, order execution, or real trading. Phase 4 has not
-started.
+AI output, broker activity, paper trading, order execution, or real trading.
+
+## Phase 3H Status
+
+Phase 3H adds a neutral scheduled digest delivery foundation. It can decide whether a readiness
+digest is due on a tick, build the existing readiness digest payload, pass it to a mockable
+notification sender, and skip duplicate deduplication keys. Scheduled delivery is disabled by
+default and no automatic delivery loop is registered in the worker. It does not add provider calls,
+AI output, strategy decisions, setup scoring, confidence scoring, trade directions, recommendations,
+signals, broker activity, paper trading, order execution, or real trading. Phase 4 has not started.
 
 ## Prerequisites
 
@@ -136,6 +145,7 @@ OPENAI_ENABLED=false
 MARKET_DATA_ENABLED=false
 CALENDAR_ENABLED=false
 SCAN_ENABLED=false
+SCHEDULED_DIGEST_ENABLED=false
 ```
 
 Secrets are required only when the matching integration is enabled.
@@ -181,6 +191,7 @@ For a local live Telegram test, see `docs/operations.md` and configure `TELEGRAM
 - `/scan_now` explicitly remains disconnected from analysis snapshots and does not fabricate a scan result.
 - `/snapshot` returns readiness reports only and does not produce trading guidance.
 - `/digest` returns manual readiness digests only and does not produce trading guidance.
+- Scheduled digest delivery is disabled by default and has no automatic worker loop.
 - Worker jobs only update heartbeat and run foundation health checks.
 
 ## Directory Overview

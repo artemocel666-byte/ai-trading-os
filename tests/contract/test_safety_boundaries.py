@@ -160,6 +160,35 @@ PHASE_3G_FORBIDDEN_TERMS = (
     "paper_trading",
     "order_execution",
 )
+PHASE_3H_FILES = (
+    Path("app/domain/entities/scheduled_digest.py"),
+    Path("app/domain/interfaces/notifications.py"),
+    Path("app/services/scheduled_digest_delivery_service.py"),
+    Path("app/scheduler/jobs.py"),
+)
+PHASE_3H_FORBIDDEN_TERMS = (
+    "bullish",
+    "bearish",
+    "overbought",
+    "oversold",
+    "breakout",
+    "reversal",
+    "trend signal",
+    "entry",
+    "exit",
+    "buy",
+    "sell",
+    "long",
+    "short",
+    "recommendation",
+    "setup",
+    "score",
+    "confidence",
+    "OpenAI",
+    "broker",
+    "paper_trading",
+    "order_execution",
+)
 
 
 def test_no_real_order_execution_code_exists() -> None:
@@ -218,6 +247,18 @@ def test_phase3g_digest_command_does_not_add_decision_or_execution_terms() -> No
     source = inspect.getsource(digest_command).lower()
 
     offenders = [term for term in PHASE_3G_FORBIDDEN_TERMS if term.lower() in source]
+
+    assert offenders == []
+
+
+def test_phase3h_scheduled_digest_files_do_not_add_decision_or_execution_terms() -> None:
+    offenders: list[str] = []
+    for file_path in PHASE_3H_FILES:
+        text = file_path.read_text(encoding="utf-8")
+        lowered = text.lower()
+        for term in PHASE_3H_FORBIDDEN_TERMS:
+            if term.lower() in lowered:
+                offenders.append(f"{file_path}: {term}")
 
     assert offenders == []
 

@@ -1,8 +1,12 @@
 import logging
+from datetime import datetime
 from typing import Any
 
+from app.core.time import utc_now
+from app.domain.entities import ScheduledDigestDeliveryResult
 from app.observability.health_checks import run_application_health_check
 from app.services.health_service import HealthService
+from app.services.scheduled_digest_delivery_service import ScheduledDigestDeliveryService
 from app.services.system_state_service import SystemStateService
 
 logger = logging.getLogger(__name__)
@@ -16,6 +20,22 @@ async def update_worker_heartbeat_job(service: SystemStateService) -> None:
 async def application_health_check_job(health_service: HealthService) -> None:
     result = await run_application_health_check(health_service)
     logger.info("worker_health_check_completed", extra={"database_status": result["database"]})
+
+
+async def scheduled_digest_delivery_job(
+    service: ScheduledDigestDeliveryService,
+    *,
+    as_of: datetime | None = None,
+) -> ScheduledDigestDeliveryResult:
+    result = await service.run_tick(as_of=as_of or utc_now())
+    logger.info(
+        "scheduled_digest_delivery_checked",
+        extra={
+            "delivered": result.delivered,
+            "reason": result.decision.reason.value,
+        },
+    )
+    return result
 
 
 def register_jobs(

@@ -50,6 +50,8 @@ class Settings(BaseSettings):
     require_integration_tests: bool = False
 
     scan_enabled: bool = False
+    scheduled_digest_enabled: bool = False
+    scheduled_digest_interval_minutes: int = Field(default=60, ge=1, le=1440)
     setup_score_threshold: int = Field(default=85, ge=0, le=100)
 
     paper_account_currency: str = "EUR"

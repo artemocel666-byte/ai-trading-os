@@ -1,4 +1,4 @@
-PROJECT_PHASE = "phase_3g_telegram_digest_command_foundation"
+PROJECT_PHASE = "phase_3h_scheduled_digest_delivery_foundation"
 STRATEGY_IMPLEMENTED = False
 REAL_TRADING_ENABLED = False
 

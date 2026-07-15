@@ -14,6 +14,8 @@ def test_default_settings_keep_external_integrations_disabled() -> None:
     assert settings.market_data_enabled is False
     assert settings.calendar_enabled is False
     assert settings.scan_enabled is False
+    assert settings.scheduled_digest_enabled is False
+    assert settings.scheduled_digest_interval_minutes == 60
     assert settings.paper_account_balance == Decimal("10000")
 
 

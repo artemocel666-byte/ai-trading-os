@@ -57,6 +57,14 @@ from app.domain.entities.readiness import (
     SnapshotWindow,
     digest_status_from_analysis,
 )
+from app.domain.entities.scheduled_digest import (
+    ScheduledDigestConfig,
+    ScheduledDigestDecision,
+    ScheduledDigestDecisionReason,
+    ScheduledDigestDeliveryRecord,
+    ScheduledDigestDeliveryResult,
+    ScheduledDigestTick,
+)
 
 __all__ = [
     "AnalysisInputAudit",
@@ -97,6 +105,12 @@ __all__ = [
     "MovingAverageSummary",
     "RangeContextSummary",
     "ReturnDistributionSummary",
+    "ScheduledDigestConfig",
+    "ScheduledDigestDecision",
+    "ScheduledDigestDecisionReason",
+    "ScheduledDigestDeliveryRecord",
+    "ScheduledDigestDeliveryResult",
+    "ScheduledDigestTick",
     "SnapshotDigest",
     "SnapshotDigestIssueCount",
     "SnapshotDigestItem",
