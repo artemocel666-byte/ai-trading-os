@@ -9,14 +9,27 @@ from app.core.config import Settings
 from app.core.enums import MessageType
 from app.core.exceptions import NotImplementedFeatureError
 from app.core.time import normalize_to_utc, utc_now
-from app.domain.entities import Timeframe
+from app.domain.entities import SnapshotScheduleItem, Timeframe
 from app.domain.value_objects import CurrencyPair
 from app.services.analysis_service import AnalysisService
+from app.services.readiness_digest_service import ReadinessDigestService
 from app.services.system_state_service import SystemStateService
 from app.telegram.authorization import TelegramIdentity, is_authorized
 from app.telegram.formatter import TelegramFormatter
 
 DEFAULT_SNAPSHOT_CANDLE_COUNT = 12
+DEFAULT_DIGEST_ITEMS = (
+    SnapshotScheduleItem(
+        pair=CurrencyPair(value="EURUSD"),
+        timeframe=Timeframe.M15,
+        lookback_candle_count=DEFAULT_SNAPSHOT_CANDLE_COUNT,
+    ),
+    SnapshotScheduleItem(
+        pair=CurrencyPair(value="EURUSD"),
+        timeframe=Timeframe.H1,
+        lookback_candle_count=DEFAULT_SNAPSHOT_CANDLE_COUNT,
+    ),
+)
 
 
 def _identity(update: Update) -> TelegramIdentity:
@@ -38,6 +51,10 @@ def _system_state_service(context: ContextTypes.DEFAULT_TYPE) -> SystemStateServ
 
 def _analysis_service(context: ContextTypes.DEFAULT_TYPE) -> AnalysisService:
     return cast(AnalysisService, context.application.bot_data["analysis_service"])
+
+
+def _readiness_digest_service(context: ContextTypes.DEFAULT_TYPE) -> ReadinessDigestService:
+    return cast(ReadinessDigestService, context.application.bot_data["readiness_digest_service"])
 
 
 def _formatter(context: ContextTypes.DEFAULT_TYPE) -> TelegramFormatter:
@@ -93,7 +110,7 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         MessageType.EDUCATION,
         (
             "Доступные команды: /start, /help, /status, /start_scan, "
-            "/stop_scan, /scan_now, /snapshot."
+            "/stop_scan, /scan_now, /snapshot, /digest."
         ),
     )
 
@@ -186,6 +203,37 @@ async def snapshot_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -
     await _reply(update, context, MessageType.REPORT, body)
 
 
+async def digest_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    if not await _ensure_authorized(update, context):
+        return
+    try:
+        items = _parse_digest_command(update)
+    except (ValueError, ValidationError):
+        await _reply(
+            update,
+            context,
+            MessageType.REJECTED,
+            "Формат команды: /digest или /digest EURUSD M15. Поддерживаются M15 и H1.",
+        )
+        return
+
+    try:
+        payload = await _readiness_digest_service(context).build_payload(
+            items=items,
+            as_of=normalize_to_utc(utc_now()),
+        )
+    except Exception:
+        await _reply(
+            update,
+            context,
+            MessageType.DATA_UNAVAILABLE,
+            "Дайджест готовности сейчас недоступен. Проверьте базу данных и настройки сервиса.",
+        )
+        return
+
+    await _reply(update, context, MessageType.REPORT, payload.text)
+
+
 def _parse_snapshot_command(update: Update) -> tuple[CurrencyPair, Timeframe]:
     text = (
         update.effective_message.text
@@ -196,6 +244,26 @@ def _parse_snapshot_command(update: Update) -> tuple[CurrencyPair, Timeframe]:
     if len(parts) != 3:
         raise ValueError("snapshot command requires pair and timeframe")
     return CurrencyPair(value=parts[1].upper()), Timeframe(parts[2].upper())
+
+
+def _parse_digest_command(update: Update) -> tuple[SnapshotScheduleItem, ...]:
+    text = (
+        update.effective_message.text
+        if update.effective_message is not None and update.effective_message.text is not None
+        else ""
+    )
+    parts = text.split()
+    if len(parts) == 1:
+        return DEFAULT_DIGEST_ITEMS
+    if len(parts) != 3:
+        raise ValueError("digest command expects no arguments or pair and timeframe")
+    return (
+        SnapshotScheduleItem(
+            pair=CurrencyPair(value=parts[1].upper()),
+            timeframe=Timeframe(parts[2].upper()),
+            lookback_candle_count=DEFAULT_SNAPSHOT_CANDLE_COUNT,
+        ),
+    )
 
 
 def _default_snapshot_window(timeframe: Timeframe) -> tuple[datetime, datetime, datetime]:
@@ -219,3 +287,4 @@ def add_handlers(application: Application[Any, Any, Any, Any, Any, Any]) -> None
     application.add_handler(CommandHandler("stop_scan", stop_scan_command))
     application.add_handler(CommandHandler("scan_now", scan_now_command))
     application.add_handler(CommandHandler("snapshot", snapshot_command))
+    application.add_handler(CommandHandler("digest", digest_command))

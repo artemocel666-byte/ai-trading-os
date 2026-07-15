@@ -4,7 +4,7 @@ AI Trading OS is a safety-first foundation for a future modular Forex analysis a
 
 ## Current Status
 
-- Current project phase: phase_3f_readiness_scheduler_foundation.
+- Current project phase: phase_3g_telegram_digest_command_foundation.
 - Trading strategy: not implemented.
 - Real trading: disabled and unsupported.
 - External integrations: disabled by default.
@@ -12,6 +12,7 @@ AI Trading OS is a safety-first foundation for a future modular Forex analysis a
 - Phase 3D: deterministic analysis snapshot/readiness report foundation only.
 - Phase 3E: local Telegram readiness reports only.
 - Phase 3F: neutral readiness scheduler/snapshot digest foundation only.
+- Phase 3G: manual Telegram `/digest` readiness digest command only.
 
 ## Safety Warning
 
@@ -75,6 +76,14 @@ Phase 3F adds a deterministic readiness scheduler and snapshot digest foundation
 readiness windows for configured pairs/timeframes, resolves the latest fully closed M15/H1 boundary,
 aggregates Phase 3D snapshot readiness states, creates deterministic deduplication keys, and builds
 Telegram-safe readiness digest payload text. It does not send automatic Telegram messages, produce
+strategy decisions, setup scoring, confidence scoring, trade directions, recommendations, signals,
+AI output, broker activity, paper trading, order execution, or real trading.
+
+## Phase 3G Status
+
+Phase 3G adds a manual Telegram `/digest` command over the Phase 3F readiness digest service. The
+command returns Russian, neutral readiness digest text for the default EURUSD M15/H1 schedule or a
+single requested pair/timeframe. It does not add automatic Telegram delivery, provider calls,
 strategy decisions, setup scoring, confidence scoring, trade directions, recommendations, signals,
 AI output, broker activity, paper trading, order execution, or real trading. Phase 4 has not
 started.
@@ -171,6 +180,7 @@ For a local live Telegram test, see `docs/operations.md` and configure `TELEGRAM
 - No strategy, signals, OpenAI calls, backtesting, position sizing, broker execution, or real trading.
 - `/scan_now` explicitly remains disconnected from analysis snapshots and does not fabricate a scan result.
 - `/snapshot` returns readiness reports only and does not produce trading guidance.
+- `/digest` returns manual readiness digests only and does not produce trading guidance.
 - Worker jobs only update heartbeat and run foundation health checks.
 
 ## Directory Overview

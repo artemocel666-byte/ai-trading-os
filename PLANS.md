@@ -31,6 +31,9 @@
 - Phase 3F readiness scheduler foundation: deterministic pair/timeframe readiness plans, latest
   closed-window resolution, snapshot digest payloads, deduplication keys, and safety tests
   confirming no strategy/signals/trading activation.
+- Phase 3G Telegram digest command foundation: manual `/digest` command wiring over the existing
+  readiness digest service, default EURUSD M15/H1 digest arguments, and safety tests confirming no
+  strategy/signals/trading activation.
 
 ## Current Implementation Status
 
@@ -38,10 +41,10 @@ The repository has completed the foundation phase, Phase 2 hardening/data adapte
 data-quality foundation, Phase 3B deterministic feature-engine foundation, Phase 3C deterministic
 indicator/context foundation, Phase 3D deterministic analysis snapshot/readiness report foundation,
 Phase 3E local Telegram readiness-report foundation, and Phase 3F deterministic readiness
-scheduler/snapshot digest foundation. Production Twelve Data and FMP adapters exist, but live
-integrations remain disabled by default. Scanning state can be enabled or disabled, and Telegram can
-request readiness reports, but no strategy, signal generation, AI agent, paper-trading, or execution
-flow is connected.
+scheduler/snapshot digest foundation, and Phase 3G manual Telegram digest command foundation.
+Production Twelve Data and FMP adapters exist, but live integrations remain disabled by default.
+Scanning state can be enabled or disabled, and Telegram can request readiness reports and readiness
+digests, but no strategy, signal generation, AI agent, paper-trading, or execution flow is connected.
 
 ## Future Phases
 
@@ -53,6 +56,7 @@ flow is connected.
 - Phase 3D: deterministic analysis snapshot/readiness report foundation — completed without trading decisions
 - Phase 3E: local Telegram readiness reports — completed without trading decisions
 - Phase 3F: neutral readiness scheduler/snapshot digest foundation — completed without trading decisions
+- Phase 3G: manual Telegram digest command foundation — completed without trading decisions
 - Phase 4: analytical agents and Decision Engine
 - Phase 5: Russian Chief AI explanations
 - Phase 6: Telegram signal delivery

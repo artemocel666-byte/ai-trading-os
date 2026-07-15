@@ -7,8 +7,14 @@ from app.core.config import Settings
 from app.domain.entities import Candle, Timeframe
 from app.domain.value_objects import CurrencyPair
 from app.services.analysis_service import AnalysisService
+from app.services.readiness_digest_service import ReadinessDigestService
 from app.telegram import commands
-from app.telegram.commands import scan_now_command, snapshot_command, start_scan_command
+from app.telegram.commands import (
+    digest_command,
+    scan_now_command,
+    snapshot_command,
+    start_scan_command,
+)
 from app.telegram.formatter import TelegramFormatter
 from tests.fakes import FakeUnitOfWorkFactory
 
@@ -52,6 +58,20 @@ class FakeContext:
         self.application = FakeApplication(bot_data)
 
 
+class FakeHandlerApplication:
+    def __init__(self) -> None:
+        self.handlers: list[FakeCommandHandler] = []
+
+    def add_handler(self, handler: "FakeCommandHandler") -> None:
+        self.handlers.append(handler)
+
+
+class FakeCommandHandler:
+    def __init__(self, command: str, callback: object) -> None:
+        self.command = command
+        self.callback = callback
+
+
 def _context(factory: FakeUnitOfWorkFactory) -> FakeContext:
     settings = Settings(
         _env_file=None,
@@ -60,6 +80,7 @@ def _context(factory: FakeUnitOfWorkFactory) -> FakeContext:
         telegram_allowed_user_id=1,
         telegram_allowed_chat_id=2,
     )
+    analysis_service = AnalysisService(factory)
     return FakeContext(
         {
             "settings": settings,
@@ -67,7 +88,8 @@ def _context(factory: FakeUnitOfWorkFactory) -> FakeContext:
                 "app.services.system_state_service",
                 fromlist=["SystemStateService"],
             ).SystemStateService(factory),
-            "analysis_service": AnalysisService(factory),
+            "analysis_service": analysis_service,
+            "readiness_digest_service": ReadinessDigestService(analysis_service),
             "formatter": TelegramFormatter(),
         }
     )
@@ -155,4 +177,68 @@ async def test_snapshot_command_rejects_invalid_arguments() -> None:
 
     assert update.effective_message.replies == [
         "❌ Формат команды: /snapshot EURUSD M15. Поддерживаются M15 и H1."
+    ]
+
+
+def test_add_handlers_keeps_snapshot_and_registers_digest(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    application = FakeHandlerApplication()
+    monkeypatch.setattr(commands, "CommandHandler", FakeCommandHandler)
+
+    commands.add_handlers(application)
+
+    registered = {handler.command: handler.callback for handler in application.handlers}
+    assert registered["snapshot"] is snapshot_command
+    assert registered["digest"] is digest_command
+
+
+@pytest.mark.asyncio
+async def test_digest_command_returns_default_readiness_digest(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    factory = FakeUnitOfWorkFactory(candles=[_candle(index) for index in range(12)])
+    context = _context(factory)
+    update = FakeUpdate(user_id=1, chat_id=2, text="/digest")
+    monkeypatch.setattr(commands, "utc_now", lambda: BASE_TIME + timedelta(hours=3))
+
+    await digest_command(update, context)
+
+    assert len(update.effective_message.replies) == 1
+    reply = update.effective_message.replies[0]
+    assert reply.startswith("📊 ")
+    assert "Системный отчёт готовности" in reply
+    assert "EURUSD M15: READY" in reply
+    assert "EURUSD H1: BLOCKED" in reply
+    assert "Решений и указаний нет." in reply
+
+
+@pytest.mark.asyncio
+async def test_digest_command_accepts_single_snapshot_identity(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    factory = FakeUnitOfWorkFactory(candles=[_candle(index) for index in range(12)])
+    context = _context(factory)
+    update = FakeUpdate(user_id=1, chat_id=2, text="/digest EURUSD M15")
+    monkeypatch.setattr(commands, "utc_now", lambda: BASE_TIME + timedelta(hours=3))
+
+    await digest_command(update, context)
+
+    assert len(update.effective_message.replies) == 1
+    reply = update.effective_message.replies[0]
+    assert "EURUSD M15: READY" in reply
+    assert "EURUSD H1" not in reply
+    assert "Решений и указаний нет." in reply
+
+
+@pytest.mark.asyncio
+async def test_digest_command_rejects_invalid_arguments() -> None:
+    factory = FakeUnitOfWorkFactory()
+    context = _context(factory)
+    update = FakeUpdate(user_id=1, chat_id=2, text="/digest EURUSD M5")
+
+    await digest_command(update, context)
+
+    assert update.effective_message.replies == [
+        "❌ Формат команды: /digest или /digest EURUSD M15. Поддерживаются M15 и H1."
     ]

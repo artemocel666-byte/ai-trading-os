@@ -80,6 +80,11 @@ configured pair/timeframe windows. It does not schedule automatic Telegram deliv
 does not call market-data, calendar, AI, or broker services. Any future delivery path must keep
 Telegram output limited to readiness reporting text.
 
+Phase 3G exposes that digest foundation through a manual Telegram `/digest` command. `/digest`
+returns the default EURUSD M15/H1 readiness digest, and `/digest EURUSD M15` returns a single
+pair/timeframe digest. The command remains read-only and neutral; it does not schedule automatic
+delivery, call providers, call AI services, contact brokers, or produce trading guidance.
+
 ## Telegram Bot Local Setup
 
 Create the bot in Telegram before enabling the `bot` service:
@@ -139,11 +144,13 @@ Then send these commands to the bot in Telegram:
 /start
 /status
 /snapshot EURUSD M15
+/digest
+/digest EURUSD M15
 ```
 
 Expected behavior: `/snapshot EURUSD M15` returns a Russian readiness report with one leading emoji.
-It must not contain LONG/SHORT directions, entry guidance, buy/sell recommendations, or paper-trade
-actions.
+`/digest` returns a Russian readiness digest with one leading emoji. These commands must not contain
+LONG/SHORT directions, entry guidance, buy/sell recommendations, or paper-trade actions.
 
 ## Common Failure Cases
 

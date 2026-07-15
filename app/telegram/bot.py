@@ -9,6 +9,7 @@ from app.core.logging import configure_logging
 from app.persistence.database import create_engine, create_session_factory
 from app.persistence.session import build_uow_factory
 from app.services.analysis_service import AnalysisService
+from app.services.readiness_digest_service import ReadinessDigestService
 from app.services.system_state_service import SystemStateService
 from app.telegram.commands import add_handlers
 from app.telegram.formatter import TelegramFormatter
@@ -34,9 +35,11 @@ async def run_enabled_bot() -> None:
     session_factory = create_session_factory(engine)
     uow_factory = build_uow_factory(session_factory)
     application = ApplicationBuilder().token(token.get_secret_value()).build()
+    analysis_service = AnalysisService(uow_factory)
     application.bot_data["settings"] = settings
     application.bot_data["system_state_service"] = SystemStateService(uow_factory)
-    application.bot_data["analysis_service"] = AnalysisService(uow_factory)
+    application.bot_data["analysis_service"] = analysis_service
+    application.bot_data["readiness_digest_service"] = ReadinessDigestService(analysis_service)
     application.bot_data["formatter"] = TelegramFormatter()
     add_handlers(application)
 
