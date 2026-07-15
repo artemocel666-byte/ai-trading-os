@@ -75,6 +75,11 @@ To use a real Telegram chat, create a bot token with BotFather, set `TELEGRAM_EN
 start the bot service. The `/snapshot` command returns readiness reports only; it does not produce
 trading guidance or paper-trading actions.
 
+Phase 3F adds an internal readiness digest planner that can prepare neutral digest payloads for
+configured pair/timeframe windows. It does not schedule automatic Telegram delivery by itself and
+does not call market-data, calendar, AI, or broker services. Any future delivery path must keep
+Telegram output limited to readiness reporting text.
+
 ## Telegram Bot Local Setup
 
 Create the bot in Telegram before enabling the `bot` service:

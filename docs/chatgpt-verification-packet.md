@@ -1,14 +1,14 @@
-# AI Trading OS - Phase 3D Verification Packet
+# AI Trading OS - Phase 3F Verification Packet
 
-Generated at: `2026-07-12T11:50:39Z`
+Generated at: `2026-07-15T17:24:22Z`
 
 ## Scope
 
-This packet documents Phase 3D: deterministic analysis snapshot/readiness report foundation. Phase
-3D builds typed, immutable, JSON-serializable analysis snapshots from existing Phase 3A storage,
-Phase 3B feature snapshots, and Phase 3C context snapshots.
+This packet documents Phase 3F: neutral readiness scheduler / snapshot digest foundation. Phase 3F
+builds typed, immutable, JSON-serializable schedule plans, digest items, digest summaries, and
+notification payloads from existing Phase 3D analysis snapshots.
 
-Phase 3D is uncommitted at packet generation time. Phase 3E was not started.
+Phase 3F is uncommitted at packet generation time. Phase 4 was not started.
 
 No strategy, signals, setup scoring, confidence scoring, AI agents, OpenAI calls, broker APIs,
 paper trading, order execution, or real trading were added or activated. Existing foundation-era
@@ -17,7 +17,7 @@ signal/trading/paper schemas remain inactive.
 ## Git Metadata
 
 - Branch: `main`
-- Current commit hash: `60e6e5363cdfb1fc8c8b432cb475d1657976e6a5`
+- Current commit hash: `588ab6a51eb52b4455688fd8e4cc3fdfc533a6dd`
 
 ### `git status --short`
 
@@ -27,47 +27,54 @@ signal/trading/paper schemas remain inactive.
  M README.md
  M app/core/constants.py
  M app/domain/entities/__init__.py
- M app/services/analysis_service.py
+ M app/telegram/formatter.py
  M docs/chatgpt-verification-packet.md
+ M docs/operations.md
  M tests/contract/test_safety_boundaries.py
  M tests/integration/test_database_and_api.py
-?? app/domain/analysis_engine.py
-?? app/domain/entities/analysis.py
-?? docs/phase3d-verification-report.md
-?? tests/unit/test_analysis_snapshot_foundation.py
+ M tests/unit/test_analysis_snapshot_foundation.py
+?? app/domain/entities/readiness.py
+?? app/domain/readiness_engine.py
+?? app/services/readiness_digest_service.py
+?? docs/phase3f-verification-report.md
+?? tests/unit/test_readiness_scheduler_foundation.py
 ```
 
 ### `git diff --stat`
 
 ```text
- AGENTS.md                                  |   12 +-
- PLANS.md                                   |   15 +-
- README.md                                  |   17 +-
- app/core/constants.py                      |    2 +-
- app/domain/entities/__init__.py            |   22 +
- app/services/analysis_service.py           |  101 +-
- docs/chatgpt-verification-packet.md        | 1815 ++++++++++++++--------------
- tests/contract/test_safety_boundaries.py   |   47 +
- tests/integration/test_database_and_api.py |    2 +-
- 9 files changed, 1087 insertions(+), 946 deletions(-)
+ AGENTS.md                                       |   12 +-
+ PLANS.md                                        |   13 +-
+ README.md                                       |   13 +-
+ app/core/constants.py                           |    2 +-
+ app/domain/entities/__init__.py                 |   22 +
+ app/telegram/formatter.py                       |    5 +
+ docs/chatgpt-verification-packet.md             | 1499 ++++++++++++-----------
+ docs/operations.md                              |    5 +
+ tests/contract/test_safety_boundaries.py        |   48 +
+ tests/integration/test_database_and_api.py      |    2 +-
+ tests/unit/test_analysis_snapshot_foundation.py |    4 +-
+ 11 files changed, 909 insertions(+), 716 deletions(-)
 ```
 
-### `git log --oneline -5`
+### `git log --oneline -6`
 
 ```text
+588ab6a Phase 3E DONE
+8166820 phase 3C DONE
 60e6e53 Add Phase 3C indicator context foundation
 a6f44f0 Add Phase 3B feature engine foundation
 03c3acd Add Phase 3A data quality foundation
 9d68709 Document Phase 2 runtime verification
-0848243 Complete Phase 2 data adapters
 ```
 
 ## Created Files
 
-- `app/domain/analysis_engine.py`
-- `app/domain/entities/analysis.py`
-- `docs/phase3d-verification-report.md`
-- `tests/unit/test_analysis_snapshot_foundation.py`
+- `app/domain/entities/readiness.py`
+- `app/domain/readiness_engine.py`
+- `app/services/readiness_digest_service.py`
+- `docs/phase3f-verification-report.md`
+- `tests/unit/test_readiness_scheduler_foundation.py`
 
 ## Modified Files
 
@@ -76,24 +83,26 @@ a6f44f0 Add Phase 3B feature engine foundation
 - `README.md`
 - `app/core/constants.py`
 - `app/domain/entities/__init__.py`
-- `app/services/analysis_service.py`
+- `app/telegram/formatter.py`
 - `docs/chatgpt-verification-packet.md`
+- `docs/operations.md`
 - `tests/contract/test_safety_boundaries.py`
 - `tests/integration/test_database_and_api.py`
+- `tests/unit/test_analysis_snapshot_foundation.py`
 
 ## Implementation Summary
 
-- Updated `PROJECT_PHASE` to `phase_3d_analysis_snapshot_foundation`.
-- Added immutable Phase 3D analysis models in `app/domain/entities/analysis.py`.
-- Added deterministic analysis snapshot assembly in `app/domain/analysis_engine.py`.
-- Updated `AnalysisService` in `app/services/analysis_service.py` to build neutral snapshots/reports
-  from repository protocols while keeping `/scan_now` disconnected.
-- Reused Phase 3C `MarketContextEngine` and Phase 3B `MarketFeatureSnapshot` as descriptive inputs.
-- Added unit/service tests for exact deterministic assembly, UTC normalization, JSON serialization,
-  readiness status values, no-after-`as_of` proof, issue aggregation, empty/small input behavior,
-  immutability, deterministic repeated output, and fake-repo service behavior.
-- Added safety coverage confirming Phase 3D files do not introduce decision/execution terms.
-- No migration was added; Phase 3D reads existing Phase 2/3A tables only.
+- Updated `PROJECT_PHASE` to `phase_3f_readiness_scheduler_foundation`.
+- Added immutable Phase 3F readiness models in `app/domain/entities/readiness.py`.
+- Added deterministic planning and digest building in `app/domain/readiness_engine.py`.
+- Added `ReadinessDigestService` in `app/services/readiness_digest_service.py` over existing
+  `AnalysisService` and UnitOfWork-backed repositories.
+- Added Telegram-safe digest body formatting without registering a new automatic delivery command.
+- Added tests for latest closed-window resolution, M15/H1 planning, invalid lookback handling, UTC
+  normalization, no-future window leakage, dedup key stability, digest aggregation, formatting, JSON
+  serialization, immutability, fake-repository service behavior, and existing `/snapshot` coverage.
+- Added safety coverage confirming Phase 3F files do not introduce decision/execution terms.
+- No migration was added; Phase 3F reads existing Phase 2/3A tables through Phase 3D services only.
 - No API route, signal endpoint, network call, provider call, secret, or API key was added.
 
 ## Verification Command Outputs
@@ -103,7 +112,7 @@ a6f44f0 Add Phase 3B feature engine foundation
 Exit code: `0`
 
 ```text
-Resolved 46 packages in 18ms
+Resolved 46 packages in 29ms
 ```
 
 ### `uv sync`
@@ -112,7 +121,7 @@ Exit code: `0`
 
 ```text
 Resolved 46 packages in 2ms
-Checked 43 packages in 10ms
+Checked 43 packages in 11ms
 ```
 
 ### `uv run ruff format --check .`
@@ -120,7 +129,7 @@ Checked 43 packages in 10ms
 Exit code: `0`
 
 ```text
-99 files already formatted
+104 files already formatted
 ```
 
 ### `uv run ruff check .`
@@ -136,7 +145,7 @@ All checks passed!
 Exit code: `0`
 
 ```text
-Success: no issues found in 71 source files
+Success: no issues found in 74 source files
 ```
 
 ### `uv run pytest`
@@ -151,25 +160,26 @@ configfile: pyproject.toml
 testpaths: tests
 plugins: anyio-4.14.1, asyncio-0.26.0
 asyncio: mode=Mode.AUTO, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
-collected 187 items
+collected 199 items
 
 tests/contract/test_agent_contracts.py ......                            [  3%]
 tests/contract/test_api_error_schema.py .                                [  3%]
 tests/contract/test_architecture_boundaries.py ..                        [  4%]
-tests/contract/test_provider_contracts.py .............................. [ 20%]
-...............................                                          [ 37%]
-tests/contract/test_safety_boundaries.py ............                    [ 43%]
-tests/integration/test_database_and_api.py sssss                         [ 46%]
-tests/unit/test_analysis_snapshot_foundation.py ..........               [ 51%]
-tests/unit/test_context_engine_foundation.py .............               [ 58%]
-tests/unit/test_data_quality_foundation.py ...                           [ 60%]
-tests/unit/test_domain_market_models.py ..................               [ 70%]
-tests/unit/test_errors_and_redaction.py .......                          [ 73%]
-tests/unit/test_feature_engine_foundation.py ...........                 [ 79%]
-tests/unit/test_internal_api_key.py ....                                 [ 81%]
+tests/contract/test_provider_contracts.py .............................. [ 19%]
+...............................                                          [ 35%]
+tests/contract/test_safety_boundaries.py .............                   [ 41%]
+tests/integration/test_database_and_api.py sssss                         [ 44%]
+tests/unit/test_analysis_snapshot_foundation.py ..........               [ 49%]
+tests/unit/test_context_engine_foundation.py .............               [ 55%]
+tests/unit/test_data_quality_foundation.py ...                           [ 57%]
+tests/unit/test_domain_market_models.py ..................               [ 66%]
+tests/unit/test_errors_and_redaction.py .......                          [ 69%]
+tests/unit/test_feature_engine_foundation.py ...........                 [ 75%]
+tests/unit/test_internal_api_key.py ....                                 [ 77%]
+tests/unit/test_readiness_scheduler_foundation.py .........              [ 81%]
 tests/unit/test_settings.py .........                                    [ 86%]
-tests/unit/test_system_state_service.py .....                            [ 89%]
-tests/unit/test_telegram_commands.py ..                                  [ 90%]
+tests/unit/test_system_state_service.py .....                            [ 88%]
+tests/unit/test_telegram_commands.py ....                                [ 90%]
 tests/unit/test_telegram_policy.py .....                                 [ 93%]
 tests/unit/test_time.py ...                                              [ 94%]
 tests/unit/test_unit_of_work_lifecycle.py ......                         [ 97%]
@@ -181,7 +191,7 @@ tests/unit/test_value_objects_and_enums.py ....                          [100%]
     from starlette.testclient import TestClient as TestClient  # noqa
 
 -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
-================== 182 passed, 5 skipped, 1 warning in 0.72s ===================
+================== 194 passed, 5 skipped, 1 warning in 0.79s ===================
 ```
 
 ### `uv run python scripts/security_check.py`
@@ -198,92 +208,92 @@ Exit code: `0`
 Exit code: `0`
 
 ```text
- Image ai-trading-os-api Building 
- Image ai-trading-os-worker Building 
  Image ai-trading-os-bot Building 
  Image ai-trading-os-migrate Building 
+ Image ai-trading-os-api Building 
+ Image ai-trading-os-worker Building 
 #1 [internal] load local bake definitions
 #1 reading from stdin 1.91kB done
 #1 DONE 0.0s
 
-#2 [worker internal] load build definition from Dockerfile
+#2 [api internal] load build definition from Dockerfile
 #2 transferring dockerfile: 411B done
 #2 DONE 0.0s
 
-#3 [api internal] load metadata for ghcr.io/astral-sh/uv:python3.12-bookworm-slim
+#3 [migrate internal] load metadata for ghcr.io/astral-sh/uv:python3.12-bookworm-slim
 #3 DONE 0.7s
 
 #4 [bot internal] load .dockerignore
 #4 transferring context: 143B done
 #4 DONE 0.0s
 
-#5 [bot 1/5] FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim@sha256:e5b65587bce7de595f299855d7385fe7fca39b8a74baa261ba1b7147afa78e58
+#5 [migrate 1/5] FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim@sha256:e5b65587bce7de595f299855d7385fe7fca39b8a74baa261ba1b7147afa78e58
 #5 resolve ghcr.io/astral-sh/uv:python3.12-bookworm-slim@sha256:e5b65587bce7de595f299855d7385fe7fca39b8a74baa261ba1b7147afa78e58 0.0s done
 #5 DONE 0.0s
 
 #6 [worker internal] load build context
-#6 transferring context: 16.07kB 0.0s done
+#6 transferring context: 16.81kB 0.0s done
 #6 DONE 0.0s
 
-#7 [migrate 4/5] RUN uv sync --frozen --no-dev
+#7 [api 2/5] WORKDIR /app
 #7 CACHED
 
-#8 [migrate 2/5] WORKDIR /app
+#8 [api 3/5] COPY pyproject.toml uv.lock* ./
 #8 CACHED
 
-#9 [migrate 3/5] COPY pyproject.toml uv.lock* ./
+#9 [api 4/5] RUN uv sync --frozen --no-dev
 #9 CACHED
 
-#10 [migrate 5/5] COPY . .
+#10 [api 5/5] COPY . .
 #10 CACHED
 
-#11 [migrate] exporting to image
+#11 [worker] exporting to image
 #11 exporting layers done
-#11 exporting manifest sha256:3bee3053a84e071913b1158a2012e73d0b1850e4e2612c542fecb8372619148f done
-#11 exporting config sha256:c80f38957abedd3590298e0a50ac7bed830269f399f83bf9d43fd61aceb2eb28 done
-#11 exporting attestation manifest sha256:0bb46bb4666445d99081611f86730de91eb42e0820241104f45561c72db17cd4 0.0s done
-#11 exporting manifest list sha256:ca0917795e87c62e8a0b4fbfa3c3dd6f6aec1daa732c758d9b1c2620d6fc0f9b done
-#11 naming to docker.io/library/ai-trading-os-migrate:latest done
-#11 unpacking to docker.io/library/ai-trading-os-migrate:latest done
+#11 exporting manifest sha256:72605e3f7c5910dc75bd2b546cba58c6fbc3dfc686824f14b6f4648414fceed7 done
+#11 exporting config sha256:1967fbb840604bfa94c79843cc127f1c7c693997d561626bee678f36f25d0a55 done
+#11 exporting attestation manifest sha256:47ef42af5de4ff2768798b6709f3ed0aba180c0fc726dca99f36a99783986655 0.0s done
+#11 exporting manifest list sha256:36a7ed4ca927e30580906ba7e34b16e3dbe0deb22100930fb1a29ee57fd9c56f done
+#11 naming to docker.io/library/ai-trading-os-worker:latest done
+#11 unpacking to docker.io/library/ai-trading-os-worker:latest done
 #11 DONE 0.1s
 
-#12 [bot] exporting to image
+#12 [api] exporting to image
 #12 exporting layers done
-#12 exporting manifest sha256:5b8aacfa434bf57c5e02a1bdc3c971da949874b2ab55f773e2b30daab46b5fca done
-#12 exporting config sha256:cbbfbf1c628feeadeacb8bdd097be493d2d81823832171c2ffda0e0eda973298 done
-#12 exporting attestation manifest sha256:c438bb139243f733999cdb04a8afa8baf1292abb587c2ca907d34a1751df4b6e 0.0s done
-#12 exporting manifest list sha256:e4e8a7c9c0924cf18c00158729d7700d53e22d1c0b93c0e1a59fbd2cfe3a4172 done
-#12 naming to docker.io/library/ai-trading-os-bot:latest done
-#12 unpacking to docker.io/library/ai-trading-os-bot:latest done
+#12 exporting manifest sha256:da2eaf726ea1faeec8ffa1ee286e4a527a72282e61ae68872da274be6c654669 done
+#12 exporting config sha256:6ef7d13e6e742971ca2501f1f76d828446e812222c29e520e8b0caec30c368ec done
+#12 exporting attestation manifest sha256:ec256dab2589dc9b1fc31511f3df90577e6b71d80f58764b321de14a7c6bb183 0.0s done
+#12 exporting manifest list sha256:9b06e82474c9bdece30ba5e963d1520fbd7833825461fd712ce4e6c93fa10864 done
+#12 naming to docker.io/library/ai-trading-os-api:latest done
+#12 unpacking to docker.io/library/ai-trading-os-api:latest done
 #12 DONE 0.1s
 
-#13 [api] exporting to image
+#13 [bot] exporting to image
 #13 exporting layers done
-#13 exporting manifest sha256:00b1745579dfd9286431479c0b598867431fa0ff7647f56ba61f62d90dbf20e5 done
-#13 exporting config sha256:77c4c777fdbc8c1b446d925c10a268613b82cf2037a8286f5cb31bc6dd7ffe5c done
-#13 exporting attestation manifest sha256:977c5996aa9e9a499a4ac2550e3892e238499f566ad405fe41b3f5773d53b2fe 0.0s done
-#13 exporting manifest list sha256:bef95dafb4f67de16ac837bcfa2d9536ea2f76f29bd05cbda4d1916744e4d533 done
-#13 naming to docker.io/library/ai-trading-os-api:latest done
-#13 unpacking to docker.io/library/ai-trading-os-api:latest done
+#13 exporting manifest sha256:ff0bde168fed8ad301a6699b2a5724d6fe2313d1686c1c55df3f8f0ef91fc51b done
+#13 exporting config sha256:286beec80aedda2dd009b125607d8ae1d1f50e252a85beea121a33e3321770ff done
+#13 exporting attestation manifest sha256:e4f59ddf150a1c9898fa16b62a0d61af9f5f9cec08c38f1928f78358cc140120 0.0s done
+#13 exporting manifest list sha256:13ad7bdab4926bd42039b6bfb607b72d14740076bd1d54bcb825bac5be4b4a2c done
+#13 naming to docker.io/library/ai-trading-os-bot:latest done
+#13 unpacking to docker.io/library/ai-trading-os-bot:latest done
 #13 DONE 0.1s
 
-#14 [worker] exporting to image
+#14 [migrate] exporting to image
 #14 exporting layers done
-#14 exporting manifest sha256:4dc40106e6f0f6728c89d0650058b6632da059f5d776e1dd2ea997adde70eb4d done
-#14 exporting config sha256:1627c4680525880037e4260beb5a5771a4ab611f7dab28693f14645cfe3cac8d done
-#14 exporting attestation manifest sha256:113c72d816845c07d326452e919a1d35d814b191b73255625e5a9a145caa99b1 0.0s done
-#14 exporting manifest list sha256:028f4f3ec651db16c2c04c05b4776b5bfb31585cbd0e10f2fef52a1286b80245 done
-#14 naming to docker.io/library/ai-trading-os-worker:latest done
-#14 unpacking to docker.io/library/ai-trading-os-worker:latest done
+#14 exporting manifest sha256:a50e0e43d012b82e575cab53db09093e1d4fde45bec6de891d64d2d1dc178672 done
+#14 exporting config sha256:0319e71fff323f8a5cacf1c40572f3b0f71e885064440228e4e459849f3eba52 done
+#14 exporting attestation manifest sha256:8b3166a3883328a4500e0d49a0cfde4b0b3dbaab4f6e183b702de36eef08c219 0.0s done
+#14 exporting manifest list sha256:8edfb1b01a2d189f87f17593d94b1c6ee554125cc09cafea3c7ec426281549e2 done
+#14 naming to docker.io/library/ai-trading-os-migrate:latest done
+#14 unpacking to docker.io/library/ai-trading-os-migrate:latest done
 #14 DONE 0.1s
 
-#15 [worker] resolving provenance for metadata file
+#15 [migrate] resolving provenance for metadata file
 #15 DONE 0.0s
 
-#16 [migrate] resolving provenance for metadata file
+#16 [api] resolving provenance for metadata file
 #16 DONE 0.0s
 
-#17 [api] resolving provenance for metadata file
+#17 [worker] resolving provenance for metadata file
 #17 DONE 0.0s
 
 #18 [bot] resolving provenance for metadata file
@@ -310,8 +320,8 @@ Exit code: `0`
  Container ai-trading-os-postgres-1 Running 
  Container ai-trading-os-postgres-1 Waiting 
  Container ai-trading-os-postgres-1 Healthy 
- Container ai-trading-os-migrate-run-56e7166b4cf8 Creating 
- Container ai-trading-os-migrate-run-56e7166b4cf8 Created 
+ Container ai-trading-os-migrate-run-232df7e87233 Creating 
+ Container ai-trading-os-migrate-run-232df7e87233 Created 
 INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
 INFO  [alembic.runtime.migration] Will assume transactional DDL.
 0002_phase2_data_constraints (head)
@@ -325,8 +335,8 @@ Exit code: `0`
  Container ai-trading-os-postgres-1 Running 
  Container ai-trading-os-postgres-1 Waiting 
  Container ai-trading-os-postgres-1 Healthy 
- Container ai-trading-os-migrate-run-2e5b54fe39c8 Creating 
- Container ai-trading-os-migrate-run-2e5b54fe39c8 Created 
+ Container ai-trading-os-migrate-run-caf5a65cce98 Creating 
+ Container ai-trading-os-migrate-run-caf5a65cce98 Created 
 INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
 INFO  [alembic.runtime.migration] Will assume transactional DDL.
 INFO  [alembic.runtime.plugins] setting up autogenerate plugin alembic.autogenerate.schemas
@@ -346,8 +356,8 @@ Exit code: `0`
  Container ai-trading-os-postgres-1 Running 
  Container ai-trading-os-postgres-1 Waiting 
  Container ai-trading-os-postgres-1 Healthy 
- Container ai-trading-os-migrate-run-f94553fbd847 Creating 
- Container ai-trading-os-migrate-run-f94553fbd847 Created 
+ Container ai-trading-os-migrate-run-a9ce2f0a029b Creating 
+ Container ai-trading-os-migrate-run-a9ce2f0a029b Created 
 INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
 INFO  [alembic.runtime.migration] Will assume transactional DDL.
 ```
@@ -360,16 +370,16 @@ Exit code: `0`
  Container ai-trading-os-postgres-1 Running 
  Container ai-trading-os-postgres-1 Waiting 
  Container ai-trading-os-postgres-1 Healthy 
- Container ai-trading-os-migrate-run-41cb03219fb2 Creating 
- Container ai-trading-os-migrate-run-41cb03219fb2 Created 
-Downloading ruff (10.5MiB)
+ Container ai-trading-os-migrate-run-f68e18c13ca8 Creating 
+ Container ai-trading-os-migrate-run-f68e18c13ca8 Created 
 Downloading pygments (1.2MiB)
+Downloading ruff (10.5MiB)
 Downloading mypy (13.1MiB)
  Downloaded pygments
  Downloaded ruff
  Downloaded mypy
-Installed 11 packages in 44ms
-Bytecode compiled 1963 files in 377ms
+Installed 11 packages in 102ms
+Bytecode compiled 1963 files in 468ms
 ============================= test session starts ==============================
 platform linux -- Python 3.12.12, pytest-8.4.2, pluggy-1.6.0
 rootdir: /app
@@ -386,7 +396,7 @@ tests/integration/test_database_and_api.py .....                         [100%]
     from starlette.testclient import TestClient as TestClient  # noqa
 
 -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
-========================= 5 passed, 1 warning in 0.31s =========================
+========================= 5 passed, 1 warning in 0.32s =========================
 ```
 
 ### `docker integration run #2`
@@ -397,16 +407,16 @@ Exit code: `0`
  Container ai-trading-os-postgres-1 Running 
  Container ai-trading-os-postgres-1 Waiting 
  Container ai-trading-os-postgres-1 Healthy 
- Container ai-trading-os-migrate-run-5cc363cc16b2 Creating 
- Container ai-trading-os-migrate-run-5cc363cc16b2 Created 
+ Container ai-trading-os-migrate-run-f3d4777e106d Creating 
+ Container ai-trading-os-migrate-run-f3d4777e106d Created 
 Downloading pygments (1.2MiB)
-Downloading mypy (13.1MiB)
 Downloading ruff (10.5MiB)
+Downloading mypy (13.1MiB)
  Downloaded pygments
  Downloaded ruff
  Downloaded mypy
-Installed 11 packages in 37ms
-Bytecode compiled 1963 files in 384ms
+Installed 11 packages in 41ms
+Bytecode compiled 1963 files in 433ms
 ============================= test session starts ==============================
 platform linux -- Python 3.12.12, pytest-8.4.2, pluggy-1.6.0
 rootdir: /app
@@ -423,7 +433,7 @@ tests/integration/test_database_and_api.py .....                         [100%]
     from starlette.testclient import TestClient as TestClient  # noqa
 
 -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
-========================= 5 passed, 1 warning in 0.31s =========================
+========================= 5 passed, 1 warning in 0.30s =========================
 ```
 
 ### `docker compose config`
@@ -723,45 +733,45 @@ volumes:
 - Host integration tests in `uv run pytest` were skipped because `REQUIRE_INTEGRATION_TESTS` was not
   enabled for the host run. The PostgreSQL integration suite was run inside Docker twice against the
   same `ai_trading_os_test` database without cleanup, and both runs passed.
-- Full API stack `/ready` probing was not rerun for Phase 3D because the requested Docker verification
+- Full API stack `/ready` probing was not rerun for Phase 3F because the requested Docker verification
   set was PostgreSQL, Alembic, integration tests, and compose configuration.
 
 ## Unavailable Checks
 
-- None for the requested Phase 3D verification commands. Host `uv` and Docker were available.
+- None for the requested Phase 3F verification commands. Host `uv` and Docker were available.
 
 ## Remaining Risks
 
-- Phase 3D changes are uncommitted at packet generation time.
-- Analysis snapshots are deterministic in-memory structures and are not persisted by design.
-- Existing foundation-era database names and environment variables may still mention future execution
-  concepts, but Phase 3D did not activate them or use them for decisions.
+- Phase 3F changes are uncommitted at packet generation time.
+- Readiness plans and digests are deterministic in-memory structures and are not persisted by design.
+- No automatic Telegram delivery path was added; payloads remain mockable and manually invokable from services.
 
 ## Phase Boundary Confirmation
 
-- Phase 3E was not started.
+- Phase 4 was not started.
 - No strategy was added.
 - No signals were added.
 - No setup scoring or confidence scoring was added.
 - No AI agents, OpenAI calls, or LLM calls were added.
 - No broker APIs, paper trading, order execution, or real trading were added.
-- Analysis snapshots and reports produce neutral deterministic readiness structures only.
+- Telegram output remains neutral readiness reporting only.
 
 ## Traceability
 
 | Requirement | Implementation file | Test file | Verification result |
 | --- | --- | --- | --- |
-| Update project phase to Phase 3D | `app/core/constants.py` | `tests/integration/test_database_and_api.py` | Host pytest and Docker integration tests passed |
-| Typed immutable analysis models | `app/domain/entities/analysis.py` | `tests/unit/test_analysis_snapshot_foundation.py` | Host pytest passed |
-| Deterministic analysis snapshot assembly | `app/domain/analysis_engine.py` | `tests/unit/test_analysis_snapshot_foundation.py` | Host pytest passed |
-| UTC normalization and JSON serialization | `app/domain/entities/analysis.py` | `tests/unit/test_analysis_snapshot_foundation.py` | Host pytest passed |
-| Readiness status READY/INCOMPLETE/BLOCKED | `app/domain/analysis_engine.py` | `tests/unit/test_analysis_snapshot_foundation.py` | Host pytest passed |
-| No-after-as_of proof | `app/domain/analysis_engine.py` | `tests/unit/test_analysis_snapshot_foundation.py` | Host pytest passed |
-| Issue aggregation from feature/context/data-quality snapshots | `app/domain/analysis_engine.py` | `tests/unit/test_analysis_snapshot_foundation.py` | Host pytest passed |
-| Empty/small input handling | `app/domain/analysis_engine.py` | `tests/unit/test_analysis_snapshot_foundation.py` | Host pytest passed |
-| Service uses UnitOfWork/repository protocols | `app/services/analysis_service.py` | `tests/unit/test_analysis_snapshot_foundation.py` | Host pytest and mypy passed |
+| Update project phase to Phase 3F | `app/core/constants.py` | `tests/integration/test_database_and_api.py` | Host pytest and Docker integration tests passed |
+| Typed immutable readiness models | `app/domain/entities/readiness.py` | `tests/unit/test_readiness_scheduler_foundation.py` | Host pytest passed |
+| Latest closed M15/H1 window planning | `app/domain/readiness_engine.py` | `tests/unit/test_readiness_scheduler_foundation.py` | Host pytest passed |
+| Invalid lookback handling | `app/domain/entities/readiness.py`, `app/domain/readiness_engine.py` | `tests/unit/test_readiness_scheduler_foundation.py` | Host pytest passed |
+| UTC normalization and no future window leakage | `app/domain/entities/readiness.py`, `app/domain/readiness_engine.py` | `tests/unit/test_readiness_scheduler_foundation.py` | Host pytest passed |
+| Deterministic deduplication keys | `app/domain/readiness_engine.py` | `tests/unit/test_readiness_scheduler_foundation.py` | Host pytest passed |
+| Digest aggregation READY/INCOMPLETE/BLOCKED | `app/domain/readiness_engine.py` | `tests/unit/test_readiness_scheduler_foundation.py` | Host pytest passed |
+| Telegram-safe digest formatting | `app/services/readiness_digest_service.py`, `app/telegram/formatter.py` | `tests/unit/test_readiness_scheduler_foundation.py` | Host pytest passed |
+| Service uses AnalysisService and repository protocols | `app/services/readiness_digest_service.py` | `tests/unit/test_readiness_scheduler_foundation.py` | Host pytest and mypy passed |
+| Existing `/snapshot` still works | `app/telegram/commands.py`, `app/telegram/formatter.py` | `tests/unit/test_telegram_commands.py` | Host pytest passed |
 | Preserve PostgreSQL repeatability | existing repositories and integration tests | `tests/integration/test_database_and_api.py` | Docker integration tests passed twice without DB cleanup |
-| Preserve safety boundary | `app/domain/entities/analysis.py`, `app/domain/analysis_engine.py`, `app/services/analysis_service.py` | `tests/contract/test_safety_boundaries.py`, `scripts/security_check.py` | Ruff, pytest, and security check passed |
+| Preserve safety boundary | `app/domain/entities/readiness.py`, `app/domain/readiness_engine.py`, `app/services/readiness_digest_service.py` | `tests/contract/test_safety_boundaries.py`, `scripts/security_check.py` | Ruff, pytest, and security check passed |
 | Avoid new migrations | no new migration file | `docker compose run --rm migrate alembic check` | No new upgrade operations detected |
 
 ## Full Contents of Changed Source Files
@@ -769,7 +779,7 @@ volumes:
 ### `app/core/constants.py`
 
 ```python
-PROJECT_PHASE = "phase_3d_analysis_snapshot_foundation"
+PROJECT_PHASE = "phase_3f_readiness_scheduler_foundation"
 STRATEGY_IMPLEMENTED = False
 REAL_TRADING_ENABLED = False
 
@@ -832,6 +842,18 @@ from app.domain.entities.features import (
     MarketFeatureSnapshot,
 )
 from app.domain.entities.market_data import Candle, EconomicEvent, EconomicImpact, Timeframe
+from app.domain.entities.readiness import (
+    SnapshotDigest,
+    SnapshotDigestIssueCount,
+    SnapshotDigestItem,
+    SnapshotDigestStatus,
+    SnapshotNotificationDedupKey,
+    SnapshotNotificationPayload,
+    SnapshotScheduleItem,
+    SnapshotSchedulePlan,
+    SnapshotWindow,
+    digest_status_from_analysis,
+)
 
 __all__ = [
     "AnalysisInputAudit",
@@ -872,60 +894,130 @@ __all__ = [
     "MovingAverageSummary",
     "RangeContextSummary",
     "ReturnDistributionSummary",
+    "SnapshotDigest",
+    "SnapshotDigestIssueCount",
+    "SnapshotDigestItem",
+    "SnapshotDigestStatus",
+    "SnapshotNotificationDedupKey",
+    "SnapshotNotificationPayload",
+    "SnapshotScheduleItem",
+    "SnapshotSchedulePlan",
+    "SnapshotWindow",
     "TimeContextSummary",
     "Timeframe",
     "UpsertResult",
     "build_feature_snapshot",
+    "digest_status_from_analysis",
 ]
 ```
 
-### `app/domain/entities/analysis.py`
+### `app/domain/entities/readiness.py`
 
 ```python
 from datetime import datetime
-from decimal import Decimal
 from enum import StrEnum
+from typing import Self
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from app.core.time import normalize_to_utc
-from app.domain.entities.context import MarketContextSnapshot
-from app.domain.entities.features import MarketFeatureSnapshot
+from app.domain.entities.analysis import AnalysisReadinessStatus
 from app.domain.entities.market_data import Timeframe
 from app.domain.value_objects import CurrencyPair
 
 
-class AnalysisReadinessStatus(StrEnum):
+class SnapshotDigestStatus(StrEnum):
     READY = "READY"
     INCOMPLETE = "INCOMPLETE"
     BLOCKED = "BLOCKED"
 
 
-class AnalysisIssueCode(StrEnum):
-    INVALID_WINDOW = "INVALID_WINDOW"
-    NO_USABLE_CANDLES = "NO_USABLE_CANDLES"
-    NO_CANDLES = "NO_CANDLES"
-    INSUFFICIENT_CANDLES = "INSUFFICIENT_CANDLES"
-    WINDOW_NOT_ALIGNED = "WINDOW_NOT_ALIGNED"
-    CANDLE_NOT_CLOSED = "CANDLE_NOT_CLOSED"
-    CANDLE_AFTER_AS_OF = "CANDLE_AFTER_AS_OF"
-    CANDLE_OUT_OF_RANGE = "CANDLE_OUT_OF_RANGE"
-    CANDLE_PAIR_MISMATCH = "CANDLE_PAIR_MISMATCH"
-    CANDLE_TIMEFRAME_MISMATCH = "CANDLE_TIMEFRAME_MISMATCH"
-    DUPLICATE_CANDLE = "DUPLICATE_CANDLE"
-    MISSING_CANDLE = "MISSING_CANDLE"
-    EVENT_AFTER_AS_OF = "EVENT_AFTER_AS_OF"
-    EVENT_OUT_OF_RANGE = "EVENT_OUT_OF_RANGE"
-    DATA_QUALITY_ISSUE = "DATA_QUALITY_ISSUE"
-    SNAPSHOT_WINDOW_MISMATCH = "SNAPSHOT_WINDOW_MISMATCH"
+class SnapshotNotificationDedupKey(BaseModel):
+    value: str = Field(min_length=64, max_length=64)
+
+    model_config = ConfigDict(frozen=True)
 
 
-class AnalysisWindow(BaseModel):
+class SnapshotScheduleItem(BaseModel):
+    pair: CurrencyPair
+    timeframe: Timeframe
+    lookback_candle_count: int = Field(ge=1)
+    provider: str | None = None
+    currencies: tuple[str, ...] = ()
+
+    model_config = ConfigDict(frozen=True)
+
+    @field_validator("currencies")
+    @classmethod
+    def currencies_must_be_unique(cls, value: tuple[str, ...]) -> tuple[str, ...]:
+        return tuple(sorted(set(value)))
+
+
+class SnapshotWindow(BaseModel):
     pair: CurrencyPair
     timeframe: Timeframe
     window_start: datetime
     window_end: datetime
     as_of: datetime
+    lookback_candle_count: int = Field(ge=1)
+    provider: str | None = None
+    currencies: tuple[str, ...] = ()
+
+    model_config = ConfigDict(frozen=True)
+
+    @field_validator("window_start", "window_end", "as_of")
+    @classmethod
+    def timestamps_must_be_utc(cls, value: datetime) -> datetime:
+        return normalize_to_utc(value)
+
+    @model_validator(mode="after")
+    def validate_window(self) -> Self:
+        if self.window_end <= self.window_start:
+            raise ValueError("snapshot window_end must be later than window_start")
+        if self.window_end > self.as_of:
+            raise ValueError("snapshot window_end must not be later than as_of")
+        return self
+
+
+class SnapshotSchedulePlan(BaseModel):
+    project_phase: str = Field(min_length=1)
+    as_of: datetime
+    windows: tuple[SnapshotWindow, ...]
+
+    model_config = ConfigDict(frozen=True)
+
+    @field_validator("as_of")
+    @classmethod
+    def as_of_must_be_utc(cls, value: datetime) -> datetime:
+        return normalize_to_utc(value)
+
+
+class SnapshotDigestIssueCount(BaseModel):
+    source: str = Field(min_length=1)
+    code: str = Field(min_length=1)
+    count: int = Field(ge=0)
+
+    model_config = ConfigDict(frozen=True)
+
+
+class SnapshotDigestItem(BaseModel):
+    pair: CurrencyPair
+    timeframe: Timeframe
+    window_start: datetime
+    window_end: datetime
+    as_of: datetime
+    readiness_status: SnapshotDigestStatus
+    input_candle_count: int = Field(ge=0)
+    used_candle_count: int = Field(ge=0)
+    input_event_count: int = Field(ge=0)
+    used_event_count: int = Field(ge=0)
+    issue_count: int = Field(ge=0)
+    issue_counts: tuple[SnapshotDigestIssueCount, ...] = ()
+    issue_descriptions: tuple[str, ...] = ()
+    no_candles_after_as_of_used: bool
+    no_events_after_as_of_used: bool
+    snapshot_id: str = Field(min_length=64, max_length=64)
+    dedup_key: SnapshotNotificationDedupKey
 
     model_config = ConfigDict(frozen=True)
 
@@ -935,648 +1027,382 @@ class AnalysisWindow(BaseModel):
         return normalize_to_utc(value)
 
 
-class AnalysisIssue(BaseModel):
-    code: AnalysisIssueCode
-    description: str = Field(min_length=1)
-    source: str = Field(min_length=1)
-    timestamp: datetime | None = None
-
-    model_config = ConfigDict(frozen=True)
-
-    @field_validator("timestamp")
-    @classmethod
-    def timestamp_must_be_utc(cls, value: datetime | None) -> datetime | None:
-        return normalize_to_utc(value) if value is not None else None
-
-
-class AnalysisIssueCount(BaseModel):
-    source: str = Field(min_length=1)
-    code: AnalysisIssueCode
-    count: int = Field(ge=0)
-
-    model_config = ConfigDict(frozen=True)
-
-
-class AnalysisInputAudit(BaseModel):
-    requested_pair: CurrencyPair
-    requested_timeframe: Timeframe
-    provider: str | None = None
-    requested_currencies: tuple[str, ...] = ()
-    input_candle_count: int = Field(ge=0)
-    used_candle_count: int = Field(ge=0)
-    input_event_count: int = Field(ge=0)
-    used_event_count: int = Field(ge=0)
-    input_candles_after_as_of_count: int = Field(ge=0)
-    input_events_after_as_of_count: int = Field(ge=0)
-    excluded_issue_counts: tuple[AnalysisIssueCount, ...] = ()
-    as_of: datetime
-    latest_used_candle_close_time: datetime | None = None
-    latest_used_event_time: datetime | None = None
-    no_candles_after_as_of_used: bool
-    no_events_after_as_of_used: bool
-
-    model_config = ConfigDict(frozen=True)
-
-    @field_validator("as_of", "latest_used_candle_close_time", "latest_used_event_time")
-    @classmethod
-    def timestamps_must_be_utc(cls, value: datetime | None) -> datetime | None:
-        return normalize_to_utc(value) if value is not None else None
-
-
-class AnalysisSnapshotMetadata(BaseModel):
+class SnapshotDigest(BaseModel):
     project_phase: str = Field(min_length=1)
-    snapshot_id: str = Field(min_length=64, max_length=64)
-    feature_snapshot_id: str | None = Field(default=None, min_length=64, max_length=64)
-    context_snapshot_id: str | None = Field(default=None, min_length=64, max_length=64)
-    built_at: datetime
-    source_layer: str = Field(min_length=1)
-
-    model_config = ConfigDict(frozen=True)
-
-    @field_validator("built_at")
-    @classmethod
-    def built_at_must_be_utc(cls, value: datetime) -> datetime:
-        return normalize_to_utc(value)
-
-
-class AnalysisSnapshot(BaseModel):
-    window: AnalysisWindow
-    metadata: AnalysisSnapshotMetadata
-    input_audit: AnalysisInputAudit
-    readiness_status: AnalysisReadinessStatus
-    readiness_issues: tuple[AnalysisIssue, ...] = ()
-    feature_snapshot: MarketFeatureSnapshot | None = None
-    context_snapshot: MarketContextSnapshot | None = None
-
-    model_config = ConfigDict(frozen=True)
-
-
-class AnalysisReport(BaseModel):
-    snapshot: AnalysisSnapshot
-    ready_for_review: bool
-    issue_count: int = Field(ge=0)
-    used_candle_count: int = Field(ge=0)
-    used_event_count: int = Field(ge=0)
     generated_at: datetime
+    as_of: datetime
+    readiness_status: SnapshotDigestStatus
+    items: tuple[SnapshotDigestItem, ...]
+    ready_count: int = Field(ge=0)
+    incomplete_count: int = Field(ge=0)
+    blocked_count: int = Field(ge=0)
+    dedup_key: SnapshotNotificationDedupKey
 
     model_config = ConfigDict(frozen=True)
 
-    @field_validator("generated_at")
+    @field_validator("generated_at", "as_of")
     @classmethod
-    def generated_at_must_be_utc(cls, value: datetime) -> datetime:
+    def timestamps_must_be_utc(cls, value: datetime) -> datetime:
         return normalize_to_utc(value)
 
 
-class AnalysisNumericSummary(BaseModel):
-    value: Decimal | None = None
+class SnapshotNotificationPayload(BaseModel):
+    project_phase: str = Field(min_length=1)
+    dedup_key: SnapshotNotificationDedupKey
+    digest: SnapshotDigest
+    text: str = Field(min_length=1)
 
     model_config = ConfigDict(frozen=True)
+
+
+def digest_status_from_analysis(status: AnalysisReadinessStatus) -> SnapshotDigestStatus:
+    return SnapshotDigestStatus(status.value)
 ```
 
-### `app/domain/analysis_engine.py`
+### `app/domain/readiness_engine.py`
 
 ```python
 import hashlib
 import json
-from collections import Counter
 from collections.abc import Sequence
 from datetime import datetime
 
-from pydantic import BaseModel
-
 from app.core import constants
 from app.core.time import normalize_to_utc
-from app.domain.context_engine import MarketContextEngine
-from app.domain.entities.analysis import (
-    AnalysisInputAudit,
-    AnalysisIssue,
-    AnalysisIssueCode,
-    AnalysisIssueCount,
-    AnalysisReadinessStatus,
-    AnalysisReport,
-    AnalysisSnapshot,
-    AnalysisSnapshotMetadata,
-    AnalysisWindow,
+from app.domain.entities.analysis import AnalysisSnapshot
+from app.domain.entities.data_quality import TIMEFRAME_TO_DELTA
+from app.domain.entities.market_data import Timeframe
+from app.domain.entities.readiness import (
+    SnapshotDigest,
+    SnapshotDigestIssueCount,
+    SnapshotDigestItem,
+    SnapshotDigestStatus,
+    SnapshotNotificationDedupKey,
+    SnapshotScheduleItem,
+    SnapshotSchedulePlan,
+    SnapshotWindow,
+    digest_status_from_analysis,
 )
-from app.domain.entities.context import ContextIssue, MarketContextSnapshot
-from app.domain.entities.data_quality import DataQualityIssue
-from app.domain.entities.features import FeatureIssue, MarketFeatureSnapshot
-from app.domain.entities.market_data import Candle, EconomicEvent, Timeframe
-from app.domain.value_objects import CurrencyPair
 
 
-class AnalysisEngine:
-    def __init__(self, *, context_engine: MarketContextEngine | None = None) -> None:
-        self._context_engine = context_engine or MarketContextEngine()
-
-    def build_snapshot(
+class SnapshotReadinessPlanner:
+    def build_plan(
         self,
         *,
-        pair: CurrencyPair,
-        timeframe: Timeframe,
-        window_start: datetime,
-        window_end: datetime,
+        items: Sequence[SnapshotScheduleItem],
         as_of: datetime,
-        candles: Sequence[Candle] = (),
-        economic_events: Sequence[EconomicEvent] = (),
-        currencies: Sequence[str] | None = None,
-        provider: str | None = None,
-        feature_snapshot: MarketFeatureSnapshot | None = None,
-        context_snapshot: MarketContextSnapshot | None = None,
-        moving_average_windows: Sequence[int] = (3, 5),
-    ) -> AnalysisSnapshot:
-        window = AnalysisWindow(
-            pair=pair,
-            timeframe=timeframe,
-            window_start=window_start,
-            window_end=window_end,
-            as_of=as_of,
+    ) -> SnapshotSchedulePlan:
+        if not items:
+            raise ValueError("at least one schedule item is required")
+        as_of_utc = normalize_to_utc(as_of)
+        windows = tuple(
+            _window_for_item(item=item, as_of=as_of_utc)
+            for item in sorted(items, key=lambda value: (value.pair.value, value.timeframe.value))
         )
-        requested_currencies = _requested_currencies(pair=pair, currencies=currencies)
-        invalid_window_issue = _invalid_window_issue(window)
-        if invalid_window_issue is None and context_snapshot is None:
-            context_snapshot = self._context_engine.build_snapshot(
-                pair=pair,
-                timeframe=timeframe,
-                window_start=window.window_start,
-                window_end=window.window_end,
-                as_of=window.as_of,
-                candles=candles,
-                economic_events=economic_events,
-                moving_average_windows=moving_average_windows,
+        return SnapshotSchedulePlan(
+            project_phase=constants.PROJECT_PHASE,
+            as_of=as_of_utc,
+            windows=windows,
+        )
+
+
+class SnapshotDigestBuilder:
+    def build_digest(
+        self,
+        *,
+        snapshots: Sequence[AnalysisSnapshot],
+        generated_at: datetime,
+        as_of: datetime,
+    ) -> SnapshotDigest:
+        if not snapshots:
+            raise ValueError("at least one snapshot is required")
+        generated_at_utc = normalize_to_utc(generated_at)
+        as_of_utc = normalize_to_utc(as_of)
+        items = tuple(
+            _digest_item(snapshot)
+            for snapshot in sorted(
+                snapshots,
+                key=lambda value: (value.window.pair.value, value.window.timeframe.value),
             )
-        if context_snapshot is not None and feature_snapshot is None:
-            feature_snapshot = context_snapshot.feature_snapshot
-
-        issues = _analysis_issues(
-            window=window,
-            invalid_window_issue=invalid_window_issue,
-            feature_snapshot=feature_snapshot,
-            context_snapshot=context_snapshot,
         )
-        input_audit = _input_audit(
-            window=window,
-            provider=provider,
-            requested_currencies=requested_currencies,
-            candles=candles,
-            economic_events=economic_events,
-            feature_snapshot=feature_snapshot,
-            context_snapshot=context_snapshot,
-            issues=issues,
+        ready_count = sum(
+            1 for item in items if item.readiness_status == SnapshotDigestStatus.READY
         )
-        readiness_status = _readiness_status(issues=issues, input_audit=input_audit)
-        metadata = _metadata(
-            window=window,
-            input_audit=input_audit,
-            issues=issues,
+        incomplete_count = sum(
+            1 for item in items if item.readiness_status == SnapshotDigestStatus.INCOMPLETE
+        )
+        blocked_count = sum(
+            1 for item in items if item.readiness_status == SnapshotDigestStatus.BLOCKED
+        )
+        readiness_status = _combined_status(items)
+        dedup_key = SnapshotNotificationDedupKey(
+            value=_hash_payload(
+                {
+                    "project_phase": constants.PROJECT_PHASE,
+                    "as_of": as_of_utc.isoformat(),
+                    "items": [item.dedup_key.value for item in items],
+                    "status": readiness_status.value,
+                }
+            )
+        )
+        return SnapshotDigest(
+            project_phase=constants.PROJECT_PHASE,
+            generated_at=generated_at_utc,
+            as_of=as_of_utc,
             readiness_status=readiness_status,
-            feature_snapshot=feature_snapshot,
-            context_snapshot=context_snapshot,
-        )
-        return AnalysisSnapshot(
-            window=window,
-            metadata=metadata,
-            input_audit=input_audit,
-            readiness_status=readiness_status,
-            readiness_issues=issues,
-            feature_snapshot=feature_snapshot,
-            context_snapshot=context_snapshot,
-        )
-
-    def build_report(
-        self,
-        *,
-        pair: CurrencyPair,
-        timeframe: Timeframe,
-        window_start: datetime,
-        window_end: datetime,
-        as_of: datetime,
-        candles: Sequence[Candle] = (),
-        economic_events: Sequence[EconomicEvent] = (),
-        currencies: Sequence[str] | None = None,
-        provider: str | None = None,
-        feature_snapshot: MarketFeatureSnapshot | None = None,
-        context_snapshot: MarketContextSnapshot | None = None,
-        moving_average_windows: Sequence[int] = (3, 5),
-    ) -> AnalysisReport:
-        snapshot = self.build_snapshot(
-            pair=pair,
-            timeframe=timeframe,
-            window_start=window_start,
-            window_end=window_end,
-            as_of=as_of,
-            candles=candles,
-            economic_events=economic_events,
-            currencies=currencies,
-            provider=provider,
-            feature_snapshot=feature_snapshot,
-            context_snapshot=context_snapshot,
-            moving_average_windows=moving_average_windows,
-        )
-        return AnalysisReport(
-            snapshot=snapshot,
-            ready_for_review=snapshot.readiness_status == AnalysisReadinessStatus.READY,
-            issue_count=len(snapshot.readiness_issues),
-            used_candle_count=snapshot.input_audit.used_candle_count,
-            used_event_count=snapshot.input_audit.used_event_count,
-            generated_at=snapshot.window.as_of,
+            items=items,
+            ready_count=ready_count,
+            incomplete_count=incomplete_count,
+            blocked_count=blocked_count,
+            dedup_key=dedup_key,
         )
 
 
-def _requested_currencies(
-    *,
-    pair: CurrencyPair,
-    currencies: Sequence[str] | None,
-) -> tuple[str, ...]:
-    if currencies is None:
-        return (pair.base_currency, pair.quote_currency)
-    return tuple(sorted(set(currencies)))
+def latest_closed_boundary(*, timeframe: Timeframe, as_of: datetime) -> datetime:
+    as_of_utc = normalize_to_utc(as_of)
+    if timeframe == Timeframe.M15:
+        minute = (as_of_utc.minute // 15) * 15
+        return as_of_utc.replace(minute=minute, second=0, microsecond=0)
+    if timeframe == Timeframe.H1:
+        return as_of_utc.replace(minute=0, second=0, microsecond=0)
+    raise ValueError(f"unsupported timeframe: {timeframe.value}")
 
 
-def _invalid_window_issue(window: AnalysisWindow) -> AnalysisIssue | None:
-    if window.window_end > window.window_start:
-        return None
-    return AnalysisIssue(
-        code=AnalysisIssueCode.INVALID_WINDOW,
-        description="Analysis window end must be later than analysis window start.",
-        source="analysis",
-        timestamp=window.window_start,
+def _window_for_item(*, item: SnapshotScheduleItem, as_of: datetime) -> SnapshotWindow:
+    if item.lookback_candle_count < 1:
+        raise ValueError("lookback_candle_count must be at least 1")
+    window_end = latest_closed_boundary(timeframe=item.timeframe, as_of=as_of)
+    delta = TIMEFRAME_TO_DELTA[item.timeframe]
+    window_start = window_end - (item.lookback_candle_count * delta)
+    return SnapshotWindow(
+        pair=item.pair,
+        timeframe=item.timeframe,
+        window_start=window_start,
+        window_end=window_end,
+        as_of=as_of,
+        lookback_candle_count=item.lookback_candle_count,
+        provider=item.provider,
+        currencies=item.currencies,
     )
 
 
-def _analysis_issues(
-    *,
-    window: AnalysisWindow,
-    invalid_window_issue: AnalysisIssue | None,
-    feature_snapshot: MarketFeatureSnapshot | None,
-    context_snapshot: MarketContextSnapshot | None,
-) -> tuple[AnalysisIssue, ...]:
-    issues: list[AnalysisIssue] = []
-    if invalid_window_issue is not None:
-        issues.append(invalid_window_issue)
-    if feature_snapshot is not None:
-        issues.extend(_feature_issues(feature_snapshot.quality_issues))
-        issues.extend(_data_quality_issues(feature_snapshot.data_quality_issues))
-        issues.extend(_feature_window_issues(window=window, snapshot=feature_snapshot))
-    if context_snapshot is not None:
-        issues.extend(_context_issues(context_snapshot.context_issues))
-        issues.extend(_context_window_issues(window=window, snapshot=context_snapshot))
-    return tuple(issues)
-
-
-def _feature_issues(issues: Sequence[FeatureIssue]) -> tuple[AnalysisIssue, ...]:
-    return tuple(
-        AnalysisIssue(
-            code=_analysis_code(issue.code.name),
-            description=issue.description,
-            source="feature",
-            timestamp=issue.timestamp,
+def _digest_item(snapshot: AnalysisSnapshot) -> SnapshotDigestItem:
+    status = digest_status_from_analysis(snapshot.readiness_status)
+    audit = snapshot.input_audit
+    issue_counts = tuple(
+        SnapshotDigestIssueCount(
+            source=item.source,
+            code=item.code.value,
+            count=item.count,
         )
-        for issue in issues
+        for item in audit.excluded_issue_counts
     )
-
-
-def _context_issues(issues: Sequence[ContextIssue]) -> tuple[AnalysisIssue, ...]:
-    return tuple(
-        AnalysisIssue(
-            code=_analysis_code(issue.code.name),
-            description=issue.description,
-            source="context",
-            timestamp=issue.timestamp,
+    issue_descriptions = tuple(issue.description for issue in snapshot.readiness_issues[:5])
+    dedup_key = SnapshotNotificationDedupKey(
+        value=_hash_payload(
+            {
+                "project_phase": constants.PROJECT_PHASE,
+                "pair": snapshot.window.pair.value,
+                "timeframe": snapshot.window.timeframe.value,
+                "window_start": snapshot.window.window_start.isoformat(),
+                "window_end": snapshot.window.window_end.isoformat(),
+                "as_of": snapshot.window.as_of.isoformat(),
+                "snapshot_id": snapshot.metadata.snapshot_id,
+                "status": status.value,
+            }
         )
-        for issue in issues
+    )
+    return SnapshotDigestItem(
+        pair=snapshot.window.pair,
+        timeframe=snapshot.window.timeframe,
+        window_start=snapshot.window.window_start,
+        window_end=snapshot.window.window_end,
+        as_of=snapshot.window.as_of,
+        readiness_status=status,
+        input_candle_count=audit.input_candle_count,
+        used_candle_count=audit.used_candle_count,
+        input_event_count=audit.input_event_count,
+        used_event_count=audit.used_event_count,
+        issue_count=len(snapshot.readiness_issues),
+        issue_counts=issue_counts,
+        issue_descriptions=issue_descriptions,
+        no_candles_after_as_of_used=audit.no_candles_after_as_of_used,
+        no_events_after_as_of_used=audit.no_events_after_as_of_used,
+        snapshot_id=snapshot.metadata.snapshot_id,
+        dedup_key=dedup_key,
     )
 
 
-def _data_quality_issues(issues: Sequence[DataQualityIssue]) -> tuple[AnalysisIssue, ...]:
-    return tuple(
-        AnalysisIssue(
-            code=_analysis_code(issue.code.name),
-            description=issue.description,
-            source="data_quality",
-            timestamp=issue.timestamp,
-        )
-        for issue in issues
-    )
+def _combined_status(items: Sequence[SnapshotDigestItem]) -> SnapshotDigestStatus:
+    if any(item.readiness_status == SnapshotDigestStatus.BLOCKED for item in items):
+        return SnapshotDigestStatus.BLOCKED
+    if any(item.readiness_status == SnapshotDigestStatus.INCOMPLETE for item in items):
+        return SnapshotDigestStatus.INCOMPLETE
+    return SnapshotDigestStatus.READY
 
 
-def _feature_window_issues(
-    *,
-    window: AnalysisWindow,
-    snapshot: MarketFeatureSnapshot,
-) -> tuple[AnalysisIssue, ...]:
-    if (
-        snapshot.window.pair == window.pair
-        and snapshot.window.timeframe == window.timeframe
-        and snapshot.window.window_start == window.window_start
-        and snapshot.window.window_end == window.window_end
-        and snapshot.window.as_of == window.as_of
-    ):
-        return ()
-    return (
-        AnalysisIssue(
-            code=AnalysisIssueCode.SNAPSHOT_WINDOW_MISMATCH,
-            description="Feature snapshot window does not match the requested analysis window.",
-            source="analysis",
-        ),
-    )
-
-
-def _context_window_issues(
-    *,
-    window: AnalysisWindow,
-    snapshot: MarketContextSnapshot,
-) -> tuple[AnalysisIssue, ...]:
-    if (
-        snapshot.window.pair == window.pair
-        and snapshot.window.timeframe == window.timeframe
-        and snapshot.window.window_start == window.window_start
-        and snapshot.window.window_end == window.window_end
-        and snapshot.window.as_of == window.as_of
-    ):
-        return ()
-    return (
-        AnalysisIssue(
-            code=AnalysisIssueCode.SNAPSHOT_WINDOW_MISMATCH,
-            description="Context snapshot window does not match the requested analysis window.",
-            source="analysis",
-        ),
-    )
-
-
-def _input_audit(
-    *,
-    window: AnalysisWindow,
-    provider: str | None,
-    requested_currencies: tuple[str, ...],
-    candles: Sequence[Candle],
-    economic_events: Sequence[EconomicEvent],
-    feature_snapshot: MarketFeatureSnapshot | None,
-    context_snapshot: MarketContextSnapshot | None,
-    issues: Sequence[AnalysisIssue],
-) -> AnalysisInputAudit:
-    used_candle_count = (
-        feature_snapshot.candle_summary.used_candle_count if feature_snapshot is not None else 0
-    )
-    used_event_count = (
-        feature_snapshot.economic_event_summary.used_event_count
-        if feature_snapshot is not None
-        else 0
-    )
-    latest_used_candle_close_time = (
-        feature_snapshot.candle_summary.latest_candle_close_time
-        if feature_snapshot is not None
-        else None
-    )
-    latest_used_event_time = (
-        context_snapshot.event_context.latest_event_time if context_snapshot is not None else None
-    )
-    return AnalysisInputAudit(
-        requested_pair=window.pair,
-        requested_timeframe=window.timeframe,
-        provider=provider,
-        requested_currencies=requested_currencies,
-        input_candle_count=_input_candle_count(candles, feature_snapshot),
-        used_candle_count=used_candle_count,
-        input_event_count=_input_event_count(economic_events, feature_snapshot),
-        used_event_count=used_event_count,
-        input_candles_after_as_of_count=sum(
-            1 for candle in candles if candle.close_time > window.as_of
-        ),
-        input_events_after_as_of_count=sum(
-            1 for event in economic_events if event.scheduled_at > window.as_of
-        ),
-        excluded_issue_counts=_issue_counts(issues),
-        as_of=window.as_of,
-        latest_used_candle_close_time=latest_used_candle_close_time,
-        latest_used_event_time=latest_used_event_time,
-        no_candles_after_as_of_used=_not_after(latest_used_candle_close_time, window.as_of),
-        no_events_after_as_of_used=_not_after(latest_used_event_time, window.as_of),
-    )
-
-
-def _input_candle_count(
-    candles: Sequence[Candle],
-    feature_snapshot: MarketFeatureSnapshot | None,
-) -> int:
-    if candles:
-        return len(candles)
-    if feature_snapshot is not None:
-        return feature_snapshot.candle_summary.input_candle_count
-    return 0
-
-
-def _input_event_count(
-    economic_events: Sequence[EconomicEvent],
-    feature_snapshot: MarketFeatureSnapshot | None,
-) -> int:
-    if economic_events:
-        return len(economic_events)
-    if feature_snapshot is not None:
-        return feature_snapshot.economic_event_summary.input_event_count
-    return 0
-
-
-def _issue_counts(issues: Sequence[AnalysisIssue]) -> tuple[AnalysisIssueCount, ...]:
-    counts = Counter((issue.source, issue.code) for issue in issues)
-    return tuple(
-        AnalysisIssueCount(source=source, code=code, count=counts[(source, code)])
-        for source, code in sorted(counts, key=lambda item: (item[0], item[1].value))
-    )
-
-
-def _not_after(value: datetime | None, as_of: datetime) -> bool:
-    return value is None or normalize_to_utc(value) <= normalize_to_utc(as_of)
-
-
-def _readiness_status(
-    *,
-    issues: Sequence[AnalysisIssue],
-    input_audit: AnalysisInputAudit,
-) -> AnalysisReadinessStatus:
-    if _has_blocking_issue(issues) or input_audit.used_candle_count == 0:
-        return AnalysisReadinessStatus.BLOCKED
-    if issues:
-        return AnalysisReadinessStatus.INCOMPLETE
-    return AnalysisReadinessStatus.READY
-
-
-def _has_blocking_issue(issues: Sequence[AnalysisIssue]) -> bool:
-    blocking_codes = {
-        AnalysisIssueCode.INVALID_WINDOW,
-        AnalysisIssueCode.NO_USABLE_CANDLES,
-        AnalysisIssueCode.NO_CANDLES,
-        AnalysisIssueCode.CANDLE_AFTER_AS_OF,
-        AnalysisIssueCode.EVENT_AFTER_AS_OF,
-        AnalysisIssueCode.CANDLE_PAIR_MISMATCH,
-        AnalysisIssueCode.CANDLE_TIMEFRAME_MISMATCH,
-        AnalysisIssueCode.DUPLICATE_CANDLE,
-        AnalysisIssueCode.SNAPSHOT_WINDOW_MISMATCH,
-    }
-    return any(issue.code in blocking_codes for issue in issues)
-
-
-def _metadata(
-    *,
-    window: AnalysisWindow,
-    input_audit: AnalysisInputAudit,
-    issues: Sequence[AnalysisIssue],
-    readiness_status: AnalysisReadinessStatus,
-    feature_snapshot: MarketFeatureSnapshot | None,
-    context_snapshot: MarketContextSnapshot | None,
-) -> AnalysisSnapshotMetadata:
-    feature_snapshot_id = _model_hash(feature_snapshot)
-    context_snapshot_id = _model_hash(context_snapshot)
-    snapshot_id = _hash_json(
-        {
-            "window": window.model_dump(mode="json"),
-            "input_audit": input_audit.model_dump(mode="json"),
-            "issues": [issue.model_dump(mode="json") for issue in issues],
-            "readiness_status": readiness_status.value,
-            "feature_snapshot_id": feature_snapshot_id,
-            "context_snapshot_id": context_snapshot_id,
-        }
-    )
-    return AnalysisSnapshotMetadata(
-        project_phase=constants.PROJECT_PHASE,
-        snapshot_id=snapshot_id,
-        feature_snapshot_id=feature_snapshot_id,
-        context_snapshot_id=context_snapshot_id,
-        built_at=window.as_of,
-        source_layer="phase_3d_analysis_snapshot_foundation",
-    )
-
-
-def _analysis_code(name: str) -> AnalysisIssueCode:
-    if name in AnalysisIssueCode.__members__:
-        return AnalysisIssueCode[name]
-    return AnalysisIssueCode.DATA_QUALITY_ISSUE
-
-
-def _model_hash(model: BaseModel | None) -> str | None:
-    if model is None:
-        return None
-    return _hash_json(model.model_dump(mode="json"))
-
-
-def _hash_json(payload: object) -> str:
+def _hash_payload(payload: object) -> str:
     canonical = json.dumps(payload, sort_keys=True, separators=(",", ":"))
     return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
 ```
 
-### `app/services/analysis_service.py`
+### `app/services/readiness_digest_service.py`
 
 ```python
-from collections.abc import Callable, Sequence
+from collections.abc import Sequence
 from datetime import datetime
 
-from app.core.exceptions import NotImplementedFeatureError
-from app.domain.analysis_engine import AnalysisEngine
-from app.domain.entities import Timeframe
-from app.domain.entities.analysis import AnalysisReport, AnalysisSnapshot
-from app.domain.interfaces.unit_of_work import UnitOfWork
-from app.domain.value_objects import CurrencyPair
+from app.core import constants
+from app.domain.entities.readiness import (
+    SnapshotDigest,
+    SnapshotNotificationPayload,
+    SnapshotScheduleItem,
+)
+from app.domain.readiness_engine import SnapshotDigestBuilder, SnapshotReadinessPlanner
+from app.services.analysis_service import AnalysisService
 
-UnitOfWorkFactory = Callable[[], UnitOfWork]
 
-
-class AnalysisService:
+class ReadinessDigestService:
     def __init__(
         self,
-        uow_factory: UnitOfWorkFactory | None = None,
+        analysis_service: AnalysisService,
         *,
-        engine: AnalysisEngine | None = None,
+        planner: SnapshotReadinessPlanner | None = None,
+        digest_builder: SnapshotDigestBuilder | None = None,
     ) -> None:
-        self._uow_factory = uow_factory
-        self._engine = engine or AnalysisEngine()
+        self._analysis_service = analysis_service
+        self._planner = planner or SnapshotReadinessPlanner()
+        self._digest_builder = digest_builder or SnapshotDigestBuilder()
 
-    async def build_snapshot(
+    async def build_digest(
         self,
         *,
-        pair: CurrencyPair,
-        timeframe: Timeframe,
-        window_start: datetime,
-        window_end: datetime,
+        items: Sequence[SnapshotScheduleItem],
         as_of: datetime,
-        currencies: Sequence[str] | None = None,
-        provider: str | None = None,
-        moving_average_windows: Sequence[int] = (3, 5),
-    ) -> AnalysisSnapshot:
-        event_currencies = (
-            list(currencies)
-            if currencies is not None
-            else [
-                pair.base_currency,
-                pair.quote_currency,
-            ]
-        )
-        if self._uow_factory is None:
-            raise ValueError("unit of work factory is required")
-        async with self._uow_factory() as uow:
-            candles = await uow.candles.list_range(
-                pair=pair,
-                timeframe=timeframe,
-                start_at=window_start,
-                end_at=window_end,
-                provider=provider,
+    ) -> SnapshotDigest:
+        plan = self._planner.build_plan(items=items, as_of=as_of)
+        snapshots = []
+        for window in plan.windows:
+            snapshots.append(
+                await self._analysis_service.build_snapshot(
+                    pair=window.pair,
+                    timeframe=window.timeframe,
+                    window_start=window.window_start,
+                    window_end=window.window_end,
+                    as_of=window.as_of,
+                    currencies=window.currencies or None,
+                    provider=window.provider,
+                )
             )
-            events = await uow.economic_events.list_window(
-                start_at=window_start,
-                end_at=window_end,
-                currencies=event_currencies,
-                provider=provider,
-            )
-        return self._engine.build_snapshot(
-            pair=pair,
-            timeframe=timeframe,
-            window_start=window_start,
-            window_end=window_end,
-            as_of=as_of,
-            candles=candles,
-            economic_events=events,
-            currencies=event_currencies,
-            provider=provider,
-            moving_average_windows=moving_average_windows,
+        return self._digest_builder.build_digest(
+            snapshots=snapshots,
+            generated_at=plan.as_of,
+            as_of=plan.as_of,
         )
 
-    async def build_report(
+    async def build_payload(
         self,
         *,
-        pair: CurrencyPair,
-        timeframe: Timeframe,
-        window_start: datetime,
-        window_end: datetime,
+        items: Sequence[SnapshotScheduleItem],
         as_of: datetime,
-        currencies: Sequence[str] | None = None,
-        provider: str | None = None,
-        moving_average_windows: Sequence[int] = (3, 5),
-    ) -> AnalysisReport:
-        snapshot = await self.build_snapshot(
-            pair=pair,
-            timeframe=timeframe,
-            window_start=window_start,
-            window_end=window_end,
-            as_of=as_of,
-            currencies=currencies,
-            provider=provider,
-            moving_average_windows=moving_average_windows,
-        )
-        return AnalysisReport(
-            snapshot=snapshot,
-            ready_for_review=snapshot.readiness_status.value == "READY",
-            issue_count=len(snapshot.readiness_issues),
-            used_candle_count=snapshot.input_audit.used_candle_count,
-            used_event_count=snapshot.input_audit.used_event_count,
-            generated_at=snapshot.window.as_of,
+    ) -> SnapshotNotificationPayload:
+        digest = await self.build_digest(items=items, as_of=as_of)
+        return SnapshotNotificationPayload(
+            project_phase=constants.PROJECT_PHASE,
+            dedup_key=digest.dedup_key,
+            digest=digest,
+            text=readiness_digest_text(digest),
         )
 
-    async def scan_now(self) -> None:
-        raise NotImplementedFeatureError("analysis_engine")
+
+def readiness_digest_text(digest: SnapshotDigest) -> str:
+    lines = [
+        "Системный отчёт готовности.",
+        f"Статус: {digest.readiness_status.value}.",
+        "Элементы:",
+    ]
+    for item in digest.items:
+        lines.append(
+            f"- {item.pair.value} {item.timeframe.value}: {item.readiness_status.value}, "
+            f"свечи {item.used_candle_count}/{item.input_candle_count}, "
+            f"проблемы {item.issue_count}"
+        )
+    lines.append("Решений и указаний нет.")
+    return "\n".join(lines)
+```
+
+### `app/telegram/formatter.py`
+
+```python
+import re
+
+from app.core.enums import MessageType
+from app.core.exceptions import MessageFormatInvalidError, RussianTextInvalidError
+from app.domain.entities.analysis import AnalysisReadinessStatus, AnalysisSnapshot
+from app.domain.entities.readiness import SnapshotDigest
+from app.services.readiness_digest_service import readiness_digest_text
+from app.telegram.emoji_policy import EMOJI_BY_MESSAGE_TYPE, validate_telegram_emoji
+
+CYRILLIC_RE = re.compile(r"[А-Яа-яЁё]")  # noqa: RUF001
+
+
+def validate_russian_foundation_text(text: str) -> None:
+    body = text.strip()
+    if not body:
+        raise RussianTextInvalidError("Текст сообщения не должен быть пустым.")
+    if not CYRILLIC_RE.search(body):
+        raise RussianTextInvalidError("Сообщение выглядит как английский-only текст.")
+
+
+class TelegramFormatter:
+    def format(self, message_type: MessageType, body_ru: str) -> str:
+        validate_russian_foundation_text(body_ru)
+        if any(emoji in body_ru for emoji in EMOJI_BY_MESSAGE_TYPE.values()):
+            raise MessageFormatInvalidError("Сервисы не должны вставлять эмодзи в тело сообщения.")
+        text = f"{EMOJI_BY_MESSAGE_TYPE[message_type]} {body_ru.strip()}"
+        validate_telegram_emoji(message_type, text)
+        return text
+
+    def format_analysis_readiness_body(self, snapshot: AnalysisSnapshot) -> str:
+        status_ru = {
+            AnalysisReadinessStatus.READY: "готово",
+            AnalysisReadinessStatus.INCOMPLETE: "неполные данные",
+            AnalysisReadinessStatus.BLOCKED: "заблокировано",
+        }[snapshot.readiness_status]
+        audit = snapshot.input_audit
+        future_data_status = (
+            "пройдена"
+            if audit.no_candles_after_as_of_used and audit.no_events_after_as_of_used
+            else "требует проверки"
+        )
+        issue_summary = _issue_summary(snapshot)
+        return (
+            f"Отчёт готовности {snapshot.window.pair.value} {snapshot.window.timeframe.value}.\n"
+            f"Статус: {status_ru}.\n"
+            f"Свечей использовано: {audit.used_candle_count} из {audit.input_candle_count}.\n"
+            f"Событий календаря: {audit.used_event_count} из {audit.input_event_count}.\n"
+            f"Проверка будущих данных: {future_data_status}.\n"
+            f"Проблемы: {issue_summary}.\n"
+            f"Снимок: {snapshot.metadata.snapshot_id[:12]}.\n"
+            "Только отчёт готовности; торговых действий нет."
+        )
+
+    def format_snapshot_digest_body(self, digest: SnapshotDigest) -> str:
+        return readiness_digest_text(digest)
+
+
+def _issue_summary(snapshot: AnalysisSnapshot) -> str:
+    if not snapshot.input_audit.excluded_issue_counts:
+        return "не обнаружены"
+    return "; ".join(
+        f"{item.source}/{item.code.value}: {item.count}"
+        for item in snapshot.input_audit.excluded_issue_counts[:5]
+    )
 ```
 
 ## Migration Contents
 
-No new migration was added for Phase 3D. Existing migration contents are included below.
+No new migration was added for Phase 3F. Existing migration contents are included below.
 
 ### `migrations/versions/0001_foundation_schema.py`
 
@@ -1926,6 +1752,229 @@ def downgrade() -> None:
 
 ## New and Modified Tests
 
+### `tests/unit/test_readiness_scheduler_foundation.py`
+
+```python
+from datetime import UTC, datetime, timedelta, timezone
+from decimal import Decimal
+
+import pytest
+from pydantic import ValidationError
+
+from app.core import constants
+from app.core.enums import MessageType
+from app.domain.analysis_engine import AnalysisEngine
+from app.domain.entities import Candle, Timeframe
+from app.domain.entities.readiness import (
+    SnapshotDigestStatus,
+    SnapshotScheduleItem,
+)
+from app.domain.readiness_engine import (
+    SnapshotDigestBuilder,
+    SnapshotReadinessPlanner,
+    latest_closed_boundary,
+)
+from app.domain.value_objects import CurrencyPair
+from app.services.analysis_service import AnalysisService
+from app.services.readiness_digest_service import ReadinessDigestService
+from app.telegram.formatter import TelegramFormatter
+from tests.fakes import FakeUnitOfWorkFactory
+
+PAIR = CurrencyPair(value="EURUSD")
+BASE_TIME = datetime(2026, 7, 15, 8, 0, tzinfo=UTC)
+
+
+def _schedule_item(
+    *,
+    timeframe: Timeframe = Timeframe.M15,
+    lookback_candle_count: int = 3,
+) -> SnapshotScheduleItem:
+    return SnapshotScheduleItem(
+        pair=PAIR,
+        timeframe=timeframe,
+        lookback_candle_count=lookback_candle_count,
+    )
+
+
+def _candle(index: int, *, timeframe: Timeframe = Timeframe.M15) -> Candle:
+    step = timedelta(minutes=15) if timeframe == Timeframe.M15 else timedelta(hours=1)
+    open_time = BASE_TIME + (index * step)
+    open_price = Decimal("1.1000") + (Decimal("0.0001") * Decimal(index))
+    close_price = open_price + Decimal("0.0001")
+    return Candle(
+        provider="readiness-test",
+        pair=PAIR,
+        timeframe=timeframe,
+        open_time=open_time,
+        close_time=open_time + step,
+        open=open_price,
+        high=close_price + Decimal("0.0002"),
+        low=open_price - Decimal("0.0002"),
+        close=close_price,
+        volume=Decimal("100"),
+        is_closed=True,
+    )
+
+
+def _snapshot(candles: list[Candle]):
+    return AnalysisEngine().build_snapshot(
+        pair=PAIR,
+        timeframe=Timeframe.M15,
+        window_start=BASE_TIME,
+        window_end=BASE_TIME + timedelta(minutes=45),
+        as_of=BASE_TIME + timedelta(minutes=45),
+        candles=candles,
+        economic_events=[],
+        moving_average_windows=(3,),
+    )
+
+
+def test_latest_closed_boundary_uses_existing_timeframes() -> None:
+    as_of = datetime(2026, 7, 15, 10, 37, 12, tzinfo=UTC)
+
+    assert latest_closed_boundary(timeframe=Timeframe.M15, as_of=as_of) == datetime(
+        2026, 7, 15, 10, 30, tzinfo=UTC
+    )
+    assert latest_closed_boundary(timeframe=Timeframe.H1, as_of=as_of) == datetime(
+        2026, 7, 15, 10, 0, tzinfo=UTC
+    )
+
+
+def test_planner_builds_deterministic_m15_and_h1_windows() -> None:
+    planner = SnapshotReadinessPlanner()
+    as_of = datetime(2026, 7, 15, 10, 37, tzinfo=UTC)
+
+    plan = planner.build_plan(
+        items=[
+            _schedule_item(timeframe=Timeframe.H1, lookback_candle_count=2),
+            _schedule_item(timeframe=Timeframe.M15, lookback_candle_count=4),
+        ],
+        as_of=as_of,
+    )
+
+    assert plan.project_phase == constants.PROJECT_PHASE
+    assert [window.timeframe for window in plan.windows] == [Timeframe.H1, Timeframe.M15]
+    assert plan.windows[0].window_start == datetime(2026, 7, 15, 8, 0, tzinfo=UTC)
+    assert plan.windows[0].window_end == datetime(2026, 7, 15, 10, 0, tzinfo=UTC)
+    assert plan.windows[1].window_start == datetime(2026, 7, 15, 9, 30, tzinfo=UTC)
+    assert plan.windows[1].window_end == datetime(2026, 7, 15, 10, 30, tzinfo=UTC)
+    assert plan.model_dump(mode="json") == planner.build_plan(
+        items=[
+            _schedule_item(timeframe=Timeframe.H1, lookback_candle_count=2),
+            _schedule_item(timeframe=Timeframe.M15, lookback_candle_count=4),
+        ],
+        as_of=as_of,
+    ).model_dump(mode="json")
+
+
+def test_invalid_lookback_is_rejected() -> None:
+    with pytest.raises(ValidationError):
+        _schedule_item(lookback_candle_count=0)
+
+    with pytest.raises(ValueError, match="at least one schedule item"):
+        SnapshotReadinessPlanner().build_plan(items=[], as_of=BASE_TIME)
+
+
+def test_planner_normalizes_utc_and_never_ends_after_as_of() -> None:
+    offset = timezone(timedelta(hours=2))
+    as_of = datetime(2026, 7, 15, 12, 14, tzinfo=offset)
+
+    plan = SnapshotReadinessPlanner().build_plan(items=[_schedule_item()], as_of=as_of)
+
+    assert plan.as_of == datetime(2026, 7, 15, 10, 14, tzinfo=UTC)
+    assert plan.windows[0].window_end == datetime(2026, 7, 15, 10, 0, tzinfo=UTC)
+    assert plan.windows[0].window_end <= plan.windows[0].as_of
+
+
+def test_digest_dedup_key_is_stable() -> None:
+    snapshots = [_snapshot([_candle(0), _candle(1), _candle(2)])]
+    builder = SnapshotDigestBuilder()
+
+    first = builder.build_digest(
+        snapshots=snapshots,
+        generated_at=BASE_TIME + timedelta(minutes=45),
+        as_of=BASE_TIME + timedelta(minutes=45),
+    )
+    second = builder.build_digest(
+        snapshots=snapshots,
+        generated_at=BASE_TIME + timedelta(minutes=45),
+        as_of=BASE_TIME + timedelta(minutes=45),
+    )
+
+    assert first.dedup_key == second.dedup_key
+    assert first.items[0].dedup_key == second.items[0].dedup_key
+
+
+def test_digest_aggregates_statuses() -> None:
+    ready = _snapshot([_candle(0), _candle(1), _candle(2)])
+    incomplete = _snapshot([_candle(0), _candle(2)])
+    blocked = _snapshot([_candle(0), _candle(0), _candle(1), _candle(2)])
+
+    digest = SnapshotDigestBuilder().build_digest(
+        snapshots=[ready, incomplete, blocked],
+        generated_at=BASE_TIME + timedelta(minutes=45),
+        as_of=BASE_TIME + timedelta(minutes=45),
+    )
+
+    assert digest.readiness_status == SnapshotDigestStatus.BLOCKED
+    assert digest.ready_count == 1
+    assert digest.incomplete_count == 1
+    assert digest.blocked_count == 1
+    assert [item.readiness_status for item in digest.items] == [
+        SnapshotDigestStatus.READY,
+        SnapshotDigestStatus.INCOMPLETE,
+        SnapshotDigestStatus.BLOCKED,
+    ]
+
+
+def test_digest_payload_is_json_serializable_and_immutable() -> None:
+    digest = SnapshotDigestBuilder().build_digest(
+        snapshots=[_snapshot([_candle(0), _candle(1), _candle(2)])],
+        generated_at=BASE_TIME + timedelta(minutes=45),
+        as_of=BASE_TIME + timedelta(minutes=45),
+    )
+
+    data = digest.model_dump(mode="json")
+    assert data["items"][0]["readiness_status"] == "READY"
+    assert "phase_3f_readiness_scheduler_foundation" in digest.model_dump_json()
+    with pytest.raises(ValidationError):
+        digest.ready_count = 99
+
+
+def test_telegram_digest_formatting_is_neutral() -> None:
+    digest = SnapshotDigestBuilder().build_digest(
+        snapshots=[_snapshot([_candle(0), _candle(1), _candle(2)])],
+        generated_at=BASE_TIME + timedelta(minutes=45),
+        as_of=BASE_TIME + timedelta(minutes=45),
+    )
+
+    body = TelegramFormatter().format_snapshot_digest_body(digest)
+    message = TelegramFormatter().format(MessageType.REPORT, body)
+
+    assert message.startswith("📊 ")
+    assert "Системный отчёт готовности" in message
+    assert "EURUSD M15: READY" in message
+    assert "Решений и указаний нет." in message
+
+
+@pytest.mark.asyncio
+async def test_digest_service_uses_repository_protocols() -> None:
+    factory = FakeUnitOfWorkFactory(candles=[_candle(0), _candle(1), _candle(2)])
+    service = ReadinessDigestService(AnalysisService(factory))
+
+    payload = await service.build_payload(
+        items=[_schedule_item()],
+        as_of=BASE_TIME + timedelta(minutes=45),
+    )
+
+    assert payload.digest.readiness_status == SnapshotDigestStatus.READY
+    assert payload.digest.items[0].input_candle_count == 3
+    assert payload.digest.items[0].used_candle_count == 3
+    assert payload.digest.items[0].no_candles_after_as_of_used is True
+    assert payload.dedup_key == payload.digest.dedup_key
+    assert "EURUSD M15: READY" in payload.text
+```
+
 ### `tests/unit/test_analysis_snapshot_foundation.py`
 
 ```python
@@ -2066,8 +2115,8 @@ def test_analysis_snapshot_is_json_serializable() -> None:
     data = snapshot.model_dump(mode="json")
     text = snapshot.model_dump_json()
 
-    assert data["metadata"]["project_phase"] == "phase_3d_analysis_snapshot_foundation"
-    assert "phase_3d_analysis_snapshot_foundation" in text
+    assert data["metadata"]["project_phase"] == "phase_3f_readiness_scheduler_foundation"
+    assert "phase_3f_readiness_scheduler_foundation" in text
     assert data["context_snapshot"]["return_distribution"]["mean_return"] == "0.1"
 
 
@@ -2351,6 +2400,42 @@ PHASE_3D_FORBIDDEN_TERMS = (
     "paper_trading",
     "order_execution",
 )
+PHASE_3F_FILES = (
+    Path("app/domain/entities/readiness.py"),
+    Path("app/domain/readiness_engine.py"),
+    Path("app/services/readiness_digest_service.py"),
+    Path("app/telegram/formatter.py"),
+    Path("tests/unit/test_readiness_scheduler_foundation.py"),
+)
+PHASE_3F_FORBIDDEN_TERMS = (
+    "bullish",
+    "bearish",
+    "strong",
+    "weak",
+    "overbought",
+    "oversold",
+    "breakout",
+    "reversal",
+    "trend signal",
+    "entry",
+    "exit",
+    "buy",
+    "sell",
+    "long",
+    "short",
+    "recommendation",
+    "setup",
+    "score",
+    "confidence",
+    "trade",
+    "trading",
+    "strategy",
+    "signal",
+    "OpenAI",
+    "broker",
+    "paper_trading",
+    "order_execution",
+)
 
 
 def test_no_real_order_execution_code_exists() -> None:
@@ -2387,6 +2472,18 @@ def test_phase3d_analysis_files_do_not_add_decision_or_execution_terms() -> None
         text = file_path.read_text(encoding="utf-8")
         lowered = text.lower()
         for term in PHASE_3D_FORBIDDEN_TERMS:
+            if term.lower() in lowered:
+                offenders.append(f"{file_path}: {term}")
+
+    assert offenders == []
+
+
+def test_phase3f_readiness_files_do_not_add_decision_or_execution_terms() -> None:
+    offenders: list[str] = []
+    for file_path in PHASE_3F_FILES:
+        text = file_path.read_text(encoding="utf-8")
+        lowered = text.lower()
+        for term in PHASE_3F_FORBIDDEN_TERMS:
             if term.lower() in lowered:
                 offenders.append(f"{file_path}: {term}")
 
@@ -2562,7 +2659,7 @@ def test_api_health_readiness_status_and_scan_state(postgres_database_url: str) 
     assert ready.status_code == 200
     assert ready.json()["status"] == "ready"
     assert status.status_code == 200
-    assert status.json()["project_phase"] == "phase_3d_analysis_snapshot_foundation"
+    assert status.json()["project_phase"] == "phase_3f_readiness_scheduler_foundation"
     assert status.json()["trading_strategy_implemented"] is False
     assert status.json()["real_trading_enabled"] is False
     assert start.status_code == 200

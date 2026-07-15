@@ -4,13 +4,14 @@ AI Trading OS is a safety-first foundation for a future modular Forex analysis a
 
 ## Current Status
 
-- Current project phase: phase_3e_telegram_readiness_foundation.
+- Current project phase: phase_3f_readiness_scheduler_foundation.
 - Trading strategy: not implemented.
 - Real trading: disabled and unsupported.
 - External integrations: disabled by default.
 - Telegram: can run in disabled mode without a token.
 - Phase 3D: deterministic analysis snapshot/readiness report foundation only.
 - Phase 3E: local Telegram readiness reports only.
+- Phase 3F: neutral readiness scheduler/snapshot digest foundation only.
 
 ## Safety Warning
 
@@ -67,6 +68,16 @@ emoji, and provides `scripts/seed_local_snapshot_data.py` for local demo candles
 does not produce strategy decisions, setup scoring, confidence scoring, trade directions,
 recommendations, signals, AI output, broker activity, paper trading, order execution, or real
 trading.
+
+## Phase 3F Status
+
+Phase 3F adds a deterministic readiness scheduler and snapshot digest foundation. It plans neutral
+readiness windows for configured pairs/timeframes, resolves the latest fully closed M15/H1 boundary,
+aggregates Phase 3D snapshot readiness states, creates deterministic deduplication keys, and builds
+Telegram-safe readiness digest payload text. It does not send automatic Telegram messages, produce
+strategy decisions, setup scoring, confidence scoring, trade directions, recommendations, signals,
+AI output, broker activity, paper trading, order execution, or real trading. Phase 4 has not
+started.
 
 ## Prerequisites
 

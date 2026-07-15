@@ -3,6 +3,8 @@ import re
 from app.core.enums import MessageType
 from app.core.exceptions import MessageFormatInvalidError, RussianTextInvalidError
 from app.domain.entities.analysis import AnalysisReadinessStatus, AnalysisSnapshot
+from app.domain.entities.readiness import SnapshotDigest
+from app.services.readiness_digest_service import readiness_digest_text
 from app.telegram.emoji_policy import EMOJI_BY_MESSAGE_TYPE, validate_telegram_emoji
 
 CYRILLIC_RE = re.compile(r"[А-Яа-яЁё]")  # noqa: RUF001
@@ -48,6 +50,9 @@ class TelegramFormatter:
             f"Снимок: {snapshot.metadata.snapshot_id[:12]}.\n"
             "Только отчёт готовности; торговых действий нет."
         )
+
+    def format_snapshot_digest_body(self, digest: SnapshotDigest) -> str:
+        return readiness_digest_text(digest)
 
 
 def _issue_summary(snapshot: AnalysisSnapshot) -> str:

@@ -99,6 +99,42 @@ PHASE_3D_FORBIDDEN_TERMS = (
     "paper_trading",
     "order_execution",
 )
+PHASE_3F_FILES = (
+    Path("app/domain/entities/readiness.py"),
+    Path("app/domain/readiness_engine.py"),
+    Path("app/services/readiness_digest_service.py"),
+    Path("app/telegram/formatter.py"),
+    Path("tests/unit/test_readiness_scheduler_foundation.py"),
+)
+PHASE_3F_FORBIDDEN_TERMS = (
+    "bullish",
+    "bearish",
+    "strong",
+    "weak",
+    "overbought",
+    "oversold",
+    "breakout",
+    "reversal",
+    "trend signal",
+    "entry",
+    "exit",
+    "buy",
+    "sell",
+    "long",
+    "short",
+    "recommendation",
+    "setup",
+    "score",
+    "confidence",
+    "trade",
+    "trading",
+    "strategy",
+    "signal",
+    "OpenAI",
+    "broker",
+    "paper_trading",
+    "order_execution",
+)
 
 
 def test_no_real_order_execution_code_exists() -> None:
@@ -135,6 +171,18 @@ def test_phase3d_analysis_files_do_not_add_decision_or_execution_terms() -> None
         text = file_path.read_text(encoding="utf-8")
         lowered = text.lower()
         for term in PHASE_3D_FORBIDDEN_TERMS:
+            if term.lower() in lowered:
+                offenders.append(f"{file_path}: {term}")
+
+    assert offenders == []
+
+
+def test_phase3f_readiness_files_do_not_add_decision_or_execution_terms() -> None:
+    offenders: list[str] = []
+    for file_path in PHASE_3F_FILES:
+        text = file_path.read_text(encoding="utf-8")
+        lowered = text.lower()
+        for term in PHASE_3F_FORBIDDEN_TERMS:
             if term.lower() in lowered:
                 offenders.append(f"{file_path}: {term}")
 

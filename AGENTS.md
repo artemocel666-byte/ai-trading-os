@@ -2,11 +2,11 @@
 
 AI Trading OS is a foundation for a future Forex analysis and paper-trading platform.
 
-Current project phase: phase_3e_telegram_readiness_foundation.
-Phase 3E is limited to a local Telegram readiness-report slice over deterministic Phase 3D analysis
-snapshots built from existing Phase 3A storage, Phase 3B feature, and Phase 3C context data.
-External integrations are disabled by default. The project contains no strategy, no signals, no
-broker order APIs, no paper trading, and no real trading.
+Current project phase: phase_3f_readiness_scheduler_foundation.
+Phase 3F is limited to deterministic readiness scheduling, snapshot digest planning, and neutral
+Telegram-safe digest payloads built from existing Phase 3D analysis snapshots. External integrations
+are disabled by default. The project contains no strategy, no signals, no broker order APIs, no
+paper trading, and no real trading. Phase 4 has not started.
 
 ## Start and Checks
 
@@ -41,7 +41,7 @@ broker order APIs, no paper trading, and no real trading.
 - Never add real trading execution, broker order APIs, real account credentials, or live position management.
 - Never add strategy, setup scoring, LONG/SHORT direction, buy/sell recommendations, paper trading,
   broker APIs, order execution, or real trading while working in foundation phases.
-- While working in Phase 3E, Telegram output is limited to readiness reports. Do not add Telegram
+- While working in Phase 3F, Telegram output is limited to readiness reports. Do not add Telegram
   trading signals, entry guidance, LONG/SHORT advice, buy/sell recommendations, or paper-trading
   actions.
 - Never fabricate market data, calendar data, agent evidence, or scan results.
