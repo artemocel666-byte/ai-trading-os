@@ -2,11 +2,12 @@
 
 AI Trading OS is a foundation for a future Forex analysis and paper-trading platform.
 
-Current project phase: phase_3h_scheduled_digest_delivery_foundation.
-Phase 3H is limited to neutral scheduled readiness digest delivery orchestration over existing
-Phase 3F/3G readiness digest payloads. External integrations are disabled by default. The project
-contains no strategy, no signals, no broker order APIs, no paper trading, and no real trading.
-Phase 4 has not started.
+Current project phase: phase_3i_snapshot_versioning_and_evidence_foundation.
+Phase 3I is limited to descriptive snapshot schema versioning, deterministic data-completeness
+ratios, candle-level evidence timestamps, and an unwired, read-only agent contract, all layered
+over the existing Phase 3A-3H foundation. External integrations are disabled by default. The
+project contains no strategy, no signals, no broker order APIs, no paper trading, and no real
+trading. Phase 4 has not started.
 
 ## Start and Checks
 
@@ -45,6 +46,11 @@ Phase 4 has not started.
   Scheduled delivery must remain disabled by default. Do not add Telegram trading signals, entry
   guidance, LONG/SHORT advice, buy/sell recommendations, automatic runtime loops, or paper-trading
   actions.
+- While working in Phase 3I, schema versioning, data-completeness ratios, and evidence timestamps
+  are descriptive-only and must not influence readiness status, quality checks, or any branching
+  decision. The `AnalysisAgent` Protocol in `app/schemas/agents.py` must remain unimplemented and
+  unwired to any service, route, or scheduler in this phase. Do not add concrete agents, a Decision
+  Engine, a registry, or trading terms.
 - Never fabricate market data, calendar data, agent evidence, or scan results.
 - LLM output may explain deterministic results only; it must not change prices, scores, risk, or rejected decisions.
 - Update documentation when architecture or safety boundaries change.

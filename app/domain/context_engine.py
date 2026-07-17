@@ -3,6 +3,7 @@ from collections.abc import Sequence
 from datetime import datetime
 from decimal import Decimal
 
+from app.core import constants
 from app.core.time import normalize_to_utc
 from app.domain.entities.context import (
     CandleShapeSummary,
@@ -75,6 +76,7 @@ class MarketContextEngine:
         )
         context_issues = tuple(_context_issue(issue) for issue in feature_snapshot.quality_issues)
         return MarketContextSnapshot(
+            schema_version=constants.CONTEXT_SNAPSHOT_SCHEMA_VERSION,
             window=window,
             feature_snapshot=feature_snapshot,
             return_distribution=_return_distribution(usable_candles),
@@ -90,6 +92,7 @@ class MarketContextEngine:
                 as_of=window.as_of,
             ),
             time_context=_time_context(window=window, candle_count=len(usable_candles)),
+            data_completeness_ratio=feature_snapshot.data_completeness_ratio,
             context_issues=context_issues,
         )
 

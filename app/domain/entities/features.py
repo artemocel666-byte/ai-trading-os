@@ -80,6 +80,8 @@ class CandleFeatureSummary(BaseModel):
     true_ranges: tuple[Decimal, ...] = ()
     average_true_range: Decimal | None = None
     market_data_complete: bool
+    used_candle_open_times: tuple[datetime, ...] = ()
+    used_candle_close_times: tuple[datetime, ...] = ()
 
     model_config = ConfigDict(frozen=True)
 
@@ -113,9 +115,11 @@ class EconomicEventFeatureSummary(BaseModel):
 
 
 class MarketFeatureSnapshot(BaseModel):
+    schema_version: int = Field(ge=1)
     window: FeatureWindow
     candle_summary: CandleFeatureSummary
     economic_event_summary: EconomicEventFeatureSummary
+    data_completeness_ratio: Decimal = Field(ge=Decimal("0"), le=Decimal("1"))
     quality_issues: tuple[FeatureIssue, ...] = ()
     data_quality_issues: tuple[DataQualityIssue, ...] = ()
 

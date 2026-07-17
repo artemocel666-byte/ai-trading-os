@@ -135,8 +135,10 @@ def test_analysis_snapshot_is_json_serializable() -> None:
     data = snapshot.model_dump(mode="json")
     text = snapshot.model_dump_json()
 
-    assert data["metadata"]["project_phase"] == "phase_3h_scheduled_digest_delivery_foundation"
-    assert "phase_3h_scheduled_digest_delivery_foundation" in text
+    assert (
+        data["metadata"]["project_phase"] == "phase_3i_snapshot_versioning_and_evidence_foundation"
+    )
+    assert "phase_3i_snapshot_versioning_and_evidence_foundation" in text
     assert data["context_snapshot"]["return_distribution"]["mean_return"] == "0.1"
 
 

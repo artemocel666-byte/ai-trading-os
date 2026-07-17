@@ -153,6 +153,7 @@ class TimeContextSummary(BaseModel):
 
 
 class MarketContextSnapshot(BaseModel):
+    schema_version: int = Field(ge=1)
     window: IndicatorWindow
     feature_snapshot: MarketFeatureSnapshot
     return_distribution: ReturnDistributionSummary
@@ -161,6 +162,7 @@ class MarketContextSnapshot(BaseModel):
     candle_shape: CandleShapeSummary
     event_context: EventContextSummary
     time_context: TimeContextSummary
+    data_completeness_ratio: Decimal = Field(ge=Decimal("0"), le=Decimal("1"))
     context_issues: tuple[ContextIssue, ...] = ()
 
     model_config = ConfigDict(frozen=True)

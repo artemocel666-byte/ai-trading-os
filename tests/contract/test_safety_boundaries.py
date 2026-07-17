@@ -189,6 +189,29 @@ PHASE_3H_FORBIDDEN_TERMS = (
     "paper_trading",
     "order_execution",
 )
+PHASE_3I_FILES = (
+    Path("app/core/constants.py"),
+    Path("app/domain/entities/features.py"),
+    Path("app/domain/entities/context.py"),
+    Path("app/domain/entities/analysis.py"),
+    Path("app/domain/feature_engine.py"),
+    Path("app/domain/context_engine.py"),
+    Path("app/domain/analysis_engine.py"),
+)
+PHASE_3I_FORBIDDEN_TERMS = (
+    "LONG",
+    "SHORT",
+    "BUY",
+    "SELL",
+    "NO_TRADE",
+    "signal",
+    "setup_score",
+    "recommendation",
+    "OpenAI",
+    "broker",
+    "paper_trading",
+    "order_execution",
+)
 
 
 def test_no_real_order_execution_code_exists() -> None:
@@ -257,6 +280,18 @@ def test_phase3h_scheduled_digest_files_do_not_add_decision_or_execution_terms()
         text = file_path.read_text(encoding="utf-8")
         lowered = text.lower()
         for term in PHASE_3H_FORBIDDEN_TERMS:
+            if term.lower() in lowered:
+                offenders.append(f"{file_path}: {term}")
+
+    assert offenders == []
+
+
+def test_phase3i_snapshot_versioning_files_do_not_add_decision_or_execution_terms() -> None:
+    offenders: list[str] = []
+    for file_path in PHASE_3I_FILES:
+        text = file_path.read_text(encoding="utf-8")
+        lowered = text.lower()
+        for term in PHASE_3I_FORBIDDEN_TERMS:
             if term.lower() in lowered:
                 offenders.append(f"{file_path}: {term}")
 

@@ -37,19 +37,27 @@
 - Phase 3H scheduled digest delivery foundation: disabled-by-default scheduled readiness digest
   due checks, mockable notification sending, deduplication records, and safety tests confirming no
   strategy/signals/trading activation.
+- Phase 3I snapshot versioning and evidence foundation: `schema_version` fields on feature, context,
+  and analysis snapshot metadata; deterministic `data_completeness_ratio` on feature/context
+  snapshots; candle-level `used_candle_open_times`/`used_candle_close_times` evidence timestamps on
+  feature snapshots; an unwired, read-only `AnalysisAgent` Protocol in `app/schemas/agents.py`
+  reusing the existing `AgentReport`/`EvidenceReference` contract; and safety tests confirming no
+  strategy/signals/trading activation.
 
 ## Current Implementation Status
 
 The repository has completed the foundation phase, Phase 2 hardening/data adapters, Phase 3A
 data-quality foundation, Phase 3B deterministic feature-engine foundation, Phase 3C deterministic
 indicator/context foundation, Phase 3D deterministic analysis snapshot/readiness report foundation,
-Phase 3E local Telegram readiness-report foundation, and Phase 3F deterministic readiness
-scheduler/snapshot digest foundation, and Phase 3G manual Telegram digest command foundation.
-scheduler/snapshot digest foundation, Phase 3G manual Telegram digest command foundation, and Phase
-3H neutral scheduled digest delivery foundation. Production Twelve Data and FMP adapters exist, but
-live integrations remain disabled by default. Scanning state can be enabled or disabled, Telegram can
-request readiness reports and readiness digests, and scheduled digest orchestration remains disabled
-by default. No strategy, signal generation, AI agent, paper-trading, or execution flow is connected.
+Phase 3E local Telegram readiness-report foundation, Phase 3F deterministic readiness
+scheduler/snapshot digest foundation, Phase 3G manual Telegram digest command foundation, Phase 3H
+neutral scheduled digest delivery foundation, and Phase 3I snapshot versioning/evidence foundation.
+Production Twelve Data and FMP adapters exist, but live integrations remain disabled by default.
+Scanning state can be enabled or disabled, Telegram can request readiness reports and readiness
+digests, and scheduled digest orchestration remains disabled by default. Snapshots now carry a
+schema version, a deterministic data-completeness ratio, and candle-level evidence timestamps, and
+a read-only agent contract exists but is unimplemented and unwired. No strategy, signal generation,
+AI agent, paper-trading, or execution flow is connected.
 
 ## Future Phases
 
@@ -63,6 +71,7 @@ by default. No strategy, signal generation, AI agent, paper-trading, or executio
 - Phase 3F: neutral readiness scheduler/snapshot digest foundation — completed without trading decisions
 - Phase 3G: manual Telegram digest command foundation — completed without trading decisions
 - Phase 3H: neutral scheduled digest delivery foundation — completed without trading decisions
+- Phase 3I: snapshot versioning and evidence foundation — completed without trading decisions
 - Phase 4: analytical agents and Decision Engine
 - Phase 5: Russian Chief AI explanations
 - Phase 6: Telegram signal delivery
@@ -86,3 +95,5 @@ by default. No strategy, signal generation, AI agent, paper-trading, or executio
 ## Next Planned Task
 
 Phase 4 is the next phase if applicable. It has not started, and no Phase 4 behavior is active.
+Phase 3I closed the versioning, evidence-trail, quality-signal, and read-only agent-contract
+prerequisites identified before Phase 4 begins.

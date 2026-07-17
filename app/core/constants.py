@@ -1,6 +1,10 @@
-PROJECT_PHASE = "phase_3h_scheduled_digest_delivery_foundation"
+PROJECT_PHASE = "phase_3i_snapshot_versioning_and_evidence_foundation"
 STRATEGY_IMPLEMENTED = False
 REAL_TRADING_ENABLED = False
+
+FEATURE_SNAPSHOT_SCHEMA_VERSION = 1
+CONTEXT_SNAPSHOT_SCHEMA_VERSION = 1
+ANALYSIS_SNAPSHOT_SCHEMA_VERSION = 1
 
 SYSTEM_STATE_SCAN_ENABLED = "scan_enabled"
 SYSTEM_STATE_WORKER_HEARTBEAT = "worker_heartbeat"
