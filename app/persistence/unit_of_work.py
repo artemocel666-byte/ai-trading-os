@@ -3,6 +3,7 @@ from typing import Self
 
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
+from app.domain.interfaces.notifications import ScheduledDigestDeliveryStore
 from app.domain.interfaces.repositories import (
     AuditLogRepository,
     CandleRepository,
@@ -15,6 +16,7 @@ from app.persistence.repositories import (
     SqlAlchemyCandleRepository,
     SqlAlchemyEconomicEventRepository,
     SqlAlchemyErrorEventRepository,
+    SqlAlchemyScheduledDigestDeliveryStore,
     SqlAlchemySystemStateRepository,
 )
 
@@ -29,6 +31,7 @@ class SqlAlchemyUnitOfWork:
         self._error_events: ErrorEventRepository | None = None
         self._candles: CandleRepository | None = None
         self._economic_events: EconomicEventRepository | None = None
+        self._scheduled_digest_deliveries: ScheduledDigestDeliveryStore | None = None
 
     async def __aenter__(self) -> Self:
         if self._session is not None:
@@ -40,6 +43,7 @@ class SqlAlchemyUnitOfWork:
         self._error_events = SqlAlchemyErrorEventRepository(self._session)
         self._candles = SqlAlchemyCandleRepository(self._session)
         self._economic_events = SqlAlchemyEconomicEventRepository(self._session)
+        self._scheduled_digest_deliveries = SqlAlchemyScheduledDigestDeliveryStore(self._session)
         return self
 
     async def __aexit__(
@@ -62,6 +66,7 @@ class SqlAlchemyUnitOfWork:
             self._error_events = None
             self._candles = None
             self._economic_events = None
+            self._scheduled_digest_deliveries = None
             self._committed = False
 
     @property
@@ -93,6 +98,12 @@ class SqlAlchemyUnitOfWork:
         if self._session is None or self._economic_events is None:
             raise RuntimeError("unit of work has not been entered")
         return self._economic_events
+
+    @property
+    def scheduled_digest_deliveries(self) -> ScheduledDigestDeliveryStore:
+        if self._session is None or self._scheduled_digest_deliveries is None:
+            raise RuntimeError("unit of work has not been entered")
+        return self._scheduled_digest_deliveries
 
     async def commit(self) -> None:
         if self._session is None:

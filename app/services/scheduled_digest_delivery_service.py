@@ -38,6 +38,12 @@ class InMemoryScheduledDigestDeliveryStore:
     async def record(self, record: ScheduledDigestDeliveryRecord) -> None:
         self._records[record.dedup_key.value] = record
 
+    async def get(
+        self,
+        dedup_key: SnapshotNotificationDedupKey,
+    ) -> ScheduledDigestDeliveryRecord | None:
+        return self._records.get(dedup_key.value)
+
 
 class ScheduledDigestDeliveryService:
     def __init__(
@@ -98,6 +104,13 @@ class ScheduledDigestDeliveryService:
             dedup_key=payload.dedup_key,
             delivered_at=tick.as_of,
             sender_name=self._sender_name,
+            readiness_status=payload.digest.readiness_status,
+            item_count=len(payload.digest.items),
+            ready_count=payload.digest.ready_count,
+            incomplete_count=payload.digest.incomplete_count,
+            blocked_count=payload.digest.blocked_count,
+            items_summary=_items_summary(payload),
+            payload_preview=_payload_preview(payload.text),
         )
         await self._delivery_store.record(record)
         return ScheduledDigestDeliveryResult(
@@ -201,3 +214,12 @@ def _skipped_result(
         payload=payload,
         record=None,
     )
+
+
+def _items_summary(payload: SnapshotNotificationPayload) -> str:
+    return ",".join(f"{item.pair.value}:{item.timeframe.value}" for item in payload.digest.items)
+
+
+def _payload_preview(text: str) -> str:
+    normalized = " ".join(text.split())
+    return normalized[:1000]

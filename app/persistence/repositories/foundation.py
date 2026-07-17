@@ -3,18 +3,22 @@ from datetime import datetime
 from typing import Any
 
 from sqlalchemy import select
+from sqlalchemy.dialects.postgresql import insert as postgresql_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.security import redact_text
 from app.core.time import normalize_to_utc, utc_now
 from app.domain.entities import Candle, EconomicEvent, EconomicImpact, Timeframe
 from app.domain.entities.data_quality import UpsertResult
+from app.domain.entities.readiness import SnapshotDigestStatus, SnapshotNotificationDedupKey
+from app.domain.entities.scheduled_digest import ScheduledDigestDeliveryRecord
 from app.domain.value_objects import CurrencyPair
 from app.persistence.models import (
     AuditLogModel,
     CandleModel,
     EconomicEventModel,
     ErrorEventModel,
+    ScheduledDigestDeliveryModel,
     SystemStateModel,
 )
 
@@ -51,6 +55,24 @@ def _event_from_model(row: EconomicEventModel) -> EconomicEvent:
         forecast_raw=row.forecast_raw,
         previous_raw=row.previous_raw,
         fetched_at=row.fetched_at,
+    )
+
+
+def _delivery_from_model(row: ScheduledDigestDeliveryModel) -> ScheduledDigestDeliveryRecord:
+    return ScheduledDigestDeliveryRecord(
+        project_phase=row.project_phase,
+        dedup_key=SnapshotNotificationDedupKey(value=row.dedup_key),
+        delivered_at=row.delivered_at,
+        sender_name=row.sender_name,
+        readiness_status=(
+            SnapshotDigestStatus(row.readiness_status) if row.readiness_status is not None else None
+        ),
+        item_count=row.item_count,
+        ready_count=row.ready_count,
+        incomplete_count=row.incomplete_count,
+        blocked_count=row.blocked_count,
+        items_summary=row.items_summary,
+        payload_preview=row.payload_preview,
     )
 
 
@@ -278,3 +300,50 @@ class SqlAlchemyEconomicEventRepository:
             )
         )
         return [_event_from_model(row) for row in result.scalars().all()]
+
+
+class SqlAlchemyScheduledDigestDeliveryStore:
+    def __init__(self, session: AsyncSession) -> None:
+        self._session = session
+
+    async def exists(self, dedup_key: SnapshotNotificationDedupKey) -> bool:
+        result = await self._session.execute(
+            select(ScheduledDigestDeliveryModel.dedup_key).where(
+                ScheduledDigestDeliveryModel.dedup_key == dedup_key.value
+            )
+        )
+        return result.scalar_one_or_none() is not None
+
+    async def record(self, record: ScheduledDigestDeliveryRecord) -> None:
+        statement = (
+            postgresql_insert(ScheduledDigestDeliveryModel)
+            .values(
+                dedup_key=record.dedup_key.value,
+                project_phase=record.project_phase,
+                delivered_at=record.delivered_at,
+                sender_name=record.sender_name,
+                readiness_status=(
+                    record.readiness_status.value if record.readiness_status is not None else None
+                ),
+                item_count=record.item_count,
+                ready_count=record.ready_count,
+                incomplete_count=record.incomplete_count,
+                blocked_count=record.blocked_count,
+                items_summary=record.items_summary,
+                payload_preview=record.payload_preview,
+            )
+            .on_conflict_do_nothing(index_elements=[ScheduledDigestDeliveryModel.dedup_key])
+        )
+        await self._session.execute(statement)
+
+    async def get(
+        self,
+        dedup_key: SnapshotNotificationDedupKey,
+    ) -> ScheduledDigestDeliveryRecord | None:
+        result = await self._session.execute(
+            select(ScheduledDigestDeliveryModel).where(
+                ScheduledDigestDeliveryModel.dedup_key == dedup_key.value
+            )
+        )
+        row = result.scalar_one_or_none()
+        return None if row is None else _delivery_from_model(row)

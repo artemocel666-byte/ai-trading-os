@@ -35,6 +35,17 @@ The initial schema is created by Alembic revision `0001_foundation_schema`.
 - Unique constraint from Phase 2 migration: provider + provider_event_id.
 - Indexes: currency, impact, provider event ID, scheduled time, currency + scheduled time.
 
+## scheduled_digest_deliveries
+
+- Added by Alembic revision `0003_phase3i_digest_audit`.
+- Primary key: `id` UUID.
+- Fields: dedup key, project phase, delivered time, sender name, readiness status, item counts,
+  ready/incomplete/blocked counts, item summary, neutral payload preview, created time.
+- Unique constraint: dedup key.
+- Indexes: delivered time, readiness status, project phase.
+- Safety boundary: stores no Telegram tokens, chat IDs, provider secrets, strategy decisions,
+  trading guidance, broker data, paper-trading records, or order execution data.
+
 ## scans
 
 - Primary key: `id` UUID.

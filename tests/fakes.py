@@ -3,6 +3,9 @@ from typing import Any, Self
 
 from app.domain.entities import Candle, EconomicEvent, Timeframe
 from app.domain.entities.data_quality import UpsertResult
+from app.domain.entities.readiness import SnapshotNotificationDedupKey
+from app.domain.entities.scheduled_digest import ScheduledDigestDeliveryRecord
+from app.domain.interfaces.notifications import ScheduledDigestDeliveryStore
 from app.domain.interfaces.repositories import (
     AuditLogRepository,
     CandleRepository,
@@ -134,18 +137,39 @@ class FakeEconomicEventRepository:
         ]
 
 
+class FakeScheduledDigestDeliveryStore:
+    def __init__(self, records: dict[str, ScheduledDigestDeliveryRecord]) -> None:
+        self._records = records
+
+    async def exists(self, dedup_key: SnapshotNotificationDedupKey) -> bool:
+        return dedup_key.value in self._records
+
+    async def record(self, record: ScheduledDigestDeliveryRecord) -> None:
+        self._records.setdefault(record.dedup_key.value, record)
+
+    async def get(
+        self,
+        dedup_key: SnapshotNotificationDedupKey,
+    ) -> ScheduledDigestDeliveryRecord | None:
+        return self._records.get(dedup_key.value)
+
+
 class FakeUnitOfWork:
     def __init__(
         self,
         state: dict[str, Any],
         candles: list[Candle],
         events: list[EconomicEvent],
+        scheduled_digest_deliveries: dict[str, ScheduledDigestDeliveryRecord],
     ) -> None:
         self.system_state: SystemStateRepository = FakeSystemStateRepository(state)
         self.audit_logs: AuditLogRepository = FakeAuditLogRepository()
         self.error_events: ErrorEventRepository = FakeErrorEventRepository()
         self.candles: CandleRepository = FakeCandleRepository(candles)
         self.economic_events: EconomicEventRepository = FakeEconomicEventRepository(events)
+        self.scheduled_digest_deliveries: ScheduledDigestDeliveryStore = (
+            FakeScheduledDigestDeliveryStore(scheduled_digest_deliveries)
+        )
         self.committed = False
         self.rolled_back = False
 
@@ -174,13 +198,20 @@ class FakeUnitOfWorkFactory:
         state: dict[str, Any] | None = None,
         candles: list[Candle] | None = None,
         events: list[EconomicEvent] | None = None,
+        scheduled_digest_deliveries: dict[str, ScheduledDigestDeliveryRecord] | None = None,
     ) -> None:
         self.state = state or {}
         self.candles = candles or []
         self.events = events or []
+        self.scheduled_digest_deliveries = scheduled_digest_deliveries or {}
         self.instances: list[FakeUnitOfWork] = []
 
     def __call__(self) -> FakeUnitOfWork:
-        uow = FakeUnitOfWork(self.state, self.candles, self.events)
+        uow = FakeUnitOfWork(
+            self.state,
+            self.candles,
+            self.events,
+            self.scheduled_digest_deliveries,
+        )
         self.instances.append(uow)
         return uow

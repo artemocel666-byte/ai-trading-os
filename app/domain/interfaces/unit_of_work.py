@@ -1,6 +1,7 @@
 from types import TracebackType
 from typing import Protocol, Self
 
+from app.domain.interfaces.notifications import ScheduledDigestDeliveryStore
 from app.domain.interfaces.repositories import (
     AuditLogRepository,
     CandleRepository,
@@ -34,6 +35,11 @@ class UnitOfWork(Protocol):
     @property
     def economic_events(self) -> EconomicEventRepository:
         """Repository for normalized economic events."""
+        ...
+
+    @property
+    def scheduled_digest_deliveries(self) -> ScheduledDigestDeliveryStore:
+        """Store for neutral scheduled digest delivery audit records."""
         ...
 
     async def __aenter__(self) -> Self:

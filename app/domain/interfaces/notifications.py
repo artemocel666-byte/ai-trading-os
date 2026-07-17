@@ -15,3 +15,9 @@ class ScheduledDigestDeliveryStore(Protocol):
 
     async def record(self, record: ScheduledDigestDeliveryRecord) -> None:
         """Record a delivered scheduled digest deduplication key."""
+
+    async def get(
+        self,
+        dedup_key: SnapshotNotificationDedupKey,
+    ) -> ScheduledDigestDeliveryRecord | None:
+        """Return one neutral scheduled digest delivery audit record when present."""

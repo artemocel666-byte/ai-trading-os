@@ -7,6 +7,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator, model_valida
 from app.core import constants
 from app.core.time import normalize_to_utc
 from app.domain.entities.readiness import (
+    SnapshotDigestStatus,
     SnapshotNotificationDedupKey,
     SnapshotNotificationPayload,
     SnapshotScheduleItem,
@@ -75,6 +76,13 @@ class ScheduledDigestDeliveryRecord(BaseModel):
     dedup_key: SnapshotNotificationDedupKey
     delivered_at: datetime
     sender_name: str = Field(min_length=1)
+    readiness_status: SnapshotDigestStatus | None = None
+    item_count: int = Field(default=0, ge=0)
+    ready_count: int = Field(default=0, ge=0)
+    incomplete_count: int = Field(default=0, ge=0)
+    blocked_count: int = Field(default=0, ge=0)
+    items_summary: str | None = Field(default=None, max_length=500)
+    payload_preview: str | None = Field(default=None, max_length=1000)
 
     model_config = ConfigDict(frozen=True)
 

@@ -13,6 +13,8 @@ from app.core.enums import Decision
 from app.core.exceptions import IntegrationDisabledError
 from app.domain.entities import Timeframe
 from app.domain.value_objects import CurrencyPair
+from app.persistence.models import ScheduledDigestDeliveryModel
+from app.persistence.repositories.foundation import SqlAlchemyScheduledDigestDeliveryStore
 from app.telegram.commands import digest_command
 from scripts.security_check import scan_files, scan_production_code
 
@@ -189,6 +191,34 @@ PHASE_3H_FORBIDDEN_TERMS = (
     "paper_trading",
     "order_execution",
 )
+PHASE_3I_FILES = (Path("migrations/versions/0003_phase3i_scheduled_digest_deliveries.py"),)
+PHASE_3I_SOURCE_OBJECTS = (
+    ScheduledDigestDeliveryModel,
+    SqlAlchemyScheduledDigestDeliveryStore,
+)
+PHASE_3I_FORBIDDEN_TERMS = (
+    "bullish",
+    "bearish",
+    "overbought",
+    "oversold",
+    "breakout",
+    "reversal",
+    "trend signal",
+    "entry",
+    "exit",
+    "buy",
+    "sell",
+    "long",
+    "short",
+    "recommendation",
+    "setup",
+    "score",
+    "confidence",
+    "OpenAI",
+    "broker",
+    "paper_trading",
+    "order_execution",
+)
 
 
 def test_no_real_order_execution_code_exists() -> None:
@@ -259,6 +289,19 @@ def test_phase3h_scheduled_digest_files_do_not_add_decision_or_execution_terms()
         for term in PHASE_3H_FORBIDDEN_TERMS:
             if term.lower() in lowered:
                 offenders.append(f"{file_path}: {term}")
+
+    assert offenders == []
+
+
+def test_phase3i_digest_audit_files_do_not_add_decision_or_execution_terms() -> None:
+    offenders: list[str] = []
+    texts = [path.read_text(encoding="utf-8") for path in PHASE_3I_FILES]
+    texts.extend(inspect.getsource(source_object) for source_object in PHASE_3I_SOURCE_OBJECTS)
+    for index, text in enumerate(texts):
+        lowered = text.lower()
+        for term in PHASE_3I_FORBIDDEN_TERMS:
+            if term.lower() in lowered:
+                offenders.append(f"phase3i-source-{index}: {term}")
 
     assert offenders == []
 

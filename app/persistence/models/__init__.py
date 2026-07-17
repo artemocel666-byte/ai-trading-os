@@ -6,6 +6,7 @@ from app.persistence.models.foundation import (
     ErrorEventModel,
     PaperPositionModel,
     ScanModel,
+    ScheduledDigestDeliveryModel,
     SignalModel,
     SystemStateModel,
 )
@@ -18,6 +19,7 @@ __all__ = [
     "ErrorEventModel",
     "PaperPositionModel",
     "ScanModel",
+    "ScheduledDigestDeliveryModel",
     "SignalModel",
     "SystemStateModel",
 ]

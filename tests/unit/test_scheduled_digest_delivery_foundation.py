@@ -7,7 +7,11 @@ from pydantic import ValidationError
 
 from app.core import constants
 from app.domain.entities import Candle, Timeframe
-from app.domain.entities.readiness import SnapshotNotificationPayload, SnapshotScheduleItem
+from app.domain.entities.readiness import (
+    SnapshotDigestStatus,
+    SnapshotNotificationPayload,
+    SnapshotScheduleItem,
+)
 from app.domain.entities.scheduled_digest import (
     ScheduledDigestConfig,
     ScheduledDigestDecisionReason,
@@ -149,6 +153,11 @@ async def test_scheduled_digest_due_builds_payload_and_sends_once() -> None:
     assert result.dedup_key == result.payload.dedup_key
     assert len(sender.payloads) == 1
     assert sender.payloads[0] == result.payload
+    assert result.record.readiness_status == SnapshotDigestStatus.READY
+    assert result.record.item_count == 1
+    assert result.record.ready_count == 1
+    assert result.record.items_summary == "EURUSD:M15"
+    assert "Решений и указаний нет" in (result.record.payload_preview or "")
     assert "Системный отчёт готовности" in result.payload.text
     assert "Решений и указаний нет." in result.payload.text
     data = result.model_dump(mode="json")
@@ -173,6 +182,8 @@ async def test_scheduled_digest_duplicate_dedup_key_skip() -> None:
     assert second.decision.reason == ScheduledDigestDecisionReason.DUPLICATE
     assert second.dedup_key == first.dedup_key
     assert len(sender.payloads) == 1
+    stored = await store.get(first.dedup_key)
+    assert stored == first.record
 
 
 @pytest.mark.asyncio

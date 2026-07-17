@@ -179,7 +179,7 @@ def test_digest_payload_is_json_serializable_and_immutable() -> None:
 
     data = digest.model_dump(mode="json")
     assert data["items"][0]["readiness_status"] == "READY"
-    assert "phase_3h_scheduled_digest_delivery_foundation" in digest.model_dump_json()
+    assert "phase_3i_persistent_digest_audit_foundation" in digest.model_dump_json()
     with pytest.raises(ValidationError):
         digest.ready_count = 99
 

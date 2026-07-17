@@ -91,6 +91,12 @@ deduplication keys. It is disabled by default with `SCHEDULED_DIGEST_ENABLED=fal
 does not register an automatic scheduled digest job. It does not call providers, AI services, or
 brokers, and it does not produce trading guidance.
 
+Phase 3I persists neutral scheduled digest delivery audit records in
+`scheduled_digest_deliveries`. The table stores deduplication keys, delivery timestamps, sender
+names, readiness status/counts, item summaries, and a neutral payload preview. It does not store
+Telegram tokens, chat IDs, provider secrets, strategy decisions, trading guidance, or broker data.
+Scheduled delivery remains disabled by default.
+
 ## Telegram Bot Local Setup
 
 Create the bot in Telegram before enabling the `bot` service:

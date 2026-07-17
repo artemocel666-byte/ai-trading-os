@@ -1,4 +1,4 @@
-PROJECT_PHASE = "phase_3h_scheduled_digest_delivery_foundation"
+PROJECT_PHASE = "phase_3i_persistent_digest_audit_foundation"
 STRATEGY_IMPLEMENTED = False
 REAL_TRADING_ENABLED = False
 

@@ -1,136 +1,78 @@
-# ChatGPT Verification Packet - Phase 3H
-## Generation Metadata
-- Generation timestamp: 2026-07-15T18:10:00Z
-- Repository: `/Users/artem.otsel/Documents/ai-trading-os`
+# ChatGPT Verification Packet: Phase 3I Persistent Digest Delivery Audit Foundation
+
+Generated: 2026-07-15T18:57:41Z
+
+## Repository Metadata
+
+- Repository path: `/Users/artem.otsel/Documents/ai-trading-os`
 - Git branch: `main`
-- Current git commit hash: `ab4aafbb2bf598cce9b3da14764e78b1ab0d3b28`
-- Latest committed baseline observed locally: `ab4aafb phase 3G done`
-- User prompt expected Phase 3G commit: `463d77 Add Phase 3G Telegram digest command foundation`; local clean baseline differs by hash/message but is Phase 3G.
-- Phase 3H state: uncommitted at packet generation time
-- Phase 4: not started
-- Migration created: none
-- Runtime note: host `uv` was available at `/Users/artem.otsel/.local/bin/uv`; commands were run with that directory on PATH.
+- Current commit hash: `901d86411d01217b6b1ca0c7fd7e694621159577`
+- Local latest commit: `901d864 Phase 3H Done`
+- Prompt expected latest commit: `141ef71 Add Phase 3H scheduled digest delivery foundation`
+- Baseline note: the prompt's expected Phase 3H commit did not match the local repository. The local repository was clean at `901d864 Phase 3H Done`, and Phase 3I work continued from that actual state.
+- Commit status: Phase 3I remains uncommitted at packet generation time.
 
-## Scope Confirmation
-- Implemented Phase 3H only: neutral scheduled readiness digest delivery foundation.
-- Scheduled delivery remains disabled by default through `scheduled_digest_enabled=False` / `SCHEDULED_DIGEST_ENABLED=false`.
-- A worker callable exists, but `register_jobs` does not register an automatic scheduled digest loop.
-- Existing `/snapshot` and `/digest` commands remain active and tested.
-- No strategy, signals, setup scoring, confidence scoring, AI agents, OpenAI calls, broker APIs, paper trading, order execution, or real trading were added.
-- Feature/analysis/readiness/delivery flows remain descriptive and deterministic only.
+## Git Status Short
 
-## Changed Files
-Created files:
-- `app/domain/entities/scheduled_digest.py`
-- `app/domain/interfaces/notifications.py`
-- `app/services/scheduled_digest_delivery_service.py`
-- `docs/phase3h-verification-report.md`
-- `tests/unit/test_scheduled_digest_delivery_foundation.py`
-
-Modified files:
-- `.env.example`
-- `AGENTS.md`
-- `PLANS.md`
-- `README.md`
-- `app/core/config.py`
-- `app/core/constants.py`
-- `app/domain/entities/__init__.py`
-- `app/scheduler/jobs.py`
-- `docs/chatgpt-verification-packet.md`
-- `docs/operations.md`
-- `tests/contract/test_safety_boundaries.py`
-- `tests/integration/test_database_and_api.py`
-- `tests/unit/test_analysis_snapshot_foundation.py`
-- `tests/unit/test_readiness_scheduler_foundation.py`
-- `tests/unit/test_settings.py`
-
-## Implementation Summary
-- Updated `PROJECT_PHASE` to `phase_3h_scheduled_digest_delivery_foundation`.
-- Added disabled-by-default scheduled digest settings.
-- Added immutable Pydantic scheduled digest config, tick, decision, record, and result models.
-- Added mockable `NotificationSender` and `ScheduledDigestDeliveryStore` protocols.
-- Added scheduled digest delivery service with deterministic due checks, build-only-when-due behavior, duplicate skip, build-failed skip, and in-memory foundation store.
-- Added a worker callable without automatic worker registration.
-- Updated safety, settings, phase, and integration tests.
-- Updated README, AGENTS, PLANS, operations, and Phase 3H verification docs.
-
-## New Tests
-- `tests/unit/test_scheduled_digest_delivery_foundation.py::test_scheduled_digest_disabled_skip`
-- `tests/unit/test_scheduled_digest_delivery_foundation.py::test_scheduled_digest_not_due_skip`
-- `tests/unit/test_scheduled_digest_delivery_foundation.py::test_scheduled_digest_due_builds_payload_and_sends_once`
-- `tests/unit/test_scheduled_digest_delivery_foundation.py::test_scheduled_digest_duplicate_dedup_key_skip`
-- `tests/unit/test_scheduled_digest_delivery_foundation.py::test_scheduled_digest_no_items_skip`
-- `tests/unit/test_scheduled_digest_delivery_foundation.py::test_scheduled_digest_build_failed_skip`
-- `tests/unit/test_scheduled_digest_delivery_foundation.py::test_scheduled_digest_tick_is_json_serializable_and_immutable`
-- `tests/unit/test_scheduled_digest_delivery_foundation.py::test_scheduled_digest_tick_normalizes_utc`
-- `tests/unit/test_scheduled_digest_delivery_foundation.py::test_scheduled_digest_due_policy_is_deterministic`
-- `tests/unit/test_scheduled_digest_delivery_foundation.py::test_worker_callable_can_run_without_auto_registration`
-- `tests/unit/test_scheduled_digest_delivery_foundation.py::test_register_jobs_does_not_start_scheduled_digest_delivery_loop`
-- `tests/contract/test_safety_boundaries.py::test_phase3h_scheduled_digest_files_do_not_add_decision_or_execution_terms`
-
-## Traceability Table
-| Requirement | Implementation file | Test file | Verification result |
-|---|---|---|---|
-| Set Phase 3H project phase | app/core/constants.py | tests/integration/test_database_and_api.py; tests/unit/test_analysis_snapshot_foundation.py; tests/unit/test_readiness_scheduler_foundation.py | Host pytest passed; Docker integration tests passed twice |
-| Disabled-by-default scheduled delivery setting | app/core/config.py; .env.example | tests/unit/test_settings.py | Host pytest passed |
-| Immutable scheduled digest models with UTC normalization | app/domain/entities/scheduled_digest.py | tests/unit/test_scheduled_digest_delivery_foundation.py | Host pytest passed |
-| Mockable notification sender and dedup store protocols | app/domain/interfaces/notifications.py; app/services/scheduled_digest_delivery_service.py | tests/unit/test_scheduled_digest_delivery_foundation.py | Host pytest passed |
-| Due/not-due deterministic interval policy | app/services/scheduled_digest_delivery_service.py | tests/unit/test_scheduled_digest_delivery_foundation.py | Host pytest passed |
-| Build payload only when enabled and due | app/services/scheduled_digest_delivery_service.py | tests/unit/test_scheduled_digest_delivery_foundation.py | Host pytest passed |
-| Duplicate dedup key skip | app/services/scheduled_digest_delivery_service.py | tests/unit/test_scheduled_digest_delivery_foundation.py | Host pytest passed |
-| No automatic worker loop | app/scheduler/jobs.py | tests/unit/test_scheduled_digest_delivery_foundation.py | Host pytest passed |
-| Keep `/snapshot` and `/digest` working | app/telegram/commands.py | tests/unit/test_telegram_commands.py | Host pytest passed |
-| No strategy/signals/AI/broker/execution additions | app/domain/entities/scheduled_digest.py; app/services/scheduled_digest_delivery_service.py; app/scheduler/jobs.py | tests/contract/test_safety_boundaries.py; scripts/security_check.py | Safety tests and security check passed |
-| No migration required | none | docker compose run --rm migrate alembic check | No new upgrade operations detected |
-
-## Git Metadata
-### git status --short
-
-```
- M .env.example
+```text
  M AGENTS.md
  M PLANS.md
  M README.md
- M app/core/config.py
  M app/core/constants.py
- M app/domain/entities/__init__.py
- M app/scheduler/jobs.py
+ M app/domain/entities/scheduled_digest.py
+ M app/domain/interfaces/notifications.py
+ M app/domain/interfaces/unit_of_work.py
+ M app/persistence/models/__init__.py
+ M app/persistence/models/foundation.py
+ M app/persistence/repositories/__init__.py
+ M app/persistence/repositories/foundation.py
+ M app/persistence/unit_of_work.py
+ M app/services/scheduled_digest_delivery_service.py
  M docs/chatgpt-verification-packet.md
+ M docs/database-schema.md
  M docs/operations.md
  M tests/contract/test_safety_boundaries.py
+ M tests/fakes.py
  M tests/integration/test_database_and_api.py
  M tests/unit/test_analysis_snapshot_foundation.py
  M tests/unit/test_readiness_scheduler_foundation.py
- M tests/unit/test_settings.py
-?? app/domain/entities/scheduled_digest.py
-?? app/domain/interfaces/notifications.py
-?? app/services/scheduled_digest_delivery_service.py
-?? docs/phase3h-verification-report.md
-?? tests/unit/test_scheduled_digest_delivery_foundation.py
+ M tests/unit/test_scheduled_digest_delivery_foundation.py
+?? docs/phase3i-verification-report.md
+?? migrations/versions/0003_phase3i_scheduled_digest_deliveries.py
 ```
-### git diff --stat
 
-```
-.env.example                                      |  2 ++
-AGENTS.md                                         | 16 +++++----
-PLANS.md                                          | 12 +++++--
-README.md                                         | 17 ++++++++--
-app/core/config.py                                |  2 ++
-app/core/constants.py                             |  2 +-
-app/domain/entities/__init__.py                   | 14 ++++++++
-app/scheduler/jobs.py                             | 20 +++++++++++
-docs/chatgpt-verification-packet.md               | regenerated for Phase 3H
-docs/operations.md                                |  8 +++++
-tests/contract/test_safety_boundaries.py          | 41 +++++++++++++++++++++++
-tests/integration/test_database_and_api.py        |  2 +-
-tests/unit/test_analysis_snapshot_foundation.py   |  4 +--
-tests/unit/test_readiness_scheduler_foundation.py |  2 +-
-tests/unit/test_settings.py                       |  2 ++
-14 tracked files changed before packet regeneration; new untracked files are listed in git status.
-```
-### git log --oneline -8
+## Git Diff Stat
 
+```text
+ AGENTS.md                                          |   14 +-
+ PLANS.md                                           |   18 +-
+ README.md                                          |   13 +-
+ app/core/constants.py                              |    2 +-
+ app/domain/entities/scheduled_digest.py            |    8 +
+ app/domain/interfaces/notifications.py             |    6 +
+ app/domain/interfaces/unit_of_work.py              |    6 +
+ app/persistence/models/__init__.py                 |    2 +
+ app/persistence/models/foundation.py               |   36 +
+ app/persistence/repositories/__init__.py           |    2 +
+ app/persistence/repositories/foundation.py         |   69 +
+ app/persistence/unit_of_work.py                    |   11 +
+ app/services/scheduled_digest_delivery_service.py  |   22 +
+ docs/chatgpt-verification-packet.md                | 3700 +++++++++++---------
+ docs/database-schema.md                            |   11 +
+ docs/operations.md                                 |    6 +
+ tests/contract/test_safety_boundaries.py           |   43 +
+ tests/fakes.py                                     |   33 +-
+ tests/integration/test_database_and_api.py         |  220 +-
+ tests/unit/test_analysis_snapshot_foundation.py    |    4 +-
+ tests/unit/test_readiness_scheduler_foundation.py  |    2 +-
+ .../test_scheduled_digest_delivery_foundation.py   |   13 +-
+ 22 files changed, 2631 insertions(+), 1610 deletions(-)
 ```
+
+## Git Log
+
+```text
+901d864 Phase 3H Done
 ab4aafb phase 3G done
 40473bd Add Phase 3F readiness scheduler foundation
 588ab6a Phase 3E DONE
@@ -141,36 +83,124 @@ a6f44f0 Add Phase 3B feature engine foundation
 9d68709 Document Phase 2 runtime verification
 ```
 
+## Created Files
+
+- `docs/phase3i-verification-report.md`
+- `migrations/versions/0003_phase3i_scheduled_digest_deliveries.py`
+
+## Modified Files
+
+- `AGENTS.md`
+- `PLANS.md`
+- `README.md`
+- `app/core/constants.py`
+- `app/domain/entities/scheduled_digest.py`
+- `app/domain/interfaces/notifications.py`
+- `app/domain/interfaces/unit_of_work.py`
+- `app/persistence/models/__init__.py`
+- `app/persistence/models/foundation.py`
+- `app/persistence/repositories/__init__.py`
+- `app/persistence/repositories/foundation.py`
+- `app/persistence/unit_of_work.py`
+- `app/services/scheduled_digest_delivery_service.py`
+- `docs/chatgpt-verification-packet.md`
+- `docs/database-schema.md`
+- `docs/operations.md`
+- `tests/contract/test_safety_boundaries.py`
+- `tests/fakes.py`
+- `tests/integration/test_database_and_api.py`
+- `tests/unit/test_analysis_snapshot_foundation.py`
+- `tests/unit/test_readiness_scheduler_foundation.py`
+- `tests/unit/test_scheduled_digest_delivery_foundation.py`
+
+## Migration Files Created Or Modified
+
+- `migrations/versions/0003_phase3i_scheduled_digest_deliveries.py`
+
+## Phase Scope Confirmation
+
+Phase 3I is persistent digest delivery audit foundation only. It stores neutral scheduled digest delivery deduplication keys and non-sensitive metadata.
+
+Phase 4 was not started. No strategy implementation, trade signals, setup scoring, confidence scoring, AI agents, OpenAI calls, broker APIs, paper trading, order execution, or real trading were added.
+
+Scheduled delivery remains disabled by default. Telegram output remains neutral readiness/reporting text only. Provider/network integrations remain disabled by default.
+
+## Implementation Summary
+
+- Updated `PROJECT_PHASE` to `phase_3i_persistent_digest_audit_foundation`.
+- Added neutral `scheduled_digest_deliveries` database table with unique `dedup_key`, project phase, UTC delivery time, sender name, readiness status/counts, item summary, and payload preview.
+- Added SQLAlchemy model and repository implementing the existing domain store protocol.
+- Updated persistent audit recording to use PostgreSQL `ON CONFLICT DO NOTHING` on the unique dedup key.
+- Added UoW access to the persistent delivery audit store without coupling domain code to SQLAlchemy.
+- Extended scheduled digest delivery records with neutral audit fields.
+- Updated delivery service to populate audit metadata and still support the in-memory store.
+- Added repeatable PostgreSQL integration cleanup and tests for persistent duplicate skipping.
+- Updated README, AGENTS, PLANS, operations, database schema, Phase 3I report, and this packet.
+
 ## Exact Verification Command Outputs
-### uv lock --check
 
-```
-Resolved 46 packages in 3ms
-```
-### uv sync
+### Host Checks
 
+The requested `uv ...` checks were executed with `/Users/artem.otsel/.local/bin` prepended to PATH because this Codex shell does not include that directory by default. This is an environment path detail, not a project failure.
+
+### `uv lock --check`
+
+Command: `uv lock --check`
+
+Exit code: `0`
+
+```text
+Resolved 46 packages in 29ms
 ```
+
+### `uv sync`
+
+Command: `uv sync`
+
+Exit code: `0`
+
+```text
 Resolved 46 packages in 2ms
-Checked 43 packages in 0.89ms
+Checked 43 packages in 7ms
 ```
-### uv run ruff format --check .
 
-```
-108 files already formatted
-```
-### uv run ruff check .
+### `uv run ruff format --check .`
 
+Command: `uv run ruff format --check .`
+
+Exit code: `0`
+
+```text
+109 files already formatted
 ```
+
+### `uv run ruff check .`
+
+Command: `uv run ruff check .`
+
+Exit code: `0`
+
+```text
 All checks passed!
 ```
-### uv run mypy app
 
-```
+### `uv run mypy app`
+
+Command: `uv run mypy app`
+
+Exit code: `0`
+
+```text
 Success: no issues found in 77 source files
 ```
-### uv run pytest
 
-```
+### `uv run pytest`
+
+Command: `uv run pytest`
+
+Exit code: `0`
+
+```text
 ============================= test session starts ==============================
 platform darwin -- Python 3.12.13, pytest-8.4.2, pluggy-1.6.0
 rootdir: /Users/artem.otsel/Documents/ai-trading-os
@@ -178,18 +208,18 @@ configfile: pyproject.toml
 testpaths: tests
 plugins: anyio-4.14.1, asyncio-0.26.0
 asyncio: mode=Mode.AUTO, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
-collected 216 items
+collected 219 items
 
 tests/contract/test_agent_contracts.py ......                            [  2%]
 tests/contract/test_api_error_schema.py .                                [  3%]
 tests/contract/test_architecture_boundaries.py ..                        [  4%]
-tests/contract/test_provider_contracts.py .............................. [ 18%]
-...............................                                          [ 32%]
-tests/contract/test_safety_boundaries.py ...............                 [ 39%]
-tests/integration/test_database_and_api.py sssss                         [ 41%]
-tests/unit/test_analysis_snapshot_foundation.py ..........               [ 46%]
+tests/contract/test_provider_contracts.py .............................. [ 17%]
+...............................                                          [ 31%]
+tests/contract/test_safety_boundaries.py ................                [ 39%]
+tests/integration/test_database_and_api.py sssssss                       [ 42%]
+tests/unit/test_analysis_snapshot_foundation.py ..........               [ 47%]
 tests/unit/test_context_engine_foundation.py .............               [ 52%]
-tests/unit/test_data_quality_foundation.py ...                           [ 53%]
+tests/unit/test_data_quality_foundation.py ...                           [ 54%]
 tests/unit/test_domain_market_models.py ..................               [ 62%]
 tests/unit/test_errors_and_redaction.py .......                          [ 65%]
 tests/unit/test_feature_engine_foundation.py ...........                 [ 70%]
@@ -197,9 +227,9 @@ tests/unit/test_internal_api_key.py ....                                 [ 72%]
 tests/unit/test_readiness_scheduler_foundation.py .........              [ 76%]
 tests/unit/test_scheduled_digest_delivery_foundation.py ...........      [ 81%]
 tests/unit/test_settings.py .........                                    [ 85%]
-tests/unit/test_system_state_service.py .....                            [ 87%]
+tests/unit/test_system_state_service.py .....                            [ 88%]
 tests/unit/test_telegram_commands.py ........                            [ 91%]
-tests/unit/test_telegram_policy.py .....                                 [ 93%]
+tests/unit/test_telegram_policy.py .....                                 [ 94%]
 tests/unit/test_time.py ...                                              [ 95%]
 tests/unit/test_unit_of_work_lifecycle.py ......                         [ 98%]
 tests/unit/test_value_objects_and_enums.py ....                          [100%]
@@ -210,33 +240,44 @@ tests/unit/test_value_objects_and_enums.py ....                          [100%]
     from starlette.testclient import TestClient as TestClient  # noqa
 
 -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
-================== 211 passed, 5 skipped, 1 warning in 0.83s ===================
+================== 212 passed, 7 skipped, 1 warning in 0.77s ===================
 ```
-### uv run python scripts/security_check.py
 
-```
-Exit code: 0
-Output: <no output>
-```
-### docker compose build
+### `uv run python scripts/security_check.py`
 
+Command: `uv run python scripts/security_check.py`
+
+Exit code: `0`
+
+```text
+<no output>
 ```
-Image ai-trading-os-api Building 
+
+### Docker And PostgreSQL Checks
+
+### `docker compose build`
+
+Command: `docker compose build`
+
+Exit code: `0`
+
+```text
  Image ai-trading-os-worker Building 
  Image ai-trading-os-bot Building 
  Image ai-trading-os-migrate Building 
+ Image ai-trading-os-api Building 
 #1 [internal] load local bake definitions
 #1 reading from stdin 1.91kB done
 #1 DONE 0.0s
 
-#2 [api internal] load build definition from Dockerfile
+#2 [bot internal] load build definition from Dockerfile
 #2 transferring dockerfile: 411B done
 #2 DONE 0.0s
 
-#3 [worker internal] load metadata for ghcr.io/astral-sh/uv:python3.12-bookworm-slim
+#3 [migrate internal] load metadata for ghcr.io/astral-sh/uv:python3.12-bookworm-slim
 #3 DONE 1.1s
 
-#4 [api internal] load .dockerignore
+#4 [migrate internal] load .dockerignore
 #4 transferring context: 143B done
 #4 DONE 0.0s
 
@@ -244,116 +285,130 @@ Image ai-trading-os-api Building
 #5 resolve ghcr.io/astral-sh/uv:python3.12-bookworm-slim@sha256:e5b65587bce7de595f299855d7385fe7fca39b8a74baa261ba1b7147afa78e58 0.0s done
 #5 DONE 0.0s
 
-#6 [worker internal] load build context
-#6 transferring context: 446.40kB 0.0s done
+#6 [migrate internal] load build context
+#6 transferring context: 282.09kB 0.0s done
 #6 DONE 0.0s
 
-#7 [migrate 2/5] WORKDIR /app
+#7 [bot 2/5] WORKDIR /app
 #7 CACHED
 
-#8 [migrate 3/5] COPY pyproject.toml uv.lock* ./
+#8 [bot 3/5] COPY pyproject.toml uv.lock* ./
 #8 CACHED
 
-#9 [migrate 4/5] RUN uv sync --frozen --no-dev
+#9 [bot 4/5] RUN uv sync --frozen --no-dev
 #9 CACHED
 
-#10 [worker 5/5] COPY . .
-#10 DONE 0.1s
+#10 [api 5/5] COPY . .
+#10 DONE 0.0s
 
-#11 [bot] exporting to image
-#11 exporting layers
-#11 exporting layers 0.0s done
-#11 exporting manifest sha256:873b59e21a784cd9cac3fa064dac626786711c5b954828a565ef96f605eae3c1 done
-#11 exporting config sha256:dcc8aba89b33ab6d6d3c3de7197afa6b0792c83680a360482fb4dccc2021a1bd 0.0s done
-#11 exporting attestation manifest sha256:e900b639e5b4919e5d22a15810a15b754610d3ed7c6dc157bbd8e22d749da5c7 0.0s done
-#11 exporting manifest list sha256:fd3d32bb7d3f2ecf4a913c8f94123cb3a66776197d85b39cf6824dc63da71942
-#11 exporting manifest list sha256:fd3d32bb7d3f2ecf4a913c8f94123cb3a66776197d85b39cf6824dc63da71942 done
-#11 naming to docker.io/library/ai-trading-os-bot:latest done
-#11 unpacking to docker.io/library/ai-trading-os-bot:latest 0.0s done
+#11 [migrate] exporting to image
+#11 exporting layers 0.1s done
+#11 exporting manifest sha256:7b38c8e56b4309f37915bd25d364bf139d9ee91e958ad09aee5ae825f0d51c43
+#11 exporting manifest sha256:7b38c8e56b4309f37915bd25d364bf139d9ee91e958ad09aee5ae825f0d51c43 done
+#11 exporting config sha256:8baa40577815966189bc7275e733ee3bb9cf0a66ae84635cd37986b791252b58 done
+#11 exporting attestation manifest sha256:1bee49ba4b51956108c4dce9833046b4fa7698f31935c2e99fe34ae0df8b5e96 0.0s done
+#11 exporting manifest list sha256:9015244eaf111398cd2fda7da43591646217e7fc19b5ebd9ddca78d9ff41ad95 done
+#11 naming to docker.io/library/ai-trading-os-migrate:latest done
+#11 unpacking to docker.io/library/ai-trading-os-migrate:latest 0.0s done
 #11 DONE 0.2s
 
-#12 [worker] exporting to image
-#12 exporting layers 0.0s done
-#12 exporting manifest sha256:a67574b20bdf73940d5a2cfcab2de3a59f500f305dea983d5123c1ac00734ed4 done
-#12 exporting config sha256:48e284755a59dc6c2dffe8c26bc0992d9990cc93df9be805181c5a61c74b6e6f 0.0s done
-#12 exporting attestation manifest sha256:2f6159457022213953c44f2fdc35b79f01595ec1a225031dc3b250924557a218 0.0s done
-#12 exporting manifest list sha256:3b067319363d9ee7d71198f5fc61d3cbe241ca4dd4d57972acd532c779654845 done
-#12 naming to docker.io/library/ai-trading-os-worker:latest done
-#12 unpacking to docker.io/library/ai-trading-os-worker:latest 0.0s done
+#12 [api] exporting to image
+#12 exporting layers 0.1s done
+#12 exporting manifest sha256:df22c64aaf398dd52f8a4de626ca06a5bd8dfbc6b6d851324571cc7db939d6f4 done
+#12 exporting config sha256:3d711e92c7c74a657dea25edf1f1dff92a145d874844723f5539570bc09cde42 done
+#12 exporting attestation manifest sha256:02c1138b53859051cfaddc40af9611b934ad1050530c13d231e218ab9f528b06 0.0s done
+#12 exporting manifest list sha256:f4e6254ff395bd0903a5c92da9fc44303d6376462db411984ac20390bbfe7131 done
+#12 naming to docker.io/library/ai-trading-os-api:latest done
+#12 unpacking to docker.io/library/ai-trading-os-api:latest 0.0s done
 #12 DONE 0.2s
 
-#13 [api] exporting to image
-#13 exporting layers 0.0s done
-#13 exporting manifest sha256:19dd8ce1838f252def88e4eb7d77ba1a9ee8bcad32c3ca7c3402ed6b4d2a1254 0.0s done
-#13 exporting config sha256:95bc4aab192e2ead3ae9d7edc7a29f32c115558641e58ed9073934f9b0764f9c done
-#13 exporting attestation manifest sha256:640d9d6d386b94d329ef7e5d6896f51eb2d15fffdc30d87236e023ba92304c6d 0.0s done
-#13 exporting manifest list sha256:cb4726db4d1aa1b5fa82d7a80ae0e42529142c5a479911e963de94f48e9934e0 done
-#13 naming to docker.io/library/ai-trading-os-api:latest done
-#13 unpacking to docker.io/library/ai-trading-os-api:latest 0.0s done
+#13 [worker] exporting to image
+#13 exporting layers 0.1s done
+#13 exporting manifest sha256:5ed933efc1c91e727cacfa31822a7e61eeb727182822b1c88fc2bec6b5d8602d done
+#13 exporting config sha256:4389d788547b67c484a8480fb8f9b183c62b9177c15c69424bc646738dc1c722 done
+#13 exporting attestation manifest sha256:c1062b6d5164094fb902ec9d986a56e9b2ef463e11894262fc893bb4f80cb6e3 0.0s done
+#13 exporting manifest list sha256:262d1ad75deb3c479657c2a4fc9b48f780eb18a7a32628e3622d6ad44da2a917 done
+#13 naming to docker.io/library/ai-trading-os-worker:latest done
+#13 unpacking to docker.io/library/ai-trading-os-worker:latest 0.0s done
 #13 DONE 0.2s
 
-#14 [migrate] exporting to image
-#14 exporting layers 0.0s done
-#14 exporting manifest sha256:b6394bb7164077b903b4dfcae1c02f422483832b0a42c53c681c5c6aade3fd98 done
-#14 exporting config sha256:2892f262a9c1a49c2c03b73ade90d87a81c09c851a5bd0ad9ac274dea787085a done
-#14 exporting attestation manifest sha256:52cbfdf48b88c53991bb1e112c718b373f705e3a58ac34c29ce9cbb1ed58f5e5 0.0s done
-#14 exporting manifest list sha256:86a31a7c5142c3d04081aa9c06a757df7fa978f3116e9d7d00ae89b8b63f7952 done
-#14 naming to docker.io/library/ai-trading-os-migrate:latest done
-#14 unpacking to docker.io/library/ai-trading-os-migrate:latest 0.0s done
+#14 [bot] exporting to image
+#14 exporting layers 0.1s done
+#14 exporting manifest sha256:f137c746dad4dda50c473a34b2e81b888783794aadb2570bc93e2eb180da0d02 done
+#14 exporting config sha256:7d1be4ac4752056dbd3a4967216de3b58551aa3b55446945a9c120eb12739b5c done
+#14 exporting attestation manifest sha256:41c8f183518d0614dd6e1f8d77345ff9ec3c676652585b91494fd3adc3596bc6 0.0s done
+#14 exporting manifest list sha256:502f3b5424b1360a5ab74cd10271cdc2eab970290c9fbac4354227af8ed949a4 done
+#14 naming to docker.io/library/ai-trading-os-bot:latest done
+#14 unpacking to docker.io/library/ai-trading-os-bot:latest 0.0s done
 #14 DONE 0.2s
 
-#15 [bot] resolving provenance for metadata file
+#15 [migrate] resolving provenance for metadata file
 #15 DONE 0.0s
 
-#16 [api] resolving provenance for metadata file
+#16 [worker] resolving provenance for metadata file
 #16 DONE 0.0s
 
-#17 [worker] resolving provenance for metadata file
+#17 [bot] resolving provenance for metadata file
 #17 DONE 0.0s
 
-#18 [migrate] resolving provenance for metadata file
+#18 [api] resolving provenance for metadata file
 #18 DONE 0.0s
- Image ai-trading-os-api Built 
  Image ai-trading-os-bot Built 
  Image ai-trading-os-migrate Built 
- Image ai-trading-os-worker Built
+ Image ai-trading-os-worker Built 
+ Image ai-trading-os-api Built
 ```
-### docker compose up -d postgres
 
-```
-Network ai-trading-os_default Creating 
-Network ai-trading-os_default Created 
-Container ai-trading-os-postgres-1 Creating 
-Container ai-trading-os-postgres-1 Created 
-Container ai-trading-os-postgres-1 Starting 
-Container ai-trading-os-postgres-1 Started
-```
-### docker compose ps postgres
+### `docker compose up -d postgres`
 
-```
-NAME                       IMAGE                COMMAND                  SERVICE    CREATED         STATUS                   PORTS
-ai-trading-os-postgres-1   postgres:16-alpine   "docker-entrypoint.s…"   postgres   7 seconds ago   Up 6 seconds (healthy)   5432/tcp
-```
-### docker compose run --rm migrate alembic current
+Command: `docker compose up -d postgres`
 
+Exit code: `0`
+
+```text
+ Container ai-trading-os-postgres-1 Running
 ```
-Container ai-trading-os-postgres-1 Running 
-Container ai-trading-os-postgres-1 Waiting 
-Container ai-trading-os-postgres-1 Healthy 
-Container ai-trading-os-migrate-run-c3c71a3af6d0 Creating 
-Container ai-trading-os-migrate-run-c3c71a3af6d0 Created 
+
+### `docker compose ps postgres`
+
+Command: `docker compose ps postgres`
+
+Exit code: `0`
+
+```text
+NAME                       IMAGE                COMMAND                  SERVICE    CREATED          STATUS                    PORTS
+ai-trading-os-postgres-1   postgres:16-alpine   "docker-entrypoint.s…"   postgres   19 minutes ago   Up 19 minutes (healthy)   5432/tcp
+```
+
+### `docker compose run --rm migrate alembic current`
+
+Command: `docker compose run --rm migrate alembic current`
+
+Exit code: `0`
+
+```text
+ Container ai-trading-os-postgres-1 Running 
+ Container ai-trading-os-postgres-1 Waiting 
+ Container ai-trading-os-postgres-1 Healthy 
+ Container ai-trading-os-migrate-run-737bbe8e5ebd Creating 
+ Container ai-trading-os-migrate-run-737bbe8e5ebd Created 
 INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
 INFO  [alembic.runtime.migration] Will assume transactional DDL.
-0002_phase2_data_constraints (head)
+0003_phase3i_digest_audit (head)
 ```
-### docker compose run --rm migrate alembic check
 
-```
-Container ai-trading-os-postgres-1 Running 
-Container ai-trading-os-postgres-1 Waiting 
-Container ai-trading-os-postgres-1 Healthy 
-Container ai-trading-os-migrate-run-9b86b06663c9 Creating 
-Container ai-trading-os-migrate-run-9b86b06663c9 Created 
+### `docker compose run --rm migrate alembic check`
+
+Command: `docker compose run --rm migrate alembic check`
+
+Exit code: `0`
+
+```text
+ Container ai-trading-os-postgres-1 Running 
+ Container ai-trading-os-postgres-1 Waiting 
+ Container ai-trading-os-postgres-1 Healthy 
+ Container ai-trading-os-migrate-run-501ef29f5f68 Creating 
+ Container ai-trading-os-migrate-run-501ef29f5f68 Created 
 INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
 INFO  [alembic.runtime.migration] Will assume transactional DDL.
 INFO  [alembic.runtime.plugins] setting up autogenerate plugin alembic.autogenerate.schemas
@@ -364,46 +419,52 @@ INFO  [alembic.runtime.plugins] setting up autogenerate plugin alembic.autogener
 INFO  [alembic.runtime.plugins] setting up autogenerate plugin alembic.autogenerate.comments
 No new upgrade operations detected.
 ```
-### test database migration
 
-```
-docker compose run --rm -e DATABASE_URL=postgresql+asyncpg://ai_trading_os:ai_trading_os@postgres:5432/ai_trading_os_test migrate alembic upgrade head
+### `docker compose run --rm -e DATABASE_URL=postgresql+asyncpg://ai_trading_os:ai_trading_os@postgres:5432/ai_trading_os_test migrate alembic upgrade head`
 
-Container ai-trading-os-postgres-1 Running 
-Container ai-trading-os-postgres-1 Waiting 
-Container ai-trading-os-postgres-1 Healthy 
-Container ai-trading-os-migrate-run-af8c55ea470b Creating 
-Container ai-trading-os-migrate-run-af8c55ea470b Created 
+Command: `docker compose run --rm -e DATABASE_URL=postgresql+asyncpg://ai_trading_os:ai_trading_os@postgres:5432/ai_trading_os_test migrate alembic upgrade head`
+
+Exit code: `0`
+
+```text
+ Container ai-trading-os-postgres-1 Running 
+ Container ai-trading-os-postgres-1 Waiting 
+ Container ai-trading-os-postgres-1 Healthy 
+ Container ai-trading-os-migrate-run-84ab7a3e018d Creating 
+ Container ai-trading-os-migrate-run-84ab7a3e018d Created 
 INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
 INFO  [alembic.runtime.migration] Will assume transactional DDL.
 ```
-### docker integration run 1
 
-```
-docker compose run --rm -e REQUIRE_INTEGRATION_TESTS=true -e TEST_DATABASE_URL=postgresql+asyncpg://ai_trading_os:ai_trading_os@postgres:5432/ai_trading_os_test migrate uv run pytest tests/integration/test_database_and_api.py
+### `Docker integration run 1: docker compose run --rm -e REQUIRE_INTEGRATION_TESTS=true -e TEST_DATABASE_URL=postgresql+asyncpg://ai_trading_os:ai_trading_os@postgres:5432/ai_trading_os_test migrate uv run pytest tests/integration/test_database_and_api.py`
 
-Container ai-trading-os-postgres-1 Running 
-Container ai-trading-os-postgres-1 Waiting 
-Container ai-trading-os-postgres-1 Healthy 
-Container ai-trading-os-migrate-run-795958161608 Creating 
-Container ai-trading-os-migrate-run-795958161608 Created 
-Downloading pygments (1.2MiB)
-Downloading mypy (13.1MiB)
+Command: `docker compose run --rm -e REQUIRE_INTEGRATION_TESTS=true -e TEST_DATABASE_URL=postgresql+asyncpg://ai_trading_os:ai_trading_os@postgres:5432/ai_trading_os_test migrate uv run pytest tests/integration/test_database_and_api.py`
+
+Exit code: `0`
+
+```text
+ Container ai-trading-os-postgres-1 Running 
+ Container ai-trading-os-postgres-1 Waiting 
+ Container ai-trading-os-postgres-1 Healthy 
+ Container ai-trading-os-migrate-run-a9aa9bf0d333 Creating 
+ Container ai-trading-os-migrate-run-a9aa9bf0d333 Created 
 Downloading ruff (10.5MiB)
+Downloading mypy (13.1MiB)
+Downloading pygments (1.2MiB)
  Downloaded pygments
  Downloaded ruff
  Downloaded mypy
-Installed 11 packages in 81ms
-Bytecode compiled 1963 files in 538ms
+Installed 11 packages in 112ms
+Bytecode compiled 1963 files in 449ms
 ============================= test session starts ==============================
 platform linux -- Python 3.12.12, pytest-8.4.2, pluggy-1.6.0
 rootdir: /app
 configfile: pyproject.toml
 plugins: anyio-4.14.1, asyncio-0.26.0
 asyncio: mode=Mode.AUTO, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
-collected 5 items
+collected 7 items
 
-tests/integration/test_database_and_api.py .....                         [100%]
+tests/integration/test_database_and_api.py .......                       [100%]
 
 =============================== warnings summary ===============================
 .venv/lib/python3.12/site-packages/fastapi/testclient.py:1
@@ -411,35 +472,38 @@ tests/integration/test_database_and_api.py .....                         [100%]
     from starlette.testclient import TestClient as TestClient  # noqa
 
 -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
-========================= 5 passed, 1 warning in 0.34s =========================
+========================= 7 passed, 1 warning in 0.37s =========================
 ```
-### docker integration run 2
 
-```
-docker compose run --rm -e REQUIRE_INTEGRATION_TESTS=true -e TEST_DATABASE_URL=postgresql+asyncpg://ai_trading_os:ai_trading_os@postgres:5432/ai_trading_os_test migrate uv run pytest tests/integration/test_database_and_api.py
+### `Docker integration run 2: docker compose run --rm -e REQUIRE_INTEGRATION_TESTS=true -e TEST_DATABASE_URL=postgresql+asyncpg://ai_trading_os:ai_trading_os@postgres:5432/ai_trading_os_test migrate uv run pytest tests/integration/test_database_and_api.py`
 
-Container ai-trading-os-postgres-1 Running 
-Container ai-trading-os-postgres-1 Waiting 
-Container ai-trading-os-postgres-1 Healthy 
-Container ai-trading-os-migrate-run-e6ebffd9eeb4 Creating 
-Container ai-trading-os-migrate-run-e6ebffd9eeb4 Created 
+Command: `docker compose run --rm -e REQUIRE_INTEGRATION_TESTS=true -e TEST_DATABASE_URL=postgresql+asyncpg://ai_trading_os:ai_trading_os@postgres:5432/ai_trading_os_test migrate uv run pytest tests/integration/test_database_and_api.py`
+
+Exit code: `0`
+
+```text
+ Container ai-trading-os-postgres-1 Running 
+ Container ai-trading-os-postgres-1 Waiting 
+ Container ai-trading-os-postgres-1 Healthy 
+ Container ai-trading-os-migrate-run-14e2ee8cf490 Creating 
+ Container ai-trading-os-migrate-run-14e2ee8cf490 Created 
 Downloading pygments (1.2MiB)
-Downloading mypy (13.1MiB)
 Downloading ruff (10.5MiB)
+Downloading mypy (13.1MiB)
  Downloaded pygments
  Downloaded ruff
  Downloaded mypy
-Installed 11 packages in 49ms
-Bytecode compiled 1963 files in 406ms
+Installed 11 packages in 44ms
+Bytecode compiled 1963 files in 410ms
 ============================= test session starts ==============================
 platform linux -- Python 3.12.12, pytest-8.4.2, pluggy-1.6.0
 rootdir: /app
 configfile: pyproject.toml
 plugins: anyio-4.14.1, asyncio-0.26.0
 asyncio: mode=Mode.AUTO, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
-collected 5 items
+collected 7 items
 
-tests/integration/test_database_and_api.py .....                         [100%]
+tests/integration/test_database_and_api.py .......                       [100%]
 
 =============================== warnings summary ===============================
 .venv/lib/python3.12/site-packages/fastapi/testclient.py:1
@@ -447,11 +511,16 @@ tests/integration/test_database_and_api.py .....                         [100%]
     from starlette.testclient import TestClient as TestClient  # noqa
 
 -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
-========================= 5 passed, 1 warning in 0.32s =========================
+========================= 7 passed, 1 warning in 0.37s =========================
 ```
-### docker compose config
 
-```
+### `docker compose config`
+
+Command: `docker compose config`
+
+Exit code: `0`
+
+```text
 name: ai-trading-os
 services:
   api:
@@ -739,228 +808,139 @@ volumes:
     name: ai-trading-os_postgres_data
 ```
 
+### Superseded Pre-Upgrade Docker Audit Note
+
+Before applying the new Phase 3I migration to the main Docker database, an initial `alembic current` showed `0002_phase2_data_constraints`, and an initial `alembic check` failed with:
+
+```text
+FAILED: Target database is not up to date.
+ERROR [alembic.util.messaging] Target database is not up to date.
+```
+
+That was a pre-upgrade state, not the final status. After running the migration, `alembic current` returned `0003_phase3i_digest_audit (head)` and `alembic check` returned `No new upgrade operations detected.`
+
 ## Skipped Checks
-- Host `uv run pytest` skipped 5 integration tests because those require explicit PostgreSQL integration settings.
-- The PostgreSQL integration tests were run separately in Docker with `REQUIRE_INTEGRATION_TESTS=true`; both repeated Docker runs passed.
+
+- Host `uv run pytest` skipped 7 integration tests because host integration tests require `REQUIRE_INTEGRATION_TESTS=true` and a PostgreSQL integration database. The same integration file was run in Docker twice with `REQUIRE_INTEGRATION_TESTS=true`, and both runs passed.
 
 ## Unavailable Checks
-- None for the requested Phase 3H verification set. Docker, PostgreSQL, Alembic, host uv, and Docker integration checks were available and ran successfully.
+
+- None for the requested Phase 3I verification set. Docker Desktop, PostgreSQL container, Alembic, and integration tests were available and run.
 
 ## Remaining Risks
-- Live Telegram API behavior was not tested with a real bot token; Phase 3H tests use fakes and protocols.
-- Scheduled digest deduplication persistence is in-memory foundation behavior in Phase 3H; no durable delivery table was added.
-- Provider integrations remain disabled and were not called during Phase 3H verification.
-- `docker compose config` output includes existing future-phase environment placeholders; Phase 3H did not activate them.
 
-## Migration Contents
-No migration was added for Phase 3H. Current Alembic head remains `0002_phase2_data_constraints (head)`, and `alembic check` reported `No new upgrade operations detected.`
+- Phase 3I stores audit metadata only; production scheduled delivery remains disabled by default and was not activated end-to-end against a live Telegram service.
+- The Docker integration suite validates repository persistence and duplicate skipping against PostgreSQL, but it does not send real Telegram messages.
+- Existing inactive signal/trading/paper tables remain present from prior foundation work but were not activated or used for decision-making.
+
+## Traceability
+
+| Requirement | Implementation file | Test file | Verification result |
+| --- | --- | --- | --- |
+| Update project phase to Phase 3I | `app/core/constants.py` | `tests/unit/test_analysis_snapshot_foundation.py`, `tests/unit/test_readiness_scheduler_foundation.py`, `tests/integration/test_database_and_api.py` | Host pytest passed; Docker integration status coverage passed |
+| Persist neutral scheduled digest delivery audit records | `migrations/versions/0003_phase3i_scheduled_digest_deliveries.py`, `app/persistence/models/foundation.py` | `tests/integration/test_database_and_api.py` | Docker Alembic upgrade/current/check passed; Docker integration tests passed twice |
+| Implement SQLAlchemy-backed `ScheduledDigestDeliveryStore` | `app/persistence/repositories/foundation.py`, `app/persistence/unit_of_work.py` | `tests/integration/test_database_and_api.py` | Repository insert/get/exists coverage passed in Docker |
+| Make duplicate recording conflict-safe | `app/persistence/repositories/foundation.py` | `tests/integration/test_database_and_api.py` | Duplicate direct record with changed metadata did not overwrite first audit row; Docker integration passed twice |
+| Preserve in-memory store behavior | `app/services/scheduled_digest_delivery_service.py` | `tests/unit/test_scheduled_digest_delivery_foundation.py` | Host pytest passed |
+| Duplicate-safe delivery skip survives persistence | `app/services/scheduled_digest_delivery_service.py`, `app/persistence/repositories/foundation.py` | `tests/integration/test_database_and_api.py` | Docker integration tests passed twice against the same DB |
+| UTC-normalized persisted timestamps | `app/domain/entities/scheduled_digest.py`, `app/persistence/repositories/foundation.py` | `tests/integration/test_database_and_api.py` | Host and Docker tests passed |
+| Existing `/snapshot` and `/digest` commands still work | Existing Telegram command handlers | `tests/unit/test_telegram_commands.py` | Host pytest passed |
+| Scheduled delivery remains disabled by default | Settings and compose defaults, documented in README/operations | `docker compose config` | Config output shows integrations and Telegram disabled defaults |
+| Safety boundary: no strategy/signals/scoring/AI/broker/order execution | No Phase 4 code added | `tests/contract/test_safety_boundaries.py`, `scripts/security_check.py` | Contract safety tests and security check passed |
+
+## Full Migration Contents
+
+### `migrations/versions/0003_phase3i_scheduled_digest_deliveries.py`
+
+```python
+"""phase3i scheduled digest delivery audit
+
+Revision ID: 0003_phase3i_digest_audit
+Revises: 0002_phase2_data_constraints
+Create Date: 2026-07-15 00:00:00.000000
+"""
+
+from collections.abc import Sequence
+
+import sqlalchemy as sa
+from alembic import op
+from sqlalchemy.dialects import postgresql
+
+revision: str = "0003_phase3i_digest_audit"
+down_revision: str | None = "0002_phase2_data_constraints"
+branch_labels: str | Sequence[str] | None = None
+depends_on: str | Sequence[str] | None = None
+
+
+def upgrade() -> None:
+    op.create_table(
+        "scheduled_digest_deliveries",
+        sa.Column("id", postgresql.UUID(as_uuid=True), nullable=False),
+        sa.Column("dedup_key", sa.String(length=64), nullable=False),
+        sa.Column("project_phase", sa.String(length=120), nullable=False),
+        sa.Column("delivered_at", sa.DateTime(timezone=True), nullable=False),
+        sa.Column("sender_name", sa.String(length=120), nullable=False),
+        sa.Column("readiness_status", sa.String(length=20), nullable=True),
+        sa.Column("item_count", sa.Integer(), server_default=sa.text("0"), nullable=False),
+        sa.Column("ready_count", sa.Integer(), server_default=sa.text("0"), nullable=False),
+        sa.Column("incomplete_count", sa.Integer(), server_default=sa.text("0"), nullable=False),
+        sa.Column("blocked_count", sa.Integer(), server_default=sa.text("0"), nullable=False),
+        sa.Column("items_summary", sa.String(length=500), nullable=True),
+        sa.Column("payload_preview", sa.String(length=1000), nullable=True),
+        sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
+        sa.PrimaryKeyConstraint("id"),
+        sa.UniqueConstraint("dedup_key", name="uq_scheduled_digest_deliveries_dedup_key"),
+        sa.CheckConstraint("item_count >= 0", name="ck_scheduled_digest_item_count_non_negative"),
+        sa.CheckConstraint("ready_count >= 0", name="ck_scheduled_digest_ready_count_non_negative"),
+        sa.CheckConstraint(
+            "incomplete_count >= 0",
+            name="ck_scheduled_digest_incomplete_count_non_negative",
+        ),
+        sa.CheckConstraint(
+            "blocked_count >= 0",
+            name="ck_scheduled_digest_blocked_count_non_negative",
+        ),
+    )
+    op.create_index(
+        "ix_scheduled_digest_deliveries_delivered_at",
+        "scheduled_digest_deliveries",
+        ["delivered_at"],
+    )
+    op.create_index(
+        "ix_scheduled_digest_deliveries_project_phase",
+        "scheduled_digest_deliveries",
+        ["project_phase"],
+    )
+    op.create_index(
+        "ix_scheduled_digest_deliveries_readiness_status",
+        "scheduled_digest_deliveries",
+        ["readiness_status"],
+    )
+
+
+def downgrade() -> None:
+    op.drop_index(
+        "ix_scheduled_digest_deliveries_readiness_status",
+        table_name="scheduled_digest_deliveries",
+    )
+    op.drop_index(
+        "ix_scheduled_digest_deliveries_project_phase",
+        table_name="scheduled_digest_deliveries",
+    )
+    op.drop_index(
+        "ix_scheduled_digest_deliveries_delivered_at",
+        table_name="scheduled_digest_deliveries",
+    )
+    op.drop_table("scheduled_digest_deliveries")
+```
+
 
 ## Full Contents Of Changed Source Files
-### .env.example
 
-```dotenv
-APP_NAME=AI Trading OS
-APP_ENV=development
-APP_TIMEZONE=Europe/Stockholm
-STORAGE_TIMEZONE=UTC
-LOG_LEVEL=INFO
-
-DATABASE_URL=postgresql+asyncpg://ai_trading_os:ai_trading_os@postgres:5432/ai_trading_os
-TEST_DATABASE_URL=postgresql+asyncpg://ai_trading_os:ai_trading_os@localhost:5432/ai_trading_os_test
-INTERNAL_API_KEY=development-internal-key-change-me
-
-TELEGRAM_ENABLED=false
-TELEGRAM_BOT_TOKEN=
-TELEGRAM_ALLOWED_USER_ID=
-TELEGRAM_ALLOWED_CHAT_ID=
-
-OPENAI_ENABLED=false
-OPENAI_API_KEY=
-OPENAI_MODEL=gpt-4.1
-
-MARKET_DATA_ENABLED=false
-TWELVE_DATA_API_KEY=
-TWELVE_DATA_BASE_URL=https://api.twelvedata.com
-
-CALENDAR_ENABLED=false
-FMP_API_KEY=
-FMP_BASE_URL=https://financialmodelingprep.com
-
-PROVIDER_CONNECT_TIMEOUT_SECONDS=5
-PROVIDER_READ_TIMEOUT_SECONDS=10
-PROVIDER_WRITE_TIMEOUT_SECONDS=5
-PROVIDER_POOL_TIMEOUT_SECONDS=5
-PROVIDER_RETRY_COUNT=2
-PROVIDER_RETRY_BACKOFF_SECONDS=0.1
-PROVIDER_MAX_REQUEST_RANGE_DAYS=31
-REQUIRE_INTEGRATION_TESTS=false
-
-SCAN_ENABLED=false
-SCHEDULED_DIGEST_ENABLED=false
-SCHEDULED_DIGEST_INTERVAL_MINUTES=60
-SETUP_SCORE_THRESHOLD=85
-
-PAPER_ACCOUNT_CURRENCY=EUR
-PAPER_ACCOUNT_BALANCE=10000
-PAPER_RISK_PERCENT=0.5
-MAX_OPEN_RISK_PERCENT=1.0
-MAX_DAILY_LOSS_PERCENT=1.5
-MAX_WEEKLY_LOSS_PERCENT=4.0
-MAX_CONSECUTIVE_LOSSES=3
-
-SIGNAL_VALID_MINUTES=30
-```
-### app/core/config.py
+### `app/core/constants.py`
 
 ```python
-from decimal import Decimal
-from functools import lru_cache
-from typing import Any
-
-from pydantic import Field, SecretStr, field_validator, model_validator
-from pydantic_settings import BaseSettings, SettingsConfigDict
-
-DEFAULT_DEVELOPMENT_INTERNAL_API_KEY = "development-internal-key-change-me"
-
-
-class Settings(BaseSettings):
-    app_name: str = "AI Trading OS"
-    app_env: str = "development"
-    app_timezone: str = "Europe/Stockholm"
-    storage_timezone: str = "UTC"
-    log_level: str = "INFO"
-
-    database_url: SecretStr = SecretStr(
-        "postgresql+asyncpg://ai_trading_os:ai_trading_os@postgres:5432/ai_trading_os"
-    )
-    test_database_url: SecretStr | None = SecretStr(
-        "postgresql+asyncpg://ai_trading_os:ai_trading_os@localhost:5432/ai_trading_os_test"
-    )
-    internal_api_key: SecretStr = SecretStr(DEFAULT_DEVELOPMENT_INTERNAL_API_KEY)
-
-    telegram_enabled: bool = False
-    telegram_bot_token: SecretStr | None = None
-    telegram_allowed_user_id: int | None = None
-    telegram_allowed_chat_id: int | None = None
-
-    openai_enabled: bool = False
-    openai_api_key: SecretStr | None = None
-    openai_model: str = "gpt-4.1"
-
-    market_data_enabled: bool = False
-    twelve_data_api_key: SecretStr | None = None
-    twelve_data_base_url: str = "https://api.twelvedata.com"
-
-    calendar_enabled: bool = False
-    fmp_api_key: SecretStr | None = None
-    fmp_base_url: str = "https://financialmodelingprep.com"
-
-    provider_connect_timeout_seconds: float = Field(default=5.0, gt=0, le=30)
-    provider_read_timeout_seconds: float = Field(default=10.0, gt=0, le=60)
-    provider_write_timeout_seconds: float = Field(default=5.0, gt=0, le=30)
-    provider_pool_timeout_seconds: float = Field(default=5.0, gt=0, le=30)
-    provider_retry_count: int = Field(default=2, ge=0, le=5)
-    provider_retry_backoff_seconds: float = Field(default=0.1, ge=0, le=5)
-    provider_max_request_range_days: int = Field(default=31, ge=1, le=370)
-    require_integration_tests: bool = False
-
-    scan_enabled: bool = False
-    scheduled_digest_enabled: bool = False
-    scheduled_digest_interval_minutes: int = Field(default=60, ge=1, le=1440)
-    setup_score_threshold: int = Field(default=85, ge=0, le=100)
-
-    paper_account_currency: str = "EUR"
-    paper_account_balance: Decimal = Field(default=Decimal("10000"), gt=Decimal("0"))
-    paper_risk_percent: Decimal = Field(default=Decimal("0.5"), ge=Decimal("0"))
-    max_open_risk_percent: Decimal = Field(default=Decimal("1.0"), ge=Decimal("0"))
-    max_daily_loss_percent: Decimal = Field(default=Decimal("1.5"), ge=Decimal("0"))
-    max_weekly_loss_percent: Decimal = Field(default=Decimal("4.0"), ge=Decimal("0"))
-    max_consecutive_losses: int = Field(default=3, ge=0)
-
-    signal_valid_minutes: int = Field(default=30, ge=1)
-
-    model_config = SettingsConfigDict(
-        case_sensitive=False,
-        env_file=".env",
-        env_file_encoding="utf-8",
-        extra="ignore",
-    )
-
-    @field_validator(
-        "telegram_bot_token",
-        "telegram_allowed_user_id",
-        "telegram_allowed_chat_id",
-        "openai_api_key",
-        "twelve_data_api_key",
-        "fmp_api_key",
-        "test_database_url",
-        mode="before",
-    )
-    @classmethod
-    def empty_string_to_none(cls, value: Any) -> Any:
-        if value == "":
-            return None
-        return value
-
-    @field_validator("paper_account_currency")
-    @classmethod
-    def currency_code_must_be_uppercase(cls, value: str) -> str:
-        if len(value) != 3 or not value.isalpha() or value.upper() != value:
-            raise ValueError("paper account currency must be a three-letter uppercase code")
-        return value
-
-    @model_validator(mode="after")
-    def validate_conditional_settings(self) -> "Settings":
-        errors: list[str] = []
-        if not self.internal_api_key.get_secret_value().strip():
-            errors.append("INTERNAL_API_KEY is required")
-        if self.storage_timezone != "UTC":
-            errors.append("STORAGE_TIMEZONE must be UTC")
-        if (
-            self.app_env != "development"
-            and self.internal_api_key.get_secret_value() == DEFAULT_DEVELOPMENT_INTERNAL_API_KEY
-        ):
-            errors.append("Default development INTERNAL_API_KEY is rejected outside development")
-        if self.telegram_enabled:
-            if not self.telegram_bot_token:
-                errors.append("TELEGRAM_BOT_TOKEN is required when TELEGRAM_ENABLED=true")
-            if self.telegram_allowed_user_id is None:
-                errors.append("TELEGRAM_ALLOWED_USER_ID is required when TELEGRAM_ENABLED=true")
-            if self.telegram_allowed_chat_id is None:
-                errors.append("TELEGRAM_ALLOWED_CHAT_ID is required when TELEGRAM_ENABLED=true")
-        if self.openai_enabled and not self.openai_api_key:
-            errors.append("OPENAI_API_KEY is required when OPENAI_ENABLED=true")
-        if self.market_data_enabled and not self.twelve_data_api_key:
-            errors.append("TWELVE_DATA_API_KEY is required when MARKET_DATA_ENABLED=true")
-        if self.calendar_enabled and not self.fmp_api_key:
-            errors.append("FMP_API_KEY is required when CALENDAR_ENABLED=true")
-        if errors:
-            raise ValueError("; ".join(errors))
-        return self
-
-    def database_dsn(self) -> str:
-        return self.database_url.get_secret_value()
-
-    def test_database_dsn(self) -> str | None:
-        return self.test_database_url.get_secret_value() if self.test_database_url else None
-
-    def enabled_integrations(self) -> dict[str, bool]:
-        return {
-            "telegram": self.telegram_enabled,
-            "openai": self.openai_enabled,
-            "market_data": self.market_data_enabled,
-            "calendar": self.calendar_enabled,
-        }
-
-
-@lru_cache
-def get_settings() -> Settings:
-    return Settings()
-```
-### app/core/constants.py
-
-```python
-PROJECT_PHASE = "phase_3h_scheduled_digest_delivery_foundation"
+PROJECT_PHASE = "phase_3i_persistent_digest_audit_foundation"
 STRATEGY_IMPLEMENTED = False
 REAL_TRADING_ENABLED = False
 
@@ -972,139 +952,8 @@ SYSTEM_STATE_LAST_ERROR = "last_error"
 
 DEFAULT_STRATEGY_VERSION = "foundation-v1"
 ```
-### app/domain/entities/__init__.py
 
-```python
-from app.domain.entities.analysis import (
-    AnalysisInputAudit,
-    AnalysisIssue,
-    AnalysisIssueCode,
-    AnalysisIssueCount,
-    AnalysisNumericSummary,
-    AnalysisReadinessStatus,
-    AnalysisReport,
-    AnalysisSnapshot,
-    AnalysisSnapshotMetadata,
-    AnalysisWindow,
-)
-from app.domain.entities.context import (
-    CandleShapeSummary,
-    ContextCurrencyCount,
-    ContextImpactCount,
-    ContextIssue,
-    ContextIssueCode,
-    EventContextSummary,
-    IndicatorWindow,
-    MarketContextSnapshot,
-    MovingAverageSeries,
-    MovingAverageSummary,
-    RangeContextSummary,
-    ReturnDistributionSummary,
-    TimeContextSummary,
-)
-from app.domain.entities.data_quality import (
-    CandleAvailability,
-    DataQualityIssue,
-    DataQualityIssueCode,
-    EconomicEventAvailability,
-    FeatureSnapshot,
-    UpsertResult,
-    build_feature_snapshot,
-)
-from app.domain.entities.features import (
-    CandleFeatureSummary,
-    CurrencyEventCount,
-    EconomicEventFeatureSummary,
-    EconomicImpactCount,
-    FeatureIssue,
-    FeatureIssueCode,
-    FeatureWindow,
-    MarketFeatureSnapshot,
-)
-from app.domain.entities.market_data import Candle, EconomicEvent, EconomicImpact, Timeframe
-from app.domain.entities.readiness import (
-    SnapshotDigest,
-    SnapshotDigestIssueCount,
-    SnapshotDigestItem,
-    SnapshotDigestStatus,
-    SnapshotNotificationDedupKey,
-    SnapshotNotificationPayload,
-    SnapshotScheduleItem,
-    SnapshotSchedulePlan,
-    SnapshotWindow,
-    digest_status_from_analysis,
-)
-from app.domain.entities.scheduled_digest import (
-    ScheduledDigestConfig,
-    ScheduledDigestDecision,
-    ScheduledDigestDecisionReason,
-    ScheduledDigestDeliveryRecord,
-    ScheduledDigestDeliveryResult,
-    ScheduledDigestTick,
-)
-
-__all__ = [
-    "AnalysisInputAudit",
-    "AnalysisIssue",
-    "AnalysisIssueCode",
-    "AnalysisIssueCount",
-    "AnalysisNumericSummary",
-    "AnalysisReadinessStatus",
-    "AnalysisReport",
-    "AnalysisSnapshot",
-    "AnalysisSnapshotMetadata",
-    "AnalysisWindow",
-    "Candle",
-    "CandleAvailability",
-    "CandleFeatureSummary",
-    "CandleShapeSummary",
-    "ContextCurrencyCount",
-    "ContextImpactCount",
-    "ContextIssue",
-    "ContextIssueCode",
-    "CurrencyEventCount",
-    "DataQualityIssue",
-    "DataQualityIssueCode",
-    "EconomicEvent",
-    "EconomicEventAvailability",
-    "EconomicEventFeatureSummary",
-    "EconomicImpact",
-    "EconomicImpactCount",
-    "EventContextSummary",
-    "FeatureIssue",
-    "FeatureIssueCode",
-    "FeatureSnapshot",
-    "FeatureWindow",
-    "IndicatorWindow",
-    "MarketContextSnapshot",
-    "MarketFeatureSnapshot",
-    "MovingAverageSeries",
-    "MovingAverageSummary",
-    "RangeContextSummary",
-    "ReturnDistributionSummary",
-    "ScheduledDigestConfig",
-    "ScheduledDigestDecision",
-    "ScheduledDigestDecisionReason",
-    "ScheduledDigestDeliveryRecord",
-    "ScheduledDigestDeliveryResult",
-    "ScheduledDigestTick",
-    "SnapshotDigest",
-    "SnapshotDigestIssueCount",
-    "SnapshotDigestItem",
-    "SnapshotDigestStatus",
-    "SnapshotNotificationDedupKey",
-    "SnapshotNotificationPayload",
-    "SnapshotScheduleItem",
-    "SnapshotSchedulePlan",
-    "SnapshotWindow",
-    "TimeContextSummary",
-    "Timeframe",
-    "UpsertResult",
-    "build_feature_snapshot",
-    "digest_status_from_analysis",
-]
-```
-### app/domain/entities/scheduled_digest.py
+### `app/domain/entities/scheduled_digest.py`
 
 ```python
 from datetime import datetime
@@ -1116,6 +965,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator, model_valida
 from app.core import constants
 from app.core.time import normalize_to_utc
 from app.domain.entities.readiness import (
+    SnapshotDigestStatus,
     SnapshotNotificationDedupKey,
     SnapshotNotificationPayload,
     SnapshotScheduleItem,
@@ -1184,6 +1034,13 @@ class ScheduledDigestDeliveryRecord(BaseModel):
     dedup_key: SnapshotNotificationDedupKey
     delivered_at: datetime
     sender_name: str = Field(min_length=1)
+    readiness_status: SnapshotDigestStatus | None = None
+    item_count: int = Field(default=0, ge=0)
+    ready_count: int = Field(default=0, ge=0)
+    incomplete_count: int = Field(default=0, ge=0)
+    blocked_count: int = Field(default=0, ge=0)
+    items_summary: str | None = Field(default=None, max_length=500)
+    payload_preview: str | None = Field(default=None, max_length=1000)
 
     model_config = ConfigDict(frozen=True)
 
@@ -1215,7 +1072,8 @@ class ScheduledDigestDeliveryResult(BaseModel):
             raise ValueError("skipped scheduled digest result must not include a record")
         return self
 ```
-### app/domain/interfaces/notifications.py
+
+### `app/domain/interfaces/notifications.py`
 
 ```python
 from typing import Protocol
@@ -1235,78 +1093,891 @@ class ScheduledDigestDeliveryStore(Protocol):
 
     async def record(self, record: ScheduledDigestDeliveryRecord) -> None:
         """Record a delivered scheduled digest deduplication key."""
+
+    async def get(
+        self,
+        dedup_key: SnapshotNotificationDedupKey,
+    ) -> ScheduledDigestDeliveryRecord | None:
+        """Return one neutral scheduled digest delivery audit record when present."""
 ```
-### app/scheduler/jobs.py
+
+### `app/domain/interfaces/unit_of_work.py`
 
 ```python
-import logging
+from types import TracebackType
+from typing import Protocol, Self
+
+from app.domain.interfaces.notifications import ScheduledDigestDeliveryStore
+from app.domain.interfaces.repositories import (
+    AuditLogRepository,
+    CandleRepository,
+    EconomicEventRepository,
+    ErrorEventRepository,
+    SystemStateRepository,
+)
+
+
+class UnitOfWork(Protocol):
+    @property
+    def system_state(self) -> SystemStateRepository:
+        """Repository for persisted system state."""
+        ...
+
+    @property
+    def audit_logs(self) -> AuditLogRepository:
+        """Repository for audit events."""
+        ...
+
+    @property
+    def error_events(self) -> ErrorEventRepository:
+        """Repository for structured error events."""
+        ...
+
+    @property
+    def candles(self) -> CandleRepository:
+        """Repository for normalized closed candles."""
+        ...
+
+    @property
+    def economic_events(self) -> EconomicEventRepository:
+        """Repository for normalized economic events."""
+        ...
+
+    @property
+    def scheduled_digest_deliveries(self) -> ScheduledDigestDeliveryStore:
+        """Store for neutral scheduled digest delivery audit records."""
+        ...
+
+    async def __aenter__(self) -> Self:
+        """Open one asynchronous persistence boundary."""
+
+    async def __aexit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc: BaseException | None,
+        traceback: TracebackType | None,
+    ) -> None:
+        """Rollback uncommitted work and close resources."""
+
+    async def commit(self) -> None:
+        """Commit the current unit of work explicitly."""
+
+    async def rollback(self) -> None:
+        """Rollback the current unit of work."""
+```
+
+### `app/persistence/models/__init__.py`
+
+```python
+from app.persistence.models.foundation import (
+    AgentReportModel,
+    AuditLogModel,
+    CandleModel,
+    EconomicEventModel,
+    ErrorEventModel,
+    PaperPositionModel,
+    ScanModel,
+    ScheduledDigestDeliveryModel,
+    SignalModel,
+    SystemStateModel,
+)
+
+__all__ = [
+    "AgentReportModel",
+    "AuditLogModel",
+    "CandleModel",
+    "EconomicEventModel",
+    "ErrorEventModel",
+    "PaperPositionModel",
+    "ScanModel",
+    "ScheduledDigestDeliveryModel",
+    "SignalModel",
+    "SystemStateModel",
+]
+```
+
+### `app/persistence/models/foundation.py`
+
+```python
+import uuid
+from datetime import datetime
+from decimal import Decimal
+from typing import Any
+
+from sqlalchemy import (
+    Boolean,
+    CheckConstraint,
+    DateTime,
+    ForeignKey,
+    Index,
+    Integer,
+    Numeric,
+    String,
+    UniqueConstraint,
+    Uuid,
+)
+from sqlalchemy.dialects import postgresql
+from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.types import JSON
+
+from app.core.time import utc_now
+from app.persistence.database import Base
+
+JSONB_TYPE = postgresql.JSONB().with_variant(JSON(), "sqlite")
+UUID_PK = Uuid(as_uuid=True)
+
+
+class SystemStateModel(Base):
+    __tablename__ = "system_state"
+
+    key: Mapped[str] = mapped_column(String(120), primary_key=True)
+    value_json: Mapped[Any] = mapped_column(JSONB_TYPE, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=utc_now,
+        onupdate=utc_now,
+        nullable=False,
+    )
+
+
+class AuditLogModel(Base):
+    __tablename__ = "audit_logs"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID_PK, primary_key=True, default=uuid.uuid4)
+    event_type: Mapped[str] = mapped_column(String(120), nullable=False, index=True)
+    entity_type: Mapped[str | None] = mapped_column(String(120))
+    entity_id: Mapped[str | None] = mapped_column(String(120))
+    actor: Mapped[str | None] = mapped_column(String(120))
+    before_json: Mapped[Any | None] = mapped_column(JSONB_TYPE)
+    after_json: Mapped[Any | None] = mapped_column(JSONB_TYPE)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=utc_now,
+        nullable=False,
+        index=True,
+    )
+
+
+class ErrorEventModel(Base):
+    __tablename__ = "error_events"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID_PK, primary_key=True, default=uuid.uuid4)
+    error_code: Mapped[str] = mapped_column(String(80), nullable=False, index=True)
+    severity: Mapped[str] = mapped_column(String(30), nullable=False, index=True)
+    component: Mapped[str] = mapped_column(String(120), nullable=False, index=True)
+    message_ru: Mapped[str] = mapped_column(String(500), nullable=False)
+    technical_details: Mapped[str | None] = mapped_column(String(2000))
+    context_json: Mapped[Any | None] = mapped_column(JSONB_TYPE)
+    resolved: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False, index=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=utc_now,
+        nullable=False,
+        index=True,
+    )
+
+
+class CandleModel(Base):
+    __tablename__ = "candles"
+    __table_args__ = (
+        UniqueConstraint("provider", "pair", "timeframe", "open_time", name="uq_candle_identity"),
+        CheckConstraint("open > 0", name="ck_candles_open_positive"),
+        CheckConstraint("high > 0", name="ck_candles_high_positive"),
+        CheckConstraint("low > 0", name="ck_candles_low_positive"),
+        CheckConstraint("close > 0", name="ck_candles_close_positive"),
+        CheckConstraint("close_time > open_time", name="ck_candles_close_after_open"),
+        CheckConstraint("volume IS NULL OR volume >= 0", name="ck_candles_volume_non_negative"),
+        CheckConstraint("is_closed = true", name="ck_candles_is_closed"),
+        Index("ix_candles_pair_timeframe_close_time", "pair", "timeframe", "close_time"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID_PK, primary_key=True, default=uuid.uuid4)
+    provider: Mapped[str] = mapped_column(String(80), nullable=False)
+    pair: Mapped[str] = mapped_column(String(6), nullable=False, index=True)
+    timeframe: Mapped[str] = mapped_column(String(20), nullable=False, index=True)
+    open_time: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    close_time: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, index=True
+    )
+    open: Mapped[Decimal] = mapped_column(Numeric(20, 10), nullable=False)
+    high: Mapped[Decimal] = mapped_column(Numeric(20, 10), nullable=False)
+    low: Mapped[Decimal] = mapped_column(Numeric(20, 10), nullable=False)
+    close: Mapped[Decimal] = mapped_column(Numeric(20, 10), nullable=False)
+    volume: Mapped[Decimal | None] = mapped_column(Numeric(24, 8))
+    is_closed: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utc_now, nullable=False
+    )
+
+
+class EconomicEventModel(Base):
+    __tablename__ = "economic_events"
+    __table_args__ = (
+        UniqueConstraint("provider", "provider_event_id", name="uq_economic_events_provider_event"),
+        Index("ix_economic_events_currency_scheduled", "currency", "scheduled_at"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID_PK, primary_key=True, default=uuid.uuid4)
+    provider_event_id: Mapped[str] = mapped_column(String(120), nullable=False, index=True)
+    currency: Mapped[str] = mapped_column(String(3), nullable=False, index=True)
+    country: Mapped[str | None] = mapped_column(String(120))
+    title: Mapped[str] = mapped_column(String(300), nullable=False)
+    impact: Mapped[str] = mapped_column(String(40), nullable=False, index=True)
+    scheduled_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, index=True
+    )
+    actual: Mapped[Decimal | None] = mapped_column(Numeric(20, 6))
+    forecast: Mapped[Decimal | None] = mapped_column(Numeric(20, 6))
+    previous: Mapped[Decimal | None] = mapped_column(Numeric(20, 6))
+    actual_raw: Mapped[str | None] = mapped_column(String(200))
+    forecast_raw: Mapped[str | None] = mapped_column(String(200))
+    previous_raw: Mapped[str | None] = mapped_column(String(200))
+    provider: Mapped[str] = mapped_column(String(80), nullable=False)
+    fetched_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+
+class ScheduledDigestDeliveryModel(Base):
+    __tablename__ = "scheduled_digest_deliveries"
+    __table_args__ = (
+        UniqueConstraint("dedup_key", name="uq_scheduled_digest_deliveries_dedup_key"),
+        CheckConstraint("item_count >= 0", name="ck_scheduled_digest_item_count_non_negative"),
+        CheckConstraint("ready_count >= 0", name="ck_scheduled_digest_ready_count_non_negative"),
+        CheckConstraint(
+            "incomplete_count >= 0",
+            name="ck_scheduled_digest_incomplete_count_non_negative",
+        ),
+        CheckConstraint(
+            "blocked_count >= 0",
+            name="ck_scheduled_digest_blocked_count_non_negative",
+        ),
+        Index("ix_scheduled_digest_deliveries_delivered_at", "delivered_at"),
+        Index("ix_scheduled_digest_deliveries_project_phase", "project_phase"),
+        Index("ix_scheduled_digest_deliveries_readiness_status", "readiness_status"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID_PK, primary_key=True, default=uuid.uuid4)
+    dedup_key: Mapped[str] = mapped_column(String(64), nullable=False)
+    project_phase: Mapped[str] = mapped_column(String(120), nullable=False)
+    delivered_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    sender_name: Mapped[str] = mapped_column(String(120), nullable=False)
+    readiness_status: Mapped[str | None] = mapped_column(String(20))
+    item_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    ready_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    incomplete_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    blocked_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    items_summary: Mapped[str | None] = mapped_column(String(500))
+    payload_preview: Mapped[str | None] = mapped_column(String(1000))
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utc_now, nullable=False
+    )
+
+
+class ScanModel(Base):
+    __tablename__ = "scans"
+    __table_args__ = (
+        UniqueConstraint("pair", "m15_close_time", "strategy_version", name="uq_scan_identity"),
+        Index("ix_scans_status_started", "status", "started_at"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID_PK, primary_key=True, default=uuid.uuid4)
+    pair: Mapped[str] = mapped_column(String(6), nullable=False, index=True)
+    m15_close_time: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    status: Mapped[str] = mapped_column(String(60), nullable=False, index=True)
+    snapshot_id: Mapped[uuid.UUID | None] = mapped_column(UUID_PK)
+    strategy_version: Mapped[str] = mapped_column(String(80), nullable=False)
+    started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    error_code: Mapped[str | None] = mapped_column(String(80))
+
+
+class AgentReportModel(Base):
+    __tablename__ = "agent_reports"
+    __table_args__ = (
+        CheckConstraint("score >= 0 AND score <= 100", name="ck_agent_reports_score_range"),
+        Index("ix_agent_reports_scan_agent", "scan_id", "agent_name"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID_PK, primary_key=True, default=uuid.uuid4)
+    scan_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("scans.id"), nullable=False, index=True)
+    agent_name: Mapped[str] = mapped_column(String(120), nullable=False)
+    direction: Mapped[str] = mapped_column(String(20), nullable=False)
+    verdict: Mapped[str] = mapped_column(String(40), nullable=False)
+    score: Mapped[int] = mapped_column(Integer, nullable=False)
+    confidence: Mapped[str] = mapped_column(String(20), nullable=False)
+    summary_ru: Mapped[str] = mapped_column(String(2000), nullable=False)
+    reasons_for_json: Mapped[Any] = mapped_column(JSONB_TYPE, nullable=False)
+    reasons_against_json: Mapped[Any] = mapped_column(JSONB_TYPE, nullable=False)
+    invalid_if_json: Mapped[Any] = mapped_column(JSONB_TYPE, nullable=False)
+    evidence_json: Mapped[Any] = mapped_column(JSONB_TYPE, nullable=False)
+    rule_version: Mapped[str] = mapped_column(String(80), nullable=False)
+    model_version: Mapped[str | None] = mapped_column(String(120))
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utc_now, nullable=False
+    )
+
+
+class SignalModel(Base):
+    __tablename__ = "signals"
+    __table_args__ = (
+        Index("uq_signals_fingerprint", "fingerprint", unique=True),
+        Index("ix_signals_pair_status_valid_until", "pair", "status", "valid_until"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID_PK, primary_key=True, default=uuid.uuid4)
+    scan_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("scans.id"), nullable=False, index=True)
+    fingerprint: Mapped[str] = mapped_column(String(160), nullable=False)
+    pair: Mapped[str] = mapped_column(String(6), nullable=False, index=True)
+    direction: Mapped[str] = mapped_column(String(20), nullable=False)
+    setup_score: Mapped[int] = mapped_column(Integer, nullable=False)
+    confidence: Mapped[str] = mapped_column(String(20), nullable=False)
+    entry_min: Mapped[Decimal] = mapped_column(Numeric(20, 10), nullable=False)
+    entry_max: Mapped[Decimal] = mapped_column(Numeric(20, 10), nullable=False)
+    invalidation_price: Mapped[Decimal] = mapped_column(Numeric(20, 10), nullable=False)
+    stop_loss: Mapped[Decimal] = mapped_column(Numeric(20, 10), nullable=False)
+    take_profit_1: Mapped[Decimal] = mapped_column(Numeric(20, 10), nullable=False)
+    take_profit_2: Mapped[Decimal] = mapped_column(Numeric(20, 10), nullable=False)
+    valid_until: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, index=True
+    )
+    status: Mapped[str] = mapped_column(String(60), nullable=False, index=True)
+    sent_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    cancelled_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    cancel_reason_ru: Mapped[str | None] = mapped_column(String(1000))
+    strategy_version: Mapped[str] = mapped_column(String(80), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utc_now, nullable=False
+    )
+
+
+class PaperPositionModel(Base):
+    __tablename__ = "paper_positions"
+    __table_args__ = (Index("ix_paper_positions_status_created", "status", "created_at"),)
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID_PK, primary_key=True, default=uuid.uuid4)
+    signal_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("signals.id"), nullable=False, index=True
+    )
+    account_balance_before: Mapped[Decimal] = mapped_column(Numeric(20, 2), nullable=False)
+    risk_percent: Mapped[Decimal] = mapped_column(Numeric(8, 4), nullable=False)
+    risk_amount_eur: Mapped[Decimal] = mapped_column(Numeric(20, 2), nullable=False)
+    position_size: Mapped[Decimal] = mapped_column(Numeric(24, 8), nullable=False)
+    entry_price: Mapped[Decimal] = mapped_column(Numeric(20, 10), nullable=False)
+    entered_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    stop_loss: Mapped[Decimal] = mapped_column(Numeric(20, 10), nullable=False)
+    take_profit_1: Mapped[Decimal] = mapped_column(Numeric(20, 10), nullable=False)
+    take_profit_2: Mapped[Decimal] = mapped_column(Numeric(20, 10), nullable=False)
+    status: Mapped[str] = mapped_column(String(60), nullable=False, index=True)
+    closed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    result_eur: Mapped[Decimal | None] = mapped_column(Numeric(20, 2))
+    result_percent: Mapped[Decimal | None] = mapped_column(Numeric(10, 4))
+    result_r: Mapped[Decimal | None] = mapped_column(Numeric(10, 4))
+    spread_cost: Mapped[Decimal | None] = mapped_column(Numeric(20, 2))
+    slippage_cost: Mapped[Decimal | None] = mapped_column(Numeric(20, 2))
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utc_now, nullable=False
+    )
+```
+
+### `app/persistence/repositories/__init__.py`
+
+```python
+from app.persistence.repositories.foundation import (
+    SqlAlchemyAuditLogRepository,
+    SqlAlchemyCandleRepository,
+    SqlAlchemyEconomicEventRepository,
+    SqlAlchemyErrorEventRepository,
+    SqlAlchemyScheduledDigestDeliveryStore,
+    SqlAlchemySystemStateRepository,
+)
+
+__all__ = [
+    "SqlAlchemyAuditLogRepository",
+    "SqlAlchemyCandleRepository",
+    "SqlAlchemyEconomicEventRepository",
+    "SqlAlchemyErrorEventRepository",
+    "SqlAlchemyScheduledDigestDeliveryStore",
+    "SqlAlchemySystemStateRepository",
+]
+```
+
+### `app/persistence/repositories/foundation.py`
+
+```python
+from collections.abc import Mapping
 from datetime import datetime
 from typing import Any
 
-from app.core.time import utc_now
-from app.domain.entities import ScheduledDigestDeliveryResult
-from app.observability.health_checks import run_application_health_check
-from app.services.health_service import HealthService
-from app.services.scheduled_digest_delivery_service import ScheduledDigestDeliveryService
-from app.services.system_state_service import SystemStateService
+from sqlalchemy import select
+from sqlalchemy.dialects.postgresql import insert as postgresql_insert
+from sqlalchemy.ext.asyncio import AsyncSession
 
-logger = logging.getLogger(__name__)
+from app.core.security import redact_text
+from app.core.time import normalize_to_utc, utc_now
+from app.domain.entities import Candle, EconomicEvent, EconomicImpact, Timeframe
+from app.domain.entities.data_quality import UpsertResult
+from app.domain.entities.readiness import SnapshotDigestStatus, SnapshotNotificationDedupKey
+from app.domain.entities.scheduled_digest import ScheduledDigestDeliveryRecord
+from app.domain.value_objects import CurrencyPair
+from app.persistence.models import (
+    AuditLogModel,
+    CandleModel,
+    EconomicEventModel,
+    ErrorEventModel,
+    ScheduledDigestDeliveryModel,
+    SystemStateModel,
+)
 
 
-async def update_worker_heartbeat_job(service: SystemStateService) -> None:
-    await service.update_worker_heartbeat()
-    logger.info("worker_heartbeat_updated")
-
-
-async def application_health_check_job(health_service: HealthService) -> None:
-    result = await run_application_health_check(health_service)
-    logger.info("worker_health_check_completed", extra={"database_status": result["database"]})
-
-
-async def scheduled_digest_delivery_job(
-    service: ScheduledDigestDeliveryService,
-    *,
-    as_of: datetime | None = None,
-) -> ScheduledDigestDeliveryResult:
-    result = await service.run_tick(as_of=as_of or utc_now())
-    logger.info(
-        "scheduled_digest_delivery_checked",
-        extra={
-            "delivered": result.delivered,
-            "reason": result.decision.reason.value,
-        },
+def _candle_from_model(row: CandleModel) -> Candle:
+    return Candle(
+        provider=row.provider,
+        pair=CurrencyPair(value=row.pair),
+        timeframe=Timeframe(row.timeframe),
+        open_time=row.open_time,
+        close_time=row.close_time,
+        open=row.open,
+        high=row.high,
+        low=row.low,
+        close=row.close,
+        volume=row.volume,
+        is_closed=row.is_closed,
     )
-    return result
 
 
-def register_jobs(
-    scheduler: Any,
-    *,
-    system_state_service: SystemStateService,
-    health_service: HealthService,
-) -> None:
-    scheduler.add_job(
-        update_worker_heartbeat_job,
-        "interval",
-        seconds=30,
-        args=[system_state_service],
-        id="worker_heartbeat",
-        max_instances=1,
-        coalesce=True,
-        replace_existing=True,
+def _event_from_model(row: EconomicEventModel) -> EconomicEvent:
+    return EconomicEvent(
+        provider=row.provider,
+        provider_event_id=row.provider_event_id,
+        title=row.title,
+        currency=row.currency,
+        country=row.country,
+        impact=EconomicImpact(row.impact),
+        scheduled_at=row.scheduled_at,
+        actual=row.actual,
+        forecast=row.forecast,
+        previous=row.previous,
+        actual_raw=row.actual_raw,
+        forecast_raw=row.forecast_raw,
+        previous_raw=row.previous_raw,
+        fetched_at=row.fetched_at,
     )
-    scheduler.add_job(
-        application_health_check_job,
-        "interval",
-        seconds=60,
-        args=[health_service],
-        id="application_health_check",
-        max_instances=1,
-        coalesce=True,
-        replace_existing=True,
+
+
+def _delivery_from_model(row: ScheduledDigestDeliveryModel) -> ScheduledDigestDeliveryRecord:
+    return ScheduledDigestDeliveryRecord(
+        project_phase=row.project_phase,
+        dedup_key=SnapshotNotificationDedupKey(value=row.dedup_key),
+        delivered_at=row.delivered_at,
+        sender_name=row.sender_name,
+        readiness_status=(
+            SnapshotDigestStatus(row.readiness_status) if row.readiness_status is not None else None
+        ),
+        item_count=row.item_count,
+        ready_count=row.ready_count,
+        incomplete_count=row.incomplete_count,
+        blocked_count=row.blocked_count,
+        items_summary=row.items_summary,
+        payload_preview=row.payload_preview,
     )
+
+
+class SqlAlchemySystemStateRepository:
+    def __init__(self, session: AsyncSession) -> None:
+        self._session = session
+
+    async def get(self, key: str) -> Any | None:
+        row = await self._session.get(SystemStateModel, key)
+        return None if row is None else row.value_json
+
+    async def set(self, key: str, value: Any) -> None:
+        row = await self._session.get(SystemStateModel, key)
+        if row is None:
+            self._session.add(SystemStateModel(key=key, value_json=value))
+            return
+        row.value_json = value
+        row.updated_at = utc_now()
+
+    async def get_all(self) -> dict[str, Any]:
+        result = await self._session.execute(select(SystemStateModel))
+        rows = result.scalars().all()
+        return {row.key: row.value_json for row in rows}
+
+
+class SqlAlchemyAuditLogRepository:
+    def __init__(self, session: AsyncSession) -> None:
+        self._session = session
+
+    async def add(
+        self,
+        *,
+        event_type: str,
+        entity_type: str | None = None,
+        entity_id: str | None = None,
+        actor: str | None = None,
+        before_json: Mapping[str, Any] | None = None,
+        after_json: Mapping[str, Any] | None = None,
+    ) -> None:
+        self._session.add(
+            AuditLogModel(
+                event_type=event_type,
+                entity_type=entity_type,
+                entity_id=entity_id,
+                actor=actor,
+                before_json=dict(before_json) if before_json is not None else None,
+                after_json=dict(after_json) if after_json is not None else None,
+            )
+        )
+
+
+class SqlAlchemyErrorEventRepository:
+    def __init__(self, session: AsyncSession) -> None:
+        self._session = session
+
+    async def add(
+        self,
+        *,
+        error_code: str,
+        severity: str,
+        component: str,
+        message_ru: str,
+        technical_details: str | None = None,
+        context_json: Mapping[str, Any] | None = None,
+        resolved: bool = False,
+    ) -> None:
+        self._session.add(
+            ErrorEventModel(
+                error_code=error_code,
+                severity=severity,
+                component=component,
+                message_ru=message_ru,
+                technical_details=redact_text(technical_details) if technical_details else None,
+                context_json=dict(context_json) if context_json is not None else None,
+                resolved=resolved,
+            )
+        )
+
+
+class SqlAlchemyCandleRepository:
+    def __init__(self, session: AsyncSession) -> None:
+        self._session = session
+
+    async def upsert_many(self, candles: list[Candle]) -> UpsertResult:
+        inserted = 0
+        updated = 0
+        for candle in candles:
+            result = await self._session.execute(
+                select(CandleModel).where(
+                    CandleModel.provider == candle.provider,
+                    CandleModel.pair == candle.pair.value,
+                    CandleModel.timeframe == candle.timeframe.value,
+                    CandleModel.open_time == candle.open_time,
+                )
+            )
+            row = result.scalar_one_or_none()
+            if row is None:
+                self._session.add(
+                    CandleModel(
+                        provider=candle.provider,
+                        pair=candle.pair.value,
+                        timeframe=candle.timeframe.value,
+                        open_time=candle.open_time,
+                        close_time=candle.close_time,
+                        open=candle.open,
+                        high=candle.high,
+                        low=candle.low,
+                        close=candle.close,
+                        volume=candle.volume,
+                        is_closed=True,
+                    )
+                )
+                inserted += 1
+                continue
+            row.close_time = candle.close_time
+            row.open = candle.open
+            row.high = candle.high
+            row.low = candle.low
+            row.close = candle.close
+            row.volume = candle.volume
+            row.is_closed = True
+            updated += 1
+        return UpsertResult(inserted=inserted, updated=updated)
+
+    async def list_range(
+        self,
+        *,
+        pair: CurrencyPair,
+        timeframe: Timeframe,
+        start_at: datetime,
+        end_at: datetime,
+        provider: str | None = None,
+    ) -> list[Candle]:
+        start_utc = normalize_to_utc(start_at)
+        end_utc = normalize_to_utc(end_at)
+        query = select(CandleModel).where(
+            CandleModel.pair == pair.value,
+            CandleModel.timeframe == timeframe.value,
+            CandleModel.open_time >= start_utc,
+            CandleModel.close_time <= end_utc,
+            CandleModel.is_closed.is_(True),
+        )
+        if provider is not None:
+            query = query.where(CandleModel.provider == provider)
+        result = await self._session.execute(
+            query.order_by(CandleModel.open_time.asc(), CandleModel.provider.asc())
+        )
+        return [_candle_from_model(row) for row in result.scalars().all()]
+
+
+class SqlAlchemyEconomicEventRepository:
+    def __init__(self, session: AsyncSession) -> None:
+        self._session = session
+
+    async def upsert_many(self, events: list[EconomicEvent]) -> UpsertResult:
+        inserted = 0
+        updated = 0
+        for event in events:
+            result = await self._session.execute(
+                select(EconomicEventModel).where(
+                    EconomicEventModel.provider == event.provider,
+                    EconomicEventModel.provider_event_id == event.provider_event_id,
+                )
+            )
+            row = result.scalar_one_or_none()
+            if row is None:
+                self._session.add(
+                    EconomicEventModel(
+                        provider=event.provider,
+                        provider_event_id=event.provider_event_id,
+                        title=event.title,
+                        currency=event.currency,
+                        country=event.country,
+                        impact=event.impact.value,
+                        scheduled_at=event.scheduled_at,
+                        actual=event.actual,
+                        forecast=event.forecast,
+                        previous=event.previous,
+                        actual_raw=event.actual_raw,
+                        forecast_raw=event.forecast_raw,
+                        previous_raw=event.previous_raw,
+                        fetched_at=event.fetched_at,
+                    )
+                )
+                inserted += 1
+                continue
+            row.title = event.title
+            row.currency = event.currency
+            row.country = event.country
+            row.impact = event.impact.value
+            row.scheduled_at = event.scheduled_at
+            row.actual = event.actual
+            row.forecast = event.forecast
+            row.previous = event.previous
+            row.actual_raw = event.actual_raw
+            row.forecast_raw = event.forecast_raw
+            row.previous_raw = event.previous_raw
+            row.fetched_at = event.fetched_at
+            updated += 1
+        return UpsertResult(inserted=inserted, updated=updated)
+
+    async def list_window(
+        self,
+        *,
+        start_at: datetime,
+        end_at: datetime,
+        currencies: list[str] | None = None,
+        provider: str | None = None,
+    ) -> list[EconomicEvent]:
+        start_utc = normalize_to_utc(start_at)
+        end_utc = normalize_to_utc(end_at)
+        query = select(EconomicEventModel).where(
+            EconomicEventModel.scheduled_at >= start_utc,
+            EconomicEventModel.scheduled_at < end_utc,
+        )
+        if currencies is not None:
+            query = query.where(EconomicEventModel.currency.in_(currencies))
+        if provider is not None:
+            query = query.where(EconomicEventModel.provider == provider)
+        result = await self._session.execute(
+            query.order_by(
+                EconomicEventModel.scheduled_at.asc(),
+                EconomicEventModel.currency.asc(),
+                EconomicEventModel.provider_event_id.asc(),
+            )
+        )
+        return [_event_from_model(row) for row in result.scalars().all()]
+
+
+class SqlAlchemyScheduledDigestDeliveryStore:
+    def __init__(self, session: AsyncSession) -> None:
+        self._session = session
+
+    async def exists(self, dedup_key: SnapshotNotificationDedupKey) -> bool:
+        result = await self._session.execute(
+            select(ScheduledDigestDeliveryModel.dedup_key).where(
+                ScheduledDigestDeliveryModel.dedup_key == dedup_key.value
+            )
+        )
+        return result.scalar_one_or_none() is not None
+
+    async def record(self, record: ScheduledDigestDeliveryRecord) -> None:
+        statement = (
+            postgresql_insert(ScheduledDigestDeliveryModel)
+            .values(
+                dedup_key=record.dedup_key.value,
+                project_phase=record.project_phase,
+                delivered_at=record.delivered_at,
+                sender_name=record.sender_name,
+                readiness_status=(
+                    record.readiness_status.value if record.readiness_status is not None else None
+                ),
+                item_count=record.item_count,
+                ready_count=record.ready_count,
+                incomplete_count=record.incomplete_count,
+                blocked_count=record.blocked_count,
+                items_summary=record.items_summary,
+                payload_preview=record.payload_preview,
+            )
+            .on_conflict_do_nothing(index_elements=[ScheduledDigestDeliveryModel.dedup_key])
+        )
+        await self._session.execute(statement)
+
+    async def get(
+        self,
+        dedup_key: SnapshotNotificationDedupKey,
+    ) -> ScheduledDigestDeliveryRecord | None:
+        result = await self._session.execute(
+            select(ScheduledDigestDeliveryModel).where(
+                ScheduledDigestDeliveryModel.dedup_key == dedup_key.value
+            )
+        )
+        row = result.scalar_one_or_none()
+        return None if row is None else _delivery_from_model(row)
 ```
-### app/services/scheduled_digest_delivery_service.py
+
+### `app/persistence/unit_of_work.py`
+
+```python
+from types import TracebackType
+from typing import Self
+
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
+
+from app.domain.interfaces.notifications import ScheduledDigestDeliveryStore
+from app.domain.interfaces.repositories import (
+    AuditLogRepository,
+    CandleRepository,
+    EconomicEventRepository,
+    ErrorEventRepository,
+    SystemStateRepository,
+)
+from app.persistence.repositories import (
+    SqlAlchemyAuditLogRepository,
+    SqlAlchemyCandleRepository,
+    SqlAlchemyEconomicEventRepository,
+    SqlAlchemyErrorEventRepository,
+    SqlAlchemyScheduledDigestDeliveryStore,
+    SqlAlchemySystemStateRepository,
+)
+
+
+class SqlAlchemyUnitOfWork:
+    def __init__(self, session_factory: async_sessionmaker[AsyncSession]) -> None:
+        self._session_factory = session_factory
+        self._session: AsyncSession | None = None
+        self._committed = False
+        self._system_state: SystemStateRepository | None = None
+        self._audit_logs: AuditLogRepository | None = None
+        self._error_events: ErrorEventRepository | None = None
+        self._candles: CandleRepository | None = None
+        self._economic_events: EconomicEventRepository | None = None
+        self._scheduled_digest_deliveries: ScheduledDigestDeliveryStore | None = None
+
+    async def __aenter__(self) -> Self:
+        if self._session is not None:
+            raise RuntimeError("unit of work is already active")
+        self._session = self._session_factory()
+        self._committed = False
+        self._system_state = SqlAlchemySystemStateRepository(self._session)
+        self._audit_logs = SqlAlchemyAuditLogRepository(self._session)
+        self._error_events = SqlAlchemyErrorEventRepository(self._session)
+        self._candles = SqlAlchemyCandleRepository(self._session)
+        self._economic_events = SqlAlchemyEconomicEventRepository(self._session)
+        self._scheduled_digest_deliveries = SqlAlchemyScheduledDigestDeliveryStore(self._session)
+        return self
+
+    async def __aexit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc: BaseException | None,
+        traceback: TracebackType | None,
+    ) -> None:
+        if self._session is None:
+            return
+        try:
+            in_transaction = getattr(self._session, "in_transaction", lambda: False)
+            if exc_type is not None or not self._committed or in_transaction():
+                await self._session.rollback()
+        finally:
+            await self._session.close()
+            self._session = None
+            self._system_state = None
+            self._audit_logs = None
+            self._error_events = None
+            self._candles = None
+            self._economic_events = None
+            self._scheduled_digest_deliveries = None
+            self._committed = False
+
+    @property
+    def system_state(self) -> SystemStateRepository:
+        if self._session is None or self._system_state is None:
+            raise RuntimeError("unit of work has not been entered")
+        return self._system_state
+
+    @property
+    def audit_logs(self) -> AuditLogRepository:
+        if self._session is None or self._audit_logs is None:
+            raise RuntimeError("unit of work has not been entered")
+        return self._audit_logs
+
+    @property
+    def error_events(self) -> ErrorEventRepository:
+        if self._session is None or self._error_events is None:
+            raise RuntimeError("unit of work has not been entered")
+        return self._error_events
+
+    @property
+    def candles(self) -> CandleRepository:
+        if self._session is None or self._candles is None:
+            raise RuntimeError("unit of work has not been entered")
+        return self._candles
+
+    @property
+    def economic_events(self) -> EconomicEventRepository:
+        if self._session is None or self._economic_events is None:
+            raise RuntimeError("unit of work has not been entered")
+        return self._economic_events
+
+    @property
+    def scheduled_digest_deliveries(self) -> ScheduledDigestDeliveryStore:
+        if self._session is None or self._scheduled_digest_deliveries is None:
+            raise RuntimeError("unit of work has not been entered")
+        return self._scheduled_digest_deliveries
+
+    async def commit(self) -> None:
+        if self._session is None:
+            raise RuntimeError("unit of work has not been entered")
+        await self._session.commit()
+        self._committed = True
+
+    async def rollback(self) -> None:
+        if self._session is None:
+            raise RuntimeError("unit of work has not been entered")
+        await self._session.rollback()
+        self._committed = False
+```
+
+### `app/services/scheduled_digest_delivery_service.py`
 
 ```python
 from datetime import datetime
@@ -1348,6 +2019,12 @@ class InMemoryScheduledDigestDeliveryStore:
 
     async def record(self, record: ScheduledDigestDeliveryRecord) -> None:
         self._records[record.dedup_key.value] = record
+
+    async def get(
+        self,
+        dedup_key: SnapshotNotificationDedupKey,
+    ) -> ScheduledDigestDeliveryRecord | None:
+        return self._records.get(dedup_key.value)
 
 
 class ScheduledDigestDeliveryService:
@@ -1409,6 +2086,13 @@ class ScheduledDigestDeliveryService:
             dedup_key=payload.dedup_key,
             delivered_at=tick.as_of,
             sender_name=self._sender_name,
+            readiness_status=payload.digest.readiness_status,
+            item_count=len(payload.digest.items),
+            ready_count=payload.digest.ready_count,
+            incomplete_count=payload.digest.incomplete_count,
+            blocked_count=payload.digest.blocked_count,
+            items_summary=_items_summary(payload),
+            payload_preview=_payload_preview(payload.text),
         )
         await self._delivery_store.record(record)
         return ScheduledDigestDeliveryResult(
@@ -1512,279 +2196,23 @@ def _skipped_result(
         payload=payload,
         record=None,
     )
+
+
+def _items_summary(payload: SnapshotNotificationPayload) -> str:
+    return ",".join(f"{item.pair.value}:{item.timeframe.value}" for item in payload.digest.items)
+
+
+def _payload_preview(text: str) -> str:
+    normalized = " ".join(text.split())
+    return normalized[:1000]
 ```
 
-## Full Contents Of New Tests
-### tests/unit/test_scheduled_digest_delivery_foundation.py
-
-```python
-from datetime import UTC, datetime, timedelta, timezone
-from decimal import Decimal
-from typing import Any, cast
-
-import pytest
-from pydantic import ValidationError
-
-from app.core import constants
-from app.domain.entities import Candle, Timeframe
-from app.domain.entities.readiness import SnapshotNotificationPayload, SnapshotScheduleItem
-from app.domain.entities.scheduled_digest import (
-    ScheduledDigestConfig,
-    ScheduledDigestDecisionReason,
-    ScheduledDigestTick,
-)
-from app.domain.value_objects import CurrencyPair
-from app.scheduler.jobs import register_jobs, scheduled_digest_delivery_job
-from app.services.analysis_service import AnalysisService
-from app.services.health_service import HealthService
-from app.services.readiness_digest_service import ReadinessDigestService
-from app.services.scheduled_digest_delivery_service import (
-    InMemoryScheduledDigestDeliveryStore,
-    ScheduledDigestDeliveryService,
-    is_scheduled_digest_due,
-)
-from app.services.system_state_service import SystemStateService
-from tests.fakes import FakeUnitOfWorkFactory
-
-PAIR = CurrencyPair(value="EURUSD")
-BASE_TIME = datetime(2026, 7, 15, 8, 0, tzinfo=UTC)
-
-
-class FakeNotificationSender:
-    def __init__(self) -> None:
-        self.payloads: list[SnapshotNotificationPayload] = []
-
-    async def send(self, payload: SnapshotNotificationPayload) -> None:
-        self.payloads.append(payload)
-
-
-class FailingReadinessDigestService:
-    async def build_payload(
-        self,
-        *,
-        items: tuple[SnapshotScheduleItem, ...],
-        as_of: datetime,
-    ) -> SnapshotNotificationPayload:
-        raise RuntimeError("forced digest build failure")
-
-
-class FakeScheduler:
-    def __init__(self) -> None:
-        self.job_ids: list[str] = []
-
-    def add_job(self, *args: Any, **kwargs: Any) -> None:
-        self.job_ids.append(str(kwargs["id"]))
-
-
-def _schedule_config(*, enabled: bool = True, interval_minutes: int = 15) -> ScheduledDigestConfig:
-    return ScheduledDigestConfig(
-        enabled=enabled,
-        interval_minutes=interval_minutes,
-        items=(
-            SnapshotScheduleItem(
-                pair=PAIR,
-                timeframe=Timeframe.M15,
-                lookback_candle_count=3,
-            ),
-        ),
-    )
-
-
-def _candle(index: int) -> Candle:
-    open_time = BASE_TIME + timedelta(minutes=15 * index)
-    open_price = Decimal("1.1000") + (Decimal("0.0001") * Decimal(index))
-    close_price = open_price + Decimal("0.0001")
-    return Candle(
-        provider="scheduled-digest-test",
-        pair=PAIR,
-        timeframe=Timeframe.M15,
-        open_time=open_time,
-        close_time=open_time + timedelta(minutes=15),
-        open=open_price,
-        high=close_price + Decimal("0.0002"),
-        low=open_price - Decimal("0.0002"),
-        close=close_price,
-        volume=Decimal("100"),
-        is_closed=True,
-    )
-
-
-def _service(
-    *,
-    config: ScheduledDigestConfig | None = None,
-    sender: FakeNotificationSender | None = None,
-    store: InMemoryScheduledDigestDeliveryStore | None = None,
-) -> tuple[ScheduledDigestDeliveryService, FakeNotificationSender]:
-    notification_sender = sender or FakeNotificationSender()
-    factory = FakeUnitOfWorkFactory(candles=[_candle(0), _candle(1), _candle(2)])
-    readiness_service = ReadinessDigestService(AnalysisService(factory))
-    return (
-        ScheduledDigestDeliveryService(
-            config=config or _schedule_config(),
-            readiness_digest_service=readiness_service,
-            sender=notification_sender,
-            delivery_store=store or InMemoryScheduledDigestDeliveryStore(),
-            sender_name="fake_sender",
-        ),
-        notification_sender,
-    )
-
-
-@pytest.mark.asyncio
-async def test_scheduled_digest_disabled_skip() -> None:
-    service, sender = _service(config=_schedule_config(enabled=False))
-
-    result = await service.run_tick(as_of=BASE_TIME + timedelta(minutes=45))
-
-    assert result.skipped is True
-    assert result.delivered is False
-    assert result.decision.reason == ScheduledDigestDecisionReason.DISABLED
-    assert result.payload is None
-    assert sender.payloads == []
-
-
-@pytest.mark.asyncio
-async def test_scheduled_digest_not_due_skip() -> None:
-    service, sender = _service(config=_schedule_config(interval_minutes=60))
-
-    result = await service.run_tick(as_of=BASE_TIME + timedelta(minutes=45))
-
-    assert result.skipped is True
-    assert result.decision.reason == ScheduledDigestDecisionReason.NOT_DUE
-    assert result.decision.is_due is False
-    assert sender.payloads == []
-
-
-@pytest.mark.asyncio
-async def test_scheduled_digest_due_builds_payload_and_sends_once() -> None:
-    service, sender = _service()
-
-    result = await service.run_tick(as_of=BASE_TIME + timedelta(minutes=45))
-
-    assert result.delivered is True
-    assert result.skipped is False
-    assert result.decision.reason == ScheduledDigestDecisionReason.DELIVERED
-    assert result.payload is not None
-    assert result.record is not None
-    assert result.dedup_key == result.payload.dedup_key
-    assert len(sender.payloads) == 1
-    assert sender.payloads[0] == result.payload
-    assert "Системный отчёт готовности" in result.payload.text
-    assert "Решений и указаний нет." in result.payload.text
-    data = result.model_dump(mode="json")
-    assert data["project_phase"] == constants.PROJECT_PHASE
-    assert data["payload"]["project_phase"] == constants.PROJECT_PHASE
-    with pytest.raises(ValidationError):
-        result.delivered = False
-
-
-@pytest.mark.asyncio
-async def test_scheduled_digest_duplicate_dedup_key_skip() -> None:
-    store = InMemoryScheduledDigestDeliveryStore()
-    sender = FakeNotificationSender()
-    service, _ = _service(store=store, sender=sender)
-    as_of = BASE_TIME + timedelta(minutes=45)
-
-    first = await service.run_tick(as_of=as_of)
-    second = await service.run_tick(as_of=as_of)
-
-    assert first.delivered is True
-    assert second.skipped is True
-    assert second.decision.reason == ScheduledDigestDecisionReason.DUPLICATE
-    assert second.dedup_key == first.dedup_key
-    assert len(sender.payloads) == 1
-
-
-@pytest.mark.asyncio
-async def test_scheduled_digest_no_items_skip() -> None:
-    service, sender = _service(config=ScheduledDigestConfig(enabled=True, items=()))
-
-    result = await service.run_tick(as_of=BASE_TIME + timedelta(minutes=45))
-
-    assert result.skipped is True
-    assert result.decision.reason == ScheduledDigestDecisionReason.NO_ITEMS
-    assert sender.payloads == []
-
-
-@pytest.mark.asyncio
-async def test_scheduled_digest_build_failed_skip() -> None:
-    sender = FakeNotificationSender()
-    service = ScheduledDigestDeliveryService(
-        config=_schedule_config(),
-        readiness_digest_service=FailingReadinessDigestService(),
-        sender=sender,
-        delivery_store=InMemoryScheduledDigestDeliveryStore(),
-    )
-
-    result = await service.run_tick(as_of=BASE_TIME + timedelta(minutes=45))
-
-    assert result.skipped is True
-    assert result.decision.reason == ScheduledDigestDecisionReason.BUILD_FAILED
-    assert result.payload is None
-    assert sender.payloads == []
-
-
-def test_scheduled_digest_tick_is_json_serializable_and_immutable() -> None:
-    tick = ScheduledDigestTick(as_of=datetime(2026, 7, 15, 10, 45, tzinfo=UTC))
-
-    data = tick.model_dump(mode="json")
-
-    assert data["project_phase"] == constants.PROJECT_PHASE
-    assert data["as_of"] == "2026-07-15T10:45:00Z"
-    with pytest.raises(ValidationError):
-        tick.as_of = BASE_TIME
-
-
-def test_scheduled_digest_tick_normalizes_utc() -> None:
-    tick = ScheduledDigestTick(
-        as_of=datetime(2026, 7, 15, 12, 45, tzinfo=timezone(timedelta(hours=2)))
-    )
-
-    assert tick.as_of == datetime(2026, 7, 15, 10, 45, tzinfo=UTC)
-
-
-def test_scheduled_digest_due_policy_is_deterministic() -> None:
-    assert is_scheduled_digest_due(
-        as_of=datetime(2026, 7, 15, 10, 45, tzinfo=UTC),
-        interval_minutes=15,
-    )
-    assert not is_scheduled_digest_due(
-        as_of=datetime(2026, 7, 15, 10, 46, tzinfo=UTC),
-        interval_minutes=15,
-    )
-    assert not is_scheduled_digest_due(
-        as_of=datetime(2026, 7, 15, 10, 45, 1, tzinfo=UTC),
-        interval_minutes=15,
-    )
-
-
-@pytest.mark.asyncio
-async def test_worker_callable_can_run_without_auto_registration() -> None:
-    service, sender = _service()
-
-    result = await scheduled_digest_delivery_job(
-        service,
-        as_of=BASE_TIME + timedelta(minutes=45),
-    )
-
-    assert result.delivered is True
-    assert len(sender.payloads) == 1
-
-
-def test_register_jobs_does_not_start_scheduled_digest_delivery_loop() -> None:
-    scheduler = FakeScheduler()
-
-    register_jobs(
-        scheduler,
-        system_state_service=cast(SystemStateService, object()),
-        health_service=cast(HealthService, object()),
-    )
-
-    assert scheduler.job_ids == ["worker_heartbeat", "application_health_check"]
-```
 
 ## Full Contents Of Changed Test Files
-### tests/contract/test_safety_boundaries.py
+
+No brand-new test file was added in Phase 3I; existing unit, contract, integration, and fake-support tests were extended. Full contents of the changed test files are included below.
+
+### `tests/contract/test_safety_boundaries.py`
 
 ```python
 import inspect
@@ -1802,6 +2230,8 @@ from app.core.enums import Decision
 from app.core.exceptions import IntegrationDisabledError
 from app.domain.entities import Timeframe
 from app.domain.value_objects import CurrencyPair
+from app.persistence.models import ScheduledDigestDeliveryModel
+from app.persistence.repositories.foundation import SqlAlchemyScheduledDigestDeliveryStore
 from app.telegram.commands import digest_command
 from scripts.security_check import scan_files, scan_production_code
 
@@ -1978,6 +2408,34 @@ PHASE_3H_FORBIDDEN_TERMS = (
     "paper_trading",
     "order_execution",
 )
+PHASE_3I_FILES = (Path("migrations/versions/0003_phase3i_scheduled_digest_deliveries.py"),)
+PHASE_3I_SOURCE_OBJECTS = (
+    ScheduledDigestDeliveryModel,
+    SqlAlchemyScheduledDigestDeliveryStore,
+)
+PHASE_3I_FORBIDDEN_TERMS = (
+    "bullish",
+    "bearish",
+    "overbought",
+    "oversold",
+    "breakout",
+    "reversal",
+    "trend signal",
+    "entry",
+    "exit",
+    "buy",
+    "sell",
+    "long",
+    "short",
+    "recommendation",
+    "setup",
+    "score",
+    "confidence",
+    "OpenAI",
+    "broker",
+    "paper_trading",
+    "order_execution",
+)
 
 
 def test_no_real_order_execution_code_exists() -> None:
@@ -2052,6 +2510,19 @@ def test_phase3h_scheduled_digest_files_do_not_add_decision_or_execution_terms()
     assert offenders == []
 
 
+def test_phase3i_digest_audit_files_do_not_add_decision_or_execution_terms() -> None:
+    offenders: list[str] = []
+    texts = [path.read_text(encoding="utf-8") for path in PHASE_3I_FILES]
+    texts.extend(inspect.getsource(source_object) for source_object in PHASE_3I_SOURCE_OBJECTS)
+    for index, text in enumerate(texts):
+        lowered = text.lower()
+        for term in PHASE_3I_FORBIDDEN_TERMS:
+            if term.lower() in lowered:
+                offenders.append(f"phase3i-source-{index}: {term}")
+
+    assert offenders == []
+
+
 @pytest.mark.asyncio
 async def test_disabled_market_data_provider_fails_before_external_call() -> None:
     with pytest.raises(IntegrationDisabledError):
@@ -2119,7 +2590,230 @@ def test_safety_scanner_rejects_execution_http_endpoints(tmp_path: Path) -> None
 
     assert scan_files([file_path])
 ```
-### tests/integration/test_database_and_api.py
+
+### `tests/fakes.py`
+
+```python
+from types import TracebackType
+from typing import Any, Self
+
+from app.domain.entities import Candle, EconomicEvent, Timeframe
+from app.domain.entities.data_quality import UpsertResult
+from app.domain.entities.readiness import SnapshotNotificationDedupKey
+from app.domain.entities.scheduled_digest import ScheduledDigestDeliveryRecord
+from app.domain.interfaces.notifications import ScheduledDigestDeliveryStore
+from app.domain.interfaces.repositories import (
+    AuditLogRepository,
+    CandleRepository,
+    EconomicEventRepository,
+    ErrorEventRepository,
+    SystemStateRepository,
+)
+from app.domain.value_objects import CurrencyPair
+
+
+class FakeSystemStateRepository:
+    def __init__(self, state: dict[str, Any]) -> None:
+        self._state = state
+
+    async def get(self, key: str) -> Any | None:
+        return self._state.get(key)
+
+    async def set(self, key: str, value: Any) -> None:
+        self._state[key] = value
+
+    async def get_all(self) -> dict[str, Any]:
+        return dict(self._state)
+
+
+class FakeAuditLogRepository:
+    def __init__(self) -> None:
+        self.events: list[dict[str, Any]] = []
+
+    async def add(
+        self,
+        *,
+        event_type: str,
+        entity_type: str | None = None,
+        entity_id: str | None = None,
+        actor: str | None = None,
+        before_json: dict[str, Any] | None = None,
+        after_json: dict[str, Any] | None = None,
+    ) -> None:
+        self.events.append(
+            {
+                "event_type": event_type,
+                "entity_type": entity_type,
+                "entity_id": entity_id,
+                "actor": actor,
+                "before_json": before_json,
+                "after_json": after_json,
+            }
+        )
+
+
+class FakeErrorEventRepository:
+    def __init__(self) -> None:
+        self.events: list[dict[str, Any]] = []
+
+    async def add(
+        self,
+        *,
+        error_code: str,
+        severity: str,
+        component: str,
+        message_ru: str,
+        technical_details: str | None = None,
+        context_json: dict[str, Any] | None = None,
+        resolved: bool = False,
+    ) -> None:
+        self.events.append(
+            {
+                "error_code": error_code,
+                "severity": severity,
+                "component": component,
+                "message_ru": message_ru,
+                "technical_details": technical_details,
+                "context_json": context_json,
+                "resolved": resolved,
+            }
+        )
+
+
+class FakeCandleRepository:
+    def __init__(self, candles: list[Candle]) -> None:
+        self._candles = candles
+
+    async def upsert_many(self, candles: list[Candle]) -> UpsertResult:
+        self._candles.extend(candles)
+        return UpsertResult(inserted=len(candles), updated=0)
+
+    async def list_range(
+        self,
+        *,
+        pair: CurrencyPair,
+        timeframe: Timeframe,
+        start_at: Any,
+        end_at: Any,
+        provider: str | None = None,
+    ) -> list[Candle]:
+        return [
+            candle
+            for candle in self._candles
+            if candle.pair == pair
+            and candle.timeframe == timeframe
+            and candle.open_time >= start_at
+            and candle.close_time <= end_at
+            and (provider is None or candle.provider == provider)
+        ]
+
+
+class FakeEconomicEventRepository:
+    def __init__(self, events: list[EconomicEvent]) -> None:
+        self._events = events
+
+    async def upsert_many(self, events: list[EconomicEvent]) -> UpsertResult:
+        self._events.extend(events)
+        return UpsertResult(inserted=len(events), updated=0)
+
+    async def list_window(
+        self,
+        *,
+        start_at: Any,
+        end_at: Any,
+        currencies: list[str] | None = None,
+        provider: str | None = None,
+    ) -> list[EconomicEvent]:
+        return [
+            event
+            for event in self._events
+            if start_at <= event.scheduled_at < end_at
+            and (currencies is None or event.currency in currencies)
+            and (provider is None or event.provider == provider)
+        ]
+
+
+class FakeScheduledDigestDeliveryStore:
+    def __init__(self, records: dict[str, ScheduledDigestDeliveryRecord]) -> None:
+        self._records = records
+
+    async def exists(self, dedup_key: SnapshotNotificationDedupKey) -> bool:
+        return dedup_key.value in self._records
+
+    async def record(self, record: ScheduledDigestDeliveryRecord) -> None:
+        self._records.setdefault(record.dedup_key.value, record)
+
+    async def get(
+        self,
+        dedup_key: SnapshotNotificationDedupKey,
+    ) -> ScheduledDigestDeliveryRecord | None:
+        return self._records.get(dedup_key.value)
+
+
+class FakeUnitOfWork:
+    def __init__(
+        self,
+        state: dict[str, Any],
+        candles: list[Candle],
+        events: list[EconomicEvent],
+        scheduled_digest_deliveries: dict[str, ScheduledDigestDeliveryRecord],
+    ) -> None:
+        self.system_state: SystemStateRepository = FakeSystemStateRepository(state)
+        self.audit_logs: AuditLogRepository = FakeAuditLogRepository()
+        self.error_events: ErrorEventRepository = FakeErrorEventRepository()
+        self.candles: CandleRepository = FakeCandleRepository(candles)
+        self.economic_events: EconomicEventRepository = FakeEconomicEventRepository(events)
+        self.scheduled_digest_deliveries: ScheduledDigestDeliveryStore = (
+            FakeScheduledDigestDeliveryStore(scheduled_digest_deliveries)
+        )
+        self.committed = False
+        self.rolled_back = False
+
+    async def __aenter__(self) -> Self:
+        return self
+
+    async def __aexit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc: BaseException | None,
+        traceback: TracebackType | None,
+    ) -> None:
+        if exc_type is not None or not self.committed:
+            self.rolled_back = True
+
+    async def commit(self) -> None:
+        self.committed = True
+
+    async def rollback(self) -> None:
+        self.rolled_back = True
+
+
+class FakeUnitOfWorkFactory:
+    def __init__(
+        self,
+        state: dict[str, Any] | None = None,
+        candles: list[Candle] | None = None,
+        events: list[EconomicEvent] | None = None,
+        scheduled_digest_deliveries: dict[str, ScheduledDigestDeliveryRecord] | None = None,
+    ) -> None:
+        self.state = state or {}
+        self.candles = candles or []
+        self.events = events or []
+        self.scheduled_digest_deliveries = scheduled_digest_deliveries or {}
+        self.instances: list[FakeUnitOfWork] = []
+
+    def __call__(self) -> FakeUnitOfWork:
+        uow = FakeUnitOfWork(
+            self.state,
+            self.candles,
+            self.events,
+            self.scheduled_digest_deliveries,
+        )
+        self.instances.append(uow)
+        return uow
+```
+
+### `tests/integration/test_database_and_api.py`
 
 ```python
 from datetime import UTC, datetime
@@ -2131,16 +2825,32 @@ from fastapi.testclient import TestClient
 from sqlalchemy import delete
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
+from app.core import constants
 from app.core.config import Settings
 from app.domain.entities import Candle, EconomicEvent, EconomicImpact, Timeframe
+from app.domain.entities.readiness import (
+    SnapshotDigest,
+    SnapshotDigestItem,
+    SnapshotDigestStatus,
+    SnapshotNotificationDedupKey,
+    SnapshotNotificationPayload,
+    SnapshotScheduleItem,
+)
+from app.domain.entities.scheduled_digest import (
+    ScheduledDigestConfig,
+    ScheduledDigestDecisionReason,
+    ScheduledDigestDeliveryRecord,
+)
 from app.domain.value_objects import CurrencyPair
 from app.main import create_app
 from app.persistence.database import create_engine, create_session_factory
-from app.persistence.models import CandleModel, EconomicEventModel
+from app.persistence.models import CandleModel, EconomicEventModel, ScheduledDigestDeliveryModel
 from app.persistence.session import build_uow_factory
+from app.services.scheduled_digest_delivery_service import ScheduledDigestDeliveryService
 from app.services.system_state_service import SystemStateService
 
 _MARKET_CALENDAR_TEST_PROVIDER = "integration-phase3a-repository-test"
+_SCHEDULED_DIGEST_TEST_SENDER = "integration-phase3i-sender"
 
 
 async def _delete_market_calendar_test_rows(
@@ -2156,6 +2866,83 @@ async def _delete_market_calendar_test_rows(
             )
         )
         await session.commit()
+
+
+async def _delete_scheduled_digest_test_rows(
+    session_factory: async_sessionmaker[AsyncSession],
+) -> None:
+    async with session_factory() as session:
+        await session.execute(
+            delete(ScheduledDigestDeliveryModel).where(
+                ScheduledDigestDeliveryModel.sender_name == _SCHEDULED_DIGEST_TEST_SENDER
+            )
+        )
+        await session.commit()
+
+
+class FakeNotificationSender:
+    def __init__(self) -> None:
+        self.payloads: list[SnapshotNotificationPayload] = []
+
+    async def send(self, payload: SnapshotNotificationPayload) -> None:
+        self.payloads.append(payload)
+
+
+class StaticReadinessDigestPayloadBuilder:
+    def __init__(self, payload: SnapshotNotificationPayload) -> None:
+        self._payload = payload
+
+    async def build_payload(
+        self,
+        *,
+        items: tuple[SnapshotScheduleItem, ...],
+        as_of: datetime,
+    ) -> SnapshotNotificationPayload:
+        return self._payload
+
+
+def _dedup_key(seed: str) -> SnapshotNotificationDedupKey:
+    return SnapshotNotificationDedupKey(value=(seed * 64)[:64])
+
+
+def _scheduled_digest_payload(
+    dedup_key: SnapshotNotificationDedupKey,
+) -> SnapshotNotificationPayload:
+    as_of = datetime(2026, 7, 15, 10, 45, tzinfo=UTC)
+    item = SnapshotDigestItem(
+        pair=CurrencyPair(value="EURUSD"),
+        timeframe=Timeframe.M15,
+        window_start=datetime(2026, 7, 15, 10, 0, tzinfo=UTC),
+        window_end=as_of,
+        as_of=as_of,
+        readiness_status=SnapshotDigestStatus.READY,
+        input_candle_count=3,
+        used_candle_count=3,
+        input_event_count=0,
+        used_event_count=0,
+        issue_count=0,
+        no_candles_after_as_of_used=True,
+        no_events_after_as_of_used=True,
+        snapshot_id="b" * 64,
+        dedup_key=dedup_key,
+    )
+    digest = SnapshotDigest(
+        project_phase=constants.PROJECT_PHASE,
+        generated_at=as_of,
+        as_of=as_of,
+        readiness_status=SnapshotDigestStatus.READY,
+        items=(item,),
+        ready_count=1,
+        incomplete_count=0,
+        blocked_count=0,
+        dedup_key=dedup_key,
+    )
+    return SnapshotNotificationPayload(
+        project_phase=constants.PROJECT_PHASE,
+        dedup_key=dedup_key,
+        digest=digest,
+        text="Системный отчёт готовности. Решений и указаний нет.",
+    )
 
 
 @pytest.mark.integration
@@ -2220,7 +3007,7 @@ def test_api_health_readiness_status_and_scan_state(postgres_database_url: str) 
     assert ready.status_code == 200
     assert ready.json()["status"] == "ready"
     assert status.status_code == 200
-    assert status.json()["project_phase"] == "phase_3h_scheduled_digest_delivery_foundation"
+    assert status.json()["project_phase"] == "phase_3i_persistent_digest_audit_foundation"
     assert status.json()["trading_strategy_implemented"] is False
     assert status.json()["real_trading_enabled"] is False
     assert start.status_code == 200
@@ -2312,8 +3099,132 @@ async def test_market_and_calendar_repositories_upsert_and_query(
     finally:
         await _delete_market_calendar_test_rows(session_factory)
         await engine.dispose()
+
+
+@pytest.mark.integration
+@pytest.mark.asyncio
+async def test_scheduled_digest_delivery_store_persists_and_deduplicates(
+    postgres_database_url: str,
+) -> None:
+    engine = create_engine(postgres_database_url)
+    session_factory = create_session_factory(engine)
+    dedup_key = _dedup_key("c")
+    record = ScheduledDigestDeliveryRecord(
+        dedup_key=dedup_key,
+        delivered_at=datetime(2026, 7, 15, 12, 45, tzinfo=UTC),
+        sender_name=_SCHEDULED_DIGEST_TEST_SENDER,
+        readiness_status=SnapshotDigestStatus.READY,
+        item_count=1,
+        ready_count=1,
+        incomplete_count=0,
+        blocked_count=0,
+        items_summary="EURUSD:M15",
+        payload_preview="Системный отчёт готовности. Решений и указаний нет.",
+    )
+    try:
+        await _delete_scheduled_digest_test_rows(session_factory)
+        uow_factory = build_uow_factory(session_factory)
+
+        async with uow_factory() as uow:
+            assert await uow.scheduled_digest_deliveries.exists(dedup_key) is False
+            await uow.scheduled_digest_deliveries.record(record)
+            await uow.scheduled_digest_deliveries.record(record)
+            await uow.commit()
+
+        duplicate_record = record.model_copy(
+            update={
+                "readiness_status": SnapshotDigestStatus.INCOMPLETE,
+                "item_count": 2,
+                "ready_count": 0,
+                "incomplete_count": 2,
+                "items_summary": "EURUSD:M15,GBPUSD:M15",
+                "payload_preview": "Повторная запись не должна менять первый аудит.",
+            }
+        )
+        async with uow_factory() as uow:
+            await uow.scheduled_digest_deliveries.record(duplicate_record)
+            await uow.commit()
+
+        async with uow_factory() as uow:
+            assert await uow.scheduled_digest_deliveries.exists(dedup_key) is True
+            stored = await uow.scheduled_digest_deliveries.get(dedup_key)
+
+        assert stored is not None
+        assert stored.project_phase == constants.PROJECT_PHASE
+        assert stored.delivered_at == datetime(2026, 7, 15, 12, 45, tzinfo=UTC)
+        assert stored.sender_name == _SCHEDULED_DIGEST_TEST_SENDER
+        assert stored.readiness_status == SnapshotDigestStatus.READY
+        assert stored.item_count == 1
+        assert stored.ready_count == 1
+        assert stored.incomplete_count == 0
+        assert stored.items_summary == "EURUSD:M15"
+        assert "Решений и указаний нет" in (stored.payload_preview or "")
+
+    finally:
+        await _delete_scheduled_digest_test_rows(session_factory)
+        await engine.dispose()
+
+
+@pytest.mark.integration
+@pytest.mark.asyncio
+async def test_scheduled_digest_delivery_service_skips_persisted_duplicate(
+    postgres_database_url: str,
+) -> None:
+    engine = create_engine(postgres_database_url)
+    session_factory = create_session_factory(engine)
+    dedup_key = _dedup_key("d")
+    payload = _scheduled_digest_payload(dedup_key)
+    config = ScheduledDigestConfig(
+        enabled=True,
+        interval_minutes=15,
+        items=(
+            SnapshotScheduleItem(
+                pair=CurrencyPair(value="EURUSD"),
+                timeframe=Timeframe.M15,
+                lookback_candle_count=3,
+            ),
+        ),
+    )
+    try:
+        await _delete_scheduled_digest_test_rows(session_factory)
+        uow_factory = build_uow_factory(session_factory)
+
+        first_sender = FakeNotificationSender()
+        async with uow_factory() as uow:
+            service = ScheduledDigestDeliveryService(
+                config=config,
+                readiness_digest_service=StaticReadinessDigestPayloadBuilder(payload),
+                sender=first_sender,
+                delivery_store=uow.scheduled_digest_deliveries,
+                sender_name=_SCHEDULED_DIGEST_TEST_SENDER,
+            )
+            first = await service.run_tick(as_of=datetime(2026, 7, 15, 10, 45, tzinfo=UTC))
+            await uow.commit()
+
+        second_sender = FakeNotificationSender()
+        async with uow_factory() as uow:
+            service = ScheduledDigestDeliveryService(
+                config=config,
+                readiness_digest_service=StaticReadinessDigestPayloadBuilder(payload),
+                sender=second_sender,
+                delivery_store=uow.scheduled_digest_deliveries,
+                sender_name=_SCHEDULED_DIGEST_TEST_SENDER,
+            )
+            second = await service.run_tick(as_of=datetime(2026, 7, 15, 10, 45, tzinfo=UTC))
+
+        assert first.delivered is True
+        assert len(first_sender.payloads) == 1
+        assert second.skipped is True
+        assert second.decision.reason == ScheduledDigestDecisionReason.DUPLICATE
+        assert second.dedup_key == first.dedup_key
+        assert second_sender.payloads == []
+
+    finally:
+        await _delete_scheduled_digest_test_rows(session_factory)
+        await engine.dispose()
 ```
-### tests/unit/test_analysis_snapshot_foundation.py
+
+### `tests/unit/test_analysis_snapshot_foundation.py`
 
 ```python
 from collections.abc import AsyncIterator, Sequence
@@ -2453,8 +3364,8 @@ def test_analysis_snapshot_is_json_serializable() -> None:
     data = snapshot.model_dump(mode="json")
     text = snapshot.model_dump_json()
 
-    assert data["metadata"]["project_phase"] == "phase_3h_scheduled_digest_delivery_foundation"
-    assert "phase_3h_scheduled_digest_delivery_foundation" in text
+    assert data["metadata"]["project_phase"] == "phase_3i_persistent_digest_audit_foundation"
+    assert "phase_3i_persistent_digest_audit_foundation" in text
     assert data["context_snapshot"]["return_distribution"]["mean_return"] == "0.1"
 
 
@@ -2633,7 +3544,8 @@ async def test_analysis_service_uses_repository_protocols() -> None:
     assert event_repository.provider == "phase3d-provider"
     assert event_repository.currencies == ["EUR", "USD"]
 ```
-### tests/unit/test_readiness_scheduler_foundation.py
+
+### `tests/unit/test_readiness_scheduler_foundation.py`
 
 ```python
 from datetime import UTC, datetime, timedelta, timezone
@@ -2817,7 +3729,7 @@ def test_digest_payload_is_json_serializable_and_immutable() -> None:
 
     data = digest.model_dump(mode="json")
     assert data["items"][0]["readiness_status"] == "READY"
-    assert "phase_3h_scheduled_digest_delivery_foundation" in digest.model_dump_json()
+    assert "phase_3i_persistent_digest_audit_foundation" in digest.model_dump_json()
     with pytest.raises(ValidationError):
         digest.ready_count = 99
 
@@ -2855,679 +3767,293 @@ async def test_digest_service_uses_repository_protocols() -> None:
     assert payload.dedup_key == payload.digest.dedup_key
     assert "EURUSD M15: READY" in payload.text
 ```
-### tests/unit/test_settings.py
+
+### `tests/unit/test_scheduled_digest_delivery_foundation.py`
 
 ```python
+from datetime import UTC, datetime, timedelta, timezone
 from decimal import Decimal
+from typing import Any, cast
 
 import pytest
 from pydantic import ValidationError
 
-from app.core.config import Settings
-
-
-def test_default_settings_keep_external_integrations_disabled() -> None:
-    settings = Settings(_env_file=None)
-
-    assert settings.telegram_enabled is False
-    assert settings.openai_enabled is False
-    assert settings.market_data_enabled is False
-    assert settings.calendar_enabled is False
-    assert settings.scan_enabled is False
-    assert settings.scheduled_digest_enabled is False
-    assert settings.scheduled_digest_interval_minutes == 60
-    assert settings.paper_account_balance == Decimal("10000")
-
-
-@pytest.mark.parametrize(
-    ("field", "enabled_kwargs"),
-    [
-        ("TELEGRAM_BOT_TOKEN", {"telegram_enabled": True}),
-        ("OPENAI_API_KEY", {"openai_enabled": True}),
-        ("TWELVE_DATA_API_KEY", {"market_data_enabled": True}),
-        ("FMP_API_KEY", {"calendar_enabled": True}),
-    ],
+from app.core import constants
+from app.domain.entities import Candle, Timeframe
+from app.domain.entities.readiness import (
+    SnapshotDigestStatus,
+    SnapshotNotificationPayload,
+    SnapshotScheduleItem,
 )
-def test_conditional_secret_requirements(field: str, enabled_kwargs: dict[str, bool]) -> None:
-    with pytest.raises(ValidationError) as exc_info:
-        Settings(_env_file=None, **enabled_kwargs)
+from app.domain.entities.scheduled_digest import (
+    ScheduledDigestConfig,
+    ScheduledDigestDecisionReason,
+    ScheduledDigestTick,
+)
+from app.domain.value_objects import CurrencyPair
+from app.scheduler.jobs import register_jobs, scheduled_digest_delivery_job
+from app.services.analysis_service import AnalysisService
+from app.services.health_service import HealthService
+from app.services.readiness_digest_service import ReadinessDigestService
+from app.services.scheduled_digest_delivery_service import (
+    InMemoryScheduledDigestDeliveryStore,
+    ScheduledDigestDeliveryService,
+    is_scheduled_digest_due,
+)
+from app.services.system_state_service import SystemStateService
+from tests.fakes import FakeUnitOfWorkFactory
 
-    assert field in str(exc_info.value)
-
-
-def test_telegram_enabled_requires_allowed_identity() -> None:
-    with pytest.raises(ValidationError) as exc_info:
-        Settings(_env_file=None, telegram_enabled=True, telegram_bot_token="token")
-
-    assert "TELEGRAM_ALLOWED_USER_ID" in str(exc_info.value)
-    assert "TELEGRAM_ALLOWED_CHAT_ID" in str(exc_info.value)
-
-
-def test_enabled_integrations_are_safe_booleans() -> None:
-    settings = Settings(_env_file=None, telegram_enabled=False, openai_enabled=False)
-
-    assert settings.enabled_integrations() == {
-        "telegram": False,
-        "openai": False,
-        "market_data": False,
-        "calendar": False,
-    }
+PAIR = CurrencyPair(value="EURUSD")
+BASE_TIME = datetime(2026, 7, 15, 8, 0, tzinfo=UTC)
 
 
-def test_storage_timezone_must_be_utc() -> None:
+class FakeNotificationSender:
+    def __init__(self) -> None:
+        self.payloads: list[SnapshotNotificationPayload] = []
+
+    async def send(self, payload: SnapshotNotificationPayload) -> None:
+        self.payloads.append(payload)
+
+
+class FailingReadinessDigestService:
+    async def build_payload(
+        self,
+        *,
+        items: tuple[SnapshotScheduleItem, ...],
+        as_of: datetime,
+    ) -> SnapshotNotificationPayload:
+        raise RuntimeError("forced digest build failure")
+
+
+class FakeScheduler:
+    def __init__(self) -> None:
+        self.job_ids: list[str] = []
+
+    def add_job(self, *args: Any, **kwargs: Any) -> None:
+        self.job_ids.append(str(kwargs["id"]))
+
+
+def _schedule_config(*, enabled: bool = True, interval_minutes: int = 15) -> ScheduledDigestConfig:
+    return ScheduledDigestConfig(
+        enabled=enabled,
+        interval_minutes=interval_minutes,
+        items=(
+            SnapshotScheduleItem(
+                pair=PAIR,
+                timeframe=Timeframe.M15,
+                lookback_candle_count=3,
+            ),
+        ),
+    )
+
+
+def _candle(index: int) -> Candle:
+    open_time = BASE_TIME + timedelta(minutes=15 * index)
+    open_price = Decimal("1.1000") + (Decimal("0.0001") * Decimal(index))
+    close_price = open_price + Decimal("0.0001")
+    return Candle(
+        provider="scheduled-digest-test",
+        pair=PAIR,
+        timeframe=Timeframe.M15,
+        open_time=open_time,
+        close_time=open_time + timedelta(minutes=15),
+        open=open_price,
+        high=close_price + Decimal("0.0002"),
+        low=open_price - Decimal("0.0002"),
+        close=close_price,
+        volume=Decimal("100"),
+        is_closed=True,
+    )
+
+
+def _service(
+    *,
+    config: ScheduledDigestConfig | None = None,
+    sender: FakeNotificationSender | None = None,
+    store: InMemoryScheduledDigestDeliveryStore | None = None,
+) -> tuple[ScheduledDigestDeliveryService, FakeNotificationSender]:
+    notification_sender = sender or FakeNotificationSender()
+    factory = FakeUnitOfWorkFactory(candles=[_candle(0), _candle(1), _candle(2)])
+    readiness_service = ReadinessDigestService(AnalysisService(factory))
+    return (
+        ScheduledDigestDeliveryService(
+            config=config or _schedule_config(),
+            readiness_digest_service=readiness_service,
+            sender=notification_sender,
+            delivery_store=store or InMemoryScheduledDigestDeliveryStore(),
+            sender_name="fake_sender",
+        ),
+        notification_sender,
+    )
+
+
+@pytest.mark.asyncio
+async def test_scheduled_digest_disabled_skip() -> None:
+    service, sender = _service(config=_schedule_config(enabled=False))
+
+    result = await service.run_tick(as_of=BASE_TIME + timedelta(minutes=45))
+
+    assert result.skipped is True
+    assert result.delivered is False
+    assert result.decision.reason == ScheduledDigestDecisionReason.DISABLED
+    assert result.payload is None
+    assert sender.payloads == []
+
+
+@pytest.mark.asyncio
+async def test_scheduled_digest_not_due_skip() -> None:
+    service, sender = _service(config=_schedule_config(interval_minutes=60))
+
+    result = await service.run_tick(as_of=BASE_TIME + timedelta(minutes=45))
+
+    assert result.skipped is True
+    assert result.decision.reason == ScheduledDigestDecisionReason.NOT_DUE
+    assert result.decision.is_due is False
+    assert sender.payloads == []
+
+
+@pytest.mark.asyncio
+async def test_scheduled_digest_due_builds_payload_and_sends_once() -> None:
+    service, sender = _service()
+
+    result = await service.run_tick(as_of=BASE_TIME + timedelta(minutes=45))
+
+    assert result.delivered is True
+    assert result.skipped is False
+    assert result.decision.reason == ScheduledDigestDecisionReason.DELIVERED
+    assert result.payload is not None
+    assert result.record is not None
+    assert result.dedup_key == result.payload.dedup_key
+    assert len(sender.payloads) == 1
+    assert sender.payloads[0] == result.payload
+    assert result.record.readiness_status == SnapshotDigestStatus.READY
+    assert result.record.item_count == 1
+    assert result.record.ready_count == 1
+    assert result.record.items_summary == "EURUSD:M15"
+    assert "Решений и указаний нет" in (result.record.payload_preview or "")
+    assert "Системный отчёт готовности" in result.payload.text
+    assert "Решений и указаний нет." in result.payload.text
+    data = result.model_dump(mode="json")
+    assert data["project_phase"] == constants.PROJECT_PHASE
+    assert data["payload"]["project_phase"] == constants.PROJECT_PHASE
     with pytest.raises(ValidationError):
-        Settings(_env_file=None, storage_timezone="Europe/Stockholm")
+        result.delivered = False
 
 
-def test_require_integration_tests_defaults_to_false() -> None:
-    assert Settings(_env_file=None).require_integration_tests is False
+@pytest.mark.asyncio
+async def test_scheduled_digest_duplicate_dedup_key_skip() -> None:
+    store = InMemoryScheduledDigestDeliveryStore()
+    sender = FakeNotificationSender()
+    service, _ = _service(store=store, sender=sender)
+    as_of = BASE_TIME + timedelta(minutes=45)
+
+    first = await service.run_tick(as_of=as_of)
+    second = await service.run_tick(as_of=as_of)
+
+    assert first.delivered is True
+    assert second.skipped is True
+    assert second.decision.reason == ScheduledDigestDecisionReason.DUPLICATE
+    assert second.dedup_key == first.dedup_key
+    assert len(sender.payloads) == 1
+    stored = await store.get(first.dedup_key)
+    assert stored == first.record
+
+
+@pytest.mark.asyncio
+async def test_scheduled_digest_no_items_skip() -> None:
+    service, sender = _service(config=ScheduledDigestConfig(enabled=True, items=()))
+
+    result = await service.run_tick(as_of=BASE_TIME + timedelta(minutes=45))
+
+    assert result.skipped is True
+    assert result.decision.reason == ScheduledDigestDecisionReason.NO_ITEMS
+    assert sender.payloads == []
+
+
+@pytest.mark.asyncio
+async def test_scheduled_digest_build_failed_skip() -> None:
+    sender = FakeNotificationSender()
+    service = ScheduledDigestDeliveryService(
+        config=_schedule_config(),
+        readiness_digest_service=FailingReadinessDigestService(),
+        sender=sender,
+        delivery_store=InMemoryScheduledDigestDeliveryStore(),
+    )
+
+    result = await service.run_tick(as_of=BASE_TIME + timedelta(minutes=45))
+
+    assert result.skipped is True
+    assert result.decision.reason == ScheduledDigestDecisionReason.BUILD_FAILED
+    assert result.payload is None
+    assert sender.payloads == []
+
+
+def test_scheduled_digest_tick_is_json_serializable_and_immutable() -> None:
+    tick = ScheduledDigestTick(as_of=datetime(2026, 7, 15, 10, 45, tzinfo=UTC))
+
+    data = tick.model_dump(mode="json")
+
+    assert data["project_phase"] == constants.PROJECT_PHASE
+    assert data["as_of"] == "2026-07-15T10:45:00Z"
+    with pytest.raises(ValidationError):
+        tick.as_of = BASE_TIME
+
+
+def test_scheduled_digest_tick_normalizes_utc() -> None:
+    tick = ScheduledDigestTick(
+        as_of=datetime(2026, 7, 15, 12, 45, tzinfo=timezone(timedelta(hours=2)))
+    )
+
+    assert tick.as_of == datetime(2026, 7, 15, 10, 45, tzinfo=UTC)
+
+
+def test_scheduled_digest_due_policy_is_deterministic() -> None:
+    assert is_scheduled_digest_due(
+        as_of=datetime(2026, 7, 15, 10, 45, tzinfo=UTC),
+        interval_minutes=15,
+    )
+    assert not is_scheduled_digest_due(
+        as_of=datetime(2026, 7, 15, 10, 46, tzinfo=UTC),
+        interval_minutes=15,
+    )
+    assert not is_scheduled_digest_due(
+        as_of=datetime(2026, 7, 15, 10, 45, 1, tzinfo=UTC),
+        interval_minutes=15,
+    )
+
+
+@pytest.mark.asyncio
+async def test_worker_callable_can_run_without_auto_registration() -> None:
+    service, sender = _service()
+
+    result = await scheduled_digest_delivery_job(
+        service,
+        as_of=BASE_TIME + timedelta(minutes=45),
+    )
+
+    assert result.delivered is True
+    assert len(sender.payloads) == 1
+
+
+def test_register_jobs_does_not_start_scheduled_digest_delivery_loop() -> None:
+    scheduler = FakeScheduler()
+
+    register_jobs(
+        scheduler,
+        system_state_service=cast(SystemStateService, object()),
+        health_service=cast(HealthService, object()),
+    )
+
+    assert scheduler.job_ids == ["worker_heartbeat", "application_health_check"]
 ```
 
-## Updated Documentation Files
-### README.md
 
-```markdown
-# AI Trading OS
-
-AI Trading OS is a safety-first foundation for a future modular Forex analysis and paper-trading platform. The current repository implements only infrastructure: API health/status endpoints, async PostgreSQL persistence, a scheduler heartbeat, Telegram command foundations, strict configuration, and safety contracts.
-
-## Current Status
-
-- Current project phase: phase_3h_scheduled_digest_delivery_foundation.
-- Trading strategy: not implemented.
-- Real trading: disabled and unsupported.
-- External integrations: disabled by default.
-- Telegram: can run in disabled mode without a token.
-- Phase 3D: deterministic analysis snapshot/readiness report foundation only.
-- Phase 3E: local Telegram readiness reports only.
-- Phase 3F: neutral readiness scheduler/snapshot digest foundation only.
-- Phase 3G: manual Telegram `/digest` readiness digest command only.
-- Phase 3H: neutral scheduled digest delivery foundation only, disabled by default.
-
-## Safety Warning
-
-This project must not open, modify, or close real financial positions. It contains no broker order API, no real account credentials, and no automatic trading execution.
-
-## Phase 2 Status
-
-Phase 2 adds hardened runtime defaults, stronger secret redaction, strict UTC normalization, typed
-`Candle` and `EconomicEvent` domain models, typed provider contracts, disabled-by-default provider
-adapters, production Twelve Data and FMP adapters tested through `httpx.MockTransport`, and
-architecture/safety verification. It still does not add strategy, indicators, analysis, signals,
-OpenAI calls, or trading execution.
-
-## Phase 3A Status
-
-Phase 3A adds duplicate-safe storage/query repositories for normalized closed candles and economic
-events, deterministic data-quality snapshots, and historical replay utilities for tests. It does not
-add strategy, indicators, technical analysis, scoring, signals, AI agents, OpenAI calls, paper
-trading, broker APIs, order execution, or real trading.
-
-## Phase 3B Status
-
-Phase 3B adds a deterministic, closed-candle-only feature engine that transforms existing normalized
-Phase 3A candles and economic events into typed immutable feature snapshots. It computes descriptive
-features only, such as latest close, candle counts, simple returns, rolling close means, ranges,
-volume summaries, true ranges, economic-event counts, and quality issues. It does not produce
-trading decisions, setup scoring, directions, recommendations, signals, AI output, broker activity,
-paper trading, order execution, or real trading.
-
-## Phase 3C Status
-
-Phase 3C adds a deterministic, closed-candle-only indicator/context foundation over the Phase 3B
-feature engine. It produces typed immutable context snapshots with descriptive close statistics,
-return distribution summaries, moving averages, range and candle-shape summaries, event metadata,
-time context, and deterministic data-quality issues. It does not produce strategy decisions, setup
-scoring, confidence scoring, trade directions, recommendations, signals, AI output, broker activity,
-paper trading, order execution, or real trading.
-
-## Phase 3D Status
-
-Phase 3D adds deterministic analysis snapshots and readiness reports over the Phase 3A storage,
-Phase 3B feature, and Phase 3C context foundations. It answers neutral infrastructure questions
-about window completeness, source inputs, excluded data, quality/context issues, attached summaries,
-and no-future-data proof. It does not produce strategy decisions, setup scoring, confidence scoring,
-trade directions, recommendations, signals, AI output, broker activity, paper trading, order
-execution, or real trading.
-
-## Phase 3E Status
-
-Phase 3E adds a local Telegram readiness-report slice over the deterministic Phase 3D analysis
-snapshot foundation. It wires the Telegram bot to the real UnitOfWork-backed analysis service,
-adds `/snapshot EURUSD M15`, formats Russian readiness reports with exactly one leading semantic
-emoji, and provides `scripts/seed_local_snapshot_data.py` for local demo candles/events. It still
-does not produce strategy decisions, setup scoring, confidence scoring, trade directions,
-recommendations, signals, AI output, broker activity, paper trading, order execution, or real
-trading.
-
-## Phase 3F Status
-
-Phase 3F adds a deterministic readiness scheduler and snapshot digest foundation. It plans neutral
-readiness windows for configured pairs/timeframes, resolves the latest fully closed M15/H1 boundary,
-aggregates Phase 3D snapshot readiness states, creates deterministic deduplication keys, and builds
-Telegram-safe readiness digest payload text. It does not send automatic Telegram messages, produce
-strategy decisions, setup scoring, confidence scoring, trade directions, recommendations, signals,
-AI output, broker activity, paper trading, order execution, or real trading.
-
-## Phase 3G Status
-
-Phase 3G adds a manual Telegram `/digest` command over the Phase 3F readiness digest service. The
-command returns Russian, neutral readiness digest text for the default EURUSD M15/H1 schedule or a
-single requested pair/timeframe. It does not add automatic Telegram delivery, provider calls,
-strategy decisions, setup scoring, confidence scoring, trade directions, recommendations, signals,
-AI output, broker activity, paper trading, order execution, or real trading.
-
-## Phase 3H Status
-
-Phase 3H adds a neutral scheduled digest delivery foundation. It can decide whether a readiness
-digest is due on a tick, build the existing readiness digest payload, pass it to a mockable
-notification sender, and skip duplicate deduplication keys. Scheduled delivery is disabled by
-default and no automatic delivery loop is registered in the worker. It does not add provider calls,
-AI output, strategy decisions, setup scoring, confidence scoring, trade directions, recommendations,
-signals, broker activity, paper trading, order execution, or real trading. Phase 4 has not started.
-
-## Prerequisites
-
-- Python 3.12
-- uv
-- Docker and Docker Compose
-- PostgreSQL for local non-Docker development
-
-## Mac and Linux Setup
-
-```bash
-uv sync
-cp .env.example .env
-uv run alembic upgrade head
-uv run uvicorn app.main:create_app --factory --reload
-```
-
-## Windows Setup
-
-Use PowerShell with Python 3.12 and uv installed:
-
-```powershell
-uv sync
-Copy-Item .env.example .env
-uv run alembic upgrade head
-uv run uvicorn app.main:create_app --factory --reload
-```
-
-## Docker Startup
-
-The default configuration starts without paid API keys. Compose uses `.env` as an optional
-local override file and does not use `.env.example` at runtime:
-
-```bash
-docker compose up --build
-```
-
-The Compose stack runs PostgreSQL, applies Alembic migrations, starts the API, starts the worker, and starts the Telegram process in disabled mode when `TELEGRAM_ENABLED=false`.
-
-## Environment Configuration
-
-Copy `.env.example` to `.env` for local overrides. The example keeps:
-
-```text
-TELEGRAM_ENABLED=false
-OPENAI_ENABLED=false
-MARKET_DATA_ENABLED=false
-CALENDAR_ENABLED=false
-SCAN_ENABLED=false
-SCHEDULED_DIGEST_ENABLED=false
-```
-
-Secrets are required only when the matching integration is enabled.
-
-## Migrations
-
-```bash
-uv run alembic upgrade head
-uv run alembic revision --autogenerate -m "message"
-```
-
-## Tests and Checks
-
-```bash
-make check
-make test
-make lint
-make typecheck
-```
-
-Integration tests require a reachable `TEST_DATABASE_URL`; otherwise they skip with a clear message.
-
-## API Endpoints
-
-- `GET /health`
-- `GET /ready`
-- `GET /api/v1/system/status`
-- `POST /api/v1/system/scanning/start`
-- `POST /api/v1/system/scanning/stop`
-
-State-changing endpoints require the `X-Internal-API-Key` header.
-The default development key is rejected when `APP_ENV` is not `development`.
-
-## Telegram Disabled Mode
-
-When `TELEGRAM_ENABLED=false`, the bot process starts and remains healthy without creating a Telegram client or making network calls. When enabled, a bot token, allowed user ID, and allowed chat ID are required.
-For a local live Telegram test, see `docs/operations.md` and configure `TELEGRAM_BOT_TOKEN`,
-`TELEGRAM_ALLOWED_USER_ID`, and `TELEGRAM_ALLOWED_CHAT_ID` in an uncommitted `.env` file.
-
-## Current Limitations
-
-- No strategy, signals, OpenAI calls, backtesting, position sizing, broker execution, or real trading.
-- `/scan_now` explicitly remains disconnected from analysis snapshots and does not fabricate a scan result.
-- `/snapshot` returns readiness reports only and does not produce trading guidance.
-- `/digest` returns manual readiness digests only and does not produce trading guidance.
-- Scheduled digest delivery is disabled by default and has no automatic worker loop.
-- Worker jobs only update heartbeat and run foundation health checks.
-
-## Directory Overview
-
-- `app/api`: FastAPI adapters.
-- `app/core`: configuration, errors, logging, time, security, enums.
-- `app/domain`: provider and repository contracts plus financial value objects.
-- `app/persistence`: SQLAlchemy models, repositories, unit of work.
-- `app/services`: application services.
-- `app/telegram`: Telegram authorization, formatting, commands, delivery.
-- `app/scheduler`: worker process and jobs.
-- `docs`: product, architecture, database, operations, and implementation notes.
-- `tests`: unit, integration, and contract tests.
-```
-### AGENTS.md
-
-```markdown
-# AI Trading OS Agent Guide
-
-AI Trading OS is a foundation for a future Forex analysis and paper-trading platform.
-
-Current project phase: phase_3h_scheduled_digest_delivery_foundation.
-Phase 3H is limited to neutral scheduled readiness digest delivery orchestration over existing
-Phase 3F/3G readiness digest payloads. External integrations are disabled by default. The project
-contains no strategy, no signals, no broker order APIs, no paper trading, and no real trading.
-Phase 4 has not started.
-
-## Start and Checks
-
-- Install: `uv sync`
-- Start Docker stack: `docker compose up --build`
-- Migrate: `uv run alembic upgrade head`
-- Test: `uv run pytest`
-- Lint: `uv run ruff check .`
-- Format: `uv run ruff format .`
-- Type-check: `uv run mypy app`
-- Full check: `make check`
-
-## Repository Layout
-
-- `app/api`: API adapters.
-- `app/services`: application services.
-- `app/domain`: domain value objects and contracts.
-- `app/persistence`: database models, repositories, unit of work.
-- `app/telegram`: Telegram adapter.
-- `app/scheduler`: worker process.
-- `docs`: detailed project documentation.
-
-## Rules
-
-- Dependency direction is adapters -> application services -> domain.
-- Domain code must not import FastAPI, Telegram, SQLAlchemy, PostgreSQL, APScheduler, OpenAI, market-data providers, or calendar providers.
-- Use async SQLAlchemy sessions only; one `AsyncSession` per unit of work or task.
-- Use `Decimal` for financial values. Do not use binary floating point for money, prices, percentages, or risk.
-- Store timestamps in UTC; present user-facing time in Europe/Stockholm when needed.
-- Telegram user-facing text must be Russian.
-- Every Telegram message must contain exactly one semantic emoji at the beginning.
-- Never add real trading execution, broker order APIs, real account credentials, or live position management.
-- Never add strategy, setup scoring, LONG/SHORT direction, buy/sell recommendations, paper trading,
-  broker APIs, order execution, or real trading while working in foundation phases.
-- While working in Phase 3H, output is limited to neutral readiness reports and readiness digests.
-  Scheduled delivery must remain disabled by default. Do not add Telegram trading signals, entry
-  guidance, LONG/SHORT advice, buy/sell recommendations, automatic runtime loops, or paper-trading
-  actions.
-- Never fabricate market data, calendar data, agent evidence, or scan results.
-- LLM output may explain deterministic results only; it must not change prices, scores, risk, or rejected decisions.
-- Update documentation when architecture or safety boundaries change.
-
-## Definition of Done
-
-Code is complete only when tests, formatting, linting, type checking, migrations, and relevant Docker checks have been run or a truthful limitation is documented in `docs/foundation-report.md`.
-```
-### PLANS.md
-
-```markdown
-# AI Trading OS Plans
-
-## Completed Foundation Scope
-
-- Project metadata and uv-compatible dependency management.
-- FastAPI health, readiness, system status, and scanning-state endpoints.
-- Async PostgreSQL models, Alembic migration, repositories, and unit of work.
-- Worker process with heartbeat and health-check jobs.
-- Telegram disabled mode, authorization, Russian text validation, and one-emoji formatting.
-- Future provider and agent contracts without live calls or analysis.
-- Safety scan for forbidden real-order execution concepts.
-- Documentation and tests for foundation behavior.
-- Phase 2 foundation hardening: Docker runtime defaults, internal API key security, redaction,
-  UTC normalization, UoW lifecycle hardening, architecture boundary tests, typed provider
-  contracts, disabled adapters, production Twelve Data/FMP adapters, and MockTransport-backed
-  provider contract tests.
-- Phase 3A data-quality foundation: duplicate-safe candle/event storage repositories,
-  deterministic data-quality snapshots, and historical replay utilities for tests.
-- Phase 3B feature engine foundation: deterministic closed-candle feature models, feature
-  calculation engine, feature service over repository protocols, and safety tests confirming no
-  strategy/signals/trading activation.
-- Phase 3C indicator/context foundation: deterministic closed-candle context models, context
-  calculation engine over Phase 3B features, context service over repository protocols, and safety
-  tests confirming no strategy/signals/trading activation.
-- Phase 3D analysis snapshot foundation: deterministic readiness report models, analysis snapshot
-  engine over Phase 3A/3B/3C outputs, analysis service over repository protocols, and safety tests
-  confirming no strategy/signals/trading activation.
-- Phase 3E Telegram readiness foundation: local `/snapshot` readiness reports in Telegram,
-  UnitOfWork-backed analysis service wiring, local seed data utility, and safety tests confirming no
-  strategy/signals/trading activation.
-- Phase 3F readiness scheduler foundation: deterministic pair/timeframe readiness plans, latest
-  closed-window resolution, snapshot digest payloads, deduplication keys, and safety tests
-  confirming no strategy/signals/trading activation.
-- Phase 3G Telegram digest command foundation: manual `/digest` command wiring over the existing
-  readiness digest service, default EURUSD M15/H1 digest arguments, and safety tests confirming no
-  strategy/signals/trading activation.
-- Phase 3H scheduled digest delivery foundation: disabled-by-default scheduled readiness digest
-  due checks, mockable notification sending, deduplication records, and safety tests confirming no
-  strategy/signals/trading activation.
-
-## Current Implementation Status
-
-The repository has completed the foundation phase, Phase 2 hardening/data adapters, Phase 3A
-data-quality foundation, Phase 3B deterministic feature-engine foundation, Phase 3C deterministic
-indicator/context foundation, Phase 3D deterministic analysis snapshot/readiness report foundation,
-Phase 3E local Telegram readiness-report foundation, and Phase 3F deterministic readiness
-scheduler/snapshot digest foundation, and Phase 3G manual Telegram digest command foundation.
-scheduler/snapshot digest foundation, Phase 3G manual Telegram digest command foundation, and Phase
-3H neutral scheduled digest delivery foundation. Production Twelve Data and FMP adapters exist, but
-live integrations remain disabled by default. Scanning state can be enabled or disabled, Telegram can
-request readiness reports and readiness digests, and scheduled digest orchestration remains disabled
-by default. No strategy, signal generation, AI agent, paper-trading, or execution flow is connected.
-
-## Future Phases
-
-- Phase 2: market-data and calendar adapters — completed as disabled-by-default factories plus
-  production adapters covered by MockTransport-backed contract tests
-- Phase 3A: data-quality foundation — completed without trading analysis or decisions
-- Phase 3B: deterministic feature engine foundation — completed without trading decisions
-- Phase 3C: deterministic indicator/context foundation — completed without trading decisions
-- Phase 3D: deterministic analysis snapshot/readiness report foundation — completed without trading decisions
-- Phase 3E: local Telegram readiness reports — completed without trading decisions
-- Phase 3F: neutral readiness scheduler/snapshot digest foundation — completed without trading decisions
-- Phase 3G: manual Telegram digest command foundation — completed without trading decisions
-- Phase 3H: neutral scheduled digest delivery foundation — completed without trading decisions
-- Phase 4: analytical agents and Decision Engine
-- Phase 5: Russian Chief AI explanations
-- Phase 6: Telegram signal delivery
-- Phase 7: backtesting and paper trading
-
-## Explicit Non-Goals
-
-- No broker execution.
-- No real trading.
-- No strategy logic.
-- No indicators or signal generation.
-- No OpenAI calls.
-- No fabricated market data or scan results.
-
-## Known Risks
-
-- Local Docker or PostgreSQL availability can affect verification.
-- Future provider adapters must preserve disabled-by-default behavior.
-- Telegram message validation is intentionally simple and should be tightened as message complexity grows.
-
-## Next Planned Task
-
-Phase 4 is the next phase if applicable. It has not started, and no Phase 4 behavior is active.
-```
-### docs/operations.md
-
-```markdown
-# Operations
-
-## Startup
-
-Docker startup:
-
-```bash
-docker compose up --build
-```
-
-Compose reads `.env` as an optional local runtime override. `.env.example` is only a template.
-The API is bound to `127.0.0.1:8000` by default, and PostgreSQL is not exposed to the host by
-the default Compose stack.
-
-Local startup:
-
-```bash
-uv sync
-uv run alembic upgrade head
-uv run uvicorn app.main:create_app --factory --reload
-```
-
-## Shutdown
-
-Use `Ctrl+C` for foreground Compose or:
-
-```bash
-docker compose down
-```
-
-The worker and Telegram process handle shutdown signals and dispose database resources.
-
-## Migrations
-
-Apply migrations:
-
-```bash
-uv run alembic upgrade head
-```
-
-Create a migration:
-
-```bash
-uv run alembic revision --autogenerate -m "message"
-```
-
-## Logs
-
-Application processes emit structured JSON logs with service, component, event, level, timestamp, request IDs where available, and redacted secret-like fields.
-
-## Health Checks
-
-- `GET /health` checks API liveness only.
-- `GET /ready` checks database connectivity and schema access.
-- `GET /api/v1/system/status` reports phase, scan state, worker heartbeat, enabled integrations, database status, and safety flags.
-
-## Disabled Integrations
-
-The default `.env.example` disables Telegram, OpenAI, market data, calendar, and scanning. Disabled providers raise typed errors before external calls.
-
-## Local Telegram Readiness Demo
-
-Phase 3E can run a local readiness report without live market or calendar integrations. Start
-PostgreSQL, migrate the schema, seed deterministic local demo data, and then use `/snapshot EURUSD
-M15` in the authorized Telegram chat.
-
-```bash
-docker compose up -d postgres
-docker compose run --rm migrate alembic upgrade head
-docker compose run --rm api python -m scripts.seed_local_snapshot_data
-```
-
-To use a real Telegram chat, create a bot token with BotFather, set `TELEGRAM_ENABLED=true`,
-`TELEGRAM_BOT_TOKEN`, `TELEGRAM_ALLOWED_USER_ID`, and `TELEGRAM_ALLOWED_CHAT_ID` in `.env`, then
-start the bot service. The `/snapshot` command returns readiness reports only; it does not produce
-trading guidance or paper-trading actions.
-
-Phase 3F adds an internal readiness digest planner that can prepare neutral digest payloads for
-configured pair/timeframe windows. It does not schedule automatic Telegram delivery by itself and
-does not call market-data, calendar, AI, or broker services. Any future delivery path must keep
-Telegram output limited to readiness reporting text.
-
-Phase 3G exposes that digest foundation through a manual Telegram `/digest` command. `/digest`
-returns the default EURUSD M15/H1 readiness digest, and `/digest EURUSD M15` returns a single
-pair/timeframe digest. The command remains read-only and neutral; it does not schedule automatic
-delivery, call providers, call AI services, contact brokers, or produce trading guidance.
-
-Phase 3H adds a neutral scheduled digest delivery foundation. It can decide whether a digest is due,
-build the same readiness payload, pass it to a mockable notification sender, and skip duplicate
-deduplication keys. It is disabled by default with `SCHEDULED_DIGEST_ENABLED=false`, and the worker
-does not register an automatic scheduled digest job. It does not call providers, AI services, or
-brokers, and it does not produce trading guidance.
-
-## Telegram Bot Local Setup
-
-Create the bot in Telegram before enabling the `bot` service:
-
-1. Open `@BotFather`.
-2. Send `/newbot`.
-3. Choose a display name, for example `AI Trading OS Local`.
-4. Choose a username ending in `bot`, for example `ai_trading_os_local_bot`.
-5. Copy the token. Telegram bot tokens look like `1234567890:AA...`; keep this value secret and
-   never commit it.
-
-Find the allowed Telegram identity:
-
-- `TELEGRAM_ALLOWED_USER_ID`: send `/start` to `@userinfobot` or `@getmyid_bot` and copy the
-  numeric `Id`.
-- `TELEGRAM_ALLOWED_CHAT_ID`: for a direct private chat with the bot, this is usually the same as
-  `TELEGRAM_ALLOWED_USER_ID`.
-- To confirm the chat ID, send `/start` to your new bot and open
-  `https://api.telegram.org/bot<TELEGRAM_BOT_TOKEN>/getUpdates` in a browser. Use the numeric
-  `message.chat.id` value from the JSON response.
-
-Create a local `.env` file in the repository root. Do not commit `.env`.
-
-```env
-APP_ENV=development
-DATABASE_URL=postgresql+asyncpg://ai_trading_os:ai_trading_os@postgres:5432/ai_trading_os
-INTERNAL_API_KEY=development-internal-key-change-me
-
-TELEGRAM_ENABLED=true
-TELEGRAM_BOT_TOKEN=1234567890:AA_REPLACE_WITH_REAL_SECRET
-TELEGRAM_ALLOWED_USER_ID=123456789
-TELEGRAM_ALLOWED_CHAT_ID=123456789
-
-OPENAI_ENABLED=false
-MARKET_DATA_ENABLED=false
-CALENDAR_ENABLED=false
-SCAN_ENABLED=false
-SCHEDULED_DIGEST_ENABLED=false
-SCHEDULED_DIGEST_INTERVAL_MINUTES=60
-```
-
-Prepare the local database and demo data:
-
-```bash
-docker compose up -d postgres
-docker compose run --rm migrate alembic upgrade head
-docker compose run --rm api python -m scripts.seed_local_snapshot_data
-```
-
-Start only the Telegram bot service:
-
-```bash
-docker compose up --build bot
-```
-
-Then send these commands to the bot in Telegram:
-
-```text
-/start
-/status
-/snapshot EURUSD M15
-/digest
-/digest EURUSD M15
-```
-
-Expected behavior: `/snapshot EURUSD M15` returns a Russian readiness report with one leading emoji.
-`/digest` returns a Russian readiness digest with one leading emoji. These commands must not contain
-LONG/SHORT directions, entry guidance, buy/sell recommendations, or paper-trade actions.
-
-## Common Failure Cases
-
-- Missing Telegram token while Telegram is enabled: configuration validation fails.
-- PostgreSQL unavailable: readiness fails and state changes cannot persist.
-- Migrations not applied: readiness returns not ready.
-- Wrong internal API key: state-changing API calls return `UNAUTHORIZED`.
-
-## Safe Recovery
-
-1. Check `docker compose ps`.
-2. Inspect `docker compose logs --no-color`.
-3. Confirm PostgreSQL is healthy.
-4. Run `uv run alembic upgrade head`.
-5. Recheck `/ready` and `/api/v1/system/status`.
-```
-### docs/phase3h-verification-report.md
-
-```markdown
-# Phase 3H Verification Report
-
-Generated at: 2026-07-15T18:10:00Z
-
-## Scope
-
-Phase 3H implemented the neutral scheduled digest delivery foundation.
-
-- `PROJECT_PHASE = "phase_3h_scheduled_digest_delivery_foundation"`.
-- Scheduled digest delivery is disabled by default.
-- The service decides whether a readiness digest is due on a tick.
-- The service builds existing Phase 3F/3G readiness digest payloads only when enabled and due.
-- Delivery uses a mockable notification sender protocol.
-- Duplicate deterministic deduplication keys are skipped.
-- A worker callable exists, but no automatic scheduled digest worker loop is registered.
-- Existing `/snapshot` and `/digest` commands remain unchanged and covered by tests.
-- No migration was required.
-- Phase 4 was not started.
-- No strategy, signals, setup scoring, confidence scoring, AI agents, OpenAI calls, broker APIs, paper trading, order execution, or real trading were added.
-
-## Verification Results
-
-Host verification:
-
-- `uv lock --check` -> passed.
-- `uv sync` -> passed.
-- `uv run ruff format --check .` -> `108 files already formatted`.
-- `uv run ruff check .` -> `All checks passed!`.
-- `uv run mypy app` -> `Success: no issues found in 77 source files`.
-- `uv run pytest` -> `211 passed, 5 skipped, 1 warning`.
-- `uv run python scripts/security_check.py` -> exit code 0.
-
-Docker verification:
-
-- `docker compose build` -> succeeded.
-- `docker compose up -d postgres` -> succeeded.
-- PostgreSQL container status -> healthy.
-- `docker compose run --rm migrate alembic current` -> `0002_phase2_data_constraints (head)`.
-- `docker compose run --rm migrate alembic check` -> `No new upgrade operations detected.`
-- Test database migration to head -> succeeded.
-- Docker integration tests run 1 -> `5 passed, 1 warning`.
-- Docker integration tests run 2 against the same test database without cleanup -> `5 passed, 1 warning`.
-- `docker compose config` -> succeeded.
-
-## Tests Added Or Updated
-
-- Added scheduled digest disabled skip coverage.
-- Added not-due skip coverage.
-- Added due payload build and fake sender delivery coverage.
-- Added duplicate deduplication key skip coverage.
-- Added no-items and build-failed skip coverage.
-- Added delivery result JSON serialization and immutability coverage.
-- Added UTC normalization coverage.
-- Added worker callable coverage without automatic registration.
-- Added Phase 3H safety-boundary coverage.
-- Updated project phase assertions to `phase_3h_scheduled_digest_delivery_foundation`.
-
-## Remaining Risks
-
-- Live Telegram API behavior was not tested and no real Telegram network calls were made.
-- Provider integrations remain disabled by default and were not called during Phase 3H verification.
-- Scheduled delivery persistence uses an in-memory foundation store in this phase; no database migration was added.
-```
+## Documentation Files Updated
+
+- `README.md`
+- `AGENTS.md`
+- `PLANS.md`
+- `docs/operations.md`
+- `docs/database-schema.md`
+- `docs/phase3i-verification-report.md`
+- `docs/chatgpt-verification-packet.md`

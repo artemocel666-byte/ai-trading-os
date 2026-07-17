@@ -4,7 +4,7 @@ AI Trading OS is a safety-first foundation for a future modular Forex analysis a
 
 ## Current Status
 
-- Current project phase: phase_3h_scheduled_digest_delivery_foundation.
+- Current project phase: phase_3i_persistent_digest_audit_foundation.
 - Trading strategy: not implemented.
 - Real trading: disabled and unsupported.
 - External integrations: disabled by default.
@@ -14,6 +14,7 @@ AI Trading OS is a safety-first foundation for a future modular Forex analysis a
 - Phase 3F: neutral readiness scheduler/snapshot digest foundation only.
 - Phase 3G: manual Telegram `/digest` readiness digest command only.
 - Phase 3H: neutral scheduled digest delivery foundation only, disabled by default.
+- Phase 3I: persistent neutral digest delivery audit foundation only.
 
 ## Safety Warning
 
@@ -96,6 +97,16 @@ notification sender, and skip duplicate deduplication keys. Scheduled delivery i
 default and no automatic delivery loop is registered in the worker. It does not add provider calls,
 AI output, strategy decisions, setup scoring, confidence scoring, trade directions, recommendations,
 signals, broker activity, paper trading, order execution, or real trading. Phase 4 has not started.
+
+## Phase 3I Status
+
+Phase 3I adds persistent audit storage for neutral scheduled readiness digest delivery records. It
+stores delivered digest deduplication keys, delivery timestamps, sender names, project phase,
+readiness status/counts, included pair/timeframe summary, and a neutral payload preview. It does not
+store secrets, Telegram tokens, or chat IDs. Scheduled delivery remains disabled by default, and this
+phase does not add provider calls, AI output, strategy decisions, setup scoring, confidence scoring,
+trade directions, recommendations, signals, broker activity, paper trading, order execution, or real
+trading. Phase 4 has not started.
 
 ## Prerequisites
 

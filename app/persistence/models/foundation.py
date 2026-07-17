@@ -135,6 +135,42 @@ class EconomicEventModel(Base):
     fetched_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
 
 
+class ScheduledDigestDeliveryModel(Base):
+    __tablename__ = "scheduled_digest_deliveries"
+    __table_args__ = (
+        UniqueConstraint("dedup_key", name="uq_scheduled_digest_deliveries_dedup_key"),
+        CheckConstraint("item_count >= 0", name="ck_scheduled_digest_item_count_non_negative"),
+        CheckConstraint("ready_count >= 0", name="ck_scheduled_digest_ready_count_non_negative"),
+        CheckConstraint(
+            "incomplete_count >= 0",
+            name="ck_scheduled_digest_incomplete_count_non_negative",
+        ),
+        CheckConstraint(
+            "blocked_count >= 0",
+            name="ck_scheduled_digest_blocked_count_non_negative",
+        ),
+        Index("ix_scheduled_digest_deliveries_delivered_at", "delivered_at"),
+        Index("ix_scheduled_digest_deliveries_project_phase", "project_phase"),
+        Index("ix_scheduled_digest_deliveries_readiness_status", "readiness_status"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID_PK, primary_key=True, default=uuid.uuid4)
+    dedup_key: Mapped[str] = mapped_column(String(64), nullable=False)
+    project_phase: Mapped[str] = mapped_column(String(120), nullable=False)
+    delivered_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    sender_name: Mapped[str] = mapped_column(String(120), nullable=False)
+    readiness_status: Mapped[str | None] = mapped_column(String(20))
+    item_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    ready_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    incomplete_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    blocked_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    items_summary: Mapped[str | None] = mapped_column(String(500))
+    payload_preview: Mapped[str | None] = mapped_column(String(1000))
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utc_now, nullable=False
+    )
+
+
 class ScanModel(Base):
     __tablename__ = "scans"
     __table_args__ = (
