@@ -73,6 +73,10 @@ from app.domain.entities.signal_contract import (
     SignalPricePlan,
     SignalRiskPlan,
 )
+from app.domain.entities.strategy_registry import (
+    StrategyRuleSetRegistryItem,
+    StrategyRuleSetRegistrySnapshot,
+)
 from app.domain.entities.strategy_rules import (
     StrategyRuleCategory,
     StrategyRuleCondition,
@@ -153,6 +157,8 @@ __all__ = [
     "StrategyRuleCondition",
     "StrategyRuleOperator",
     "StrategyRuleSet",
+    "StrategyRuleSetRegistryItem",
+    "StrategyRuleSetRegistrySnapshot",
     "StrategyRuleSetValidationIssue",
     "StrategyRuleSetValidationIssueCode",
     "StrategyRuleSetValidationReport",

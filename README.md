@@ -4,7 +4,7 @@ AI Trading OS is a safety-first foundation for a future modular Forex analysis a
 
 ## Current Status
 
-- Current project phase: phase_4c_strategy_ruleset_validation_foundation.
+- Current project phase: phase_4d_strategy_ruleset_registry_foundation.
 - Trading strategy: not implemented.
 - Real trading: disabled and unsupported.
 - External integrations: disabled by default.
@@ -20,6 +20,8 @@ AI Trading OS is a safety-first foundation for a future modular Forex analysis a
   disabled/non-actionable.
 - Phase 4C: strategy ruleset validation foundation only; validates `StrategyRuleSet` structure
   without evaluating market data.
+- Phase 4D: strategy ruleset registry/fixture foundation only; loads disabled built-in
+  `StrategyRuleSet` fixtures and validates them through the Phase 4C validator.
 
 ## Safety Warning
 
@@ -145,6 +147,21 @@ calculate entries/stops/targets, does not calculate position size, does not calc
 confidence, does not call AI/OpenAI/LLM services, does not send Telegram signals, does not use
 broker APIs, does not execute orders, and does not enable paper or real trading. Rule specs and rule
 sets remain disabled/non-actionable.
+
+## Phase 4D Status
+
+Phase 4D is strategy ruleset registry and fixture foundation only. It adds immutable registry item
+and snapshot models plus a deterministic built-in registry of disabled foundation `StrategyRuleSet`
+fixtures. The registry validates each fixture through the Phase 4C validator and can produce a
+deterministic, non-actionable snapshot/fingerprint of available rulesets.
+
+Phase 4D does not evaluate rules against market data, candles, indicators, economic events, context
+snapshots, analysis snapshots, or signal contracts. It does not generate signals, does not provide
+trading recommendations, does not calculate entries/stops/targets, does not calculate position
+size, does not calculate setup score or confidence, does not call AI/OpenAI/LLM services, does not
+send Telegram signals, does not use broker APIs, does not execute orders, and does not enable paper
+or real trading. Rule specs, rule sets, registry items, and registry snapshots remain
+disabled/non-actionable.
 
 ## Prerequisites
 

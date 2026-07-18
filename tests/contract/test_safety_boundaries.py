@@ -4,6 +4,7 @@ from pathlib import Path
 
 import pytest
 
+import app.domain.strategy_ruleset_registry as strategy_ruleset_registry_module
 import app.domain.strategy_ruleset_validator as strategy_ruleset_validator_module
 from app.adapters.disabled import (
     DisabledEconomicCalendarProvider,
@@ -12,7 +13,14 @@ from app.adapters.disabled import (
 )
 from app.core.enums import Decision
 from app.core.exceptions import IntegrationDisabledError
-from app.domain.entities import Timeframe, signal_contract, strategy_rules, strategy_validation
+from app.domain.entities import (
+    Timeframe,
+    signal_contract,
+    strategy_registry,
+    strategy_rules,
+    strategy_validation,
+)
+from app.domain.strategy_ruleset_registry import StrategyRuleSetRegistry
 from app.domain.strategy_ruleset_validator import StrategyRuleSetValidator
 from app.domain.value_objects import CurrencyPair
 from app.persistence.models import ScheduledDigestDeliveryModel
@@ -312,6 +320,54 @@ PHASE_4C_FORBIDDEN_RUNTIME_IMPORTS = (
     "httpx",
     "openai",
 )
+PHASE_4D_REGISTRY_OBJECTS = (
+    strategy_registry.StrategyRuleSetRegistryItem,
+    strategy_registry.StrategyRuleSetRegistrySnapshot,
+    StrategyRuleSetRegistry,
+)
+PHASE_4D_FORBIDDEN_RUNTIME_IMPORTS = (
+    "app.domain.entities.market_data",
+    "app.domain.entities.context",
+    "app.domain.entities.analysis",
+    "app.domain.entities.features",
+    "app.domain.entities.signal_contract",
+    "app.adapters",
+    "app.persistence",
+    "app.telegram",
+    "app.scheduler",
+    "sqlalchemy",
+    "fastapi",
+    "httpx",
+    "openai",
+)
+PHASE_4D_FORBIDDEN_BEHAVIOR_TERMS = (
+    "strategy_engine",
+    "strategy_evaluator",
+    "rule_engine",
+    "rule_evaluator",
+    "evaluate_rules",
+    "market_data_rule",
+    "generate_signal",
+    "signal_generator",
+    "signal_engine",
+    "decision_engine",
+    "setup_scoring",
+    "confidence_scoring",
+    "calculate_entry",
+    "calculate_stop",
+    "calculate_target",
+    "calculate_position_size",
+    "send_signal",
+    "telegram_signal",
+    "submit_order",
+    "execute_order",
+    "paper_trading",
+    "real_trading",
+    "backtesting",
+    "trading_simulator",
+    "OpenAI",
+    "LLM",
+)
 
 
 def test_no_real_order_execution_code_exists() -> None:
@@ -587,6 +643,112 @@ def test_phase4c_does_not_add_strategy_validation_service() -> None:
         or "ruleset" in file_path.name.lower()
         or "StrategyRuleSetValidator" in file_path.read_text(encoding="utf-8")
         or "StrategyRuleSetValidationReport" in file_path.read_text(encoding="utf-8")
+    ]
+
+    assert offenders == []
+
+
+def test_phase4d_registry_objects_are_domain_only() -> None:
+    offenders: list[str] = []
+    texts = [inspect.getsource(source_object) for source_object in PHASE_4D_REGISTRY_OBJECTS]
+    for index, text in enumerate(texts):
+        lowered = text.lower()
+        for term in PHASE_4D_FORBIDDEN_RUNTIME_IMPORTS:
+            if term.lower() in lowered:
+                offenders.append(f"phase4d-registry-{index}: {term}")
+
+    assert offenders == []
+
+
+def test_phase4d_registry_objects_do_not_add_evaluation_or_execution_terms() -> None:
+    offenders: list[str] = []
+    texts = [inspect.getsource(source_object) for source_object in PHASE_4D_REGISTRY_OBJECTS]
+    for index, text in enumerate(texts):
+        lowered = text.lower()
+        for term in PHASE_4D_FORBIDDEN_BEHAVIOR_TERMS:
+            if term.lower() in lowered:
+                offenders.append(f"phase4d-registry-{index}: {term}")
+
+    assert offenders == []
+
+
+def test_phase4d_registry_signatures_have_no_market_or_runtime_inputs() -> None:
+    assert tuple(inspect.signature(StrategyRuleSetRegistry.list_keys).parameters) == ("self",)
+    assert tuple(inspect.signature(StrategyRuleSetRegistry.load_builtin_rulesets).parameters) == (
+        "self",
+        "checked_at",
+    )
+    assert tuple(inspect.signature(StrategyRuleSetRegistry.get_by_key).parameters) == (
+        "self",
+        "key",
+        "checked_at",
+    )
+
+
+def test_phase4d_registry_module_does_not_import_runtime_dependencies() -> None:
+    source = inspect.getsource(strategy_ruleset_registry_module).lower()
+    import_lines = tuple(
+        line
+        for line in source.splitlines()
+        if line.startswith("import ") or line.startswith("from ")
+    )
+
+    offenders = [
+        term
+        for term in PHASE_4D_FORBIDDEN_RUNTIME_IMPORTS
+        if any(term.lower() in line for line in import_lines)
+    ]
+
+    assert offenders == []
+
+
+def test_phase4d_does_not_add_registry_api_routes() -> None:
+    route_files = tuple(Path("app/api/routes").glob("*.py"))
+    offenders = [
+        str(file_path)
+        for file_path in route_files
+        if "registry" in file_path.name.lower()
+        or "ruleset" in file_path.name.lower()
+        or "strategy" in file_path.name.lower()
+        or "StrategyRuleSetRegistry" in file_path.read_text(encoding="utf-8")
+    ]
+
+    assert offenders == []
+
+
+def test_phase4d_does_not_add_telegram_registry_or_signal_handlers() -> None:
+    source = Path("app/telegram/commands.py").read_text(encoding="utf-8")
+
+    assert "registry_command" not in source
+    assert "strategy_command" not in source
+    assert "ruleset_command" not in source
+    assert "signal_command" not in source
+    assert 'CommandHandler("registry"' not in source
+    assert 'CommandHandler("strategy"' not in source
+    assert 'CommandHandler("signal"' not in source
+    assert "StrategyRuleSetRegistry" not in source
+
+
+def test_phase4d_does_not_add_scheduler_registry_or_signal_jobs() -> None:
+    scheduler_text = "\n".join(
+        file_path.read_text(encoding="utf-8") for file_path in Path("app/scheduler").glob("*.py")
+    )
+
+    assert "StrategyRuleSetRegistry" not in scheduler_text
+    assert "registry_job" not in scheduler_text
+    assert "ruleset_registry_job" not in scheduler_text
+    assert "generate_signal" not in scheduler_text
+
+
+def test_phase4d_does_not_add_strategy_registry_service() -> None:
+    service_files = tuple(Path("app/services").glob("*.py"))
+    offenders = [
+        str(file_path)
+        for file_path in service_files
+        if "registry" in file_path.name.lower()
+        or "strategy" in file_path.name.lower()
+        or "ruleset" in file_path.name.lower()
+        or "StrategyRuleSetRegistry" in file_path.read_text(encoding="utf-8")
     ]
 
     assert offenders == []

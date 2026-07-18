@@ -81,8 +81,8 @@ def _codes(
     return tuple(issue.code for issue in report.issues)
 
 
-def test_project_phase_is_phase4c_strategy_ruleset_validation_foundation() -> None:
-    assert constants.PROJECT_PHASE == "phase_4c_strategy_ruleset_validation_foundation"
+def test_project_phase_is_phase4d_strategy_ruleset_registry_foundation() -> None:
+    assert constants.PROJECT_PHASE == "phase_4d_strategy_ruleset_registry_foundation"
 
 
 def test_validation_issue_and_report_models_are_immutable() -> None:

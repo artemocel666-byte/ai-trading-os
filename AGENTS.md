@@ -2,11 +2,12 @@
 
 AI Trading OS is a foundation for a future Forex analysis and paper-trading platform.
 
-Current project phase: phase_4c_strategy_ruleset_validation_foundation.
-Phase 4C is strategy ruleset validation foundation only. It defines typed immutable validation
-reports and structural checks for Phase 4B `StrategyRuleSet` objects only. External integrations are
-disabled by default. The project contains no strategy engine, no rule evaluation against market
-data, no signal generation engine, no broker order APIs, no paper trading, and no real trading.
+Current project phase: phase_4d_strategy_ruleset_registry_foundation.
+Phase 4D is strategy ruleset registry/fixture foundation only. It defines immutable registry
+items/snapshots and loads disabled built-in `StrategyRuleSet` fixtures through the Phase 4C
+validator. External integrations are disabled by default. The project contains no strategy engine,
+no rule evaluation against market data, no signal generation engine, no broker order APIs, no paper
+trading, and no real trading.
 
 ## Start and Checks
 
@@ -43,13 +44,13 @@ data, no signal generation engine, no broker order APIs, no paper trading, and n
   paper trading, broker APIs, order execution, or real trading while working in foundation phases.
   In Phase 4A, `LONG`/`SHORT` may appear only as contract enum values, not as generated
   recommendations.
-- While working in Phase 4C, strategy validation vocabulary is allowed only inside explicit ruleset
-  validation domain models, the validation-only checker, and their tests/docs. Rule specs and rule
-  sets must remain disabled/non-actionable. Do not evaluate rules against candles, indicators,
-  economic events, context snapshots, analysis snapshots, or signal contracts. Do not add strategy
-  engines, signal generation, setup scoring, confidence scoring, Telegram signal sending, API signal
-  routes, scheduler signal jobs, broker APIs, order execution, automatic runtime loops, or
-  paper-trading actions.
+- While working in Phase 4D, strategy registry vocabulary is allowed only inside explicit ruleset
+  registry/fixture domain models, the registry loader, and their tests/docs. Rule specs, rule sets,
+  registry items, and registry snapshots must remain disabled/non-actionable. Do not evaluate rules
+  against candles, indicators, economic events, context snapshots, analysis snapshots, or signal
+  contracts. Do not add strategy engines, signal generation, setup scoring, confidence scoring,
+  Telegram signal sending, API signal routes, scheduler signal jobs, broker APIs, order execution,
+  automatic runtime loops, or paper-trading actions.
 - Never fabricate market data, calendar data, agent evidence, or scan results.
 - LLM output may explain deterministic results only; it must not change prices, scores, risk, or rejected decisions.
 - Update documentation when architecture or safety boundaries change.

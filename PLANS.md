@@ -49,6 +49,10 @@
 - Phase 4C strategy ruleset validation foundation: immutable validation issue/report models,
   static structural checks for `StrategyRuleSet`, deterministic validation reports, and safety tests
   confirming no market-data rule evaluation, signal generation, scoring, or execution activation.
+- Phase 4D strategy ruleset registry foundation: immutable registry item/snapshot models,
+  deterministic disabled built-in `StrategyRuleSet` fixtures, Phase 4C validation reports, and
+  safety tests confirming no market-data rule evaluation, signal generation, scoring, or execution
+  activation.
 
 ## Current Implementation Status
 
@@ -62,11 +66,13 @@ foundation. Phase 4A signal contract foundation is contract-only and defines fut
 shapes without generating signals or trading recommendations. Phase 4B strategy rule specification
 foundation is specification-only and defines future rule set shapes without evaluating rules or
 activating strategy logic. Phase 4C strategy ruleset validation foundation validates the structure of
-Phase 4B rule sets without evaluating market data or producing decisions. Production Twelve Data and
-FMP adapters exist, but live integrations remain disabled by default. Scanning state can be enabled
-or disabled, Telegram can request readiness reports and readiness digests, and scheduled digest
-orchestration remains disabled by default. No strategy engine, rule evaluation against market data,
-signal generation, AI agent, paper-trading, or execution flow is connected.
+Phase 4B rule sets without evaluating market data or producing decisions. Phase 4D strategy ruleset
+registry foundation loads disabled built-in rule set fixtures and validates them through the Phase
+4C validator without evaluating data or producing decisions. Production Twelve Data and FMP adapters
+exist, but live integrations remain disabled by default. Scanning state can be enabled or disabled,
+Telegram can request readiness reports and readiness digests, and scheduled digest orchestration
+remains disabled by default. No strategy engine, rule evaluation against market data, signal
+generation, AI agent, paper-trading, or execution flow is connected.
 
 ## Future Phases
 
@@ -84,7 +90,8 @@ signal generation, AI agent, paper-trading, or execution flow is connected.
 - Phase 4A: signal contract foundation — contract-only, no signal generation or trading decisions
 - Phase 4B: strategy rule specification foundation — specification-only, no rule evaluation or trading decisions
 - Phase 4C: strategy ruleset validation foundation — validation-only, no market-data rule evaluation
-- Phase 4D+: future analytical agents and Decision Engine work remains not started
+- Phase 4D: strategy ruleset registry foundation — registry/fixture-only, no market-data rule evaluation
+- Phase 4E+: future analytical agents and Decision Engine work remains not started
 - Phase 5: Russian Chief AI explanations
 - Phase 6: Telegram signal delivery
 - Phase 7: backtesting and paper trading
@@ -106,6 +113,6 @@ signal generation, AI agent, paper-trading, or execution flow is connected.
 
 ## Next Planned Task
 
-Phase 4C strategy ruleset validation foundation is the current task. Later Phase 4 behavior,
+Phase 4D strategy ruleset registry foundation is the current task. Later Phase 4 behavior,
 including rule evaluation against market data, analytical agents, signal generation, and
 decision-engine work, has not started and is not active.

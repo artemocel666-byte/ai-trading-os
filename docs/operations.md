@@ -114,6 +114,15 @@ expose API endpoints, add Telegram signal handlers, add persistence migrations, 
 AI/OpenAI/LLM services, contact brokers, calculate scores/confidence, or produce trading guidance.
 Rule specs and rule sets remain disabled/non-actionable.
 
+Phase 4D adds strategy ruleset registry and fixture domain models only. It loads disabled built-in
+`StrategyRuleSet` fixtures, validates them through the Phase 4C validator, and produces
+deterministic non-actionable registry snapshots. It does not evaluate rules against market data,
+indicators, events, context snapshots, analysis snapshots, or signal contracts. It does not register
+runtime jobs, expose API endpoints, add Telegram signal handlers, add persistence migrations, call
+providers, call AI/OpenAI/LLM services, contact brokers, calculate scores/confidence, or produce
+trading guidance. Rule specs, rule sets, registry items, and registry snapshots remain
+disabled/non-actionable.
+
 ## Telegram Bot Local Setup
 
 Create the bot in Telegram before enabling the `bot` service:
