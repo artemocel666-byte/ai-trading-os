@@ -11,7 +11,7 @@ from app.adapters.disabled import (
 )
 from app.core.enums import Decision
 from app.core.exceptions import IntegrationDisabledError
-from app.domain.entities import Timeframe, signal_contract
+from app.domain.entities import Timeframe, signal_contract, strategy_rules
 from app.domain.value_objects import CurrencyPair
 from app.persistence.models import ScheduledDigestDeliveryModel
 from app.persistence.repositories.foundation import SqlAlchemyScheduledDigestDeliveryStore
@@ -251,6 +251,43 @@ PHASE_4A_FORBIDDEN_BEHAVIOR_TERMS = (
     "OpenAI",
     "LLM",
 )
+PHASE_4B_SPEC_OBJECTS = (
+    strategy_rules.StrategyRuleCategory,
+    strategy_rules.StrategyRuleCondition,
+    strategy_rules.StrategyRuleOperator,
+    strategy_rules.StrategyRuleSet,
+    strategy_rules.StrategyRuleSeverity,
+    strategy_rules.StrategyRuleSpec,
+    strategy_rules.StrategyRuleValue,
+)
+PHASE_4B_FORBIDDEN_BEHAVIOR_TERMS = (
+    "strategy_engine",
+    "strategy_evaluator",
+    "rule_engine",
+    "rule_evaluator",
+    "evaluate_rules",
+    "generate_signal",
+    "signal_generator",
+    "signal_engine",
+    "decision_engine",
+    "setup_scoring",
+    "confidence_scoring",
+    "calculate_entry",
+    "calculate_stop",
+    "calculate_target",
+    "calculate_position_size",
+    "send_signal",
+    "telegram_signal",
+    "place_order",
+    "submit_order",
+    "execute_order",
+    "paper_trading",
+    "real_trading",
+    "backtesting",
+    "trading_simulator",
+    "OpenAI",
+    "LLM",
+)
 
 
 def test_no_real_order_execution_code_exists() -> None:
@@ -378,6 +415,74 @@ def test_phase4a_does_not_add_scheduler_signal_jobs() -> None:
     assert "SignalContract" not in scheduler_text
     assert "signal_job" not in scheduler_text
     assert "generate_signal" not in scheduler_text
+
+
+def test_phase4b_strategy_rule_spec_objects_do_not_add_evaluation_or_execution_terms() -> None:
+    offenders: list[str] = []
+    texts = [inspect.getsource(source_object) for source_object in PHASE_4B_SPEC_OBJECTS]
+    for index, text in enumerate(texts):
+        lowered = text.lower()
+        for term in PHASE_4B_FORBIDDEN_BEHAVIOR_TERMS:
+            if term.lower() in lowered:
+                offenders.append(f"phase4b-spec-{index}: {term}")
+
+    assert offenders == []
+
+
+def test_phase4b_does_not_add_strategy_or_signal_api_routes() -> None:
+    route_files = tuple(Path("app/api/routes").glob("*.py"))
+    offenders = [
+        str(file_path)
+        for file_path in route_files
+        if "signal" in file_path.name.lower()
+        or "strategy" in file_path.name.lower()
+        or "rule" in file_path.name.lower()
+        or "StrategyRuleSet" in file_path.read_text(encoding="utf-8")
+        or "StrategyRuleSpec" in file_path.read_text(encoding="utf-8")
+    ]
+
+    assert offenders == []
+
+
+def test_phase4b_does_not_add_telegram_signal_or_rule_handlers() -> None:
+    source = Path("app/telegram/commands.py").read_text(encoding="utf-8")
+
+    assert "signal_command" not in source
+    assert "strategy_command" not in source
+    assert "rule_command" not in source
+    assert 'CommandHandler("signal"' not in source
+    assert 'CommandHandler("strategy"' not in source
+    assert 'CommandHandler("rules"' not in source
+    assert "StrategyRuleSet" not in source
+
+
+def test_phase4b_does_not_add_scheduler_signal_or_rule_jobs() -> None:
+    scheduler_text = "\n".join(
+        file_path.read_text(encoding="utf-8") for file_path in Path("app/scheduler").glob("*.py")
+    )
+
+    assert "StrategyRuleSet" not in scheduler_text
+    assert "strategy_rule_job" not in scheduler_text
+    assert "rule_evaluation" not in scheduler_text
+    assert "generate_signal" not in scheduler_text
+
+
+def test_phase4b_does_not_add_strategy_evaluation_service() -> None:
+    service_files = tuple(Path("app/services").glob("*.py"))
+    offenders = [
+        str(file_path)
+        for file_path in service_files
+        if "strategy" in file_path.name.lower()
+        or "rule" in file_path.name.lower()
+        or "StrategyRuleSet" in file_path.read_text(encoding="utf-8")
+        or "StrategyRuleSpec" in file_path.read_text(encoding="utf-8")
+    ]
+
+    assert offenders == []
+
+
+def test_phase3j_digest_audit_api_route_is_absent() -> None:
+    assert not Path("app/api/routes/digest_deliveries.py").exists()
 
 
 @pytest.mark.asyncio

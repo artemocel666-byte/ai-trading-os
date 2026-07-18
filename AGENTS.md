@@ -2,11 +2,11 @@
 
 AI Trading OS is a foundation for a future Forex analysis and paper-trading platform.
 
-Current project phase: phase_4a_signal_contract_foundation.
-Phase 4A starts Phase 4 but is contract-only. It defines typed immutable contracts for future signal
-objects and validation/serialization rules only. External integrations are disabled by default. The
-project contains no signal generation engine, no strategy rules, no broker order APIs, no paper
-trading, and no real trading.
+Current project phase: phase_4b_strategy_rule_specification_foundation.
+Phase 4B is strategy rule specification foundation only. It defines typed immutable contracts for
+future rule specifications and validation/serialization rules only. External integrations are
+disabled by default. The project contains no strategy engine, no rule evaluation, no signal
+generation engine, no broker order APIs, no paper trading, and no real trading.
 
 ## Start and Checks
 
@@ -39,13 +39,15 @@ trading, and no real trading.
 - Telegram user-facing text must be Russian.
 - Every Telegram message must contain exactly one semantic emoji at the beginning.
 - Never add real trading execution, broker order APIs, real account credentials, or live position management.
-- Never add strategy logic, setup scoring, buy/sell recommendations, paper trading, broker APIs,
-  order execution, or real trading while working in foundation phases. In Phase 4A, `LONG`/`SHORT`
-  may appear only as contract enum values, not as generated recommendations.
-- While working in Phase 4A, signal/trading vocabulary is allowed only inside explicit signal
-  contract domain models and their tests. Contracts must default to `NOT_ACTIONABLE`. Do not add
-  signal generation, strategy rules, setup scoring, confidence scoring, Telegram signal sending,
-  broker APIs, order execution, automatic runtime loops, or paper-trading actions.
+- Never add strategy execution logic, rule evaluation, setup scoring, buy/sell recommendations,
+  paper trading, broker APIs, order execution, or real trading while working in foundation phases.
+  In Phase 4A, `LONG`/`SHORT` may appear only as contract enum values, not as generated
+  recommendations.
+- While working in Phase 4B, strategy/rule vocabulary is allowed only inside explicit strategy rule
+  specification domain models and their tests/docs. Rule specs and rule sets must default to
+  disabled/non-actionable. Do not add rule evaluation, signal generation, setup scoring, confidence
+  scoring, Telegram signal sending, API signal routes, scheduler signal jobs, broker APIs, order
+  execution, automatic runtime loops, or paper-trading actions.
 - Never fabricate market data, calendar data, agent evidence, or scan results.
 - LLM output may explain deterministic results only; it must not change prices, scores, risk, or rejected decisions.
 - Update documentation when architecture or safety boundaries change.

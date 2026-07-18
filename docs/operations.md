@@ -102,6 +102,11 @@ Telegram signal handlers, persistence migrations, provider calls, AI/OpenAI/LLM 
 calls, order execution, paper trading, or real trading. Contracts default to `NOT_ACTIONABLE` and
 must not be treated as trading recommendations.
 
+Phase 4B adds strategy rule specification domain models only. It does not evaluate rules, register
+runtime jobs, expose API endpoints, add Telegram signal handlers, add persistence migrations, call
+providers, call AI/OpenAI/LLM services, contact brokers, calculate scores, or produce trading
+guidance. Rule specs and rule sets default to disabled/non-actionable.
+
 ## Telegram Bot Local Setup
 
 Create the bot in Telegram before enabling the `bot` service:

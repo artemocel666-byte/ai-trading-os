@@ -4,7 +4,7 @@ AI Trading OS is a safety-first foundation for a future modular Forex analysis a
 
 ## Current Status
 
-- Current project phase: phase_4a_signal_contract_foundation.
+- Current project phase: phase_4b_strategy_rule_specification_foundation.
 - Trading strategy: not implemented.
 - Real trading: disabled and unsupported.
 - External integrations: disabled by default.
@@ -16,6 +16,8 @@ AI Trading OS is a safety-first foundation for a future modular Forex analysis a
 - Phase 3H: neutral scheduled digest delivery foundation only, disabled by default.
 - Phase 3I: persistent neutral digest delivery audit foundation only.
 - Phase 4A: signal contract foundation only; contracts default to `NOT_ACTIONABLE`.
+- Phase 4B: strategy rule specification foundation only; rule specs and rule sets default to
+  disabled/non-actionable.
 
 ## Safety Warning
 
@@ -117,6 +119,17 @@ Contracts default to `NOT_ACTIONABLE` and are not recommendations. Phase 4A does
 signals, does not provide trading recommendations, does not calculate entries/stops/targets, does
 not calculate position size, does not call AI/OpenAI/LLM services, does not send Telegram signals,
 does not use broker APIs, does not execute orders, and does not enable paper or real trading.
+
+## Phase 4B Status
+
+Phase 4B is strategy rule specification foundation only. It adds immutable rule-specification
+models, operator/category/severity enums, validation rules, deterministic JSON serialization, and
+deterministic fingerprinting for future rule specifications. Rule specs and rule sets default to
+disabled and non-actionable. Phase 4B does not evaluate rules, does not generate signals, does not
+provide trading recommendations, does not calculate entries/stops/targets, does not calculate
+position size, does not calculate setup score or confidence, does not call AI/OpenAI/LLM services,
+does not send Telegram signals, does not use broker APIs, does not execute orders, and does not
+enable paper or real trading.
 
 ## Prerequisites
 

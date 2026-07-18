@@ -43,6 +43,9 @@
 - Phase 4A signal contract foundation: immutable contract/value models, validation rules,
   deterministic serialization, deterministic fingerprinting, and safety tests confirming no signal
   generation or execution activation.
+- Phase 4B strategy rule specification foundation: immutable rule specification models, operator
+  validation, deterministic serialization, deterministic fingerprinting, and safety tests confirming
+  no rule evaluation, signal generation, scoring, or execution activation.
 
 ## Current Implementation Status
 
@@ -53,11 +56,13 @@ Phase 3E local Telegram readiness-report foundation, Phase 3F deterministic read
 snapshot digest foundation, Phase 3G manual Telegram digest command foundation, Phase 3H neutral
 scheduled digest delivery foundation, and Phase 3I persistent neutral digest delivery audit
 foundation. Phase 4A signal contract foundation is contract-only and defines future signal contract
-shapes without generating signals or trading recommendations. Production Twelve Data and FMP
-adapters exist, but live integrations remain disabled by default. Scanning state can be enabled or
-disabled, Telegram can request readiness reports and readiness digests, and scheduled digest
-orchestration remains disabled by default. No strategy, signal generation, AI agent, paper-trading,
-or execution flow is connected.
+shapes without generating signals or trading recommendations. Phase 4B strategy rule specification
+foundation is specification-only and defines future rule set shapes without evaluating rules or
+activating strategy logic. Production Twelve Data and FMP adapters exist, but live integrations
+remain disabled by default. Scanning state can be enabled or disabled, Telegram can request
+readiness reports and readiness digests, and scheduled digest orchestration remains disabled by
+default. No strategy engine, rule evaluation, signal generation, AI agent, paper-trading, or
+execution flow is connected.
 
 ## Future Phases
 
@@ -73,7 +78,8 @@ or execution flow is connected.
 - Phase 3H: neutral scheduled digest delivery foundation — completed without trading decisions
 - Phase 3I: persistent digest delivery audit foundation — completed without trading decisions
 - Phase 4A: signal contract foundation — contract-only, no signal generation or trading decisions
-- Phase 4B+: future analytical agents and Decision Engine work remains not started
+- Phase 4B: strategy rule specification foundation — specification-only, no rule evaluation or trading decisions
+- Phase 4C+: future analytical agents and Decision Engine work remains not started
 - Phase 5: Russian Chief AI explanations
 - Phase 6: Telegram signal delivery
 - Phase 7: backtesting and paper trading
@@ -95,6 +101,6 @@ or execution flow is connected.
 
 ## Next Planned Task
 
-Phase 4A contract foundation is the current task. Later Phase 4 behavior, including analytical
-agents, strategy rules, signal generation, and decision-engine work, has not started and is not
-active.
+Phase 4B strategy rule specification foundation is the current task. Later Phase 4 behavior,
+including rule evaluation, analytical agents, signal generation, and decision-engine work, has not
+started and is not active.
