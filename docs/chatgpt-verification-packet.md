@@ -1,16 +1,26 @@
-# ChatGPT Verification Packet: Phase 3I Persistent Digest Delivery Audit Foundation
+# ChatGPT Verification Packet: Phase 4A Signal Contract Foundation
 
-Generated: 2026-07-15T18:57:41Z
+Generated: 2026-07-18T12:16:14Z
 
 ## Repository Metadata
 
 - Repository path: `/Users/artem.otsel/Documents/ai-trading-os`
 - Git branch: `main`
-- Current commit hash: `901d86411d01217b6b1ca0c7fd7e694621159577`
-- Local latest commit: `901d864 Phase 3H Done`
-- Prompt expected latest commit: `141ef71 Add Phase 3H scheduled digest delivery foundation`
-- Baseline note: the prompt's expected Phase 3H commit did not match the local repository. The local repository was clean at `901d864 Phase 3H Done`, and Phase 3I work continued from that actual state.
-- Commit status: Phase 3I remains uncommitted at packet generation time.
+- Current commit hash: `bad58a4702b9e3d03fc566f5b2f21006019306c7`
+- Latest expected commit from prompt: `bad58a4 Add Phase 3I persistent digest audit foundation`
+- Commit status: Phase 4A remains uncommitted at packet generation time.
+
+## Preflight
+
+Preflight passed before edits:
+
+```text
+git status --short
+<clean>
+
+git log --oneline -1
+bad58a4 Add Phase 3I persistent digest audit foundation
+```
 
 ## Git Status Short
 
@@ -19,59 +29,39 @@ Generated: 2026-07-15T18:57:41Z
  M PLANS.md
  M README.md
  M app/core/constants.py
- M app/domain/entities/scheduled_digest.py
- M app/domain/interfaces/notifications.py
- M app/domain/interfaces/unit_of_work.py
- M app/persistence/models/__init__.py
- M app/persistence/models/foundation.py
- M app/persistence/repositories/__init__.py
- M app/persistence/repositories/foundation.py
- M app/persistence/unit_of_work.py
- M app/services/scheduled_digest_delivery_service.py
+ M app/domain/entities/__init__.py
  M docs/chatgpt-verification-packet.md
- M docs/database-schema.md
  M docs/operations.md
  M tests/contract/test_safety_boundaries.py
- M tests/fakes.py
  M tests/integration/test_database_and_api.py
  M tests/unit/test_analysis_snapshot_foundation.py
  M tests/unit/test_readiness_scheduler_foundation.py
- M tests/unit/test_scheduled_digest_delivery_foundation.py
-?? docs/phase3i-verification-report.md
-?? migrations/versions/0003_phase3i_scheduled_digest_deliveries.py
+?? app/domain/entities/signal_contract.py
+?? docs/phase4a-verification-report.md
+?? tests/unit/test_signal_contract_foundation.py
 ```
 
 ## Git Diff Stat
 
 ```text
- AGENTS.md                                          |   14 +-
- PLANS.md                                           |   18 +-
- README.md                                          |   13 +-
- app/core/constants.py                              |    2 +-
- app/domain/entities/scheduled_digest.py            |    8 +
- app/domain/interfaces/notifications.py             |    6 +
- app/domain/interfaces/unit_of_work.py              |    6 +
- app/persistence/models/__init__.py                 |    2 +
- app/persistence/models/foundation.py               |   36 +
- app/persistence/repositories/__init__.py           |    2 +
- app/persistence/repositories/foundation.py         |   69 +
- app/persistence/unit_of_work.py                    |   11 +
- app/services/scheduled_digest_delivery_service.py  |   22 +
- docs/chatgpt-verification-packet.md                | 3700 +++++++++++---------
- docs/database-schema.md                            |   11 +
- docs/operations.md                                 |    6 +
- tests/contract/test_safety_boundaries.py           |   43 +
- tests/fakes.py                                     |   33 +-
- tests/integration/test_database_and_api.py         |  220 +-
- tests/unit/test_analysis_snapshot_foundation.py    |    4 +-
- tests/unit/test_readiness_scheduler_foundation.py  |    2 +-
- .../test_scheduled_digest_delivery_foundation.py   |   13 +-
- 22 files changed, 2631 insertions(+), 1610 deletions(-)
+ AGENTS.md                                         |   23 +-
+ PLANS.md                                          |   20 +-
+ README.md                                         |   16 +-
+ app/core/constants.py                             |    2 +-
+ app/domain/entities/__init__.py                   |   14 +
+ docs/chatgpt-verification-packet.md               | 2647 ++++++---------------
+ docs/operations.md                                |    5 +
+ tests/contract/test_safety_boundaries.py          |   76 +-
+ tests/integration/test_database_and_api.py        |    2 +-
+ tests/unit/test_analysis_snapshot_foundation.py   |    4 +-
+ tests/unit/test_readiness_scheduler_foundation.py |    2 +-
+ 11 files changed, 816 insertions(+), 1995 deletions(-)
 ```
 
 ## Git Log
 
 ```text
+bad58a4 Add Phase 3I persistent digest audit foundation
 901d864 Phase 3H Done
 ab4aafb phase 3G done
 40473bd Add Phase 3F readiness scheduler foundation
@@ -85,8 +75,9 @@ a6f44f0 Add Phase 3B feature engine foundation
 
 ## Created Files
 
-- `docs/phase3i-verification-report.md`
-- `migrations/versions/0003_phase3i_scheduled_digest_deliveries.py`
+- `app/domain/entities/signal_contract.py`
+- `docs/phase4a-verification-report.md`
+- `tests/unit/test_signal_contract_foundation.py`
 
 ## Modified Files
 
@@ -94,48 +85,44 @@ a6f44f0 Add Phase 3B feature engine foundation
 - `PLANS.md`
 - `README.md`
 - `app/core/constants.py`
-- `app/domain/entities/scheduled_digest.py`
-- `app/domain/interfaces/notifications.py`
-- `app/domain/interfaces/unit_of_work.py`
-- `app/persistence/models/__init__.py`
-- `app/persistence/models/foundation.py`
-- `app/persistence/repositories/__init__.py`
-- `app/persistence/repositories/foundation.py`
-- `app/persistence/unit_of_work.py`
-- `app/services/scheduled_digest_delivery_service.py`
+- `app/domain/entities/__init__.py`
 - `docs/chatgpt-verification-packet.md`
-- `docs/database-schema.md`
 - `docs/operations.md`
 - `tests/contract/test_safety_boundaries.py`
-- `tests/fakes.py`
 - `tests/integration/test_database_and_api.py`
 - `tests/unit/test_analysis_snapshot_foundation.py`
 - `tests/unit/test_readiness_scheduler_foundation.py`
-- `tests/unit/test_scheduled_digest_delivery_foundation.py`
 
 ## Migration Files Created Or Modified
 
-- `migrations/versions/0003_phase3i_scheduled_digest_deliveries.py`
+- None
+
+Phase 4A did not require a migration. Alembic head remains `0003_phase3i_digest_audit (head)`.
 
 ## Phase Scope Confirmation
 
-Phase 3I is persistent digest delivery audit foundation only. It stores neutral scheduled digest delivery deduplication keys and non-sensitive metadata.
+Phase 4A starts Phase 4 but is contract-only. It defines typed contracts, value objects, validation rules, deterministic serialization, deterministic fingerprinting, tests, and documentation for future signal contract objects.
 
-Phase 4 was not started. No strategy implementation, trade signals, setup scoring, confidence scoring, AI agents, OpenAI calls, broker APIs, paper trading, order execution, or real trading were added.
+Phase 4A does not implement signal generation, strategy rules, setup scoring, confidence scoring, automated LONG/SHORT decisions, buy/sell recommendations, entry calculation logic, stop loss calculation logic, take profit calculation logic, position sizing logic, portfolio/risk decisions, AI agents, OpenAI calls, LLM usage, Telegram signal sending, broker APIs, order execution, paper trading, real trading, backtesting, or a trading simulator.
 
-Scheduled delivery remains disabled by default. Telegram output remains neutral readiness/reporting text only. Provider/network integrations remain disabled by default.
+Contracts default to `NOT_ACTIONABLE` and must not be treated as recommendations.
+
+Phase 3J does not exist in the final result:
+
+```text
+<no Phase 3J references found outside this packet/report>
+```
 
 ## Implementation Summary
 
-- Updated `PROJECT_PHASE` to `phase_3i_persistent_digest_audit_foundation`.
-- Added neutral `scheduled_digest_deliveries` database table with unique `dedup_key`, project phase, UTC delivery time, sender name, readiness status/counts, item summary, and payload preview.
-- Added SQLAlchemy model and repository implementing the existing domain store protocol.
-- Updated persistent audit recording to use PostgreSQL `ON CONFLICT DO NOTHING` on the unique dedup key.
-- Added UoW access to the persistent delivery audit store without coupling domain code to SQLAlchemy.
-- Extended scheduled digest delivery records with neutral audit fields.
-- Updated delivery service to populate audit metadata and still support the in-memory store.
-- Added repeatable PostgreSQL integration cleanup and tests for persistent duplicate skipping.
-- Updated README, AGENTS, PLANS, operations, database schema, Phase 3I report, and this packet.
+- Updated `PROJECT_PHASE` to `phase_4a_signal_contract_foundation`.
+- Added immutable domain contract models in `app/domain/entities/signal_contract.py`.
+- Exported the contract types from `app/domain/entities/__init__.py`.
+- Added validation for UTC timestamps, valid time windows, ordered entry range, LONG/SHORT price relationships, risk percent, max loss amount, and position size.
+- Added deterministic JSON serialization and SHA-256 fingerprinting that excludes the optional stored fingerprint field.
+- Normalized evidence IDs and warnings into sorted unique tuples before serialization/fingerprinting.
+- Added contract-only safety tests proving no signal API route, Telegram handler, scheduler job, generation engine, or execution behavior was added.
+- Updated README, AGENTS, PLANS, operations docs, Phase 4A report, and this packet.
 
 ## Exact Verification Command Outputs
 
@@ -150,7 +137,7 @@ Command: `uv lock --check`
 Exit code: `0`
 
 ```text
-Resolved 46 packages in 29ms
+Resolved 46 packages in 18ms
 ```
 
 ### `uv sync`
@@ -160,8 +147,8 @@ Command: `uv sync`
 Exit code: `0`
 
 ```text
-Resolved 46 packages in 2ms
-Checked 43 packages in 7ms
+Resolved 46 packages in 3ms
+Checked 43 packages in 10ms
 ```
 
 ### `uv run ruff format --check .`
@@ -171,7 +158,7 @@ Command: `uv run ruff format --check .`
 Exit code: `0`
 
 ```text
-109 files already formatted
+111 files already formatted
 ```
 
 ### `uv run ruff check .`
@@ -191,7 +178,7 @@ Command: `uv run mypy app`
 Exit code: `0`
 
 ```text
-Success: no issues found in 77 source files
+Success: no issues found in 78 source files
 ```
 
 ### `uv run pytest`
@@ -208,27 +195,28 @@ configfile: pyproject.toml
 testpaths: tests
 plugins: anyio-4.14.1, asyncio-0.26.0
 asyncio: mode=Mode.AUTO, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
-collected 219 items
+collected 235 items
 
 tests/contract/test_agent_contracts.py ......                            [  2%]
-tests/contract/test_api_error_schema.py .                                [  3%]
-tests/contract/test_architecture_boundaries.py ..                        [  4%]
-tests/contract/test_provider_contracts.py .............................. [ 17%]
-...............................                                          [ 31%]
-tests/contract/test_safety_boundaries.py ................                [ 39%]
-tests/integration/test_database_and_api.py sssssss                       [ 42%]
-tests/unit/test_analysis_snapshot_foundation.py ..........               [ 47%]
-tests/unit/test_context_engine_foundation.py .............               [ 52%]
-tests/unit/test_data_quality_foundation.py ...                           [ 54%]
-tests/unit/test_domain_market_models.py ..................               [ 62%]
-tests/unit/test_errors_and_redaction.py .......                          [ 65%]
-tests/unit/test_feature_engine_foundation.py ...........                 [ 70%]
-tests/unit/test_internal_api_key.py ....                                 [ 72%]
-tests/unit/test_readiness_scheduler_foundation.py .........              [ 76%]
-tests/unit/test_scheduled_digest_delivery_foundation.py ...........      [ 81%]
-tests/unit/test_settings.py .........                                    [ 85%]
+tests/contract/test_api_error_schema.py .                                [  2%]
+tests/contract/test_architecture_boundaries.py ..                        [  3%]
+tests/contract/test_provider_contracts.py .............................. [ 16%]
+...............................                                          [ 29%]
+tests/contract/test_safety_boundaries.py ....................            [ 38%]
+tests/integration/test_database_and_api.py sssssss                       [ 41%]
+tests/unit/test_analysis_snapshot_foundation.py ..........               [ 45%]
+tests/unit/test_context_engine_foundation.py .............               [ 51%]
+tests/unit/test_data_quality_foundation.py ...                           [ 52%]
+tests/unit/test_domain_market_models.py ..................               [ 60%]
+tests/unit/test_errors_and_redaction.py .......                          [ 62%]
+tests/unit/test_feature_engine_foundation.py ...........                 [ 67%]
+tests/unit/test_internal_api_key.py ....                                 [ 69%]
+tests/unit/test_readiness_scheduler_foundation.py .........              [ 73%]
+tests/unit/test_scheduled_digest_delivery_foundation.py ...........      [ 77%]
+tests/unit/test_settings.py .........                                    [ 81%]
+tests/unit/test_signal_contract_foundation.py ............               [ 86%]
 tests/unit/test_system_state_service.py .....                            [ 88%]
-tests/unit/test_telegram_commands.py ........                            [ 91%]
+tests/unit/test_telegram_commands.py ........                            [ 92%]
 tests/unit/test_telegram_policy.py .....                                 [ 94%]
 tests/unit/test_time.py ...                                              [ 95%]
 tests/unit/test_unit_of_work_lifecycle.py ......                         [ 98%]
@@ -240,7 +228,7 @@ tests/unit/test_value_objects_and_enums.py ....                          [100%]
     from starlette.testclient import TestClient as TestClient  # noqa
 
 -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
-================== 212 passed, 7 skipped, 1 warning in 0.77s ===================
+================== 228 passed, 7 skipped, 1 warning in 0.83s ===================
 ```
 
 ### `uv run python scripts/security_check.py`
@@ -262,101 +250,100 @@ Command: `docker compose build`
 Exit code: `0`
 
 ```text
- Image ai-trading-os-worker Building 
- Image ai-trading-os-bot Building 
- Image ai-trading-os-migrate Building 
- Image ai-trading-os-api Building 
+ Image ai-trading-os-bot Building
+ Image ai-trading-os-migrate Building
+ Image ai-trading-os-api Building
+ Image ai-trading-os-worker Building
 #1 [internal] load local bake definitions
 #1 reading from stdin 1.91kB done
 #1 DONE 0.0s
 
-#2 [bot internal] load build definition from Dockerfile
+#2 [migrate internal] load build definition from Dockerfile
 #2 transferring dockerfile: 411B done
 #2 DONE 0.0s
 
-#3 [migrate internal] load metadata for ghcr.io/astral-sh/uv:python3.12-bookworm-slim
-#3 DONE 1.1s
+#3 [bot internal] load metadata for ghcr.io/astral-sh/uv:python3.12-bookworm-slim
+#3 DONE 0.8s
 
-#4 [migrate internal] load .dockerignore
+#4 [worker internal] load .dockerignore
 #4 transferring context: 143B done
 #4 DONE 0.0s
 
-#5 [bot 1/5] FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim@sha256:e5b65587bce7de595f299855d7385fe7fca39b8a74baa261ba1b7147afa78e58
+#5 [migrate 1/5] FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim@sha256:e5b65587bce7de595f299855d7385fe7fca39b8a74baa261ba1b7147afa78e58
 #5 resolve ghcr.io/astral-sh/uv:python3.12-bookworm-slim@sha256:e5b65587bce7de595f299855d7385fe7fca39b8a74baa261ba1b7147afa78e58 0.0s done
 #5 DONE 0.0s
 
-#6 [migrate internal] load build context
-#6 transferring context: 282.09kB 0.0s done
+#6 [api internal] load build context
+#6 transferring context: 18.80kB 0.0s done
 #6 DONE 0.0s
 
-#7 [bot 2/5] WORKDIR /app
+#7 [api 3/5] COPY pyproject.toml uv.lock* ./
 #7 CACHED
 
-#8 [bot 3/5] COPY pyproject.toml uv.lock* ./
+#8 [api 2/5] WORKDIR /app
 #8 CACHED
 
-#9 [bot 4/5] RUN uv sync --frozen --no-dev
+#9 [api 4/5] RUN uv sync --frozen --no-dev
 #9 CACHED
 
 #10 [api 5/5] COPY . .
-#10 DONE 0.0s
+#10 CACHED
 
-#11 [migrate] exporting to image
-#11 exporting layers 0.1s done
-#11 exporting manifest sha256:7b38c8e56b4309f37915bd25d364bf139d9ee91e958ad09aee5ae825f0d51c43
-#11 exporting manifest sha256:7b38c8e56b4309f37915bd25d364bf139d9ee91e958ad09aee5ae825f0d51c43 done
-#11 exporting config sha256:8baa40577815966189bc7275e733ee3bb9cf0a66ae84635cd37986b791252b58 done
-#11 exporting attestation manifest sha256:1bee49ba4b51956108c4dce9833046b4fa7698f31935c2e99fe34ae0df8b5e96 0.0s done
-#11 exporting manifest list sha256:9015244eaf111398cd2fda7da43591646217e7fc19b5ebd9ddca78d9ff41ad95 done
-#11 naming to docker.io/library/ai-trading-os-migrate:latest done
-#11 unpacking to docker.io/library/ai-trading-os-migrate:latest 0.0s done
-#11 DONE 0.2s
+#11 [bot] exporting to image
+#11 exporting layers done
+#11 exporting manifest sha256:b15fd1ccd5ea08f21ff8c28f50bf312d8b4c3788b3f6462d8b3539e3838fd787 done
+#11 exporting config sha256:f367422c67d6a50b0862d7b86a170d4fe19b2baedcc3c584f4f2953b8fa79a83 done
+#11 exporting attestation manifest sha256:c412f366743b859a309d61769871d541f57f6e6fdcfae304e0f69c479013998b 0.0s done
+#11 exporting manifest list sha256:8e61ab29a1643ddb524dd8542404602535d6d78b1fdce4eaf9a8ad8590f0b80b done
+#11 naming to docker.io/library/ai-trading-os-bot:latest done
+#11 unpacking to docker.io/library/ai-trading-os-bot:latest done
+#11 DONE 0.1s
 
 #12 [api] exporting to image
-#12 exporting layers 0.1s done
-#12 exporting manifest sha256:df22c64aaf398dd52f8a4de626ca06a5bd8dfbc6b6d851324571cc7db939d6f4 done
-#12 exporting config sha256:3d711e92c7c74a657dea25edf1f1dff92a145d874844723f5539570bc09cde42 done
-#12 exporting attestation manifest sha256:02c1138b53859051cfaddc40af9611b934ad1050530c13d231e218ab9f528b06 0.0s done
-#12 exporting manifest list sha256:f4e6254ff395bd0903a5c92da9fc44303d6376462db411984ac20390bbfe7131 done
+#12 exporting layers done
+#12 exporting manifest sha256:ac780751c37d77d73b762149b9fb8ca356e8250530b1e57d89b75aada0cde90b done
+#12 exporting config sha256:9c45a93e67d313c4e32e9cd5b8f3a5a9f17195f3e95b84b3a228ce7a08ec6044 done
+#12 exporting attestation manifest sha256:e1f1b8785680a204835bd3044c6abc28415692296ac86262222bf0b060e85d0d 0.0s done
+#12 exporting manifest list sha256:8ae0518730f677851f18beaf0ad1f1a08c3e44a9d9d621eead5577be73f0cd9b done
 #12 naming to docker.io/library/ai-trading-os-api:latest done
-#12 unpacking to docker.io/library/ai-trading-os-api:latest 0.0s done
-#12 DONE 0.2s
+#12 unpacking to docker.io/library/ai-trading-os-api:latest done
+#12 DONE 0.1s
 
-#13 [worker] exporting to image
-#13 exporting layers 0.1s done
-#13 exporting manifest sha256:5ed933efc1c91e727cacfa31822a7e61eeb727182822b1c88fc2bec6b5d8602d done
-#13 exporting config sha256:4389d788547b67c484a8480fb8f9b183c62b9177c15c69424bc646738dc1c722 done
-#13 exporting attestation manifest sha256:c1062b6d5164094fb902ec9d986a56e9b2ef463e11894262fc893bb4f80cb6e3 0.0s done
-#13 exporting manifest list sha256:262d1ad75deb3c479657c2a4fc9b48f780eb18a7a32628e3622d6ad44da2a917 done
-#13 naming to docker.io/library/ai-trading-os-worker:latest done
-#13 unpacking to docker.io/library/ai-trading-os-worker:latest 0.0s done
-#13 DONE 0.2s
+#13 [migrate] exporting to image
+#13 exporting layers done
+#13 exporting manifest sha256:d369bb2d8be34128a814e59cef3a13d8ebf59b1e17e8d6bb4d27080d1a2ead0b done
+#13 exporting config sha256:3b87c039d55def6eb0674816bf3008dba7af233271b9bfac5190b4f35bbbb419 done
+#13 exporting attestation manifest sha256:489a1ffb4aa9ca268ad1d2e1b45bc1676e844af3511cdb71a0a6b68e4493fcfd 0.0s done
+#13 exporting manifest list sha256:1d6458c24efb48266ab600cb929a71856ec3dd4ff59c24de4d7c62de0948408f done
+#13 naming to docker.io/library/ai-trading-os-migrate:latest done
+#13 unpacking to docker.io/library/ai-trading-os-migrate:latest done
+#13 DONE 0.1s
 
-#14 [bot] exporting to image
-#14 exporting layers 0.1s done
-#14 exporting manifest sha256:f137c746dad4dda50c473a34b2e81b888783794aadb2570bc93e2eb180da0d02 done
-#14 exporting config sha256:7d1be4ac4752056dbd3a4967216de3b58551aa3b55446945a9c120eb12739b5c done
-#14 exporting attestation manifest sha256:41c8f183518d0614dd6e1f8d77345ff9ec3c676652585b91494fd3adc3596bc6 0.0s done
-#14 exporting manifest list sha256:502f3b5424b1360a5ab74cd10271cdc2eab970290c9fbac4354227af8ed949a4 done
-#14 naming to docker.io/library/ai-trading-os-bot:latest done
-#14 unpacking to docker.io/library/ai-trading-os-bot:latest 0.0s done
-#14 DONE 0.2s
+#14 [worker] exporting to image
+#14 exporting layers done
+#14 exporting manifest sha256:820a1c148742512f94d41f94496e7f228dd36e5a753fac7c377eb82eb23ae095 done
+#14 exporting config sha256:d46a495dc56eff6d37e22b05b47a4fa7bf335c9d272c8f29f28666bfe211a6d7 done
+#14 exporting attestation manifest sha256:f79db324a3b72f973505aca9ca2f661d6c9bd6b5a64f2203843add086cf363d4 0.0s done
+#14 exporting manifest list sha256:b901668935ed9fbfe44c6356908d23531f3eb04928e72ae5471d4a0d5159a7c4 done
+#14 naming to docker.io/library/ai-trading-os-worker:latest done
+#14 unpacking to docker.io/library/ai-trading-os-worker:latest done
+#14 DONE 0.1s
 
-#15 [migrate] resolving provenance for metadata file
+#15 [worker] resolving provenance for metadata file
 #15 DONE 0.0s
 
-#16 [worker] resolving provenance for metadata file
+#16 [api] resolving provenance for metadata file
 #16 DONE 0.0s
 
 #17 [bot] resolving provenance for metadata file
 #17 DONE 0.0s
 
-#18 [api] resolving provenance for metadata file
+#18 [migrate] resolving provenance for metadata file
 #18 DONE 0.0s
- Image ai-trading-os-bot Built 
- Image ai-trading-os-migrate Built 
- Image ai-trading-os-worker Built 
+ Image ai-trading-os-worker Built
  Image ai-trading-os-api Built
+ Image ai-trading-os-bot Built
+ Image ai-trading-os-migrate Built
 ```
 
 ### `docker compose up -d postgres`
@@ -376,8 +363,8 @@ Command: `docker compose ps postgres`
 Exit code: `0`
 
 ```text
-NAME                       IMAGE                COMMAND                  SERVICE    CREATED          STATUS                    PORTS
-ai-trading-os-postgres-1   postgres:16-alpine   "docker-entrypoint.s…"   postgres   19 minutes ago   Up 19 minutes (healthy)   5432/tcp
+NAME                       IMAGE                COMMAND                  SERVICE    CREATED         STATUS                   PORTS
+ai-trading-os-postgres-1   postgres:16-alpine   "docker-entrypoint.s…"   postgres   4 minutes ago   Up 4 minutes (healthy)   5432/tcp
 ```
 
 ### `docker compose run --rm migrate alembic current`
@@ -387,11 +374,11 @@ Command: `docker compose run --rm migrate alembic current`
 Exit code: `0`
 
 ```text
- Container ai-trading-os-postgres-1 Running 
- Container ai-trading-os-postgres-1 Waiting 
- Container ai-trading-os-postgres-1 Healthy 
- Container ai-trading-os-migrate-run-737bbe8e5ebd Creating 
- Container ai-trading-os-migrate-run-737bbe8e5ebd Created 
+ Container ai-trading-os-postgres-1 Running
+ Container ai-trading-os-postgres-1 Waiting
+ Container ai-trading-os-postgres-1 Healthy
+ Container ai-trading-os-migrate-run-489b06565fa5 Creating
+ Container ai-trading-os-migrate-run-489b06565fa5 Created
 INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
 INFO  [alembic.runtime.migration] Will assume transactional DDL.
 0003_phase3i_digest_audit (head)
@@ -404,11 +391,11 @@ Command: `docker compose run --rm migrate alembic check`
 Exit code: `0`
 
 ```text
- Container ai-trading-os-postgres-1 Running 
- Container ai-trading-os-postgres-1 Waiting 
- Container ai-trading-os-postgres-1 Healthy 
- Container ai-trading-os-migrate-run-501ef29f5f68 Creating 
- Container ai-trading-os-migrate-run-501ef29f5f68 Created 
+ Container ai-trading-os-postgres-1 Running
+ Container ai-trading-os-postgres-1 Waiting
+ Container ai-trading-os-postgres-1 Healthy
+ Container ai-trading-os-migrate-run-109055c459bb Creating
+ Container ai-trading-os-migrate-run-109055c459bb Created
 INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
 INFO  [alembic.runtime.migration] Will assume transactional DDL.
 INFO  [alembic.runtime.plugins] setting up autogenerate plugin alembic.autogenerate.schemas
@@ -427,11 +414,11 @@ Command: `docker compose run --rm -e DATABASE_URL=postgresql+asyncpg://ai_tradin
 Exit code: `0`
 
 ```text
- Container ai-trading-os-postgres-1 Running 
- Container ai-trading-os-postgres-1 Waiting 
- Container ai-trading-os-postgres-1 Healthy 
- Container ai-trading-os-migrate-run-84ab7a3e018d Creating 
- Container ai-trading-os-migrate-run-84ab7a3e018d Created 
+ Container ai-trading-os-postgres-1 Running
+ Container ai-trading-os-postgres-1 Waiting
+ Container ai-trading-os-postgres-1 Healthy
+ Container ai-trading-os-migrate-run-6334ab9dc370 Creating
+ Container ai-trading-os-migrate-run-6334ab9dc370 Created
 INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
 INFO  [alembic.runtime.migration] Will assume transactional DDL.
 ```
@@ -443,19 +430,19 @@ Command: `docker compose run --rm -e REQUIRE_INTEGRATION_TESTS=true -e TEST_DATA
 Exit code: `0`
 
 ```text
- Container ai-trading-os-postgres-1 Running 
- Container ai-trading-os-postgres-1 Waiting 
- Container ai-trading-os-postgres-1 Healthy 
- Container ai-trading-os-migrate-run-a9aa9bf0d333 Creating 
- Container ai-trading-os-migrate-run-a9aa9bf0d333 Created 
-Downloading ruff (10.5MiB)
-Downloading mypy (13.1MiB)
+ Container ai-trading-os-postgres-1 Running
+ Container ai-trading-os-postgres-1 Waiting
+ Container ai-trading-os-postgres-1 Healthy
+ Container ai-trading-os-migrate-run-36e6960f25a2 Creating
+ Container ai-trading-os-migrate-run-36e6960f25a2 Created
 Downloading pygments (1.2MiB)
+Downloading mypy (13.1MiB)
+Downloading ruff (10.5MiB)
  Downloaded pygments
  Downloaded ruff
  Downloaded mypy
-Installed 11 packages in 112ms
-Bytecode compiled 1963 files in 449ms
+Installed 11 packages in 78ms
+Bytecode compiled 1963 files in 407ms
 ============================= test session starts ==============================
 platform linux -- Python 3.12.12, pytest-8.4.2, pluggy-1.6.0
 rootdir: /app
@@ -472,7 +459,7 @@ tests/integration/test_database_and_api.py .......                       [100%]
     from starlette.testclient import TestClient as TestClient  # noqa
 
 -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
-========================= 7 passed, 1 warning in 0.37s =========================
+========================= 7 passed, 1 warning in 0.36s =========================
 ```
 
 ### `Docker integration run 2: docker compose run --rm -e REQUIRE_INTEGRATION_TESTS=true -e TEST_DATABASE_URL=postgresql+asyncpg://ai_trading_os:ai_trading_os@postgres:5432/ai_trading_os_test migrate uv run pytest tests/integration/test_database_and_api.py`
@@ -482,19 +469,19 @@ Command: `docker compose run --rm -e REQUIRE_INTEGRATION_TESTS=true -e TEST_DATA
 Exit code: `0`
 
 ```text
- Container ai-trading-os-postgres-1 Running 
- Container ai-trading-os-postgres-1 Waiting 
- Container ai-trading-os-postgres-1 Healthy 
- Container ai-trading-os-migrate-run-14e2ee8cf490 Creating 
- Container ai-trading-os-migrate-run-14e2ee8cf490 Created 
+ Container ai-trading-os-postgres-1 Running
+ Container ai-trading-os-postgres-1 Waiting
+ Container ai-trading-os-postgres-1 Healthy
+ Container ai-trading-os-migrate-run-edc57ee9dd1e Creating
+ Container ai-trading-os-migrate-run-edc57ee9dd1e Created
+Downloading mypy (13.1MiB)
 Downloading pygments (1.2MiB)
 Downloading ruff (10.5MiB)
-Downloading mypy (13.1MiB)
- Downloaded pygments
  Downloaded ruff
+ Downloaded pygments
  Downloaded mypy
-Installed 11 packages in 44ms
-Bytecode compiled 1963 files in 410ms
+Installed 11 packages in 36ms
+Bytecode compiled 1963 files in 398ms
 ============================= test session starts ==============================
 platform linux -- Python 3.12.12, pytest-8.4.2, pluggy-1.6.0
 rootdir: /app
@@ -511,7 +498,7 @@ tests/integration/test_database_and_api.py .......                       [100%]
     from starlette.testclient import TestClient as TestClient  # noqa
 
 -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
-========================= 7 passed, 1 warning in 0.37s =========================
+========================= 7 passed, 1 warning in 0.36s =========================
 ```
 
 ### `docker compose config`
@@ -808,139 +795,42 @@ volumes:
     name: ai-trading-os_postgres_data
 ```
 
-### Superseded Pre-Upgrade Docker Audit Note
-
-Before applying the new Phase 3I migration to the main Docker database, an initial `alembic current` showed `0002_phase2_data_constraints`, and an initial `alembic check` failed with:
-
-```text
-FAILED: Target database is not up to date.
-ERROR [alembic.util.messaging] Target database is not up to date.
-```
-
-That was a pre-upgrade state, not the final status. After running the migration, `alembic current` returned `0003_phase3i_digest_audit (head)` and `alembic check` returned `No new upgrade operations detected.`
-
 ## Skipped Checks
 
 - Host `uv run pytest` skipped 7 integration tests because host integration tests require `REQUIRE_INTEGRATION_TESTS=true` and a PostgreSQL integration database. The same integration file was run in Docker twice with `REQUIRE_INTEGRATION_TESTS=true`, and both runs passed.
 
 ## Unavailable Checks
 
-- None for the requested Phase 3I verification set. Docker Desktop, PostgreSQL container, Alembic, and integration tests were available and run.
+- None for the requested Phase 4A verification set. Docker Desktop, PostgreSQL container, Alembic, and integration tests were available and run.
 
 ## Remaining Risks
 
-- Phase 3I stores audit metadata only; production scheduled delivery remains disabled by default and was not activated end-to-end against a live Telegram service.
-- The Docker integration suite validates repository persistence and duplicate skipping against PostgreSQL, but it does not send real Telegram messages.
-- Existing inactive signal/trading/paper tables remain present from prior foundation work but were not activated or used for decision-making.
+- Phase 4A defines future signal contract shape only. No future signal generator consumes it yet.
+- The contract contains future planning fields such as entry range, stop loss, take profit, and position size, but no code calculates those values or treats the contract as actionable.
+- Existing inactive signal/trading/paper tables remain present from earlier foundation schema work but were not activated or used.
 
 ## Traceability
 
 | Requirement | Implementation file | Test file | Verification result |
 | --- | --- | --- | --- |
-| Update project phase to Phase 3I | `app/core/constants.py` | `tests/unit/test_analysis_snapshot_foundation.py`, `tests/unit/test_readiness_scheduler_foundation.py`, `tests/integration/test_database_and_api.py` | Host pytest passed; Docker integration status coverage passed |
-| Persist neutral scheduled digest delivery audit records | `migrations/versions/0003_phase3i_scheduled_digest_deliveries.py`, `app/persistence/models/foundation.py` | `tests/integration/test_database_and_api.py` | Docker Alembic upgrade/current/check passed; Docker integration tests passed twice |
-| Implement SQLAlchemy-backed `ScheduledDigestDeliveryStore` | `app/persistence/repositories/foundation.py`, `app/persistence/unit_of_work.py` | `tests/integration/test_database_and_api.py` | Repository insert/get/exists coverage passed in Docker |
-| Make duplicate recording conflict-safe | `app/persistence/repositories/foundation.py` | `tests/integration/test_database_and_api.py` | Duplicate direct record with changed metadata did not overwrite first audit row; Docker integration passed twice |
-| Preserve in-memory store behavior | `app/services/scheduled_digest_delivery_service.py` | `tests/unit/test_scheduled_digest_delivery_foundation.py` | Host pytest passed |
-| Duplicate-safe delivery skip survives persistence | `app/services/scheduled_digest_delivery_service.py`, `app/persistence/repositories/foundation.py` | `tests/integration/test_database_and_api.py` | Docker integration tests passed twice against the same DB |
-| UTC-normalized persisted timestamps | `app/domain/entities/scheduled_digest.py`, `app/persistence/repositories/foundation.py` | `tests/integration/test_database_and_api.py` | Host and Docker tests passed |
-| Existing `/snapshot` and `/digest` commands still work | Existing Telegram command handlers | `tests/unit/test_telegram_commands.py` | Host pytest passed |
-| Scheduled delivery remains disabled by default | Settings and compose defaults, documented in README/operations | `docker compose config` | Config output shows integrations and Telegram disabled defaults |
-| Safety boundary: no strategy/signals/scoring/AI/broker/order execution | No Phase 4 code added | `tests/contract/test_safety_boundaries.py`, `scripts/security_check.py` | Contract safety tests and security check passed |
-
-## Full Migration Contents
-
-### `migrations/versions/0003_phase3i_scheduled_digest_deliveries.py`
-
-```python
-"""phase3i scheduled digest delivery audit
-
-Revision ID: 0003_phase3i_digest_audit
-Revises: 0002_phase2_data_constraints
-Create Date: 2026-07-15 00:00:00.000000
-"""
-
-from collections.abc import Sequence
-
-import sqlalchemy as sa
-from alembic import op
-from sqlalchemy.dialects import postgresql
-
-revision: str = "0003_phase3i_digest_audit"
-down_revision: str | None = "0002_phase2_data_constraints"
-branch_labels: str | Sequence[str] | None = None
-depends_on: str | Sequence[str] | None = None
-
-
-def upgrade() -> None:
-    op.create_table(
-        "scheduled_digest_deliveries",
-        sa.Column("id", postgresql.UUID(as_uuid=True), nullable=False),
-        sa.Column("dedup_key", sa.String(length=64), nullable=False),
-        sa.Column("project_phase", sa.String(length=120), nullable=False),
-        sa.Column("delivered_at", sa.DateTime(timezone=True), nullable=False),
-        sa.Column("sender_name", sa.String(length=120), nullable=False),
-        sa.Column("readiness_status", sa.String(length=20), nullable=True),
-        sa.Column("item_count", sa.Integer(), server_default=sa.text("0"), nullable=False),
-        sa.Column("ready_count", sa.Integer(), server_default=sa.text("0"), nullable=False),
-        sa.Column("incomplete_count", sa.Integer(), server_default=sa.text("0"), nullable=False),
-        sa.Column("blocked_count", sa.Integer(), server_default=sa.text("0"), nullable=False),
-        sa.Column("items_summary", sa.String(length=500), nullable=True),
-        sa.Column("payload_preview", sa.String(length=1000), nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
-        sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint("dedup_key", name="uq_scheduled_digest_deliveries_dedup_key"),
-        sa.CheckConstraint("item_count >= 0", name="ck_scheduled_digest_item_count_non_negative"),
-        sa.CheckConstraint("ready_count >= 0", name="ck_scheduled_digest_ready_count_non_negative"),
-        sa.CheckConstraint(
-            "incomplete_count >= 0",
-            name="ck_scheduled_digest_incomplete_count_non_negative",
-        ),
-        sa.CheckConstraint(
-            "blocked_count >= 0",
-            name="ck_scheduled_digest_blocked_count_non_negative",
-        ),
-    )
-    op.create_index(
-        "ix_scheduled_digest_deliveries_delivered_at",
-        "scheduled_digest_deliveries",
-        ["delivered_at"],
-    )
-    op.create_index(
-        "ix_scheduled_digest_deliveries_project_phase",
-        "scheduled_digest_deliveries",
-        ["project_phase"],
-    )
-    op.create_index(
-        "ix_scheduled_digest_deliveries_readiness_status",
-        "scheduled_digest_deliveries",
-        ["readiness_status"],
-    )
-
-
-def downgrade() -> None:
-    op.drop_index(
-        "ix_scheduled_digest_deliveries_readiness_status",
-        table_name="scheduled_digest_deliveries",
-    )
-    op.drop_index(
-        "ix_scheduled_digest_deliveries_project_phase",
-        table_name="scheduled_digest_deliveries",
-    )
-    op.drop_index(
-        "ix_scheduled_digest_deliveries_delivered_at",
-        table_name="scheduled_digest_deliveries",
-    )
-    op.drop_table("scheduled_digest_deliveries")
-```
-
+| Update project phase to Phase 4A | `app/core/constants.py` | `tests/unit/test_signal_contract_foundation.py`, `tests/integration/test_database_and_api.py` | Host and Docker tests passed |
+| Add immutable signal contract models | `app/domain/entities/signal_contract.py`, `app/domain/entities/__init__.py` | `tests/unit/test_signal_contract_foundation.py` | Immutability test passed |
+| Normalize timestamps to UTC | `app/domain/entities/signal_contract.py` | `tests/unit/test_signal_contract_foundation.py` | UTC normalization test passed |
+| Validate valid_until after created_at | `app/domain/entities/signal_contract.py` | `tests/unit/test_signal_contract_foundation.py` | Validation test passed |
+| Validate entry range and LONG/SHORT price relationships | `app/domain/entities/signal_contract.py` | `tests/unit/test_signal_contract_foundation.py` | LONG, SHORT, and entry range tests passed |
+| Validate risk percent, max loss, and position size bounds | `app/domain/entities/signal_contract.py` | `tests/unit/test_signal_contract_foundation.py` | Risk validation tests passed |
+| Default contracts to NOT_ACTIONABLE | `app/domain/entities/signal_contract.py` | `tests/unit/test_signal_contract_foundation.py` | Default actionability and is_actionable tests passed |
+| Add deterministic JSON serialization and fingerprinting | `app/domain/entities/signal_contract.py` | `tests/unit/test_signal_contract_foundation.py` | Serialization and fingerprint tests passed |
+| Add no API routes, Telegram handlers, scheduler jobs, generation, or execution | No API/service/scheduler/Telegram changes for signals | `tests/contract/test_safety_boundaries.py`, `scripts/security_check.py` | Safety tests and security check passed |
+| Preserve existing snapshot/digest foundations | Existing Telegram/readiness files unchanged for signal behavior | `tests/unit/test_telegram_commands.py`, `tests/unit/test_readiness_scheduler_foundation.py` | Host pytest passed |
+| No migration required | No migration file created or modified | `docker compose run --rm migrate alembic current`, `docker compose run --rm migrate alembic check` | Alembic head remained `0003_phase3i_digest_audit (head)` and check passed |
 
 ## Full Contents Of Changed Source Files
 
 ### `app/core/constants.py`
 
 ```python
-PROJECT_PHASE = "phase_3i_persistent_digest_audit_foundation"
+PROJECT_PHASE = "phase_4a_signal_contract_foundation"
 STRATEGY_IMPLEMENTED = False
 REAL_TRADING_ENABLED = False
 
@@ -953,1041 +843,67 @@ SYSTEM_STATE_LAST_ERROR = "last_error"
 DEFAULT_STRATEGY_VERSION = "foundation-v1"
 ```
 
-### `app/domain/entities/scheduled_digest.py`
+### `app/domain/entities/__init__.py`
 
 ```python
-from datetime import datetime
-from enum import StrEnum
-from typing import Self
-
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
-
-from app.core import constants
-from app.core.time import normalize_to_utc
+from app.domain.entities.analysis import (
+    AnalysisInputAudit,
+    AnalysisIssue,
+    AnalysisIssueCode,
+    AnalysisIssueCount,
+    AnalysisNumericSummary,
+    AnalysisReadinessStatus,
+    AnalysisReport,
+    AnalysisSnapshot,
+    AnalysisSnapshotMetadata,
+    AnalysisWindow,
+)
+from app.domain.entities.context import (
+    CandleShapeSummary,
+    ContextCurrencyCount,
+    ContextImpactCount,
+    ContextIssue,
+    ContextIssueCode,
+    EventContextSummary,
+    IndicatorWindow,
+    MarketContextSnapshot,
+    MovingAverageSeries,
+    MovingAverageSummary,
+    RangeContextSummary,
+    ReturnDistributionSummary,
+    TimeContextSummary,
+)
+from app.domain.entities.data_quality import (
+    CandleAvailability,
+    DataQualityIssue,
+    DataQualityIssueCode,
+    EconomicEventAvailability,
+    FeatureSnapshot,
+    UpsertResult,
+    build_feature_snapshot,
+)
+from app.domain.entities.features import (
+    CandleFeatureSummary,
+    CurrencyEventCount,
+    EconomicEventFeatureSummary,
+    EconomicImpactCount,
+    FeatureIssue,
+    FeatureIssueCode,
+    FeatureWindow,
+    MarketFeatureSnapshot,
+)
+from app.domain.entities.market_data import Candle, EconomicEvent, EconomicImpact, Timeframe
 from app.domain.entities.readiness import (
+    SnapshotDigest,
+    SnapshotDigestIssueCount,
+    SnapshotDigestItem,
     SnapshotDigestStatus,
     SnapshotNotificationDedupKey,
     SnapshotNotificationPayload,
     SnapshotScheduleItem,
-)
-
-
-class ScheduledDigestDecisionReason(StrEnum):
-    DISABLED = "DISABLED"
-    NOT_DUE = "NOT_DUE"
-    DUE = "DUE"
-    DUPLICATE = "DUPLICATE"
-    NO_ITEMS = "NO_ITEMS"
-    BUILD_FAILED = "BUILD_FAILED"
-    DELIVERED = "DELIVERED"
-
-
-class ScheduledDigestConfig(BaseModel):
-    project_phase: str = Field(default_factory=lambda: constants.PROJECT_PHASE, min_length=1)
-    enabled: bool = False
-    interval_minutes: int = Field(default=60, ge=1, le=1440)
-    items: tuple[SnapshotScheduleItem, ...] = ()
-
-    model_config = ConfigDict(frozen=True)
-
-
-class ScheduledDigestTick(BaseModel):
-    project_phase: str = Field(default_factory=lambda: constants.PROJECT_PHASE, min_length=1)
-    as_of: datetime
-
-    model_config = ConfigDict(frozen=True)
-
-    @field_validator("as_of")
-    @classmethod
-    def as_of_must_be_utc(cls, value: datetime) -> datetime:
-        return normalize_to_utc(value)
-
-
-class ScheduledDigestDecision(BaseModel):
-    project_phase: str = Field(default_factory=lambda: constants.PROJECT_PHASE, min_length=1)
-    enabled: bool
-    is_due: bool
-    should_build: bool
-    reason: ScheduledDigestDecisionReason
-    item_count: int = Field(ge=0)
-    tick_as_of: datetime
-    dedup_key: SnapshotNotificationDedupKey | None = None
-
-    model_config = ConfigDict(frozen=True)
-
-    @field_validator("tick_as_of")
-    @classmethod
-    def tick_as_of_must_be_utc(cls, value: datetime) -> datetime:
-        return normalize_to_utc(value)
-
-    @model_validator(mode="after")
-    def validate_decision(self) -> Self:
-        if self.should_build and not self.is_due:
-            raise ValueError("scheduled digest cannot build when tick is not due")
-        if self.should_build and not self.enabled:
-            raise ValueError("scheduled digest cannot build while disabled")
-        return self
-
-
-class ScheduledDigestDeliveryRecord(BaseModel):
-    project_phase: str = Field(default_factory=lambda: constants.PROJECT_PHASE, min_length=1)
-    dedup_key: SnapshotNotificationDedupKey
-    delivered_at: datetime
-    sender_name: str = Field(min_length=1)
-    readiness_status: SnapshotDigestStatus | None = None
-    item_count: int = Field(default=0, ge=0)
-    ready_count: int = Field(default=0, ge=0)
-    incomplete_count: int = Field(default=0, ge=0)
-    blocked_count: int = Field(default=0, ge=0)
-    items_summary: str | None = Field(default=None, max_length=500)
-    payload_preview: str | None = Field(default=None, max_length=1000)
-
-    model_config = ConfigDict(frozen=True)
-
-    @field_validator("delivered_at")
-    @classmethod
-    def delivered_at_must_be_utc(cls, value: datetime) -> datetime:
-        return normalize_to_utc(value)
-
-
-class ScheduledDigestDeliveryResult(BaseModel):
-    project_phase: str = Field(default_factory=lambda: constants.PROJECT_PHASE, min_length=1)
-    tick: ScheduledDigestTick
-    decision: ScheduledDigestDecision
-    delivered: bool
-    skipped: bool
-    dedup_key: SnapshotNotificationDedupKey | None = None
-    payload: SnapshotNotificationPayload | None = None
-    record: ScheduledDigestDeliveryRecord | None = None
-
-    model_config = ConfigDict(frozen=True)
-
-    @model_validator(mode="after")
-    def validate_result(self) -> Self:
-        if self.delivered == self.skipped:
-            raise ValueError("scheduled digest result must be either delivered or skipped")
-        if self.delivered and self.record is None:
-            raise ValueError("delivered scheduled digest result requires a record")
-        if self.skipped and self.record is not None:
-            raise ValueError("skipped scheduled digest result must not include a record")
-        return self
-```
-
-### `app/domain/interfaces/notifications.py`
-
-```python
-from typing import Protocol
-
-from app.domain.entities.readiness import SnapshotNotificationDedupKey, SnapshotNotificationPayload
-from app.domain.entities.scheduled_digest import ScheduledDigestDeliveryRecord
-
-
-class NotificationSender(Protocol):
-    async def send(self, payload: SnapshotNotificationPayload) -> None:
-        """Deliver a neutral readiness notification payload."""
-
-
-class ScheduledDigestDeliveryStore(Protocol):
-    async def exists(self, dedup_key: SnapshotNotificationDedupKey) -> bool:
-        """Return whether a scheduled digest deduplication key is already recorded."""
-
-    async def record(self, record: ScheduledDigestDeliveryRecord) -> None:
-        """Record a delivered scheduled digest deduplication key."""
-
-    async def get(
-        self,
-        dedup_key: SnapshotNotificationDedupKey,
-    ) -> ScheduledDigestDeliveryRecord | None:
-        """Return one neutral scheduled digest delivery audit record when present."""
-```
-
-### `app/domain/interfaces/unit_of_work.py`
-
-```python
-from types import TracebackType
-from typing import Protocol, Self
-
-from app.domain.interfaces.notifications import ScheduledDigestDeliveryStore
-from app.domain.interfaces.repositories import (
-    AuditLogRepository,
-    CandleRepository,
-    EconomicEventRepository,
-    ErrorEventRepository,
-    SystemStateRepository,
-)
-
-
-class UnitOfWork(Protocol):
-    @property
-    def system_state(self) -> SystemStateRepository:
-        """Repository for persisted system state."""
-        ...
-
-    @property
-    def audit_logs(self) -> AuditLogRepository:
-        """Repository for audit events."""
-        ...
-
-    @property
-    def error_events(self) -> ErrorEventRepository:
-        """Repository for structured error events."""
-        ...
-
-    @property
-    def candles(self) -> CandleRepository:
-        """Repository for normalized closed candles."""
-        ...
-
-    @property
-    def economic_events(self) -> EconomicEventRepository:
-        """Repository for normalized economic events."""
-        ...
-
-    @property
-    def scheduled_digest_deliveries(self) -> ScheduledDigestDeliveryStore:
-        """Store for neutral scheduled digest delivery audit records."""
-        ...
-
-    async def __aenter__(self) -> Self:
-        """Open one asynchronous persistence boundary."""
-
-    async def __aexit__(
-        self,
-        exc_type: type[BaseException] | None,
-        exc: BaseException | None,
-        traceback: TracebackType | None,
-    ) -> None:
-        """Rollback uncommitted work and close resources."""
-
-    async def commit(self) -> None:
-        """Commit the current unit of work explicitly."""
-
-    async def rollback(self) -> None:
-        """Rollback the current unit of work."""
-```
-
-### `app/persistence/models/__init__.py`
-
-```python
-from app.persistence.models.foundation import (
-    AgentReportModel,
-    AuditLogModel,
-    CandleModel,
-    EconomicEventModel,
-    ErrorEventModel,
-    PaperPositionModel,
-    ScanModel,
-    ScheduledDigestDeliveryModel,
-    SignalModel,
-    SystemStateModel,
-)
-
-__all__ = [
-    "AgentReportModel",
-    "AuditLogModel",
-    "CandleModel",
-    "EconomicEventModel",
-    "ErrorEventModel",
-    "PaperPositionModel",
-    "ScanModel",
-    "ScheduledDigestDeliveryModel",
-    "SignalModel",
-    "SystemStateModel",
-]
-```
-
-### `app/persistence/models/foundation.py`
-
-```python
-import uuid
-from datetime import datetime
-from decimal import Decimal
-from typing import Any
-
-from sqlalchemy import (
-    Boolean,
-    CheckConstraint,
-    DateTime,
-    ForeignKey,
-    Index,
-    Integer,
-    Numeric,
-    String,
-    UniqueConstraint,
-    Uuid,
-)
-from sqlalchemy.dialects import postgresql
-from sqlalchemy.orm import Mapped, mapped_column
-from sqlalchemy.types import JSON
-
-from app.core.time import utc_now
-from app.persistence.database import Base
-
-JSONB_TYPE = postgresql.JSONB().with_variant(JSON(), "sqlite")
-UUID_PK = Uuid(as_uuid=True)
-
-
-class SystemStateModel(Base):
-    __tablename__ = "system_state"
-
-    key: Mapped[str] = mapped_column(String(120), primary_key=True)
-    value_json: Mapped[Any] = mapped_column(JSONB_TYPE, nullable=False)
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        default=utc_now,
-        onupdate=utc_now,
-        nullable=False,
-    )
-
-
-class AuditLogModel(Base):
-    __tablename__ = "audit_logs"
-
-    id: Mapped[uuid.UUID] = mapped_column(UUID_PK, primary_key=True, default=uuid.uuid4)
-    event_type: Mapped[str] = mapped_column(String(120), nullable=False, index=True)
-    entity_type: Mapped[str | None] = mapped_column(String(120))
-    entity_id: Mapped[str | None] = mapped_column(String(120))
-    actor: Mapped[str | None] = mapped_column(String(120))
-    before_json: Mapped[Any | None] = mapped_column(JSONB_TYPE)
-    after_json: Mapped[Any | None] = mapped_column(JSONB_TYPE)
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        default=utc_now,
-        nullable=False,
-        index=True,
-    )
-
-
-class ErrorEventModel(Base):
-    __tablename__ = "error_events"
-
-    id: Mapped[uuid.UUID] = mapped_column(UUID_PK, primary_key=True, default=uuid.uuid4)
-    error_code: Mapped[str] = mapped_column(String(80), nullable=False, index=True)
-    severity: Mapped[str] = mapped_column(String(30), nullable=False, index=True)
-    component: Mapped[str] = mapped_column(String(120), nullable=False, index=True)
-    message_ru: Mapped[str] = mapped_column(String(500), nullable=False)
-    technical_details: Mapped[str | None] = mapped_column(String(2000))
-    context_json: Mapped[Any | None] = mapped_column(JSONB_TYPE)
-    resolved: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False, index=True)
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        default=utc_now,
-        nullable=False,
-        index=True,
-    )
-
-
-class CandleModel(Base):
-    __tablename__ = "candles"
-    __table_args__ = (
-        UniqueConstraint("provider", "pair", "timeframe", "open_time", name="uq_candle_identity"),
-        CheckConstraint("open > 0", name="ck_candles_open_positive"),
-        CheckConstraint("high > 0", name="ck_candles_high_positive"),
-        CheckConstraint("low > 0", name="ck_candles_low_positive"),
-        CheckConstraint("close > 0", name="ck_candles_close_positive"),
-        CheckConstraint("close_time > open_time", name="ck_candles_close_after_open"),
-        CheckConstraint("volume IS NULL OR volume >= 0", name="ck_candles_volume_non_negative"),
-        CheckConstraint("is_closed = true", name="ck_candles_is_closed"),
-        Index("ix_candles_pair_timeframe_close_time", "pair", "timeframe", "close_time"),
-    )
-
-    id: Mapped[uuid.UUID] = mapped_column(UUID_PK, primary_key=True, default=uuid.uuid4)
-    provider: Mapped[str] = mapped_column(String(80), nullable=False)
-    pair: Mapped[str] = mapped_column(String(6), nullable=False, index=True)
-    timeframe: Mapped[str] = mapped_column(String(20), nullable=False, index=True)
-    open_time: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
-    close_time: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False, index=True
-    )
-    open: Mapped[Decimal] = mapped_column(Numeric(20, 10), nullable=False)
-    high: Mapped[Decimal] = mapped_column(Numeric(20, 10), nullable=False)
-    low: Mapped[Decimal] = mapped_column(Numeric(20, 10), nullable=False)
-    close: Mapped[Decimal] = mapped_column(Numeric(20, 10), nullable=False)
-    volume: Mapped[Decimal | None] = mapped_column(Numeric(24, 8))
-    is_closed: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=utc_now, nullable=False
-    )
-
-
-class EconomicEventModel(Base):
-    __tablename__ = "economic_events"
-    __table_args__ = (
-        UniqueConstraint("provider", "provider_event_id", name="uq_economic_events_provider_event"),
-        Index("ix_economic_events_currency_scheduled", "currency", "scheduled_at"),
-    )
-
-    id: Mapped[uuid.UUID] = mapped_column(UUID_PK, primary_key=True, default=uuid.uuid4)
-    provider_event_id: Mapped[str] = mapped_column(String(120), nullable=False, index=True)
-    currency: Mapped[str] = mapped_column(String(3), nullable=False, index=True)
-    country: Mapped[str | None] = mapped_column(String(120))
-    title: Mapped[str] = mapped_column(String(300), nullable=False)
-    impact: Mapped[str] = mapped_column(String(40), nullable=False, index=True)
-    scheduled_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False, index=True
-    )
-    actual: Mapped[Decimal | None] = mapped_column(Numeric(20, 6))
-    forecast: Mapped[Decimal | None] = mapped_column(Numeric(20, 6))
-    previous: Mapped[Decimal | None] = mapped_column(Numeric(20, 6))
-    actual_raw: Mapped[str | None] = mapped_column(String(200))
-    forecast_raw: Mapped[str | None] = mapped_column(String(200))
-    previous_raw: Mapped[str | None] = mapped_column(String(200))
-    provider: Mapped[str] = mapped_column(String(80), nullable=False)
-    fetched_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
-
-
-class ScheduledDigestDeliveryModel(Base):
-    __tablename__ = "scheduled_digest_deliveries"
-    __table_args__ = (
-        UniqueConstraint("dedup_key", name="uq_scheduled_digest_deliveries_dedup_key"),
-        CheckConstraint("item_count >= 0", name="ck_scheduled_digest_item_count_non_negative"),
-        CheckConstraint("ready_count >= 0", name="ck_scheduled_digest_ready_count_non_negative"),
-        CheckConstraint(
-            "incomplete_count >= 0",
-            name="ck_scheduled_digest_incomplete_count_non_negative",
-        ),
-        CheckConstraint(
-            "blocked_count >= 0",
-            name="ck_scheduled_digest_blocked_count_non_negative",
-        ),
-        Index("ix_scheduled_digest_deliveries_delivered_at", "delivered_at"),
-        Index("ix_scheduled_digest_deliveries_project_phase", "project_phase"),
-        Index("ix_scheduled_digest_deliveries_readiness_status", "readiness_status"),
-    )
-
-    id: Mapped[uuid.UUID] = mapped_column(UUID_PK, primary_key=True, default=uuid.uuid4)
-    dedup_key: Mapped[str] = mapped_column(String(64), nullable=False)
-    project_phase: Mapped[str] = mapped_column(String(120), nullable=False)
-    delivered_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
-    sender_name: Mapped[str] = mapped_column(String(120), nullable=False)
-    readiness_status: Mapped[str | None] = mapped_column(String(20))
-    item_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
-    ready_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
-    incomplete_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
-    blocked_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
-    items_summary: Mapped[str | None] = mapped_column(String(500))
-    payload_preview: Mapped[str | None] = mapped_column(String(1000))
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=utc_now, nullable=False
-    )
-
-
-class ScanModel(Base):
-    __tablename__ = "scans"
-    __table_args__ = (
-        UniqueConstraint("pair", "m15_close_time", "strategy_version", name="uq_scan_identity"),
-        Index("ix_scans_status_started", "status", "started_at"),
-    )
-
-    id: Mapped[uuid.UUID] = mapped_column(UUID_PK, primary_key=True, default=uuid.uuid4)
-    pair: Mapped[str] = mapped_column(String(6), nullable=False, index=True)
-    m15_close_time: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
-    status: Mapped[str] = mapped_column(String(60), nullable=False, index=True)
-    snapshot_id: Mapped[uuid.UUID | None] = mapped_column(UUID_PK)
-    strategy_version: Mapped[str] = mapped_column(String(80), nullable=False)
-    started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
-    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
-    error_code: Mapped[str | None] = mapped_column(String(80))
-
-
-class AgentReportModel(Base):
-    __tablename__ = "agent_reports"
-    __table_args__ = (
-        CheckConstraint("score >= 0 AND score <= 100", name="ck_agent_reports_score_range"),
-        Index("ix_agent_reports_scan_agent", "scan_id", "agent_name"),
-    )
-
-    id: Mapped[uuid.UUID] = mapped_column(UUID_PK, primary_key=True, default=uuid.uuid4)
-    scan_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("scans.id"), nullable=False, index=True)
-    agent_name: Mapped[str] = mapped_column(String(120), nullable=False)
-    direction: Mapped[str] = mapped_column(String(20), nullable=False)
-    verdict: Mapped[str] = mapped_column(String(40), nullable=False)
-    score: Mapped[int] = mapped_column(Integer, nullable=False)
-    confidence: Mapped[str] = mapped_column(String(20), nullable=False)
-    summary_ru: Mapped[str] = mapped_column(String(2000), nullable=False)
-    reasons_for_json: Mapped[Any] = mapped_column(JSONB_TYPE, nullable=False)
-    reasons_against_json: Mapped[Any] = mapped_column(JSONB_TYPE, nullable=False)
-    invalid_if_json: Mapped[Any] = mapped_column(JSONB_TYPE, nullable=False)
-    evidence_json: Mapped[Any] = mapped_column(JSONB_TYPE, nullable=False)
-    rule_version: Mapped[str] = mapped_column(String(80), nullable=False)
-    model_version: Mapped[str | None] = mapped_column(String(120))
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=utc_now, nullable=False
-    )
-
-
-class SignalModel(Base):
-    __tablename__ = "signals"
-    __table_args__ = (
-        Index("uq_signals_fingerprint", "fingerprint", unique=True),
-        Index("ix_signals_pair_status_valid_until", "pair", "status", "valid_until"),
-    )
-
-    id: Mapped[uuid.UUID] = mapped_column(UUID_PK, primary_key=True, default=uuid.uuid4)
-    scan_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("scans.id"), nullable=False, index=True)
-    fingerprint: Mapped[str] = mapped_column(String(160), nullable=False)
-    pair: Mapped[str] = mapped_column(String(6), nullable=False, index=True)
-    direction: Mapped[str] = mapped_column(String(20), nullable=False)
-    setup_score: Mapped[int] = mapped_column(Integer, nullable=False)
-    confidence: Mapped[str] = mapped_column(String(20), nullable=False)
-    entry_min: Mapped[Decimal] = mapped_column(Numeric(20, 10), nullable=False)
-    entry_max: Mapped[Decimal] = mapped_column(Numeric(20, 10), nullable=False)
-    invalidation_price: Mapped[Decimal] = mapped_column(Numeric(20, 10), nullable=False)
-    stop_loss: Mapped[Decimal] = mapped_column(Numeric(20, 10), nullable=False)
-    take_profit_1: Mapped[Decimal] = mapped_column(Numeric(20, 10), nullable=False)
-    take_profit_2: Mapped[Decimal] = mapped_column(Numeric(20, 10), nullable=False)
-    valid_until: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False, index=True
-    )
-    status: Mapped[str] = mapped_column(String(60), nullable=False, index=True)
-    sent_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
-    cancelled_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
-    cancel_reason_ru: Mapped[str | None] = mapped_column(String(1000))
-    strategy_version: Mapped[str] = mapped_column(String(80), nullable=False)
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=utc_now, nullable=False
-    )
-
-
-class PaperPositionModel(Base):
-    __tablename__ = "paper_positions"
-    __table_args__ = (Index("ix_paper_positions_status_created", "status", "created_at"),)
-
-    id: Mapped[uuid.UUID] = mapped_column(UUID_PK, primary_key=True, default=uuid.uuid4)
-    signal_id: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey("signals.id"), nullable=False, index=True
-    )
-    account_balance_before: Mapped[Decimal] = mapped_column(Numeric(20, 2), nullable=False)
-    risk_percent: Mapped[Decimal] = mapped_column(Numeric(8, 4), nullable=False)
-    risk_amount_eur: Mapped[Decimal] = mapped_column(Numeric(20, 2), nullable=False)
-    position_size: Mapped[Decimal] = mapped_column(Numeric(24, 8), nullable=False)
-    entry_price: Mapped[Decimal] = mapped_column(Numeric(20, 10), nullable=False)
-    entered_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
-    stop_loss: Mapped[Decimal] = mapped_column(Numeric(20, 10), nullable=False)
-    take_profit_1: Mapped[Decimal] = mapped_column(Numeric(20, 10), nullable=False)
-    take_profit_2: Mapped[Decimal] = mapped_column(Numeric(20, 10), nullable=False)
-    status: Mapped[str] = mapped_column(String(60), nullable=False, index=True)
-    closed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
-    result_eur: Mapped[Decimal | None] = mapped_column(Numeric(20, 2))
-    result_percent: Mapped[Decimal | None] = mapped_column(Numeric(10, 4))
-    result_r: Mapped[Decimal | None] = mapped_column(Numeric(10, 4))
-    spread_cost: Mapped[Decimal | None] = mapped_column(Numeric(20, 2))
-    slippage_cost: Mapped[Decimal | None] = mapped_column(Numeric(20, 2))
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=utc_now, nullable=False
-    )
-```
-
-### `app/persistence/repositories/__init__.py`
-
-```python
-from app.persistence.repositories.foundation import (
-    SqlAlchemyAuditLogRepository,
-    SqlAlchemyCandleRepository,
-    SqlAlchemyEconomicEventRepository,
-    SqlAlchemyErrorEventRepository,
-    SqlAlchemyScheduledDigestDeliveryStore,
-    SqlAlchemySystemStateRepository,
-)
-
-__all__ = [
-    "SqlAlchemyAuditLogRepository",
-    "SqlAlchemyCandleRepository",
-    "SqlAlchemyEconomicEventRepository",
-    "SqlAlchemyErrorEventRepository",
-    "SqlAlchemyScheduledDigestDeliveryStore",
-    "SqlAlchemySystemStateRepository",
-]
-```
-
-### `app/persistence/repositories/foundation.py`
-
-```python
-from collections.abc import Mapping
-from datetime import datetime
-from typing import Any
-
-from sqlalchemy import select
-from sqlalchemy.dialects.postgresql import insert as postgresql_insert
-from sqlalchemy.ext.asyncio import AsyncSession
-
-from app.core.security import redact_text
-from app.core.time import normalize_to_utc, utc_now
-from app.domain.entities import Candle, EconomicEvent, EconomicImpact, Timeframe
-from app.domain.entities.data_quality import UpsertResult
-from app.domain.entities.readiness import SnapshotDigestStatus, SnapshotNotificationDedupKey
-from app.domain.entities.scheduled_digest import ScheduledDigestDeliveryRecord
-from app.domain.value_objects import CurrencyPair
-from app.persistence.models import (
-    AuditLogModel,
-    CandleModel,
-    EconomicEventModel,
-    ErrorEventModel,
-    ScheduledDigestDeliveryModel,
-    SystemStateModel,
-)
-
-
-def _candle_from_model(row: CandleModel) -> Candle:
-    return Candle(
-        provider=row.provider,
-        pair=CurrencyPair(value=row.pair),
-        timeframe=Timeframe(row.timeframe),
-        open_time=row.open_time,
-        close_time=row.close_time,
-        open=row.open,
-        high=row.high,
-        low=row.low,
-        close=row.close,
-        volume=row.volume,
-        is_closed=row.is_closed,
-    )
-
-
-def _event_from_model(row: EconomicEventModel) -> EconomicEvent:
-    return EconomicEvent(
-        provider=row.provider,
-        provider_event_id=row.provider_event_id,
-        title=row.title,
-        currency=row.currency,
-        country=row.country,
-        impact=EconomicImpact(row.impact),
-        scheduled_at=row.scheduled_at,
-        actual=row.actual,
-        forecast=row.forecast,
-        previous=row.previous,
-        actual_raw=row.actual_raw,
-        forecast_raw=row.forecast_raw,
-        previous_raw=row.previous_raw,
-        fetched_at=row.fetched_at,
-    )
-
-
-def _delivery_from_model(row: ScheduledDigestDeliveryModel) -> ScheduledDigestDeliveryRecord:
-    return ScheduledDigestDeliveryRecord(
-        project_phase=row.project_phase,
-        dedup_key=SnapshotNotificationDedupKey(value=row.dedup_key),
-        delivered_at=row.delivered_at,
-        sender_name=row.sender_name,
-        readiness_status=(
-            SnapshotDigestStatus(row.readiness_status) if row.readiness_status is not None else None
-        ),
-        item_count=row.item_count,
-        ready_count=row.ready_count,
-        incomplete_count=row.incomplete_count,
-        blocked_count=row.blocked_count,
-        items_summary=row.items_summary,
-        payload_preview=row.payload_preview,
-    )
-
-
-class SqlAlchemySystemStateRepository:
-    def __init__(self, session: AsyncSession) -> None:
-        self._session = session
-
-    async def get(self, key: str) -> Any | None:
-        row = await self._session.get(SystemStateModel, key)
-        return None if row is None else row.value_json
-
-    async def set(self, key: str, value: Any) -> None:
-        row = await self._session.get(SystemStateModel, key)
-        if row is None:
-            self._session.add(SystemStateModel(key=key, value_json=value))
-            return
-        row.value_json = value
-        row.updated_at = utc_now()
-
-    async def get_all(self) -> dict[str, Any]:
-        result = await self._session.execute(select(SystemStateModel))
-        rows = result.scalars().all()
-        return {row.key: row.value_json for row in rows}
-
-
-class SqlAlchemyAuditLogRepository:
-    def __init__(self, session: AsyncSession) -> None:
-        self._session = session
-
-    async def add(
-        self,
-        *,
-        event_type: str,
-        entity_type: str | None = None,
-        entity_id: str | None = None,
-        actor: str | None = None,
-        before_json: Mapping[str, Any] | None = None,
-        after_json: Mapping[str, Any] | None = None,
-    ) -> None:
-        self._session.add(
-            AuditLogModel(
-                event_type=event_type,
-                entity_type=entity_type,
-                entity_id=entity_id,
-                actor=actor,
-                before_json=dict(before_json) if before_json is not None else None,
-                after_json=dict(after_json) if after_json is not None else None,
-            )
-        )
-
-
-class SqlAlchemyErrorEventRepository:
-    def __init__(self, session: AsyncSession) -> None:
-        self._session = session
-
-    async def add(
-        self,
-        *,
-        error_code: str,
-        severity: str,
-        component: str,
-        message_ru: str,
-        technical_details: str | None = None,
-        context_json: Mapping[str, Any] | None = None,
-        resolved: bool = False,
-    ) -> None:
-        self._session.add(
-            ErrorEventModel(
-                error_code=error_code,
-                severity=severity,
-                component=component,
-                message_ru=message_ru,
-                technical_details=redact_text(technical_details) if technical_details else None,
-                context_json=dict(context_json) if context_json is not None else None,
-                resolved=resolved,
-            )
-        )
-
-
-class SqlAlchemyCandleRepository:
-    def __init__(self, session: AsyncSession) -> None:
-        self._session = session
-
-    async def upsert_many(self, candles: list[Candle]) -> UpsertResult:
-        inserted = 0
-        updated = 0
-        for candle in candles:
-            result = await self._session.execute(
-                select(CandleModel).where(
-                    CandleModel.provider == candle.provider,
-                    CandleModel.pair == candle.pair.value,
-                    CandleModel.timeframe == candle.timeframe.value,
-                    CandleModel.open_time == candle.open_time,
-                )
-            )
-            row = result.scalar_one_or_none()
-            if row is None:
-                self._session.add(
-                    CandleModel(
-                        provider=candle.provider,
-                        pair=candle.pair.value,
-                        timeframe=candle.timeframe.value,
-                        open_time=candle.open_time,
-                        close_time=candle.close_time,
-                        open=candle.open,
-                        high=candle.high,
-                        low=candle.low,
-                        close=candle.close,
-                        volume=candle.volume,
-                        is_closed=True,
-                    )
-                )
-                inserted += 1
-                continue
-            row.close_time = candle.close_time
-            row.open = candle.open
-            row.high = candle.high
-            row.low = candle.low
-            row.close = candle.close
-            row.volume = candle.volume
-            row.is_closed = True
-            updated += 1
-        return UpsertResult(inserted=inserted, updated=updated)
-
-    async def list_range(
-        self,
-        *,
-        pair: CurrencyPair,
-        timeframe: Timeframe,
-        start_at: datetime,
-        end_at: datetime,
-        provider: str | None = None,
-    ) -> list[Candle]:
-        start_utc = normalize_to_utc(start_at)
-        end_utc = normalize_to_utc(end_at)
-        query = select(CandleModel).where(
-            CandleModel.pair == pair.value,
-            CandleModel.timeframe == timeframe.value,
-            CandleModel.open_time >= start_utc,
-            CandleModel.close_time <= end_utc,
-            CandleModel.is_closed.is_(True),
-        )
-        if provider is not None:
-            query = query.where(CandleModel.provider == provider)
-        result = await self._session.execute(
-            query.order_by(CandleModel.open_time.asc(), CandleModel.provider.asc())
-        )
-        return [_candle_from_model(row) for row in result.scalars().all()]
-
-
-class SqlAlchemyEconomicEventRepository:
-    def __init__(self, session: AsyncSession) -> None:
-        self._session = session
-
-    async def upsert_many(self, events: list[EconomicEvent]) -> UpsertResult:
-        inserted = 0
-        updated = 0
-        for event in events:
-            result = await self._session.execute(
-                select(EconomicEventModel).where(
-                    EconomicEventModel.provider == event.provider,
-                    EconomicEventModel.provider_event_id == event.provider_event_id,
-                )
-            )
-            row = result.scalar_one_or_none()
-            if row is None:
-                self._session.add(
-                    EconomicEventModel(
-                        provider=event.provider,
-                        provider_event_id=event.provider_event_id,
-                        title=event.title,
-                        currency=event.currency,
-                        country=event.country,
-                        impact=event.impact.value,
-                        scheduled_at=event.scheduled_at,
-                        actual=event.actual,
-                        forecast=event.forecast,
-                        previous=event.previous,
-                        actual_raw=event.actual_raw,
-                        forecast_raw=event.forecast_raw,
-                        previous_raw=event.previous_raw,
-                        fetched_at=event.fetched_at,
-                    )
-                )
-                inserted += 1
-                continue
-            row.title = event.title
-            row.currency = event.currency
-            row.country = event.country
-            row.impact = event.impact.value
-            row.scheduled_at = event.scheduled_at
-            row.actual = event.actual
-            row.forecast = event.forecast
-            row.previous = event.previous
-            row.actual_raw = event.actual_raw
-            row.forecast_raw = event.forecast_raw
-            row.previous_raw = event.previous_raw
-            row.fetched_at = event.fetched_at
-            updated += 1
-        return UpsertResult(inserted=inserted, updated=updated)
-
-    async def list_window(
-        self,
-        *,
-        start_at: datetime,
-        end_at: datetime,
-        currencies: list[str] | None = None,
-        provider: str | None = None,
-    ) -> list[EconomicEvent]:
-        start_utc = normalize_to_utc(start_at)
-        end_utc = normalize_to_utc(end_at)
-        query = select(EconomicEventModel).where(
-            EconomicEventModel.scheduled_at >= start_utc,
-            EconomicEventModel.scheduled_at < end_utc,
-        )
-        if currencies is not None:
-            query = query.where(EconomicEventModel.currency.in_(currencies))
-        if provider is not None:
-            query = query.where(EconomicEventModel.provider == provider)
-        result = await self._session.execute(
-            query.order_by(
-                EconomicEventModel.scheduled_at.asc(),
-                EconomicEventModel.currency.asc(),
-                EconomicEventModel.provider_event_id.asc(),
-            )
-        )
-        return [_event_from_model(row) for row in result.scalars().all()]
-
-
-class SqlAlchemyScheduledDigestDeliveryStore:
-    def __init__(self, session: AsyncSession) -> None:
-        self._session = session
-
-    async def exists(self, dedup_key: SnapshotNotificationDedupKey) -> bool:
-        result = await self._session.execute(
-            select(ScheduledDigestDeliveryModel.dedup_key).where(
-                ScheduledDigestDeliveryModel.dedup_key == dedup_key.value
-            )
-        )
-        return result.scalar_one_or_none() is not None
-
-    async def record(self, record: ScheduledDigestDeliveryRecord) -> None:
-        statement = (
-            postgresql_insert(ScheduledDigestDeliveryModel)
-            .values(
-                dedup_key=record.dedup_key.value,
-                project_phase=record.project_phase,
-                delivered_at=record.delivered_at,
-                sender_name=record.sender_name,
-                readiness_status=(
-                    record.readiness_status.value if record.readiness_status is not None else None
-                ),
-                item_count=record.item_count,
-                ready_count=record.ready_count,
-                incomplete_count=record.incomplete_count,
-                blocked_count=record.blocked_count,
-                items_summary=record.items_summary,
-                payload_preview=record.payload_preview,
-            )
-            .on_conflict_do_nothing(index_elements=[ScheduledDigestDeliveryModel.dedup_key])
-        )
-        await self._session.execute(statement)
-
-    async def get(
-        self,
-        dedup_key: SnapshotNotificationDedupKey,
-    ) -> ScheduledDigestDeliveryRecord | None:
-        result = await self._session.execute(
-            select(ScheduledDigestDeliveryModel).where(
-                ScheduledDigestDeliveryModel.dedup_key == dedup_key.value
-            )
-        )
-        row = result.scalar_one_or_none()
-        return None if row is None else _delivery_from_model(row)
-```
-
-### `app/persistence/unit_of_work.py`
-
-```python
-from types import TracebackType
-from typing import Self
-
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
-
-from app.domain.interfaces.notifications import ScheduledDigestDeliveryStore
-from app.domain.interfaces.repositories import (
-    AuditLogRepository,
-    CandleRepository,
-    EconomicEventRepository,
-    ErrorEventRepository,
-    SystemStateRepository,
-)
-from app.persistence.repositories import (
-    SqlAlchemyAuditLogRepository,
-    SqlAlchemyCandleRepository,
-    SqlAlchemyEconomicEventRepository,
-    SqlAlchemyErrorEventRepository,
-    SqlAlchemyScheduledDigestDeliveryStore,
-    SqlAlchemySystemStateRepository,
-)
-
-
-class SqlAlchemyUnitOfWork:
-    def __init__(self, session_factory: async_sessionmaker[AsyncSession]) -> None:
-        self._session_factory = session_factory
-        self._session: AsyncSession | None = None
-        self._committed = False
-        self._system_state: SystemStateRepository | None = None
-        self._audit_logs: AuditLogRepository | None = None
-        self._error_events: ErrorEventRepository | None = None
-        self._candles: CandleRepository | None = None
-        self._economic_events: EconomicEventRepository | None = None
-        self._scheduled_digest_deliveries: ScheduledDigestDeliveryStore | None = None
-
-    async def __aenter__(self) -> Self:
-        if self._session is not None:
-            raise RuntimeError("unit of work is already active")
-        self._session = self._session_factory()
-        self._committed = False
-        self._system_state = SqlAlchemySystemStateRepository(self._session)
-        self._audit_logs = SqlAlchemyAuditLogRepository(self._session)
-        self._error_events = SqlAlchemyErrorEventRepository(self._session)
-        self._candles = SqlAlchemyCandleRepository(self._session)
-        self._economic_events = SqlAlchemyEconomicEventRepository(self._session)
-        self._scheduled_digest_deliveries = SqlAlchemyScheduledDigestDeliveryStore(self._session)
-        return self
-
-    async def __aexit__(
-        self,
-        exc_type: type[BaseException] | None,
-        exc: BaseException | None,
-        traceback: TracebackType | None,
-    ) -> None:
-        if self._session is None:
-            return
-        try:
-            in_transaction = getattr(self._session, "in_transaction", lambda: False)
-            if exc_type is not None or not self._committed or in_transaction():
-                await self._session.rollback()
-        finally:
-            await self._session.close()
-            self._session = None
-            self._system_state = None
-            self._audit_logs = None
-            self._error_events = None
-            self._candles = None
-            self._economic_events = None
-            self._scheduled_digest_deliveries = None
-            self._committed = False
-
-    @property
-    def system_state(self) -> SystemStateRepository:
-        if self._session is None or self._system_state is None:
-            raise RuntimeError("unit of work has not been entered")
-        return self._system_state
-
-    @property
-    def audit_logs(self) -> AuditLogRepository:
-        if self._session is None or self._audit_logs is None:
-            raise RuntimeError("unit of work has not been entered")
-        return self._audit_logs
-
-    @property
-    def error_events(self) -> ErrorEventRepository:
-        if self._session is None or self._error_events is None:
-            raise RuntimeError("unit of work has not been entered")
-        return self._error_events
-
-    @property
-    def candles(self) -> CandleRepository:
-        if self._session is None or self._candles is None:
-            raise RuntimeError("unit of work has not been entered")
-        return self._candles
-
-    @property
-    def economic_events(self) -> EconomicEventRepository:
-        if self._session is None or self._economic_events is None:
-            raise RuntimeError("unit of work has not been entered")
-        return self._economic_events
-
-    @property
-    def scheduled_digest_deliveries(self) -> ScheduledDigestDeliveryStore:
-        if self._session is None or self._scheduled_digest_deliveries is None:
-            raise RuntimeError("unit of work has not been entered")
-        return self._scheduled_digest_deliveries
-
-    async def commit(self) -> None:
-        if self._session is None:
-            raise RuntimeError("unit of work has not been entered")
-        await self._session.commit()
-        self._committed = True
-
-    async def rollback(self) -> None:
-        if self._session is None:
-            raise RuntimeError("unit of work has not been entered")
-        await self._session.rollback()
-        self._committed = False
-```
-
-### `app/services/scheduled_digest_delivery_service.py`
-
-```python
-from datetime import datetime
-from typing import Protocol
-
-from app.core.time import normalize_to_utc
-from app.domain.entities.readiness import (
-    SnapshotNotificationDedupKey,
-    SnapshotNotificationPayload,
-    SnapshotScheduleItem,
+    SnapshotSchedulePlan,
+    SnapshotWindow,
+    digest_status_from_analysis,
 )
 from app.domain.entities.scheduled_digest import (
     ScheduledDigestConfig,
@@ -1997,220 +913,252 @@ from app.domain.entities.scheduled_digest import (
     ScheduledDigestDeliveryResult,
     ScheduledDigestTick,
 )
-from app.domain.interfaces.notifications import NotificationSender, ScheduledDigestDeliveryStore
+from app.domain.entities.signal_contract import (
+    SignalActionability,
+    SignalContract,
+    SignalDirection,
+    SignalLifecycleStatus,
+    SignalPricePlan,
+    SignalRiskPlan,
+)
+
+__all__ = [
+    "AnalysisInputAudit",
+    "AnalysisIssue",
+    "AnalysisIssueCode",
+    "AnalysisIssueCount",
+    "AnalysisNumericSummary",
+    "AnalysisReadinessStatus",
+    "AnalysisReport",
+    "AnalysisSnapshot",
+    "AnalysisSnapshotMetadata",
+    "AnalysisWindow",
+    "Candle",
+    "CandleAvailability",
+    "CandleFeatureSummary",
+    "CandleShapeSummary",
+    "ContextCurrencyCount",
+    "ContextImpactCount",
+    "ContextIssue",
+    "ContextIssueCode",
+    "CurrencyEventCount",
+    "DataQualityIssue",
+    "DataQualityIssueCode",
+    "EconomicEvent",
+    "EconomicEventAvailability",
+    "EconomicEventFeatureSummary",
+    "EconomicImpact",
+    "EconomicImpactCount",
+    "EventContextSummary",
+    "FeatureIssue",
+    "FeatureIssueCode",
+    "FeatureSnapshot",
+    "FeatureWindow",
+    "IndicatorWindow",
+    "MarketContextSnapshot",
+    "MarketFeatureSnapshot",
+    "MovingAverageSeries",
+    "MovingAverageSummary",
+    "RangeContextSummary",
+    "ReturnDistributionSummary",
+    "ScheduledDigestConfig",
+    "ScheduledDigestDecision",
+    "ScheduledDigestDecisionReason",
+    "ScheduledDigestDeliveryRecord",
+    "ScheduledDigestDeliveryResult",
+    "ScheduledDigestTick",
+    "SignalActionability",
+    "SignalContract",
+    "SignalDirection",
+    "SignalLifecycleStatus",
+    "SignalPricePlan",
+    "SignalRiskPlan",
+    "SnapshotDigest",
+    "SnapshotDigestIssueCount",
+    "SnapshotDigestItem",
+    "SnapshotDigestStatus",
+    "SnapshotNotificationDedupKey",
+    "SnapshotNotificationPayload",
+    "SnapshotScheduleItem",
+    "SnapshotSchedulePlan",
+    "SnapshotWindow",
+    "TimeContextSummary",
+    "Timeframe",
+    "UpsertResult",
+    "build_feature_snapshot",
+    "digest_status_from_analysis",
+]
+```
+
+### `app/domain/entities/signal_contract.py`
+
+```python
+import hashlib
+import json
+from datetime import datetime
+from decimal import Decimal
+from enum import StrEnum
+from typing import Any, Self
+
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+
+from app.core.time import normalize_to_utc
+from app.domain.entities.market_data import Timeframe
+from app.domain.value_objects import CurrencyPair
 
 
-class ReadinessDigestPayloadBuilder(Protocol):
-    async def build_payload(
-        self,
-        *,
-        items: tuple[SnapshotScheduleItem, ...],
-        as_of: datetime,
-    ) -> SnapshotNotificationPayload:
-        """Build a neutral readiness digest payload for scheduled delivery."""
+class SignalDirection(StrEnum):
+    LONG = "LONG"
+    SHORT = "SHORT"
 
 
-class InMemoryScheduledDigestDeliveryStore:
-    def __init__(self) -> None:
-        self._records: dict[str, ScheduledDigestDeliveryRecord] = {}
-
-    async def exists(self, dedup_key: SnapshotNotificationDedupKey) -> bool:
-        return dedup_key.value in self._records
-
-    async def record(self, record: ScheduledDigestDeliveryRecord) -> None:
-        self._records[record.dedup_key.value] = record
-
-    async def get(
-        self,
-        dedup_key: SnapshotNotificationDedupKey,
-    ) -> ScheduledDigestDeliveryRecord | None:
-        return self._records.get(dedup_key.value)
+class SignalLifecycleStatus(StrEnum):
+    DRAFT = "DRAFT"
+    VALIDATED = "VALIDATED"
+    REJECTED = "REJECTED"
+    EXPIRED = "EXPIRED"
 
 
-class ScheduledDigestDeliveryService:
-    def __init__(
-        self,
-        *,
-        config: ScheduledDigestConfig,
-        readiness_digest_service: ReadinessDigestPayloadBuilder,
-        sender: NotificationSender,
-        delivery_store: ScheduledDigestDeliveryStore,
-        sender_name: str = "notification_sender",
-    ) -> None:
-        self._config = config
-        self._readiness_digest_service = readiness_digest_service
-        self._sender = sender
-        self._delivery_store = delivery_store
-        self._sender_name = sender_name
-
-    async def run_tick(self, *, as_of: datetime) -> ScheduledDigestDeliveryResult:
-        tick = ScheduledDigestTick(as_of=as_of)
-        base_decision = self._decide(tick)
-        if not base_decision.should_build:
-            return _skipped_result(tick=tick, decision=base_decision)
-
-        try:
-            payload = await self._readiness_digest_service.build_payload(
-                items=self._config.items,
-                as_of=tick.as_of,
-            )
-        except Exception:
-            return _skipped_result(
-                tick=tick,
-                decision=_decision(
-                    config=self._config,
-                    tick=tick,
-                    reason=ScheduledDigestDecisionReason.BUILD_FAILED,
-                    is_due=True,
-                    should_build=False,
-                ),
-            )
-
-        if await self._delivery_store.exists(payload.dedup_key):
-            return _skipped_result(
-                tick=tick,
-                decision=_decision(
-                    config=self._config,
-                    tick=tick,
-                    reason=ScheduledDigestDecisionReason.DUPLICATE,
-                    is_due=True,
-                    should_build=False,
-                    dedup_key=payload.dedup_key,
-                ),
-                dedup_key=payload.dedup_key,
-                payload=payload,
-            )
-
-        await self._sender.send(payload)
-        record = ScheduledDigestDeliveryRecord(
-            dedup_key=payload.dedup_key,
-            delivered_at=tick.as_of,
-            sender_name=self._sender_name,
-            readiness_status=payload.digest.readiness_status,
-            item_count=len(payload.digest.items),
-            ready_count=payload.digest.ready_count,
-            incomplete_count=payload.digest.incomplete_count,
-            blocked_count=payload.digest.blocked_count,
-            items_summary=_items_summary(payload),
-            payload_preview=_payload_preview(payload.text),
-        )
-        await self._delivery_store.record(record)
-        return ScheduledDigestDeliveryResult(
-            tick=tick,
-            decision=_decision(
-                config=self._config,
-                tick=tick,
-                reason=ScheduledDigestDecisionReason.DELIVERED,
-                is_due=True,
-                should_build=True,
-                dedup_key=payload.dedup_key,
-            ),
-            delivered=True,
-            skipped=False,
-            dedup_key=payload.dedup_key,
-            payload=payload,
-            record=record,
-        )
-
-    def _decide(self, tick: ScheduledDigestTick) -> ScheduledDigestDecision:
-        if not self._config.enabled:
-            return _decision(
-                config=self._config,
-                tick=tick,
-                reason=ScheduledDigestDecisionReason.DISABLED,
-                is_due=False,
-                should_build=False,
-            )
-        if not self._config.items:
-            return _decision(
-                config=self._config,
-                tick=tick,
-                reason=ScheduledDigestDecisionReason.NO_ITEMS,
-                is_due=False,
-                should_build=False,
-            )
-        is_due = is_scheduled_digest_due(
-            as_of=tick.as_of,
-            interval_minutes=self._config.interval_minutes,
-        )
-        if not is_due:
-            return _decision(
-                config=self._config,
-                tick=tick,
-                reason=ScheduledDigestDecisionReason.NOT_DUE,
-                is_due=False,
-                should_build=False,
-            )
-        return _decision(
-            config=self._config,
-            tick=tick,
-            reason=ScheduledDigestDecisionReason.DUE,
-            is_due=True,
-            should_build=True,
-        )
+class SignalActionability(StrEnum):
+    NOT_ACTIONABLE = "NOT_ACTIONABLE"
+    PAPER_ONLY = "PAPER_ONLY"
+    LIVE_DISABLED = "LIVE_DISABLED"
 
 
-def is_scheduled_digest_due(*, as_of: datetime, interval_minutes: int) -> bool:
-    if interval_minutes < 1:
-        raise ValueError("scheduled digest interval must be at least one minute")
-    as_of_utc = normalize_to_utc(as_of)
-    if as_of_utc.second != 0 or as_of_utc.microsecond != 0:
+def _reject_float(value: object, field_name: str) -> object:
+    if isinstance(value, float):
+        raise ValueError(f"{field_name} must use Decimal-compatible inputs, not float")
+    return value
+
+
+class SignalPricePlan(BaseModel):
+    entry_min: Decimal = Field(gt=Decimal("0"))
+    entry_max: Decimal = Field(gt=Decimal("0"))
+    stop_loss: Decimal = Field(gt=Decimal("0"))
+    take_profit_1: Decimal = Field(gt=Decimal("0"))
+    take_profit_2: Decimal | None = Field(default=None, gt=Decimal("0"))
+
+    model_config = ConfigDict(frozen=True)
+
+    @field_validator(
+        "entry_min", "entry_max", "stop_loss", "take_profit_1", "take_profit_2", mode="before"
+    )
+    @classmethod
+    def reject_float_prices(cls, value: object) -> object:
+        return _reject_float(value, "signal price")
+
+    @model_validator(mode="after")
+    def entry_range_must_be_ordered(self) -> Self:
+        if self.entry_min > self.entry_max:
+            raise ValueError("entry_min must be less than or equal to entry_max")
+        return self
+
+
+class SignalRiskPlan(BaseModel):
+    risk_percent: Decimal | None = Field(default=None, gt=Decimal("0"), le=Decimal("5"))
+    max_loss_amount: Decimal | None = Field(default=None, gt=Decimal("0"))
+    position_size: Decimal | None = Field(default=None, gt=Decimal("0"))
+    actionability: SignalActionability = SignalActionability.NOT_ACTIONABLE
+
+    model_config = ConfigDict(frozen=True)
+
+    @field_validator("risk_percent", "max_loss_amount", "position_size", mode="before")
+    @classmethod
+    def reject_float_risk_values(cls, value: object) -> object:
+        return _reject_float(value, "signal risk value")
+
+
+class SignalContract(BaseModel):
+    contract_version: str = Field(min_length=1)
+    pair: CurrencyPair
+    timeframe: Timeframe
+    direction: SignalDirection
+    status: SignalLifecycleStatus = SignalLifecycleStatus.DRAFT
+    actionability: SignalActionability = SignalActionability.NOT_ACTIONABLE
+    created_at: datetime
+    valid_until: datetime
+    strategy_version: str = Field(min_length=1)
+    price_plan: SignalPricePlan
+    risk_plan: SignalRiskPlan | None = None
+    rationale_summary: str | None = Field(default=None, max_length=1000)
+    evidence_ids: tuple[str, ...] = ()
+    warnings: tuple[str, ...] = ()
+    source_snapshot_id: str | None = Field(default=None, min_length=64, max_length=64)
+    fingerprint: str | None = Field(default=None, min_length=64, max_length=64)
+
+    model_config = ConfigDict(frozen=True)
+
+    @field_validator("created_at", "valid_until")
+    @classmethod
+    def timestamps_must_be_utc(cls, value: datetime) -> datetime:
+        return normalize_to_utc(value)
+
+    @field_validator("evidence_ids", "warnings", mode="before")
+    @classmethod
+    def normalize_string_collections(cls, value: object) -> tuple[str, ...]:
+        if value is None:
+            return ()
+        if isinstance(value, str):
+            raw_items: tuple[object, ...] = (value,)
+        elif isinstance(value, list | set | tuple):
+            raw_items = tuple(value)
+        else:
+            raise ValueError("signal string collections must be lists, sets, tuples, or strings")
+        return tuple(sorted({str(item).strip() for item in raw_items if str(item).strip()}))
+
+    @model_validator(mode="after")
+    def validate_contract(self) -> Self:
+        if self.valid_until <= self.created_at:
+            raise ValueError("valid_until must be after created_at")
+        if self.direction == SignalDirection.LONG:
+            if self.price_plan.stop_loss >= self.price_plan.entry_min:
+                raise ValueError("LONG stop_loss must be below entry_min")
+            if self.price_plan.take_profit_1 <= self.price_plan.entry_max:
+                raise ValueError("LONG take_profit_1 must be above entry_max")
+            if (
+                self.price_plan.take_profit_2 is not None
+                and self.price_plan.take_profit_2 <= self.price_plan.take_profit_1
+            ):
+                raise ValueError("LONG take_profit_2 must be above take_profit_1")
+        else:
+            if self.price_plan.stop_loss <= self.price_plan.entry_max:
+                raise ValueError("SHORT stop_loss must be above entry_max")
+            if self.price_plan.take_profit_1 >= self.price_plan.entry_min:
+                raise ValueError("SHORT take_profit_1 must be below entry_min")
+            if (
+                self.price_plan.take_profit_2 is not None
+                and self.price_plan.take_profit_2 >= self.price_plan.take_profit_1
+            ):
+                raise ValueError("SHORT take_profit_2 must be below take_profit_1")
+        return self
+
+    @property
+    def is_actionable(self) -> bool:
         return False
-    minutes_since_midnight = (as_of_utc.hour * 60) + as_of_utc.minute
-    return minutes_since_midnight % interval_minutes == 0
 
+    def canonical_payload(self) -> dict[str, Any]:
+        return self.model_dump(mode="json", exclude={"fingerprint"})
 
-def _decision(
-    *,
-    config: ScheduledDigestConfig,
-    tick: ScheduledDigestTick,
-    reason: ScheduledDigestDecisionReason,
-    is_due: bool,
-    should_build: bool,
-    dedup_key: SnapshotNotificationDedupKey | None = None,
-) -> ScheduledDigestDecision:
-    return ScheduledDigestDecision(
-        enabled=config.enabled,
-        is_due=is_due,
-        should_build=should_build,
-        reason=reason,
-        item_count=len(config.items),
-        tick_as_of=tick.as_of,
-        dedup_key=dedup_key,
-    )
+    def deterministic_json(self) -> str:
+        return json.dumps(
+            self.model_dump(mode="json"),
+            ensure_ascii=False,
+            sort_keys=True,
+            separators=(",", ":"),
+        )
 
-
-def _skipped_result(
-    *,
-    tick: ScheduledDigestTick,
-    decision: ScheduledDigestDecision,
-    dedup_key: SnapshotNotificationDedupKey | None = None,
-    payload: SnapshotNotificationPayload | None = None,
-) -> ScheduledDigestDeliveryResult:
-    return ScheduledDigestDeliveryResult(
-        tick=tick,
-        decision=decision,
-        delivered=False,
-        skipped=True,
-        dedup_key=dedup_key,
-        payload=payload,
-        record=None,
-    )
-
-
-def _items_summary(payload: SnapshotNotificationPayload) -> str:
-    return ",".join(f"{item.pair.value}:{item.timeframe.value}" for item in payload.digest.items)
-
-
-def _payload_preview(text: str) -> str:
-    normalized = " ".join(text.split())
-    return normalized[:1000]
+    def fingerprint_sha256(self) -> str:
+        canonical = json.dumps(
+            self.canonical_payload(),
+            ensure_ascii=False,
+            sort_keys=True,
+            separators=(",", ":"),
+        )
+        return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
 ```
 
 
 ## Full Contents Of Changed Test Files
-
-No brand-new test file was added in Phase 3I; existing unit, contract, integration, and fake-support tests were extended. Full contents of the changed test files are included below.
 
 ### `tests/contract/test_safety_boundaries.py`
 
@@ -2228,7 +1176,7 @@ from app.adapters.disabled import (
 )
 from app.core.enums import Decision
 from app.core.exceptions import IntegrationDisabledError
-from app.domain.entities import Timeframe
+from app.domain.entities import Timeframe, signal_contract
 from app.domain.value_objects import CurrencyPair
 from app.persistence.models import ScheduledDigestDeliveryModel
 from app.persistence.repositories.foundation import SqlAlchemyScheduledDigestDeliveryStore
@@ -2436,6 +1384,38 @@ PHASE_3I_FORBIDDEN_TERMS = (
     "paper_trading",
     "order_execution",
 )
+PHASE_4A_CONTRACT_OBJECTS = (
+    signal_contract.SignalActionability,
+    signal_contract.SignalContract,
+    signal_contract.SignalDirection,
+    signal_contract.SignalLifecycleStatus,
+    signal_contract.SignalPricePlan,
+    signal_contract.SignalRiskPlan,
+)
+PHASE_4A_FORBIDDEN_BEHAVIOR_TERMS = (
+    "generate_signal",
+    "signal_generator",
+    "signal_engine",
+    "decision_engine",
+    "setup_scoring",
+    "confidence_scoring",
+    "calculate_entry",
+    "calculate_stop",
+    "calculate_target",
+    "calculate_position_size",
+    "send_signal",
+    "telegram_signal",
+    "broker",
+    "place_order",
+    "submit_order",
+    "execute_order",
+    "paper_trading",
+    "real_trading",
+    "backtesting",
+    "trading_simulator",
+    "OpenAI",
+    "LLM",
+)
 
 
 def test_no_real_order_execution_code_exists() -> None:
@@ -2523,6 +1503,48 @@ def test_phase3i_digest_audit_files_do_not_add_decision_or_execution_terms() -> 
     assert offenders == []
 
 
+def test_phase4a_signal_contract_objects_do_not_add_generation_or_execution_terms() -> None:
+    offenders: list[str] = []
+    texts = [inspect.getsource(source_object) for source_object in PHASE_4A_CONTRACT_OBJECTS]
+    for index, text in enumerate(texts):
+        lowered = text.lower()
+        for term in PHASE_4A_FORBIDDEN_BEHAVIOR_TERMS:
+            if term.lower() in lowered:
+                offenders.append(f"phase4a-contract-{index}: {term}")
+
+    assert offenders == []
+
+
+def test_phase4a_does_not_add_signal_api_routes() -> None:
+    route_files = tuple(Path("app/api/routes").glob("*.py"))
+    offenders = [
+        str(file_path)
+        for file_path in route_files
+        if "signal" in file_path.name.lower()
+        or "SignalContract" in file_path.read_text(encoding="utf-8")
+    ]
+
+    assert offenders == []
+
+
+def test_phase4a_does_not_add_telegram_signal_handlers() -> None:
+    source = Path("app/telegram/commands.py").read_text(encoding="utf-8")
+
+    assert "signal_command" not in source
+    assert 'CommandHandler("signal"' not in source
+    assert "SignalContract" not in source
+
+
+def test_phase4a_does_not_add_scheduler_signal_jobs() -> None:
+    scheduler_text = "\n".join(
+        file_path.read_text(encoding="utf-8") for file_path in Path("app/scheduler").glob("*.py")
+    )
+
+    assert "SignalContract" not in scheduler_text
+    assert "signal_job" not in scheduler_text
+    assert "generate_signal" not in scheduler_text
+
+
 @pytest.mark.asyncio
 async def test_disabled_market_data_provider_fails_before_external_call() -> None:
     with pytest.raises(IntegrationDisabledError):
@@ -2589,228 +1611,6 @@ def test_safety_scanner_rejects_execution_http_endpoints(tmp_path: Path) -> None
     file_path.write_text("ORDERS_URL = 'https://broker.example/v1/orders'\n", encoding="utf-8")
 
     assert scan_files([file_path])
-```
-
-### `tests/fakes.py`
-
-```python
-from types import TracebackType
-from typing import Any, Self
-
-from app.domain.entities import Candle, EconomicEvent, Timeframe
-from app.domain.entities.data_quality import UpsertResult
-from app.domain.entities.readiness import SnapshotNotificationDedupKey
-from app.domain.entities.scheduled_digest import ScheduledDigestDeliveryRecord
-from app.domain.interfaces.notifications import ScheduledDigestDeliveryStore
-from app.domain.interfaces.repositories import (
-    AuditLogRepository,
-    CandleRepository,
-    EconomicEventRepository,
-    ErrorEventRepository,
-    SystemStateRepository,
-)
-from app.domain.value_objects import CurrencyPair
-
-
-class FakeSystemStateRepository:
-    def __init__(self, state: dict[str, Any]) -> None:
-        self._state = state
-
-    async def get(self, key: str) -> Any | None:
-        return self._state.get(key)
-
-    async def set(self, key: str, value: Any) -> None:
-        self._state[key] = value
-
-    async def get_all(self) -> dict[str, Any]:
-        return dict(self._state)
-
-
-class FakeAuditLogRepository:
-    def __init__(self) -> None:
-        self.events: list[dict[str, Any]] = []
-
-    async def add(
-        self,
-        *,
-        event_type: str,
-        entity_type: str | None = None,
-        entity_id: str | None = None,
-        actor: str | None = None,
-        before_json: dict[str, Any] | None = None,
-        after_json: dict[str, Any] | None = None,
-    ) -> None:
-        self.events.append(
-            {
-                "event_type": event_type,
-                "entity_type": entity_type,
-                "entity_id": entity_id,
-                "actor": actor,
-                "before_json": before_json,
-                "after_json": after_json,
-            }
-        )
-
-
-class FakeErrorEventRepository:
-    def __init__(self) -> None:
-        self.events: list[dict[str, Any]] = []
-
-    async def add(
-        self,
-        *,
-        error_code: str,
-        severity: str,
-        component: str,
-        message_ru: str,
-        technical_details: str | None = None,
-        context_json: dict[str, Any] | None = None,
-        resolved: bool = False,
-    ) -> None:
-        self.events.append(
-            {
-                "error_code": error_code,
-                "severity": severity,
-                "component": component,
-                "message_ru": message_ru,
-                "technical_details": technical_details,
-                "context_json": context_json,
-                "resolved": resolved,
-            }
-        )
-
-
-class FakeCandleRepository:
-    def __init__(self, candles: list[Candle]) -> None:
-        self._candles = candles
-
-    async def upsert_many(self, candles: list[Candle]) -> UpsertResult:
-        self._candles.extend(candles)
-        return UpsertResult(inserted=len(candles), updated=0)
-
-    async def list_range(
-        self,
-        *,
-        pair: CurrencyPair,
-        timeframe: Timeframe,
-        start_at: Any,
-        end_at: Any,
-        provider: str | None = None,
-    ) -> list[Candle]:
-        return [
-            candle
-            for candle in self._candles
-            if candle.pair == pair
-            and candle.timeframe == timeframe
-            and candle.open_time >= start_at
-            and candle.close_time <= end_at
-            and (provider is None or candle.provider == provider)
-        ]
-
-
-class FakeEconomicEventRepository:
-    def __init__(self, events: list[EconomicEvent]) -> None:
-        self._events = events
-
-    async def upsert_many(self, events: list[EconomicEvent]) -> UpsertResult:
-        self._events.extend(events)
-        return UpsertResult(inserted=len(events), updated=0)
-
-    async def list_window(
-        self,
-        *,
-        start_at: Any,
-        end_at: Any,
-        currencies: list[str] | None = None,
-        provider: str | None = None,
-    ) -> list[EconomicEvent]:
-        return [
-            event
-            for event in self._events
-            if start_at <= event.scheduled_at < end_at
-            and (currencies is None or event.currency in currencies)
-            and (provider is None or event.provider == provider)
-        ]
-
-
-class FakeScheduledDigestDeliveryStore:
-    def __init__(self, records: dict[str, ScheduledDigestDeliveryRecord]) -> None:
-        self._records = records
-
-    async def exists(self, dedup_key: SnapshotNotificationDedupKey) -> bool:
-        return dedup_key.value in self._records
-
-    async def record(self, record: ScheduledDigestDeliveryRecord) -> None:
-        self._records.setdefault(record.dedup_key.value, record)
-
-    async def get(
-        self,
-        dedup_key: SnapshotNotificationDedupKey,
-    ) -> ScheduledDigestDeliveryRecord | None:
-        return self._records.get(dedup_key.value)
-
-
-class FakeUnitOfWork:
-    def __init__(
-        self,
-        state: dict[str, Any],
-        candles: list[Candle],
-        events: list[EconomicEvent],
-        scheduled_digest_deliveries: dict[str, ScheduledDigestDeliveryRecord],
-    ) -> None:
-        self.system_state: SystemStateRepository = FakeSystemStateRepository(state)
-        self.audit_logs: AuditLogRepository = FakeAuditLogRepository()
-        self.error_events: ErrorEventRepository = FakeErrorEventRepository()
-        self.candles: CandleRepository = FakeCandleRepository(candles)
-        self.economic_events: EconomicEventRepository = FakeEconomicEventRepository(events)
-        self.scheduled_digest_deliveries: ScheduledDigestDeliveryStore = (
-            FakeScheduledDigestDeliveryStore(scheduled_digest_deliveries)
-        )
-        self.committed = False
-        self.rolled_back = False
-
-    async def __aenter__(self) -> Self:
-        return self
-
-    async def __aexit__(
-        self,
-        exc_type: type[BaseException] | None,
-        exc: BaseException | None,
-        traceback: TracebackType | None,
-    ) -> None:
-        if exc_type is not None or not self.committed:
-            self.rolled_back = True
-
-    async def commit(self) -> None:
-        self.committed = True
-
-    async def rollback(self) -> None:
-        self.rolled_back = True
-
-
-class FakeUnitOfWorkFactory:
-    def __init__(
-        self,
-        state: dict[str, Any] | None = None,
-        candles: list[Candle] | None = None,
-        events: list[EconomicEvent] | None = None,
-        scheduled_digest_deliveries: dict[str, ScheduledDigestDeliveryRecord] | None = None,
-    ) -> None:
-        self.state = state or {}
-        self.candles = candles or []
-        self.events = events or []
-        self.scheduled_digest_deliveries = scheduled_digest_deliveries or {}
-        self.instances: list[FakeUnitOfWork] = []
-
-    def __call__(self) -> FakeUnitOfWork:
-        uow = FakeUnitOfWork(
-            self.state,
-            self.candles,
-            self.events,
-            self.scheduled_digest_deliveries,
-        )
-        self.instances.append(uow)
-        return uow
 ```
 
 ### `tests/integration/test_database_and_api.py`
@@ -3007,7 +1807,7 @@ def test_api_health_readiness_status_and_scan_state(postgres_database_url: str) 
     assert ready.status_code == 200
     assert ready.json()["status"] == "ready"
     assert status.status_code == 200
-    assert status.json()["project_phase"] == "phase_3i_persistent_digest_audit_foundation"
+    assert status.json()["project_phase"] == constants.PROJECT_PHASE
     assert status.json()["trading_strategy_implemented"] is False
     assert status.json()["real_trading_enabled"] is False
     assert start.status_code == 200
@@ -3364,8 +2164,8 @@ def test_analysis_snapshot_is_json_serializable() -> None:
     data = snapshot.model_dump(mode="json")
     text = snapshot.model_dump_json()
 
-    assert data["metadata"]["project_phase"] == "phase_3i_persistent_digest_audit_foundation"
-    assert "phase_3i_persistent_digest_audit_foundation" in text
+    assert data["metadata"]["project_phase"] == constants.PROJECT_PHASE
+    assert constants.PROJECT_PHASE in text
     assert data["context_snapshot"]["return_distribution"]["mean_return"] == "0.1"
 
 
@@ -3729,7 +2529,7 @@ def test_digest_payload_is_json_serializable_and_immutable() -> None:
 
     data = digest.model_dump(mode="json")
     assert data["items"][0]["readiness_status"] == "READY"
-    assert "phase_3i_persistent_digest_audit_foundation" in digest.model_dump_json()
+    assert constants.PROJECT_PHASE in digest.model_dump_json()
     with pytest.raises(ValidationError):
         digest.ready_count = 99
 
@@ -3768,283 +2568,193 @@ async def test_digest_service_uses_repository_protocols() -> None:
     assert "EURUSD M15: READY" in payload.text
 ```
 
-### `tests/unit/test_scheduled_digest_delivery_foundation.py`
+### `tests/unit/test_signal_contract_foundation.py`
 
 ```python
 from datetime import UTC, datetime, timedelta, timezone
 from decimal import Decimal
-from typing import Any, cast
 
 import pytest
 from pydantic import ValidationError
 
 from app.core import constants
-from app.domain.entities import Candle, Timeframe
-from app.domain.entities.readiness import (
-    SnapshotDigestStatus,
-    SnapshotNotificationPayload,
-    SnapshotScheduleItem,
-)
-from app.domain.entities.scheduled_digest import (
-    ScheduledDigestConfig,
-    ScheduledDigestDecisionReason,
-    ScheduledDigestTick,
+from app.domain.entities import Timeframe
+from app.domain.entities.signal_contract import (
+    SignalActionability,
+    SignalContract,
+    SignalDirection,
+    SignalLifecycleStatus,
+    SignalPricePlan,
+    SignalRiskPlan,
 )
 from app.domain.value_objects import CurrencyPair
-from app.scheduler.jobs import register_jobs, scheduled_digest_delivery_job
-from app.services.analysis_service import AnalysisService
-from app.services.health_service import HealthService
-from app.services.readiness_digest_service import ReadinessDigestService
-from app.services.scheduled_digest_delivery_service import (
-    InMemoryScheduledDigestDeliveryStore,
-    ScheduledDigestDeliveryService,
-    is_scheduled_digest_due,
-)
-from app.services.system_state_service import SystemStateService
-from tests.fakes import FakeUnitOfWorkFactory
 
 PAIR = CurrencyPair(value="EURUSD")
-BASE_TIME = datetime(2026, 7, 15, 8, 0, tzinfo=UTC)
+CREATED_AT = datetime(2026, 7, 18, 9, 0, tzinfo=UTC)
+VALID_UNTIL = CREATED_AT + timedelta(minutes=30)
 
 
-class FakeNotificationSender:
-    def __init__(self) -> None:
-        self.payloads: list[SnapshotNotificationPayload] = []
-
-    async def send(self, payload: SnapshotNotificationPayload) -> None:
-        self.payloads.append(payload)
-
-
-class FailingReadinessDigestService:
-    async def build_payload(
-        self,
-        *,
-        items: tuple[SnapshotScheduleItem, ...],
-        as_of: datetime,
-    ) -> SnapshotNotificationPayload:
-        raise RuntimeError("forced digest build failure")
-
-
-class FakeScheduler:
-    def __init__(self) -> None:
-        self.job_ids: list[str] = []
-
-    def add_job(self, *args: Any, **kwargs: Any) -> None:
-        self.job_ids.append(str(kwargs["id"]))
-
-
-def _schedule_config(*, enabled: bool = True, interval_minutes: int = 15) -> ScheduledDigestConfig:
-    return ScheduledDigestConfig(
-        enabled=enabled,
-        interval_minutes=interval_minutes,
-        items=(
-            SnapshotScheduleItem(
-                pair=PAIR,
-                timeframe=Timeframe.M15,
-                lookback_candle_count=3,
-            ),
-        ),
+def _long_price_plan() -> SignalPricePlan:
+    return SignalPricePlan(
+        entry_min=Decimal("1.1000"),
+        entry_max=Decimal("1.1010"),
+        stop_loss=Decimal("1.0950"),
+        take_profit_1=Decimal("1.1060"),
+        take_profit_2=Decimal("1.1100"),
     )
 
 
-def _candle(index: int) -> Candle:
-    open_time = BASE_TIME + timedelta(minutes=15 * index)
-    open_price = Decimal("1.1000") + (Decimal("0.0001") * Decimal(index))
-    close_price = open_price + Decimal("0.0001")
-    return Candle(
-        provider="scheduled-digest-test",
-        pair=PAIR,
-        timeframe=Timeframe.M15,
-        open_time=open_time,
-        close_time=open_time + timedelta(minutes=15),
-        open=open_price,
-        high=close_price + Decimal("0.0002"),
-        low=open_price - Decimal("0.0002"),
-        close=close_price,
-        volume=Decimal("100"),
-        is_closed=True,
+def _short_price_plan() -> SignalPricePlan:
+    return SignalPricePlan(
+        entry_min=Decimal("1.1000"),
+        entry_max=Decimal("1.1010"),
+        stop_loss=Decimal("1.1060"),
+        take_profit_1=Decimal("1.0950"),
+        take_profit_2=Decimal("1.0910"),
     )
 
 
-def _service(
-    *,
-    config: ScheduledDigestConfig | None = None,
-    sender: FakeNotificationSender | None = None,
-    store: InMemoryScheduledDigestDeliveryStore | None = None,
-) -> tuple[ScheduledDigestDeliveryService, FakeNotificationSender]:
-    notification_sender = sender or FakeNotificationSender()
-    factory = FakeUnitOfWorkFactory(candles=[_candle(0), _candle(1), _candle(2)])
-    readiness_service = ReadinessDigestService(AnalysisService(factory))
-    return (
-        ScheduledDigestDeliveryService(
-            config=config or _schedule_config(),
-            readiness_digest_service=readiness_service,
-            sender=notification_sender,
-            delivery_store=store or InMemoryScheduledDigestDeliveryStore(),
-            sender_name="fake_sender",
-        ),
-        notification_sender,
-    )
+def _contract(**overrides: object) -> SignalContract:
+    values: dict[str, object] = {
+        "contract_version": "phase4a-contract-v1",
+        "pair": PAIR,
+        "timeframe": Timeframe.M15,
+        "direction": SignalDirection.LONG,
+        "created_at": CREATED_AT,
+        "valid_until": VALID_UNTIL,
+        "strategy_version": "future-strategy-contract-v1",
+        "price_plan": _long_price_plan(),
+        "evidence_ids": ("snapshot-b", "snapshot-a", "snapshot-a"),
+        "warnings": ("contract only",),
+        "source_snapshot_id": "a" * 64,
+    }
+    values.update(overrides)
+    return SignalContract(**values)
 
 
-@pytest.mark.asyncio
-async def test_scheduled_digest_disabled_skip() -> None:
-    service, sender = _service(config=_schedule_config(enabled=False))
-
-    result = await service.run_tick(as_of=BASE_TIME + timedelta(minutes=45))
-
-    assert result.skipped is True
-    assert result.delivered is False
-    assert result.decision.reason == ScheduledDigestDecisionReason.DISABLED
-    assert result.payload is None
-    assert sender.payloads == []
+def test_project_phase_is_phase4a_signal_contract_foundation() -> None:
+    assert constants.PROJECT_PHASE == "phase_4a_signal_contract_foundation"
 
 
-@pytest.mark.asyncio
-async def test_scheduled_digest_not_due_skip() -> None:
-    service, sender = _service(config=_schedule_config(interval_minutes=60))
+def test_signal_contract_models_are_immutable() -> None:
+    contract = _contract()
 
-    result = await service.run_tick(as_of=BASE_TIME + timedelta(minutes=45))
-
-    assert result.skipped is True
-    assert result.decision.reason == ScheduledDigestDecisionReason.NOT_DUE
-    assert result.decision.is_due is False
-    assert sender.payloads == []
-
-
-@pytest.mark.asyncio
-async def test_scheduled_digest_due_builds_payload_and_sends_once() -> None:
-    service, sender = _service()
-
-    result = await service.run_tick(as_of=BASE_TIME + timedelta(minutes=45))
-
-    assert result.delivered is True
-    assert result.skipped is False
-    assert result.decision.reason == ScheduledDigestDecisionReason.DELIVERED
-    assert result.payload is not None
-    assert result.record is not None
-    assert result.dedup_key == result.payload.dedup_key
-    assert len(sender.payloads) == 1
-    assert sender.payloads[0] == result.payload
-    assert result.record.readiness_status == SnapshotDigestStatus.READY
-    assert result.record.item_count == 1
-    assert result.record.ready_count == 1
-    assert result.record.items_summary == "EURUSD:M15"
-    assert "Решений и указаний нет" in (result.record.payload_preview or "")
-    assert "Системный отчёт готовности" in result.payload.text
-    assert "Решений и указаний нет." in result.payload.text
-    data = result.model_dump(mode="json")
-    assert data["project_phase"] == constants.PROJECT_PHASE
-    assert data["payload"]["project_phase"] == constants.PROJECT_PHASE
     with pytest.raises(ValidationError):
-        result.delivered = False
-
-
-@pytest.mark.asyncio
-async def test_scheduled_digest_duplicate_dedup_key_skip() -> None:
-    store = InMemoryScheduledDigestDeliveryStore()
-    sender = FakeNotificationSender()
-    service, _ = _service(store=store, sender=sender)
-    as_of = BASE_TIME + timedelta(minutes=45)
-
-    first = await service.run_tick(as_of=as_of)
-    second = await service.run_tick(as_of=as_of)
-
-    assert first.delivered is True
-    assert second.skipped is True
-    assert second.decision.reason == ScheduledDigestDecisionReason.DUPLICATE
-    assert second.dedup_key == first.dedup_key
-    assert len(sender.payloads) == 1
-    stored = await store.get(first.dedup_key)
-    assert stored == first.record
-
-
-@pytest.mark.asyncio
-async def test_scheduled_digest_no_items_skip() -> None:
-    service, sender = _service(config=ScheduledDigestConfig(enabled=True, items=()))
-
-    result = await service.run_tick(as_of=BASE_TIME + timedelta(minutes=45))
-
-    assert result.skipped is True
-    assert result.decision.reason == ScheduledDigestDecisionReason.NO_ITEMS
-    assert sender.payloads == []
-
-
-@pytest.mark.asyncio
-async def test_scheduled_digest_build_failed_skip() -> None:
-    sender = FakeNotificationSender()
-    service = ScheduledDigestDeliveryService(
-        config=_schedule_config(),
-        readiness_digest_service=FailingReadinessDigestService(),
-        sender=sender,
-        delivery_store=InMemoryScheduledDigestDeliveryStore(),
-    )
-
-    result = await service.run_tick(as_of=BASE_TIME + timedelta(minutes=45))
-
-    assert result.skipped is True
-    assert result.decision.reason == ScheduledDigestDecisionReason.BUILD_FAILED
-    assert result.payload is None
-    assert sender.payloads == []
-
-
-def test_scheduled_digest_tick_is_json_serializable_and_immutable() -> None:
-    tick = ScheduledDigestTick(as_of=datetime(2026, 7, 15, 10, 45, tzinfo=UTC))
-
-    data = tick.model_dump(mode="json")
-
-    assert data["project_phase"] == constants.PROJECT_PHASE
-    assert data["as_of"] == "2026-07-15T10:45:00Z"
+        contract.status = SignalLifecycleStatus.VALIDATED
     with pytest.raises(ValidationError):
-        tick.as_of = BASE_TIME
+        contract.price_plan.entry_min = Decimal("1.0990")
 
 
-def test_scheduled_digest_tick_normalizes_utc() -> None:
-    tick = ScheduledDigestTick(
-        as_of=datetime(2026, 7, 15, 12, 45, tzinfo=timezone(timedelta(hours=2)))
+def test_signal_contract_normalizes_timestamps_to_utc() -> None:
+    offset = timezone(timedelta(hours=2))
+    contract = _contract(
+        created_at=datetime(2026, 7, 18, 11, 0, tzinfo=offset),
+        valid_until=datetime(2026, 7, 18, 11, 30, tzinfo=offset),
     )
 
-    assert tick.as_of == datetime(2026, 7, 15, 10, 45, tzinfo=UTC)
+    assert contract.created_at == CREATED_AT
+    assert contract.valid_until == VALID_UNTIL
 
 
-def test_scheduled_digest_due_policy_is_deterministic() -> None:
-    assert is_scheduled_digest_due(
-        as_of=datetime(2026, 7, 15, 10, 45, tzinfo=UTC),
-        interval_minutes=15,
-    )
-    assert not is_scheduled_digest_due(
-        as_of=datetime(2026, 7, 15, 10, 46, tzinfo=UTC),
-        interval_minutes=15,
-    )
-    assert not is_scheduled_digest_due(
-        as_of=datetime(2026, 7, 15, 10, 45, 1, tzinfo=UTC),
-        interval_minutes=15,
-    )
+def test_signal_contract_requires_valid_until_after_created_at() -> None:
+    with pytest.raises(ValidationError):
+        _contract(valid_until=CREATED_AT)
 
 
-@pytest.mark.asyncio
-async def test_worker_callable_can_run_without_auto_registration() -> None:
-    service, sender = _service()
+def test_signal_price_plan_requires_ordered_entry_range() -> None:
+    with pytest.raises(ValidationError):
+        SignalPricePlan(
+            entry_min=Decimal("1.1020"),
+            entry_max=Decimal("1.1010"),
+            stop_loss=Decimal("1.0950"),
+            take_profit_1=Decimal("1.1060"),
+        )
 
-    result = await scheduled_digest_delivery_job(
-        service,
-        as_of=BASE_TIME + timedelta(minutes=45),
+
+def test_signal_contract_validates_long_price_plan() -> None:
+    assert _contract(direction=SignalDirection.LONG, price_plan=_long_price_plan()).direction == (
+        SignalDirection.LONG
     )
 
-    assert result.delivered is True
-    assert len(sender.payloads) == 1
+    with pytest.raises(ValidationError):
+        _contract(
+            direction=SignalDirection.LONG,
+            price_plan=_long_price_plan().model_copy(update={"stop_loss": Decimal("1.1000")}),
+        )
+    with pytest.raises(ValidationError):
+        _contract(
+            direction=SignalDirection.LONG,
+            price_plan=_long_price_plan().model_copy(update={"take_profit_1": Decimal("1.1010")}),
+        )
+    with pytest.raises(ValidationError):
+        _contract(
+            direction=SignalDirection.LONG,
+            price_plan=_long_price_plan().model_copy(update={"take_profit_2": Decimal("1.1060")}),
+        )
 
 
-def test_register_jobs_does_not_start_scheduled_digest_delivery_loop() -> None:
-    scheduler = FakeScheduler()
-
-    register_jobs(
-        scheduler,
-        system_state_service=cast(SystemStateService, object()),
-        health_service=cast(HealthService, object()),
+def test_signal_contract_validates_short_price_plan() -> None:
+    assert _contract(direction=SignalDirection.SHORT, price_plan=_short_price_plan()).direction == (
+        SignalDirection.SHORT
     )
 
-    assert scheduler.job_ids == ["worker_heartbeat", "application_health_check"]
+    with pytest.raises(ValidationError):
+        _contract(
+            direction=SignalDirection.SHORT,
+            price_plan=_short_price_plan().model_copy(update={"stop_loss": Decimal("1.1010")}),
+        )
+    with pytest.raises(ValidationError):
+        _contract(
+            direction=SignalDirection.SHORT,
+            price_plan=_short_price_plan().model_copy(update={"take_profit_1": Decimal("1.1000")}),
+        )
+    with pytest.raises(ValidationError):
+        _contract(
+            direction=SignalDirection.SHORT,
+            price_plan=_short_price_plan().model_copy(update={"take_profit_2": Decimal("1.0950")}),
+        )
+
+
+def test_signal_risk_plan_rejects_invalid_values() -> None:
+    with pytest.raises(ValidationError):
+        SignalRiskPlan(risk_percent=Decimal("5.1"))
+    with pytest.raises(ValidationError):
+        SignalRiskPlan(max_loss_amount=Decimal("0"))
+    with pytest.raises(ValidationError):
+        SignalRiskPlan(position_size=Decimal("0"))
+
+
+def test_signal_contract_defaults_to_not_actionable() -> None:
+    contract = _contract()
+    risk_plan = SignalRiskPlan()
+
+    assert contract.actionability == SignalActionability.NOT_ACTIONABLE
+    assert risk_plan.actionability == SignalActionability.NOT_ACTIONABLE
+    assert contract.is_actionable is False
+
+
+def test_signal_contract_serializes_deterministically_and_round_trips() -> None:
+    contract = _contract()
+    same_contract = _contract(evidence_ids=("snapshot-a", "snapshot-b"))
+
+    assert contract.evidence_ids == ("snapshot-a", "snapshot-b")
+    assert contract.deterministic_json() == same_contract.deterministic_json()
+    assert SignalContract.model_validate_json(contract.deterministic_json()) == contract
+
+
+def test_signal_contract_fingerprint_is_deterministic() -> None:
+    contract = _contract()
+    same_contract = _contract(evidence_ids=("snapshot-b", "snapshot-a"))
+
+    assert contract.fingerprint_sha256() == same_contract.fingerprint_sha256()
+    assert len(contract.fingerprint_sha256()) == 64
+
+
+def test_signal_contract_fingerprint_changes_when_key_fields_change() -> None:
+    contract = _contract()
+    changed = _contract(direction=SignalDirection.SHORT, price_plan=_short_price_plan())
+
+    assert contract.fingerprint_sha256() != changed.fingerprint_sha256()
 ```
 
 
@@ -4054,6 +2764,5 @@ def test_register_jobs_does_not_start_scheduled_digest_delivery_loop() -> None:
 - `AGENTS.md`
 - `PLANS.md`
 - `docs/operations.md`
-- `docs/database-schema.md`
-- `docs/phase3i-verification-report.md`
+- `docs/phase4a-verification-report.md`
 - `docs/chatgpt-verification-packet.md`

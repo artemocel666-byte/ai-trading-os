@@ -65,6 +65,14 @@ from app.domain.entities.scheduled_digest import (
     ScheduledDigestDeliveryResult,
     ScheduledDigestTick,
 )
+from app.domain.entities.signal_contract import (
+    SignalActionability,
+    SignalContract,
+    SignalDirection,
+    SignalLifecycleStatus,
+    SignalPricePlan,
+    SignalRiskPlan,
+)
 
 __all__ = [
     "AnalysisInputAudit",
@@ -111,6 +119,12 @@ __all__ = [
     "ScheduledDigestDeliveryRecord",
     "ScheduledDigestDeliveryResult",
     "ScheduledDigestTick",
+    "SignalActionability",
+    "SignalContract",
+    "SignalDirection",
+    "SignalLifecycleStatus",
+    "SignalPricePlan",
+    "SignalRiskPlan",
     "SnapshotDigest",
     "SnapshotDigestIssueCount",
     "SnapshotDigestItem",

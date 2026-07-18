@@ -189,7 +189,7 @@ def test_api_health_readiness_status_and_scan_state(postgres_database_url: str) 
     assert ready.status_code == 200
     assert ready.json()["status"] == "ready"
     assert status.status_code == 200
-    assert status.json()["project_phase"] == "phase_3i_persistent_digest_audit_foundation"
+    assert status.json()["project_phase"] == constants.PROJECT_PHASE
     assert status.json()["trading_strategy_implemented"] is False
     assert status.json()["real_trading_enabled"] is False
     assert start.status_code == 200

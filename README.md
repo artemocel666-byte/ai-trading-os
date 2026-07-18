@@ -4,7 +4,7 @@ AI Trading OS is a safety-first foundation for a future modular Forex analysis a
 
 ## Current Status
 
-- Current project phase: phase_3i_persistent_digest_audit_foundation.
+- Current project phase: phase_4a_signal_contract_foundation.
 - Trading strategy: not implemented.
 - Real trading: disabled and unsupported.
 - External integrations: disabled by default.
@@ -15,6 +15,7 @@ AI Trading OS is a safety-first foundation for a future modular Forex analysis a
 - Phase 3G: manual Telegram `/digest` readiness digest command only.
 - Phase 3H: neutral scheduled digest delivery foundation only, disabled by default.
 - Phase 3I: persistent neutral digest delivery audit foundation only.
+- Phase 4A: signal contract foundation only; contracts default to `NOT_ACTIONABLE`.
 
 ## Safety Warning
 
@@ -96,7 +97,7 @@ digest is due on a tick, build the existing readiness digest payload, pass it to
 notification sender, and skip duplicate deduplication keys. Scheduled delivery is disabled by
 default and no automatic delivery loop is registered in the worker. It does not add provider calls,
 AI output, strategy decisions, setup scoring, confidence scoring, trade directions, recommendations,
-signals, broker activity, paper trading, order execution, or real trading. Phase 4 has not started.
+signals, broker activity, paper trading, order execution, or real trading.
 
 ## Phase 3I Status
 
@@ -106,7 +107,16 @@ readiness status/counts, included pair/timeframe summary, and a neutral payload 
 store secrets, Telegram tokens, or chat IDs. Scheduled delivery remains disabled by default, and this
 phase does not add provider calls, AI output, strategy decisions, setup scoring, confidence scoring,
 trade directions, recommendations, signals, broker activity, paper trading, order execution, or real
-trading. Phase 4 has not started.
+trading.
+
+## Phase 4A Status
+
+Phase 4A starts Phase 4 but is contract-only. It adds immutable signal contract models, validation
+rules, deterministic JSON serialization, and deterministic fingerprinting for future signal objects.
+Contracts default to `NOT_ACTIONABLE` and are not recommendations. Phase 4A does not generate
+signals, does not provide trading recommendations, does not calculate entries/stops/targets, does
+not calculate position size, does not call AI/OpenAI/LLM services, does not send Telegram signals,
+does not use broker APIs, does not execute orders, and does not enable paper or real trading.
 
 ## Prerequisites
 

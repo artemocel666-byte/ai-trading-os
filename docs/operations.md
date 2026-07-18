@@ -97,6 +97,11 @@ names, readiness status/counts, item summaries, and a neutral payload preview. I
 Telegram tokens, chat IDs, provider secrets, strategy decisions, trading guidance, or broker data.
 Scheduled delivery remains disabled by default.
 
+Phase 4A adds signal contract domain models only. It does not add runtime jobs, API endpoints,
+Telegram signal handlers, persistence migrations, provider calls, AI/OpenAI/LLM calls, broker
+calls, order execution, paper trading, or real trading. Contracts default to `NOT_ACTIONABLE` and
+must not be treated as trading recommendations.
+
 ## Telegram Bot Local Setup
 
 Create the bot in Telegram before enabling the `bot` service:

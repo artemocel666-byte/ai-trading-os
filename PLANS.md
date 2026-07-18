@@ -40,6 +40,9 @@
 - Phase 3I persistent digest delivery audit foundation: neutral scheduled digest delivery audit
   table, SQLAlchemy-backed deduplication store, UoW integration, and safety tests confirming no
   strategy/signals/trading activation.
+- Phase 4A signal contract foundation: immutable contract/value models, validation rules,
+  deterministic serialization, deterministic fingerprinting, and safety tests confirming no signal
+  generation or execution activation.
 
 ## Current Implementation Status
 
@@ -49,10 +52,12 @@ indicator/context foundation, Phase 3D deterministic analysis snapshot/readiness
 Phase 3E local Telegram readiness-report foundation, Phase 3F deterministic readiness scheduler and
 snapshot digest foundation, Phase 3G manual Telegram digest command foundation, Phase 3H neutral
 scheduled digest delivery foundation, and Phase 3I persistent neutral digest delivery audit
-foundation. Production Twelve Data and FMP adapters exist, but live integrations remain disabled by
-default. Scanning state can be enabled or disabled, Telegram can request readiness reports and
-readiness digests, and scheduled digest orchestration remains disabled by default. No strategy,
-signal generation, AI agent, paper-trading, or execution flow is connected.
+foundation. Phase 4A signal contract foundation is contract-only and defines future signal contract
+shapes without generating signals or trading recommendations. Production Twelve Data and FMP
+adapters exist, but live integrations remain disabled by default. Scanning state can be enabled or
+disabled, Telegram can request readiness reports and readiness digests, and scheduled digest
+orchestration remains disabled by default. No strategy, signal generation, AI agent, paper-trading,
+or execution flow is connected.
 
 ## Future Phases
 
@@ -67,7 +72,8 @@ signal generation, AI agent, paper-trading, or execution flow is connected.
 - Phase 3G: manual Telegram digest command foundation — completed without trading decisions
 - Phase 3H: neutral scheduled digest delivery foundation — completed without trading decisions
 - Phase 3I: persistent digest delivery audit foundation — completed without trading decisions
-- Phase 4: analytical agents and Decision Engine
+- Phase 4A: signal contract foundation — contract-only, no signal generation or trading decisions
+- Phase 4B+: future analytical agents and Decision Engine work remains not started
 - Phase 5: Russian Chief AI explanations
 - Phase 6: Telegram signal delivery
 - Phase 7: backtesting and paper trading
@@ -89,4 +95,6 @@ signal generation, AI agent, paper-trading, or execution flow is connected.
 
 ## Next Planned Task
 
-Phase 4 is the next phase if applicable. It has not started, and no Phase 4 behavior is active.
+Phase 4A contract foundation is the current task. Later Phase 4 behavior, including analytical
+agents, strategy rules, signal generation, and decision-engine work, has not started and is not
+active.

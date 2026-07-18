@@ -11,7 +11,7 @@ from app.adapters.disabled import (
 )
 from app.core.enums import Decision
 from app.core.exceptions import IntegrationDisabledError
-from app.domain.entities import Timeframe
+from app.domain.entities import Timeframe, signal_contract
 from app.domain.value_objects import CurrencyPair
 from app.persistence.models import ScheduledDigestDeliveryModel
 from app.persistence.repositories.foundation import SqlAlchemyScheduledDigestDeliveryStore
@@ -219,6 +219,38 @@ PHASE_3I_FORBIDDEN_TERMS = (
     "paper_trading",
     "order_execution",
 )
+PHASE_4A_CONTRACT_OBJECTS = (
+    signal_contract.SignalActionability,
+    signal_contract.SignalContract,
+    signal_contract.SignalDirection,
+    signal_contract.SignalLifecycleStatus,
+    signal_contract.SignalPricePlan,
+    signal_contract.SignalRiskPlan,
+)
+PHASE_4A_FORBIDDEN_BEHAVIOR_TERMS = (
+    "generate_signal",
+    "signal_generator",
+    "signal_engine",
+    "decision_engine",
+    "setup_scoring",
+    "confidence_scoring",
+    "calculate_entry",
+    "calculate_stop",
+    "calculate_target",
+    "calculate_position_size",
+    "send_signal",
+    "telegram_signal",
+    "broker",
+    "place_order",
+    "submit_order",
+    "execute_order",
+    "paper_trading",
+    "real_trading",
+    "backtesting",
+    "trading_simulator",
+    "OpenAI",
+    "LLM",
+)
 
 
 def test_no_real_order_execution_code_exists() -> None:
@@ -304,6 +336,48 @@ def test_phase3i_digest_audit_files_do_not_add_decision_or_execution_terms() -> 
                 offenders.append(f"phase3i-source-{index}: {term}")
 
     assert offenders == []
+
+
+def test_phase4a_signal_contract_objects_do_not_add_generation_or_execution_terms() -> None:
+    offenders: list[str] = []
+    texts = [inspect.getsource(source_object) for source_object in PHASE_4A_CONTRACT_OBJECTS]
+    for index, text in enumerate(texts):
+        lowered = text.lower()
+        for term in PHASE_4A_FORBIDDEN_BEHAVIOR_TERMS:
+            if term.lower() in lowered:
+                offenders.append(f"phase4a-contract-{index}: {term}")
+
+    assert offenders == []
+
+
+def test_phase4a_does_not_add_signal_api_routes() -> None:
+    route_files = tuple(Path("app/api/routes").glob("*.py"))
+    offenders = [
+        str(file_path)
+        for file_path in route_files
+        if "signal" in file_path.name.lower()
+        or "SignalContract" in file_path.read_text(encoding="utf-8")
+    ]
+
+    assert offenders == []
+
+
+def test_phase4a_does_not_add_telegram_signal_handlers() -> None:
+    source = Path("app/telegram/commands.py").read_text(encoding="utf-8")
+
+    assert "signal_command" not in source
+    assert 'CommandHandler("signal"' not in source
+    assert "SignalContract" not in source
+
+
+def test_phase4a_does_not_add_scheduler_signal_jobs() -> None:
+    scheduler_text = "\n".join(
+        file_path.read_text(encoding="utf-8") for file_path in Path("app/scheduler").glob("*.py")
+    )
+
+    assert "SignalContract" not in scheduler_text
+    assert "signal_job" not in scheduler_text
+    assert "generate_signal" not in scheduler_text
 
 
 @pytest.mark.asyncio
