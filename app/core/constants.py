@@ -1,4 +1,4 @@
-PROJECT_PHASE = "phase_4b_strategy_rule_specification_foundation"
+PROJECT_PHASE = "phase_4c_strategy_ruleset_validation_foundation"
 STRATEGY_IMPLEMENTED = False
 REAL_TRADING_ENABLED = False
 

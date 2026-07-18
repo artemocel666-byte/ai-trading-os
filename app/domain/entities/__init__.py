@@ -82,6 +82,12 @@ from app.domain.entities.strategy_rules import (
     StrategyRuleSpec,
     StrategyRuleValue,
 )
+from app.domain.entities.strategy_validation import (
+    StrategyRuleSetValidationIssue,
+    StrategyRuleSetValidationIssueCode,
+    StrategyRuleSetValidationReport,
+    StrategyRuleSetValidationStatus,
+)
 
 __all__ = [
     "AnalysisInputAudit",
@@ -147,6 +153,10 @@ __all__ = [
     "StrategyRuleCondition",
     "StrategyRuleOperator",
     "StrategyRuleSet",
+    "StrategyRuleSetValidationIssue",
+    "StrategyRuleSetValidationIssueCode",
+    "StrategyRuleSetValidationReport",
+    "StrategyRuleSetValidationStatus",
     "StrategyRuleSeverity",
     "StrategyRuleSpec",
     "StrategyRuleValue",

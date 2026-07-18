@@ -57,8 +57,8 @@ def _ruleset(**overrides: object) -> StrategyRuleSet:
     return StrategyRuleSet(**values)
 
 
-def test_project_phase_is_phase4b_strategy_rule_specification_foundation() -> None:
-    assert constants.PROJECT_PHASE == "phase_4b_strategy_rule_specification_foundation"
+def test_project_phase_has_advanced_to_phase4c_strategy_ruleset_validation_foundation() -> None:
+    assert constants.PROJECT_PHASE == "phase_4c_strategy_ruleset_validation_foundation"
 
 
 def test_strategy_rule_models_are_immutable() -> None:

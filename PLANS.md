@@ -46,6 +46,9 @@
 - Phase 4B strategy rule specification foundation: immutable rule specification models, operator
   validation, deterministic serialization, deterministic fingerprinting, and safety tests confirming
   no rule evaluation, signal generation, scoring, or execution activation.
+- Phase 4C strategy ruleset validation foundation: immutable validation issue/report models,
+  static structural checks for `StrategyRuleSet`, deterministic validation reports, and safety tests
+  confirming no market-data rule evaluation, signal generation, scoring, or execution activation.
 
 ## Current Implementation Status
 
@@ -58,11 +61,12 @@ scheduled digest delivery foundation, and Phase 3I persistent neutral digest del
 foundation. Phase 4A signal contract foundation is contract-only and defines future signal contract
 shapes without generating signals or trading recommendations. Phase 4B strategy rule specification
 foundation is specification-only and defines future rule set shapes without evaluating rules or
-activating strategy logic. Production Twelve Data and FMP adapters exist, but live integrations
-remain disabled by default. Scanning state can be enabled or disabled, Telegram can request
-readiness reports and readiness digests, and scheduled digest orchestration remains disabled by
-default. No strategy engine, rule evaluation, signal generation, AI agent, paper-trading, or
-execution flow is connected.
+activating strategy logic. Phase 4C strategy ruleset validation foundation validates the structure of
+Phase 4B rule sets without evaluating market data or producing decisions. Production Twelve Data and
+FMP adapters exist, but live integrations remain disabled by default. Scanning state can be enabled
+or disabled, Telegram can request readiness reports and readiness digests, and scheduled digest
+orchestration remains disabled by default. No strategy engine, rule evaluation against market data,
+signal generation, AI agent, paper-trading, or execution flow is connected.
 
 ## Future Phases
 
@@ -79,7 +83,8 @@ execution flow is connected.
 - Phase 3I: persistent digest delivery audit foundation — completed without trading decisions
 - Phase 4A: signal contract foundation — contract-only, no signal generation or trading decisions
 - Phase 4B: strategy rule specification foundation — specification-only, no rule evaluation or trading decisions
-- Phase 4C+: future analytical agents and Decision Engine work remains not started
+- Phase 4C: strategy ruleset validation foundation — validation-only, no market-data rule evaluation
+- Phase 4D+: future analytical agents and Decision Engine work remains not started
 - Phase 5: Russian Chief AI explanations
 - Phase 6: Telegram signal delivery
 - Phase 7: backtesting and paper trading
@@ -101,6 +106,6 @@ execution flow is connected.
 
 ## Next Planned Task
 
-Phase 4B strategy rule specification foundation is the current task. Later Phase 4 behavior,
-including rule evaluation, analytical agents, signal generation, and decision-engine work, has not
-started and is not active.
+Phase 4C strategy ruleset validation foundation is the current task. Later Phase 4 behavior,
+including rule evaluation against market data, analytical agents, signal generation, and
+decision-engine work, has not started and is not active.

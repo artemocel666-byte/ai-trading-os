@@ -1,14 +1,14 @@
-# ChatGPT Verification Packet: Phase 4B Strategy Rule Specification Foundation
+# ChatGPT Verification Packet: Phase 4C Strategy Ruleset Validation Foundation
 
-Generated: 2026-07-18T12:46:45Z
+Generated: 2026-07-18T13:17:54Z
 
 ## Repository Metadata
 
 - Repository path: `/Users/artem.otsel/Documents/ai-trading-os`
 - Git branch: `main`
-- Current commit hash: `a4c8f273f407a14765c401fe7dfe4162947770ea`
-- Latest commit at start of Phase 4B work: `a4c8f27  Phase 4A`
-- Commit status: Phase 4B remains uncommitted at packet generation time.
+- Current commit hash: `437e1113a0ed63cff98d9276727f0d0b4d692e0a`
+- Latest commit at start of Phase 4C work: `437e111  Phase 4B`
+- Commit status: Phase 4C remains uncommitted at packet generation time.
 
 ## Preflight
 
@@ -19,14 +19,17 @@ git status --short
 <clean>
 
 git log --oneline -5
+437e111  Phase 4B
 a4c8f27  Phase 4A
 bad58a4 Add Phase 3I persistent digest audit foundation
 901d864 Phase 3H Done
 ab4aafb phase 3G done
-40473bd Add Phase 3F readiness scheduler foundation
 
 grep -n "PROJECT_PHASE" app/core/constants.py
-1:PROJECT_PHASE = "phase_4a_signal_contract_foundation"
+1:PROJECT_PHASE = "phase_4b_strategy_rule_specification_foundation"
+
+test -f app/domain/entities/strategy_rules.py && echo "Phase 4B strategy_rules exists"
+Phase 4B strategy_rules exists
 
 test -f app/domain/entities/signal_contract.py && echo "Phase 4A signal_contract exists"
 Phase 4A signal_contract exists
@@ -47,29 +50,33 @@ Phase 3J API route absent
  M docs/operations.md
  M tests/contract/test_safety_boundaries.py
  M tests/unit/test_signal_contract_foundation.py
-?? app/domain/entities/strategy_rules.py
-?? docs/phase4b-verification-report.md
-?? tests/unit/test_strategy_rule_specification_foundation.py
+ M tests/unit/test_strategy_rule_specification_foundation.py
+?? app/domain/entities/strategy_validation.py
+?? app/domain/strategy_ruleset_validator.py
+?? docs/phase4c-verification-report.md
+?? tests/unit/test_strategy_ruleset_validation_foundation.py
 ```
 
 ## Git Diff Stat
 
 ```text
- AGENTS.md                                     |   26 +-
- PLANS.md                                      |   24 +-
- README.md                                     |   15 +-
- app/core/constants.py                         |    2 +-
- app/domain/entities/__init__.py               |   16 +
- docs/chatgpt-verification-packet.md           | 2384 +++++++++++--------------
- docs/operations.md                            |    5 +
- tests/contract/test_safety_boundaries.py      |  107 +-
- tests/unit/test_signal_contract_foundation.py |    4 +-
- 9 files changed, 1253 insertions(+), 1330 deletions(-)
+ AGENTS.md                                          |   22 +-
+ PLANS.md                                           |   23 +-
+ README.md                                          |   17 +-
+ app/core/constants.py                              |    2 +-
+ app/domain/entities/__init__.py                    |   10 +
+ docs/chatgpt-verification-packet.md                | 1880 +++++++++++++-------
+ docs/operations.md                                 |    7 +
+ tests/contract/test_safety_boundaries.py           |  109 +-
+ tests/unit/test_signal_contract_foundation.py      |    4 +-
+ .../test_strategy_rule_specification_foundation.py |    4 +-
+ 10 files changed, 1366 insertions(+), 712 deletions(-)
 ```
 
 ## Git Log
 
 ```text
+437e111  Phase 4B
 a4c8f27  Phase 4A
 bad58a4 Add Phase 3I persistent digest audit foundation
 901d864 Phase 3H Done
@@ -79,14 +86,14 @@ ab4aafb phase 3G done
 8166820 phase 3C DONE
 60e6e53 Add Phase 3C indicator context foundation
 a6f44f0 Add Phase 3B feature engine foundation
-03c3acd Add Phase 3A data quality foundation
 ```
 
 ## Created Files
 
-- `app/domain/entities/strategy_rules.py`
-- `docs/phase4b-verification-report.md`
-- `tests/unit/test_strategy_rule_specification_foundation.py`
+- `app/domain/entities/strategy_validation.py`
+- `app/domain/strategy_ruleset_validator.py`
+- `docs/phase4c-verification-report.md`
+- `tests/unit/test_strategy_ruleset_validation_foundation.py`
 
 ## Modified Files
 
@@ -99,34 +106,36 @@ a6f44f0 Add Phase 3B feature engine foundation
 - `docs/operations.md`
 - `tests/contract/test_safety_boundaries.py`
 - `tests/unit/test_signal_contract_foundation.py`
+- `tests/unit/test_strategy_rule_specification_foundation.py`
 
 ## Migration Files Created Or Modified
 
 - None
 
-Phase 4B did not require a migration. Alembic head remains `0003_phase3i_digest_audit (head)`.
+Phase 4C did not require a migration. Alembic head remains `0003_phase3i_digest_audit (head)`.
 
 ## Phase Scope Confirmation
 
-Phase 4B is strategy rule specification foundation only. It defines typed contracts, enums, value objects, validation rules, deterministic serialization, deterministic fingerprinting, tests, and documentation for future strategy rule specifications.
+Phase 4C is validation-only. It validates only the structure and safety of `StrategyRuleSet` objects introduced in Phase 4B.
 
-Phase 4B does not implement rule evaluation, strategy execution logic, market-data rule evaluation, signal generation, setup scoring, confidence scoring, automated LONG/SHORT decisions, buy/sell recommendations, entry calculation logic, stop loss calculation logic, take profit calculation logic, position sizing logic, portfolio/risk decisions, AI agents, OpenAI calls, LLM usage, Telegram signal sending, API signal routes, scheduler signal jobs, broker APIs, order execution, paper trading, real trading, backtesting, or a trading simulator.
+Phase 4C does not evaluate rules against market data, candles, indicators, economic events, context snapshots, analysis snapshots, or signal contracts. It does not implement a strategy engine, rule evaluation against market data, signal generation, setup scoring, confidence scoring, automated LONG/SHORT decisions, buy/sell recommendations, entry calculation logic, stop loss calculation logic, take profit calculation logic, position sizing logic, portfolio/risk decisions, AI agents, OpenAI calls, LLM usage, Telegram signal sending, API signal routes, scheduler signal jobs, broker APIs, order execution, paper trading, real trading, backtesting, or a trading simulator.
 
-Rule specs and rule sets default to disabled and non-actionable.
+Rule specs and rule sets remain disabled and non-actionable.
 
 Phase 3J digest audit API route is absent: `True`.
 
 ## Implementation Summary
 
-- Updated `PROJECT_PHASE` to `phase_4b_strategy_rule_specification_foundation`.
-- Added immutable `StrategyRuleValue`, `StrategyRuleCondition`, `StrategyRuleSpec`, and `StrategyRuleSet` domain models.
-- Added `StrategyRuleOperator`, `StrategyRuleCategory`, and `StrategyRuleSeverity` enums.
-- Added validation for UTC timestamps, deterministic identifiers, duplicate `rule_id` values, disabled defaults, `BETWEEN`, `IN`, `EXISTS`/`NOT_EXISTS`, comparison operators, Decimal-compatible values, and finite Decimal values.
-- Added typed JSON serialization for rule values so Decimal values round-trip without binary floating point or string ambiguity.
-- Added deterministic JSON serialization and SHA-256 fingerprinting for rule specs and rule sets.
-- Normalized warnings into sorted unique tuples and normalized rule ordering by `rule_id`.
-- Added safety tests proving no API routes, Telegram handlers, scheduler jobs, strategy evaluation service, rule evaluation behavior, signal generation, scoring, or execution behavior was added.
-- Updated README, AGENTS, PLANS, operations docs, Phase 4B report, and this packet.
+- Updated `PROJECT_PHASE` to `phase_4c_strategy_ruleset_validation_foundation`.
+- Added immutable validation report models in `app/domain/entities/strategy_validation.py`.
+- Added `StrategyRuleSetValidator` in `app/domain/strategy_ruleset_validator.py`.
+- Added a deterministic static allowed field registry and category-to-prefix compatibility map.
+- Added forbidden action/scoring/confidence language checks for rule field refs, descriptions, and warnings.
+- Added validation outcomes for enabled rule sets, enabled rules, unknown field refs, category mismatches, forbidden language, and invalid operands from unsafely constructed rule specs.
+- Added deterministic issue ordering by code, rule ID, field ref, and message.
+- Added deterministic validation report JSON serialization and SHA-256 fingerprinting excluding optional stored fingerprint.
+- Added tests proving validator does not mutate input and accepts only `StrategyRuleSet` plus `checked_at`.
+- Updated README, AGENTS, PLANS, operations docs, Phase 4C report, and this packet.
 
 ## Verification Summary
 
@@ -137,7 +146,7 @@ Phase 3J digest audit API route is absent: `True`.
 | Ruff format | Passed |
 | Ruff check | Passed |
 | Mypy | Passed |
-| Host pytest | Passed, 259 passed, 7 skipped, 1 warning |
+| Host pytest | Passed, 287 passed, 7 skipped, 1 warning |
 | Security check | Passed |
 | Docker build | Passed |
 | PostgreSQL container | Passed |
@@ -158,7 +167,7 @@ Exit code: `0`
 
 ```text
 STDERR:
-Resolved 46 packages in 18ms
+Resolved 46 packages in 27ms
 ```
 
 ### `uv sync`
@@ -169,8 +178,8 @@ Exit code: `0`
 
 ```text
 STDERR:
-Resolved 46 packages in 2ms
-Checked 43 packages in 9ms
+Resolved 46 packages in 3ms
+Checked 43 packages in 8ms
 ```
 
 ### `uv run ruff format --check .`
@@ -181,7 +190,7 @@ Exit code: `0`
 
 ```text
 STDOUT:
-113 files already formatted
+116 files already formatted
 ```
 
 ### `uv run ruff check .`
@@ -203,7 +212,7 @@ Exit code: `0`
 
 ```text
 STDOUT:
-Success: no issues found in 79 source files
+Success: no issues found in 81 source files
 ```
 
 ### `uv run pytest`
@@ -221,29 +230,32 @@ configfile: pyproject.toml
 testpaths: tests
 plugins: anyio-4.14.1, asyncio-0.26.0
 asyncio: mode=Mode.AUTO, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
-collected 266 items
+collected 294 items
 
 tests/contract/test_agent_contracts.py ......                            [  2%]
 tests/contract/test_api_error_schema.py .                                [  2%]
 tests/contract/test_architecture_boundaries.py ..                        [  3%]
-tests/contract/test_provider_contracts.py .............................. [ 14%]
-...............................                                          [ 26%]
-tests/contract/test_safety_boundaries.py ..........................      [ 36%]
-tests/integration/test_database_and_api.py sssssss                       [ 38%]
-tests/unit/test_analysis_snapshot_foundation.py ..........               [ 42%]
-tests/unit/test_context_engine_foundation.py .............               [ 47%]
-tests/unit/test_data_quality_foundation.py ...                           [ 48%]
-tests/unit/test_domain_market_models.py ..................               [ 55%]
-tests/unit/test_errors_and_redaction.py .......                          [ 57%]
-tests/unit/test_feature_engine_foundation.py ...........                 [ 62%]
-tests/unit/test_internal_api_key.py ....                                 [ 63%]
-tests/unit/test_readiness_scheduler_foundation.py .........              [ 66%]
-tests/unit/test_scheduled_digest_delivery_foundation.py ...........      [ 71%]
-tests/unit/test_settings.py .........                                    [ 74%]
-tests/unit/test_signal_contract_foundation.py ............               [ 78%]
-tests/unit/test_strategy_rule_specification_foundation.py .............. [ 84%]
-...........                                                              [ 88%]
-tests/unit/test_system_state_service.py .....                            [ 90%]
+tests/contract/test_provider_contracts.py .............................. [ 13%]
+...............................                                          [ 23%]
+tests/contract/test_safety_boundaries.py ............................... [ 34%]
+..                                                                       [ 35%]
+tests/integration/test_database_and_api.py sssssss                       [ 37%]
+tests/unit/test_analysis_snapshot_foundation.py ..........               [ 40%]
+tests/unit/test_context_engine_foundation.py .............               [ 45%]
+tests/unit/test_data_quality_foundation.py ...                           [ 46%]
+tests/unit/test_domain_market_models.py ..................               [ 52%]
+tests/unit/test_errors_and_redaction.py .......                          [ 54%]
+tests/unit/test_feature_engine_foundation.py ...........                 [ 58%]
+tests/unit/test_internal_api_key.py ....                                 [ 59%]
+tests/unit/test_readiness_scheduler_foundation.py .........              [ 62%]
+tests/unit/test_scheduled_digest_delivery_foundation.py ...........      [ 66%]
+tests/unit/test_settings.py .........                                    [ 69%]
+tests/unit/test_signal_contract_foundation.py ............               [ 73%]
+tests/unit/test_strategy_rule_specification_foundation.py .............. [ 78%]
+...........                                                              [ 82%]
+tests/unit/test_strategy_ruleset_validation_foundation.py .............. [ 87%]
+.......                                                                  [ 89%]
+tests/unit/test_system_state_service.py .....                            [ 91%]
 tests/unit/test_telegram_commands.py ........                            [ 93%]
 tests/unit/test_telegram_policy.py .....                                 [ 95%]
 tests/unit/test_time.py ...                                              [ 96%]
@@ -256,7 +268,7 @@ tests/unit/test_value_objects_and_enums.py ....                          [100%]
     from starlette.testclient import TestClient as TestClient  # noqa
 
 -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
-================== 259 passed, 7 skipped, 1 warning in 0.85s ===================
+================== 287 passed, 7 skipped, 1 warning in 0.99s ===================
 ```
 
 ### `uv run python scripts/security_check.py`
@@ -281,99 +293,101 @@ STDOUT:
 #1 reading from stdin 1.91kB done
 #1 DONE 0.0s
 
-#2 [worker internal] load build definition from Dockerfile
+#2 [bot internal] load build definition from Dockerfile
 #2 transferring dockerfile: 411B done
 #2 DONE 0.0s
 
-#3 [worker internal] load metadata for ghcr.io/astral-sh/uv:python3.12-bookworm-slim
+#3 [migrate internal] load metadata for ghcr.io/astral-sh/uv:python3.12-bookworm-slim
 #3 DONE 0.9s
 
-#4 [api internal] load .dockerignore
+#4 [worker internal] load .dockerignore
 #4 transferring context: 143B done
 #4 DONE 0.0s
 
 #5 [api 1/5] FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim@sha256:e5b65587bce7de595f299855d7385fe7fca39b8a74baa261ba1b7147afa78e58
-#5 resolve ghcr.io/astral-sh/uv:python3.12-bookworm-slim@sha256:e5b65587bce7de595f299855d7385fe7fca39b8a74baa261ba1b7147afa78e58 0.0s done
+#5 resolve ghcr.io/astral-sh/uv:python3.12-bookworm-slim@sha256:e5b65587bce7de595f299855d7385fe7fca39b8a74baa261ba1b7147afa78e58 done
 #5 DONE 0.0s
 
-#6 [worker internal] load build context
-#6 transferring context: 346.40kB 0.0s done
+#6 [bot internal] load build context
+#6 transferring context: 412.65kB 0.0s done
 #6 DONE 0.0s
 
-#7 [worker 3/5] COPY pyproject.toml uv.lock* ./
+#7 [migrate 2/5] WORKDIR /app
 #7 CACHED
 
-#8 [worker 2/5] WORKDIR /app
+#8 [migrate 3/5] COPY pyproject.toml uv.lock* ./
 #8 CACHED
 
-#9 [worker 4/5] RUN uv sync --frozen --no-dev
+#9 [migrate 4/5] RUN uv sync --frozen --no-dev
 #9 CACHED
 
 #10 [api 5/5] COPY . .
 #10 DONE 0.1s
 
-#11 [migrate] exporting to image
+#11 [bot] exporting to image
 #11 exporting layers 0.1s done
-#11 exporting manifest sha256:31bed7c8311e792c61623d204acf65ea1d9907a84f2968cc70e2de3abcd872ea done
-#11 exporting config sha256:70bf5f89256b4fd8326570672a05d0d33a8500cecd592c8048b6bb63ab68cfc1 done
-#11 exporting attestation manifest sha256:46d5cc1e6baf964f7c8599b5106ab0ab9b721f32a1b1d0df999fdbe490fc8f90 0.0s done
-#11 exporting manifest list sha256:9c65b69ad1d66d1bca7b87a09140efde3c7d506888d6e5002e5a0af3d86987b7 done
-#11 naming to docker.io/library/ai-trading-os-migrate:latest done
-#11 unpacking to docker.io/library/ai-trading-os-migrate:latest
-#11 unpacking to docker.io/library/ai-trading-os-migrate:latest 0.0s done
-#11 DONE 0.2s
+#11 ...
 
-#12 [bot] exporting to image
+#12 [worker] exporting to image
 #12 exporting layers 0.1s done
-#12 exporting manifest sha256:81cb2951ae358ddce2fc0fdae7ffc4a74cf6e006378676fd50a7ee201a2812be done
-#12 exporting config sha256:c09372ee86e6ee79ae18cbac00eb4d2f65ca27540177c394b529f82601782610 done
-#12 exporting attestation manifest sha256:4325ec69affd4a7096bdd5ef9757b118f1f0c9d9ac3307742292fa871e444a53 0.0s done
-#12 exporting manifest list sha256:7979d6153317a79e875a04bcf3a3dcace5da1897487091218d179b6555b7f8ca done
-#12 naming to docker.io/library/ai-trading-os-bot:latest done
-#12 unpacking to docker.io/library/ai-trading-os-bot:latest 0.0s done
+#12 exporting manifest sha256:300306424f4e396052573da7af4ac79ed1be00816c3614f4a51df8bd61b87f09 done
+#12 exporting config sha256:9ee5dbe7f172ba6a8b990f974de51651580a6316acb7aeeef3c81925e1f216cd done
+#12 exporting attestation manifest sha256:fefe4828728bcd9cfac1f648cd5a34215f7d13bcf9559991b8f98f443c28841b 0.0s done
+#12 exporting manifest list sha256:a23cc0b6ddd535a2b5a768b9b840a87da5540792c22cdf659bb1384cc90c07a1 done
+#12 naming to docker.io/library/ai-trading-os-worker:latest done
+#12 unpacking to docker.io/library/ai-trading-os-worker:latest 0.0s done
 #12 DONE 0.2s
 
-#13 [api] exporting to image
+#11 [bot] exporting to image
+#11 exporting manifest sha256:3f6a258403526f2caff6d156c71a05e624d246af28ed5b979e925459c2c5de69 done
+#11 exporting config sha256:691882a39c0c8570b44acf2636be3b061fb90b604c07d97c41548eba69c51989 done
+#11 exporting attestation manifest sha256:f906bbadcbd24f55d2ee6138a74c0157de83ae3d9128c43a26b2ce224c091a60 0.0s done
+#11 exporting manifest list sha256:426ae7a10ef2151374279cf2ce497043509fdee324655ee17c9909b676d0cb0f done
+#11 naming to docker.io/library/ai-trading-os-bot:latest done
+#11 unpacking to docker.io/library/ai-trading-os-bot:latest 0.0s done
+#11 DONE 0.2s
+
+#13 [migrate] exporting to image
 #13 exporting layers 0.1s done
-#13 exporting manifest sha256:c8c82cb87adbc66240d54512f6d124e672cd2930b0b6bb70ec997e40aac02a04 done
-#13 exporting config sha256:0cfaba8e181163a485edb9372dcc5435a2b0a9101410fa0cdbd010a2c67dc904 done
-#13 exporting attestation manifest sha256:f3532a32c3a54deffcbb3a792cbd43ee2d79e525b217e0e37e2822138a11c802 0.0s done
-#13 exporting manifest list sha256:0e7b629409d5a4a62476c39dfac04be75d29940d5bf25ac7f6fbc20162598fe0 done
-#13 naming to docker.io/library/ai-trading-os-api:latest done
-#13 unpacking to docker.io/library/ai-trading-os-api:latest 0.0s done
+#13 exporting manifest sha256:1902a6a0120f067c137d559decc2bd29b318e85763cff3721ad3045e82e9e1f6 done
+#13 exporting config sha256:b6957c7a9fe9e3c3ede44c1ac79abbdb8b046ff22547b01da1947186c82987d1 done
+#13 exporting attestation manifest sha256:1b9d5ebaecfd1519c5156feb86e99bee680979c9a84998499a9b8bb869c38fff 0.0s done
+#13 exporting manifest list sha256:f6aa30c215672ef7be94e0a6b1c724af85ba5166e4374beac70408fae76406aa done
+#13 naming to docker.io/library/ai-trading-os-migrate:latest done
+#13 unpacking to docker.io/library/ai-trading-os-migrate:latest 0.0s done
 #13 DONE 0.2s
 
-#14 [worker] exporting to image
+#14 [api] exporting to image
 #14 exporting layers 0.1s done
-#14 exporting manifest sha256:eadd4596f1ab17020b7c1f637671811c21fc95c6ff64bb256f1ec9116d8df37b done
-#14 exporting config sha256:1ed9d6daca56021a6e30a67ca924d41b85080f6d0779c6891fb6556a7cf3b2cd done
-#14 exporting attestation manifest sha256:fb01c7157362e3d708735e9d57b3f35c5cddafa63510daa53fb97af39daf7610 0.0s done
-#14 exporting manifest list sha256:f5a3b5b2ef19015c2a367b9dce595552bdda79086ca200d518c2545179f5f1f6 done
-#14 naming to docker.io/library/ai-trading-os-worker:latest done
-#14 unpacking to docker.io/library/ai-trading-os-worker:latest 0.0s done
+#14 exporting manifest sha256:3f696663e70198dd242fe143c7c61fa4aeb7ba84dc5e483a389bd81b2a6628d1 done
+#14 exporting config sha256:b327a86e2e647c9cd3c1cde89e3b5cf74541ea547ad31c1ba8fd6584cfe4fb2e done
+#14 exporting attestation manifest sha256:527fdadb512cd34aaf67324bdd6cf17bcb667a751dbe1588310d26d995e03c20 0.0s done
+#14 exporting manifest list sha256:c7130da79d67362f3eab8d9da8cbca3fab391bff5a2aa0fa58cdb40d751432e6 done
+#14 naming to docker.io/library/ai-trading-os-api:latest done
+#14 unpacking to docker.io/library/ai-trading-os-api:latest 0.0s done
 #14 DONE 0.2s
 
-#15 [migrate] resolving provenance for metadata file
+#15 [bot] resolving provenance for metadata file
 #15 DONE 0.0s
 
 #16 [api] resolving provenance for metadata file
-#16 DONE 0.0s
+#16 DONE 0.1s
 
-#17 [bot] resolving provenance for metadata file
-#17 DONE 0.0s
+#17 [worker] resolving provenance for metadata file
+#17 DONE 0.1s
 
-#18 [worker] resolving provenance for metadata file
+#18 [migrate] resolving provenance for metadata file
 #18 DONE 0.0s
 
 STDERR:
- Image ai-trading-os-bot Building
- Image ai-trading-os-migrate Building
  Image ai-trading-os-api Building
  Image ai-trading-os-worker Building
- Image ai-trading-os-migrate Built
- Image ai-trading-os-worker Built
+ Image ai-trading-os-bot Building
+ Image ai-trading-os-migrate Building
  Image ai-trading-os-api Built
  Image ai-trading-os-bot Built
+ Image ai-trading-os-migrate Built
+ Image ai-trading-os-worker Built
 ```
 
 ### `docker compose up -d postgres`
@@ -406,8 +420,8 @@ STDERR:
  Container ai-trading-os-postgres-1 Running
  Container ai-trading-os-postgres-1 Waiting
  Container ai-trading-os-postgres-1 Healthy
- Container ai-trading-os-migrate-run-18119c95bfa4 Creating
- Container ai-trading-os-migrate-run-18119c95bfa4 Created
+ Container ai-trading-os-migrate-run-2ed043f4f30a Creating
+ Container ai-trading-os-migrate-run-2ed043f4f30a Created
 INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
 INFO  [alembic.runtime.migration] Will assume transactional DDL.
 ```
@@ -426,8 +440,8 @@ STDERR:
  Container ai-trading-os-postgres-1 Running
  Container ai-trading-os-postgres-1 Waiting
  Container ai-trading-os-postgres-1 Healthy
- Container ai-trading-os-migrate-run-926e69c169f9 Creating
- Container ai-trading-os-migrate-run-926e69c169f9 Created
+ Container ai-trading-os-migrate-run-21c61f2699d0 Creating
+ Container ai-trading-os-migrate-run-21c61f2699d0 Created
 INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
 INFO  [alembic.runtime.migration] Will assume transactional DDL.
 INFO  [alembic.runtime.plugins] setting up autogenerate plugin alembic.autogenerate.schemas
@@ -449,8 +463,8 @@ STDERR:
  Container ai-trading-os-postgres-1 Running
  Container ai-trading-os-postgres-1 Waiting
  Container ai-trading-os-postgres-1 Healthy
- Container ai-trading-os-migrate-run-2f5e17cbca14 Creating
- Container ai-trading-os-migrate-run-2f5e17cbca14 Created
+ Container ai-trading-os-migrate-run-e220538d96fb Creating
+ Container ai-trading-os-migrate-run-e220538d96fb Created
 INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
 INFO  [alembic.runtime.migration] Will assume transactional DDL.
 ```
@@ -479,22 +493,22 @@ tests/integration/test_database_and_api.py .......                       [100%]
     from starlette.testclient import TestClient as TestClient  # noqa
 
 -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
-========================= 7 passed, 1 warning in 0.38s =========================
+========================= 7 passed, 1 warning in 0.41s =========================
 
 STDERR:
  Container ai-trading-os-postgres-1 Running
  Container ai-trading-os-postgres-1 Waiting
  Container ai-trading-os-postgres-1 Healthy
- Container ai-trading-os-migrate-run-842522efe688 Creating
- Container ai-trading-os-migrate-run-842522efe688 Created
+ Container ai-trading-os-migrate-run-37d9a17b7ab0 Creating
+ Container ai-trading-os-migrate-run-37d9a17b7ab0 Created
 Downloading pygments (1.2MiB)
-Downloading mypy (13.1MiB)
 Downloading ruff (10.5MiB)
+Downloading mypy (13.1MiB)
  Downloaded pygments
  Downloaded ruff
  Downloaded mypy
-Installed 11 packages in 80ms
-Bytecode compiled 1963 files in 476ms
+Installed 11 packages in 93ms
+Bytecode compiled 1963 files in 506ms
 ```
 
 ### `Docker integration run 2: docker compose run --rm -e REQUIRE_INTEGRATION_TESTS=true -e TEST_DATABASE_URL=postgresql+asyncpg://ai_trading_os:ai_trading_os@postgres:5432/ai_trading_os_test migrate uv run pytest tests/integration/test_database_and_api.py`
@@ -521,22 +535,22 @@ tests/integration/test_database_and_api.py .......                       [100%]
     from starlette.testclient import TestClient as TestClient  # noqa
 
 -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
-========================= 7 passed, 1 warning in 0.35s =========================
+========================= 7 passed, 1 warning in 0.43s =========================
 
 STDERR:
  Container ai-trading-os-postgres-1 Running
  Container ai-trading-os-postgres-1 Waiting
  Container ai-trading-os-postgres-1 Healthy
- Container ai-trading-os-migrate-run-21885c81cf39 Creating
- Container ai-trading-os-migrate-run-21885c81cf39 Created
+ Container ai-trading-os-migrate-run-4f1a70f2292c Creating
+ Container ai-trading-os-migrate-run-4f1a70f2292c Created
 Downloading pygments (1.2MiB)
 Downloading ruff (10.5MiB)
 Downloading mypy (13.1MiB)
  Downloaded pygments
  Downloaded ruff
  Downloaded mypy
-Installed 11 packages in 44ms
-Bytecode compiled 1963 files in 410ms
+Installed 11 packages in 51ms
+Bytecode compiled 1963 files in 465ms
 ```
 
 ### `docker compose config`
@@ -840,28 +854,29 @@ volumes:
 
 ## Unavailable Checks
 
-- None for the requested Phase 4B verification set. Docker Desktop, PostgreSQL container, Alembic, Docker integration tests, and `docker compose config` were available and run.
+- None for the requested Phase 4C verification set. Docker Desktop, PostgreSQL container, Alembic, Docker integration tests, and `docker compose config` were available and run.
 
 ## Remaining Risks
 
-- Phase 4B intentionally defines rule specifications only; future phases must add separate tests before any rule evaluation, decision engine, signal generation, delivery, broker, paper-trading, or live-trading behavior can exist.
-- Rule specifications are not persisted in this phase; no database migration was added.
-- Existing Starlette/httpx deprecation warning remains in test output and is unrelated to Phase 4B behavior.
+- Phase 4C intentionally validates specification structure only; future phases must add separate tests before any rule evaluation against market data, decision engine, signal generation, delivery, broker, paper-trading, or live-trading behavior can exist.
+- Validation reports are not persisted in this phase; no database migration was added.
+- Existing Starlette/httpx deprecation warning remains in test output and is unrelated to Phase 4C behavior.
 
 ## Traceability
 
 | Requirement | Implementation File | Test File | Verification Result |
 | --- | --- | --- | --- |
-| Update project phase to Phase 4B | `app/core/constants.py` | `tests/unit/test_strategy_rule_specification_foundation.py` | Host and Docker tests passed |
-| Define strategy rule operators/categories/severity | `app/domain/entities/strategy_rules.py` | `tests/unit/test_strategy_rule_specification_foundation.py` | Unit tests passed |
-| Validate rule values and reject floats | `app/domain/entities/strategy_rules.py` | `tests/unit/test_strategy_rule_specification_foundation.py` | Float and invalid value tests passed |
-| Preserve Decimal values through deterministic JSON | `app/domain/entities/strategy_rules.py` | `tests/unit/test_strategy_rule_specification_foundation.py` | Decimal JSON round-trip test passed |
-| Validate `BETWEEN`, `IN`, `EXISTS`/`NOT_EXISTS`, and comparison operators | `app/domain/entities/strategy_rules.py` | `tests/unit/test_strategy_rule_specification_foundation.py` | Operator validation tests passed |
-| Normalize warnings and rules deterministically | `app/domain/entities/strategy_rules.py` | `tests/unit/test_strategy_rule_specification_foundation.py` | Determinism tests passed |
-| Deterministic fingerprinting | `app/domain/entities/strategy_rules.py` | `tests/unit/test_strategy_rule_specification_foundation.py` | Fingerprint tests passed |
-| Default rule specs and rule sets to disabled/non-actionable | `app/domain/entities/strategy_rules.py` | `tests/unit/test_strategy_rule_specification_foundation.py` | Default enabled and `is_actionable` tests passed |
-| Do not add scoring/confidence/action fields | `app/domain/entities/strategy_rules.py` | `tests/unit/test_strategy_rule_specification_foundation.py` | Field-name safety test passed |
-| Do not add API routes, Telegram handlers, scheduler jobs, or strategy evaluation service | No runtime files added | `tests/contract/test_safety_boundaries.py` | Safety boundary tests passed |
+| Update project phase to Phase 4C | `app/core/constants.py` | `tests/unit/test_strategy_ruleset_validation_foundation.py` | Host and Docker tests passed |
+| Define validation status, issue codes, issue/report models | `app/domain/entities/strategy_validation.py` | `tests/unit/test_strategy_ruleset_validation_foundation.py` | Unit tests passed |
+| Normalize checked_at to UTC | `app/domain/entities/strategy_validation.py` | `tests/unit/test_strategy_ruleset_validation_foundation.py` | UTC normalization test passed |
+| Validate clean disabled ruleset as VALID | `app/domain/strategy_ruleset_validator.py` | `tests/unit/test_strategy_ruleset_validation_foundation.py` | Clean validation test passed |
+| Validate enabled ruleset/rules as INVALID | `app/domain/strategy_ruleset_validator.py` | `tests/unit/test_strategy_ruleset_validation_foundation.py` | Enabled invalid tests passed |
+| Validate unknown field refs and category mismatches | `app/domain/strategy_ruleset_validator.py` | `tests/unit/test_strategy_ruleset_validation_foundation.py` | Registry/mismatch tests passed |
+| Validate forbidden execution/scoring/confidence language | `app/domain/strategy_ruleset_validator.py` | `tests/unit/test_strategy_ruleset_validation_foundation.py` | Forbidden language tests passed |
+| Validate invalid operator operands from unsafe construction | `app/domain/strategy_ruleset_validator.py` | `tests/unit/test_strategy_ruleset_validation_foundation.py` | Invalid operands test passed |
+| Deterministic report JSON, fingerprint, and issue ordering | `app/domain/entities/strategy_validation.py` | `tests/unit/test_strategy_ruleset_validation_foundation.py` | Determinism tests passed |
+| Validator does not mutate input and only accepts StrategyRuleSet | `app/domain/strategy_ruleset_validator.py` | `tests/unit/test_strategy_ruleset_validation_foundation.py` | Mutation/input tests passed |
+| Do not add API routes, Telegram handlers, scheduler jobs, or validation/evaluation services | No runtime files added | `tests/contract/test_safety_boundaries.py` | Safety boundary tests passed |
 | Do not add broker/order/paper/live trading behavior | No execution code added | `tests/contract/test_safety_boundaries.py`, `scripts/security_check.py` | Safety tests and security check passed |
 | Keep Phase 3J absent | No `app/api/routes/digest_deliveries.py` | `tests/contract/test_safety_boundaries.py` | Phase 3J absence test passed |
 | No migration required | No migration file created or modified | `docker compose run --rm migrate alembic current`, `docker compose run --rm migrate alembic check` | Alembic head remained `0003_phase3i_digest_audit (head)` and check passed |
@@ -871,7 +886,7 @@ volumes:
 ### `app/core/constants.py`
 
 ```python
-PROJECT_PHASE = "phase_4b_strategy_rule_specification_foundation"
+PROJECT_PHASE = "phase_4c_strategy_ruleset_validation_foundation"
 STRATEGY_IMPLEMENTED = False
 REAL_TRADING_ENABLED = False
 
@@ -971,6 +986,12 @@ from app.domain.entities.strategy_rules import (
     StrategyRuleSpec,
     StrategyRuleValue,
 )
+from app.domain.entities.strategy_validation import (
+    StrategyRuleSetValidationIssue,
+    StrategyRuleSetValidationIssueCode,
+    StrategyRuleSetValidationReport,
+    StrategyRuleSetValidationStatus,
+)
 
 __all__ = [
     "AnalysisInputAudit",
@@ -1036,6 +1057,10 @@ __all__ = [
     "StrategyRuleCondition",
     "StrategyRuleOperator",
     "StrategyRuleSet",
+    "StrategyRuleSetValidationIssue",
+    "StrategyRuleSetValidationIssueCode",
+    "StrategyRuleSetValidationReport",
+    "StrategyRuleSetValidationStatus",
     "StrategyRuleSeverity",
     "StrategyRuleSpec",
     "StrategyRuleValue",
@@ -1047,74 +1072,44 @@ __all__ = [
 ]
 ```
 
-### `app/domain/entities/strategy_rules.py`
+### `app/domain/entities/strategy_validation.py`
 
 ```python
 import hashlib
 import json
 from datetime import datetime
-from decimal import Decimal, InvalidOperation
 from enum import StrEnum
 from typing import Any, Self
 
-from pydantic import (
-    BaseModel,
-    ConfigDict,
-    Field,
-    field_serializer,
-    field_validator,
-    model_validator,
-)
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from app.core.time import normalize_to_utc
+from app.domain.entities.strategy_rules import StrategyRuleSeverity
 
 
-class StrategyRuleOperator(StrEnum):
-    EXISTS = "EXISTS"
-    NOT_EXISTS = "NOT_EXISTS"
-    EQ = "EQ"
-    NE = "NE"
-    GT = "GT"
-    GTE = "GTE"
-    LT = "LT"
-    LTE = "LTE"
-    BETWEEN = "BETWEEN"
-    IN = "IN"
-
-
-class StrategyRuleCategory(StrEnum):
-    DATA_QUALITY = "DATA_QUALITY"
-    MARKET_CONTEXT = "MARKET_CONTEXT"
-    EVENT_CONTEXT = "EVENT_CONTEXT"
-    RISK_GUARD = "RISK_GUARD"
-    TIME_FILTER = "TIME_FILTER"
-    SIGNAL_CONTRACT_GUARD = "SIGNAL_CONTRACT_GUARD"
-
-
-class StrategyRuleSeverity(StrEnum):
-    REQUIRED = "REQUIRED"
+class StrategyRuleSetValidationStatus(StrEnum):
+    VALID = "VALID"
+    INVALID = "INVALID"
     WARNING = "WARNING"
-    BLOCKING = "BLOCKING"
 
 
-_EXISTS_OPERATORS = {StrategyRuleOperator.EXISTS, StrategyRuleOperator.NOT_EXISTS}
-_COMPARISON_OPERATORS = {
-    StrategyRuleOperator.EQ,
-    StrategyRuleOperator.NE,
-    StrategyRuleOperator.GT,
-    StrategyRuleOperator.GTE,
-    StrategyRuleOperator.LT,
-    StrategyRuleOperator.LTE,
-}
-_ORDERED_COMPARISON_OPERATORS = {
-    StrategyRuleOperator.GT,
-    StrategyRuleOperator.GTE,
-    StrategyRuleOperator.LT,
-    StrategyRuleOperator.LTE,
-}
+class StrategyRuleSetValidationIssueCode(StrEnum):
+    EMPTY_RULESET = "EMPTY_RULESET"
+    DUPLICATE_RULE_ID = "DUPLICATE_RULE_ID"
+    RULESET_ENABLED = "RULESET_ENABLED"
+    RULE_ENABLED = "RULE_ENABLED"
+    UNKNOWN_FIELD_REF = "UNKNOWN_FIELD_REF"
+    CATEGORY_FIELD_MISMATCH = "CATEGORY_FIELD_MISMATCH"
+    FORBIDDEN_FIELD_REF = "FORBIDDEN_FIELD_REF"
+    FORBIDDEN_EXECUTION_LANGUAGE = "FORBIDDEN_EXECUTION_LANGUAGE"
+    FORBIDDEN_SCORING_LANGUAGE = "FORBIDDEN_SCORING_LANGUAGE"
+    FORBIDDEN_CONFIDENCE_LANGUAGE = "FORBIDDEN_CONFIDENCE_LANGUAGE"
+    INVALID_OPERATOR_OPERANDS = "INVALID_OPERATOR_OPERANDS"
 
 
-def _normalize_identifier(value: object, field_name: str) -> str:
+def _normalize_optional_string(value: object, field_name: str) -> str | None:
+    if value is None:
+        return None
     if not isinstance(value, str):
         raise ValueError(f"{field_name} must be a string")
     normalized = value.strip()
@@ -1123,331 +1118,81 @@ def _normalize_identifier(value: object, field_name: str) -> str:
     return normalized
 
 
-def _normalize_string_collection(value: object, field_name: str) -> tuple[str, ...]:
-    if value is None:
-        return ()
-    if isinstance(value, str):
-        raw_items: tuple[object, ...] = (value,)
-    elif isinstance(value, list | tuple):
-        raw_items = tuple(value)
-    else:
-        raise ValueError(f"{field_name} must be a string, list, or tuple")
-    return tuple(sorted({str(item).strip() for item in raw_items if str(item).strip()}))
+def _normalize_required_string(value: object, field_name: str) -> str:
+    normalized = _normalize_optional_string(value, field_name)
+    if normalized is None:
+        raise ValueError(f"{field_name} must be non-empty")
+    return normalized
 
 
-def _normalize_decimal_value(value: object) -> Decimal:
-    if isinstance(value, float):
-        raise ValueError("strategy rule values must use Decimal-compatible inputs, not float")
-    if isinstance(value, bool):
-        raise ValueError("strategy rule Decimal values must not be boolean")
-    if isinstance(value, Decimal):
-        if not value.is_finite():
-            raise ValueError("strategy rule Decimal value must be finite")
-        return value
-    if isinstance(value, int | str):
-        try:
-            normalized = Decimal(value)
-        except (InvalidOperation, ValueError) as exc:
-            raise ValueError("strategy rule Decimal value is invalid") from exc
-        if not normalized.is_finite():
-            raise ValueError("strategy rule Decimal value must be finite")
-        return normalized
-    raise ValueError("unsupported strategy rule Decimal value type")
-
-
-def _normalize_serialized_rule_value(
-    value: dict[str, object],
-) -> str | bool | Decimal | tuple[str, ...] | tuple[Decimal, ...]:
-    value_type = value.get("type")
-    raw_value = value.get("value")
-    if value_type == "string":
-        if not isinstance(raw_value, str):
-            raise ValueError("serialized string rule value must contain a string")
-        return _normalize_scalar_value(raw_value)
-    if value_type == "bool":
-        if not isinstance(raw_value, bool):
-            raise ValueError("serialized bool rule value must contain a boolean")
-        return raw_value
-    if value_type == "decimal":
-        return _normalize_decimal_value(raw_value)
-    if value_type == "string_list":
-        if not isinstance(raw_value, list):
-            raise ValueError("serialized string_list rule value must contain a list")
-        normalized = _normalize_collection_value(tuple(raw_value))
-        if not all(isinstance(item, str) for item in normalized):
-            raise ValueError("serialized string_list rule value must contain strings")
-        return normalized
-    if value_type == "decimal_list":
-        if not isinstance(raw_value, list):
-            raise ValueError("serialized decimal_list rule value must contain a list")
-        normalized = tuple(sorted({_normalize_decimal_value(item) for item in raw_value}))
-        if not normalized:
-            raise ValueError("serialized decimal_list rule value must be non-empty")
-        return normalized
-    raise ValueError("serialized rule value type is unsupported")
-
-
-def _normalize_scalar_value(value: object) -> str | bool | Decimal:
-    if isinstance(value, float):
-        raise ValueError("strategy rule values must use Decimal-compatible inputs, not float")
-    if isinstance(value, bool):
-        return value
-    if isinstance(value, Decimal):
-        if not value.is_finite():
-            raise ValueError("strategy rule Decimal value must be finite")
-        return value
-    if isinstance(value, int):
-        return Decimal(value)
-    if isinstance(value, str):
-        normalized = value.strip()
-        if not normalized:
-            raise ValueError("strategy rule string values must be non-empty")
-        return normalized
-    raise ValueError("unsupported strategy rule value type")
-
-
-def _normalize_collection_value(
-    value: list[object] | tuple[object, ...],
-) -> tuple[str, ...] | tuple[Decimal, ...]:
-    if not value:
-        raise ValueError("strategy rule collection values must be non-empty")
-    normalized_items = tuple(_normalize_scalar_value(item) for item in value)
-    string_values = [item for item in normalized_items if isinstance(item, str)]
-    if len(string_values) == len(normalized_items):
-        return tuple(sorted(set(string_values)))
-    decimal_values = [item for item in normalized_items if isinstance(item, Decimal)]
-    if len(decimal_values) == len(normalized_items):
-        return tuple(sorted(set(decimal_values)))
-    raise ValueError("strategy rule collection values must be all strings or all Decimals")
-
-
-def _normalize_rule_value(
-    value: object,
-) -> str | bool | Decimal | tuple[str, ...] | tuple[Decimal, ...]:
-    if isinstance(value, dict):
-        return _normalize_serialized_rule_value(value)
-    if isinstance(value, list | tuple):
-        return _normalize_collection_value(value)
-    return _normalize_scalar_value(value)
-
-
-class StrategyRuleValue(BaseModel):
-    value: Any
-
-    model_config = ConfigDict(frozen=True)
-
-    @field_validator("value", mode="before")
-    @classmethod
-    def normalize_value(cls, value: object) -> object:
-        return _normalize_rule_value(value)
-
-    @property
-    def is_collection(self) -> bool:
-        return isinstance(self.value, tuple)
-
-    @property
-    def is_scalar(self) -> bool:
-        return not self.is_collection
-
-    def deterministic_json(self) -> str:
-        return json.dumps(
-            self.model_dump(mode="json"),
-            ensure_ascii=False,
-            sort_keys=True,
-            separators=(",", ":"),
-        )
-
-    @field_serializer("value")
-    def serialize_value(self, value: object) -> dict[str, object]:
-        if isinstance(value, bool):
-            return {"type": "bool", "value": value}
-        if isinstance(value, Decimal):
-            return {"type": "decimal", "value": str(value)}
-        if isinstance(value, str):
-            return {"type": "string", "value": value}
-        if isinstance(value, tuple) and all(isinstance(item, Decimal) for item in value):
-            return {"type": "decimal_list", "value": [str(item) for item in value]}
-        if isinstance(value, tuple) and all(isinstance(item, str) for item in value):
-            return {"type": "string_list", "value": list(value)}
-        raise TypeError("unsupported normalized strategy rule value type")
-
-
-class StrategyRuleCondition(BaseModel):
-    field_ref: str = Field(pattern=r"^[A-Za-z0-9_.:-]+$")
-    operator: StrategyRuleOperator
-    expected_value: StrategyRuleValue | None = None
-    lower_bound: StrategyRuleValue | None = None
-    upper_bound: StrategyRuleValue | None = None
-    allowed_values: StrategyRuleValue | None = None
-
-    model_config = ConfigDict(frozen=True)
-
-    @field_validator("field_ref", mode="before")
-    @classmethod
-    def normalize_field_ref(cls, value: object) -> str:
-        return _normalize_identifier(value, "field_ref")
-
-    @model_validator(mode="after")
-    def validate_operator_values(self) -> Self:
-        if self.operator in _EXISTS_OPERATORS:
-            self._reject_operands_for_exists()
-        elif self.operator in _COMPARISON_OPERATORS:
-            self._validate_comparison_operator()
-        elif self.operator == StrategyRuleOperator.BETWEEN:
-            self._validate_between_operator()
-        elif self.operator == StrategyRuleOperator.IN:
-            self._validate_in_operator()
-        return self
-
-    def _reject_operands_for_exists(self) -> None:
-        if any(
-            value is not None
-            for value in (
-                self.expected_value,
-                self.lower_bound,
-                self.upper_bound,
-                self.allowed_values,
-            )
-        ):
-            raise ValueError("EXISTS and NOT_EXISTS rules must not define comparison values")
-
-    def _validate_comparison_operator(self) -> None:
-        if self.expected_value is None:
-            raise ValueError(f"{self.operator} requires expected_value")
-        if not self.expected_value.is_scalar:
-            raise ValueError(f"{self.operator} expected_value must be scalar")
-        if self.operator in _ORDERED_COMPARISON_OPERATORS and isinstance(
-            self.expected_value.value, bool
-        ):
-            raise ValueError(f"{self.operator} expected_value must be ordered")
-        if any(
-            value is not None for value in (self.lower_bound, self.upper_bound, self.allowed_values)
-        ):
-            raise ValueError(f"{self.operator} must not define range or allowed values")
-
-    def _validate_between_operator(self) -> None:
-        if self.lower_bound is None or self.upper_bound is None:
-            raise ValueError("BETWEEN requires lower_bound and upper_bound")
-        if self.expected_value is not None or self.allowed_values is not None:
-            raise ValueError("BETWEEN must not define expected_value or allowed_values")
-        lower = self._ordered_scalar(self.lower_bound, "lower_bound")
-        upper = self._ordered_scalar(self.upper_bound, "upper_bound")
-        if self._lower_exceeds_upper(lower, upper):
-            raise ValueError("BETWEEN lower_bound must be less than or equal to upper_bound")
-
-    def _validate_in_operator(self) -> None:
-        if self.allowed_values is None:
-            raise ValueError("IN requires allowed_values")
-        if not self.allowed_values.is_collection:
-            raise ValueError("IN allowed_values must be a collection")
-        if any(
-            value is not None for value in (self.expected_value, self.lower_bound, self.upper_bound)
-        ):
-            raise ValueError("IN must not define expected_value or range values")
-
-    @staticmethod
-    def _ordered_scalar(value: StrategyRuleValue, field_name: str) -> str | Decimal:
-        if not value.is_scalar or isinstance(value.value, bool):
-            raise ValueError(f"{field_name} must be an ordered scalar")
-        if not isinstance(value.value, str | Decimal):
-            raise ValueError(f"{field_name} must be a string or Decimal")
-        return value.value
-
-    @staticmethod
-    def _lower_exceeds_upper(lower: str | Decimal, upper: str | Decimal) -> bool:
-        if isinstance(lower, Decimal):
-            if not isinstance(upper, Decimal):
-                raise ValueError("BETWEEN lower_bound and upper_bound must use the same value type")
-            return lower > upper
-        if not isinstance(upper, str):
-            raise ValueError("BETWEEN lower_bound and upper_bound must use the same value type")
-        return lower > upper
-
-
-class StrategyRuleSpec(BaseModel):
-    rule_id: str = Field(pattern=r"^[A-Za-z0-9_.:-]+$")
-    category: StrategyRuleCategory
+class StrategyRuleSetValidationIssue(BaseModel):
+    code: StrategyRuleSetValidationIssueCode
+    message: str = Field(min_length=1, max_length=1000)
+    rule_id: str | None = None
+    field_ref: str | None = None
     severity: StrategyRuleSeverity
-    condition: StrategyRuleCondition
-    description: str = Field(min_length=1, max_length=1000)
-    enabled: bool = False
-    warnings: tuple[str, ...] = ()
 
     model_config = ConfigDict(frozen=True)
 
-    @field_validator("rule_id", mode="before")
+    @field_validator("message", mode="before")
     @classmethod
-    def normalize_rule_id(cls, value: object) -> str:
-        return _normalize_identifier(value, "rule_id")
+    def normalize_message(cls, value: object) -> str:
+        return _normalize_required_string(value, "message")
 
-    @field_validator("description", mode="before")
+    @field_validator("rule_id", "field_ref", mode="before")
     @classmethod
-    def normalize_description(cls, value: object) -> str:
-        return _normalize_identifier(value, "description")
-
-    @field_validator("warnings", mode="before")
-    @classmethod
-    def normalize_warnings(cls, value: object) -> tuple[str, ...]:
-        return _normalize_string_collection(value, "warnings")
+    def normalize_optional_identifiers(cls, value: object) -> str | None:
+        return _normalize_optional_string(value, "validation issue identifier")
 
     @property
-    def is_actionable(self) -> bool:
-        return False
-
-    def canonical_payload(self) -> dict[str, Any]:
-        return self.model_dump(mode="json")
-
-    def deterministic_json(self) -> str:
-        return json.dumps(
-            self.canonical_payload(),
-            ensure_ascii=False,
-            sort_keys=True,
-            separators=(",", ":"),
+    def sort_key(self) -> tuple[str, str, str, str]:
+        return (
+            self.code.value,
+            self.rule_id or "",
+            self.field_ref or "",
+            self.message,
         )
 
-    def fingerprint_sha256(self) -> str:
-        return hashlib.sha256(self.deterministic_json().encode("utf-8")).hexdigest()
 
-
-class StrategyRuleSet(BaseModel):
+class StrategyRuleSetValidationReport(BaseModel):
     ruleset_version: str = Field(min_length=1)
     strategy_version: str = Field(min_length=1)
-    name: str = Field(min_length=1, max_length=120)
-    description: str | None = Field(default=None, max_length=1000)
-    created_at: datetime
-    rules: tuple[StrategyRuleSpec, ...] = Field(min_length=1)
-    enabled: bool = False
+    ruleset_name: str = Field(min_length=1, max_length=120)
+    status: StrategyRuleSetValidationStatus
+    checked_at: datetime
+    issues: tuple[StrategyRuleSetValidationIssue, ...] = ()
+    rule_count: int = Field(ge=0)
+    enabled_rule_count: int = Field(ge=0)
     fingerprint: str | None = Field(default=None, min_length=64, max_length=64)
 
     model_config = ConfigDict(frozen=True)
 
-    @field_validator("ruleset_version", "strategy_version", "name", mode="before")
+    @field_validator("ruleset_version", "strategy_version", "ruleset_name", mode="before")
     @classmethod
     def normalize_required_strings(cls, value: object) -> str:
-        return _normalize_identifier(value, "strategy rule set string")
+        return _normalize_required_string(value, "validation report string")
 
-    @field_validator("description", mode="before")
+    @field_validator("checked_at")
     @classmethod
-    def normalize_optional_description(cls, value: object) -> str | None:
-        if value is None:
-            return None
-        return _normalize_identifier(value, "description")
-
-    @field_validator("created_at")
-    @classmethod
-    def created_at_must_be_utc(cls, value: datetime) -> datetime:
+    def checked_at_must_be_utc(cls, value: datetime) -> datetime:
         return normalize_to_utc(value)
 
-    @field_validator("rules")
+    @field_validator("issues")
     @classmethod
-    def normalize_rules(cls, value: tuple[StrategyRuleSpec, ...]) -> tuple[StrategyRuleSpec, ...]:
-        return tuple(sorted(value, key=lambda rule: rule.rule_id))
+    def normalize_issues(
+        cls,
+        value: tuple[StrategyRuleSetValidationIssue, ...],
+    ) -> tuple[StrategyRuleSetValidationIssue, ...]:
+        return tuple(sorted(value, key=lambda issue: issue.sort_key))
 
     @model_validator(mode="after")
-    def rule_ids_must_be_unique(self) -> Self:
-        rule_ids = [rule.rule_id for rule in self.rules]
-        if len(rule_ids) != len(set(rule_ids)):
-            raise ValueError("StrategyRuleSet rule_id values must be unique")
+    def validate_counts_and_status(self) -> Self:
+        if self.enabled_rule_count > self.rule_count:
+            raise ValueError("enabled_rule_count must not exceed rule_count")
+        if self.status == StrategyRuleSetValidationStatus.VALID and self.issues:
+            raise ValueError("VALID validation reports must not contain issues")
+        if self.status != StrategyRuleSetValidationStatus.VALID and not self.issues:
+            raise ValueError("non-VALID validation reports must contain issues")
         return self
 
     @property
@@ -1475,13 +1220,343 @@ class StrategyRuleSet(BaseModel):
         return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
 ```
 
+### `app/domain/strategy_ruleset_validator.py`
+
+```python
+from datetime import datetime
+from decimal import Decimal
+
+from app.domain.entities.strategy_rules import (
+    StrategyRuleCategory,
+    StrategyRuleCondition,
+    StrategyRuleOperator,
+    StrategyRuleSet,
+    StrategyRuleSeverity,
+    StrategyRuleSpec,
+    StrategyRuleValue,
+)
+from app.domain.entities.strategy_validation import (
+    StrategyRuleSetValidationIssue,
+    StrategyRuleSetValidationIssueCode,
+    StrategyRuleSetValidationReport,
+    StrategyRuleSetValidationStatus,
+)
+
+ALLOWED_FIELD_PREFIXES: tuple[str, ...] = (
+    "data_quality.",
+    "market_context.",
+    "event_context.",
+    "risk_guard.",
+    "time_filter.",
+    "signal_contract_guard.",
+)
+
+CATEGORY_FIELD_PREFIXES: dict[StrategyRuleCategory, str] = {
+    StrategyRuleCategory.DATA_QUALITY: "data_quality.",
+    StrategyRuleCategory.MARKET_CONTEXT: "market_context.",
+    StrategyRuleCategory.EVENT_CONTEXT: "event_context.",
+    StrategyRuleCategory.RISK_GUARD: "risk_guard.",
+    StrategyRuleCategory.TIME_FILTER: "time_filter.",
+    StrategyRuleCategory.SIGNAL_CONTRACT_GUARD: "signal_contract_guard.",
+}
+
+FORBIDDEN_EXECUTION_TERMS: tuple[str, ...] = (
+    "buy",
+    "sell",
+    "execute",
+    "order",
+    "broker",
+    "position_size",
+    "open_trade",
+    "close_trade",
+    "take_trade",
+    "entry_signal",
+    "telegram_signal",
+    "_".join(("place", "order")),
+    "paper_trade",
+    "live_trade",
+    "backtest",
+    "simulation",
+)
+FORBIDDEN_SCORING_TERMS: tuple[str, ...] = ("setup_score",)
+FORBIDDEN_CONFIDENCE_TERMS: tuple[str, ...] = ("confidence", "openai", "llm")
+_EXISTS_OPERATORS = {StrategyRuleOperator.EXISTS, StrategyRuleOperator.NOT_EXISTS}
+_COMPARISON_OPERATORS = {
+    StrategyRuleOperator.EQ,
+    StrategyRuleOperator.NE,
+    StrategyRuleOperator.GT,
+    StrategyRuleOperator.GTE,
+    StrategyRuleOperator.LT,
+    StrategyRuleOperator.LTE,
+}
+_ORDERED_COMPARISON_OPERATORS = {
+    StrategyRuleOperator.GT,
+    StrategyRuleOperator.GTE,
+    StrategyRuleOperator.LT,
+    StrategyRuleOperator.LTE,
+}
+
+
+class StrategyRuleSetValidator:
+    def validate(
+        self,
+        ruleset: StrategyRuleSet,
+        checked_at: datetime,
+    ) -> StrategyRuleSetValidationReport:
+        if not isinstance(ruleset, StrategyRuleSet):
+            raise TypeError("StrategyRuleSetValidator validates StrategyRuleSet objects only")
+
+        issues: list[StrategyRuleSetValidationIssue] = []
+        if not ruleset.rules:
+            issues.append(
+                self._issue(
+                    code=StrategyRuleSetValidationIssueCode.EMPTY_RULESET,
+                    message="StrategyRuleSet must contain at least one rule.",
+                )
+            )
+        if ruleset.enabled:
+            issues.append(
+                self._issue(
+                    code=StrategyRuleSetValidationIssueCode.RULESET_ENABLED,
+                    message="StrategyRuleSet must remain disabled in Phase 4C.",
+                )
+            )
+
+        seen_rule_ids: set[str] = set()
+        for rule in ruleset.rules:
+            if rule.rule_id in seen_rule_ids:
+                issues.append(
+                    self._issue(
+                        code=StrategyRuleSetValidationIssueCode.DUPLICATE_RULE_ID,
+                        message="Duplicate rule_id detected.",
+                        rule=rule,
+                    )
+                )
+            seen_rule_ids.add(rule.rule_id)
+            issues.extend(self._validate_rule(rule))
+
+        return StrategyRuleSetValidationReport(
+            ruleset_version=ruleset.ruleset_version,
+            strategy_version=ruleset.strategy_version,
+            ruleset_name=ruleset.name,
+            status=self._status_for(issues),
+            checked_at=checked_at,
+            issues=tuple(issues),
+            rule_count=len(ruleset.rules),
+            enabled_rule_count=sum(1 for rule in ruleset.rules if rule.enabled),
+        )
+
+    def _validate_rule(self, rule: StrategyRuleSpec) -> tuple[StrategyRuleSetValidationIssue, ...]:
+        issues: list[StrategyRuleSetValidationIssue] = []
+        if rule.enabled:
+            issues.append(
+                self._issue(
+                    code=StrategyRuleSetValidationIssueCode.RULE_ENABLED,
+                    message="StrategyRuleSpec must remain disabled in Phase 4C.",
+                    rule=rule,
+                )
+            )
+        if not rule.condition.field_ref.startswith(ALLOWED_FIELD_PREFIXES):
+            issues.append(
+                self._issue(
+                    code=StrategyRuleSetValidationIssueCode.UNKNOWN_FIELD_REF,
+                    message="Rule field_ref is not in the static validation registry.",
+                    rule=rule,
+                    field_ref=rule.condition.field_ref,
+                )
+            )
+        expected_prefix = CATEGORY_FIELD_PREFIXES[rule.category]
+        if not rule.condition.field_ref.startswith(expected_prefix):
+            issues.append(
+                self._issue(
+                    code=StrategyRuleSetValidationIssueCode.CATEGORY_FIELD_MISMATCH,
+                    message="Rule category does not match the field_ref prefix.",
+                    rule=rule,
+                    field_ref=rule.condition.field_ref,
+                )
+            )
+        issues.extend(self._scan_forbidden_language(rule))
+        issues.extend(self._validate_condition_operands(rule))
+        return tuple(issues)
+
+    def _scan_forbidden_language(
+        self,
+        rule: StrategyRuleSpec,
+    ) -> tuple[StrategyRuleSetValidationIssue, ...]:
+        text = " ".join((rule.condition.field_ref, rule.description, *rule.warnings))
+        lowered = text.lower()
+        issues: list[StrategyRuleSetValidationIssue] = []
+        if any(term in lowered for term in FORBIDDEN_EXECUTION_TERMS):
+            issues.append(
+                self._issue(
+                    code=StrategyRuleSetValidationIssueCode.FORBIDDEN_EXECUTION_LANGUAGE,
+                    message="Rule specification contains forbidden execution language.",
+                    rule=rule,
+                    field_ref=rule.condition.field_ref,
+                )
+            )
+        if any(term in lowered for term in FORBIDDEN_SCORING_TERMS):
+            issues.append(
+                self._issue(
+                    code=StrategyRuleSetValidationIssueCode.FORBIDDEN_SCORING_LANGUAGE,
+                    message="Rule specification contains forbidden scoring language.",
+                    rule=rule,
+                    field_ref=rule.condition.field_ref,
+                )
+            )
+        if any(term in lowered for term in FORBIDDEN_CONFIDENCE_TERMS):
+            issues.append(
+                self._issue(
+                    code=StrategyRuleSetValidationIssueCode.FORBIDDEN_CONFIDENCE_LANGUAGE,
+                    message="Rule specification contains forbidden confidence or AI language.",
+                    rule=rule,
+                    field_ref=rule.condition.field_ref,
+                )
+            )
+        if self._field_ref_contains_forbidden_token(rule.condition.field_ref):
+            issues.append(
+                self._issue(
+                    code=StrategyRuleSetValidationIssueCode.FORBIDDEN_FIELD_REF,
+                    message="Rule field_ref contains forbidden action-oriented language.",
+                    rule=rule,
+                    field_ref=rule.condition.field_ref,
+                )
+            )
+        return tuple(issues)
+
+    def _validate_condition_operands(
+        self,
+        rule: StrategyRuleSpec,
+    ) -> tuple[StrategyRuleSetValidationIssue, ...]:
+        condition = rule.condition
+        if condition.operator in _EXISTS_OPERATORS and self._has_any_operand(condition):
+            return (self._invalid_operands_issue(rule),)
+        if condition.operator in _COMPARISON_OPERATORS:
+            if (
+                condition.expected_value is None
+                or not condition.expected_value.is_scalar
+                or self._has_range_or_allowed_values(condition)
+            ):
+                return (self._invalid_operands_issue(rule),)
+            if condition.operator in _ORDERED_COMPARISON_OPERATORS and isinstance(
+                condition.expected_value.value, bool
+            ):
+                return (self._invalid_operands_issue(rule),)
+        if (
+            condition.operator == StrategyRuleOperator.BETWEEN
+            and self._has_invalid_between_operands(condition)
+        ):
+            return (self._invalid_operands_issue(rule),)
+        if condition.operator == StrategyRuleOperator.IN and self._has_invalid_in_operands(
+            condition
+        ):
+            return (self._invalid_operands_issue(rule),)
+        return ()
+
+    @staticmethod
+    def _has_any_operand(condition: StrategyRuleCondition) -> bool:
+        return any(
+            value is not None
+            for value in (
+                condition.expected_value,
+                condition.lower_bound,
+                condition.upper_bound,
+                condition.allowed_values,
+            )
+        )
+
+    @staticmethod
+    def _has_range_or_allowed_values(condition: StrategyRuleCondition) -> bool:
+        return any(
+            value is not None
+            for value in (condition.lower_bound, condition.upper_bound, condition.allowed_values)
+        )
+
+    def _has_invalid_between_operands(self, condition: StrategyRuleCondition) -> bool:
+        lower_bound = condition.lower_bound
+        upper_bound = condition.upper_bound
+        if (
+            lower_bound is None
+            or upper_bound is None
+            or condition.expected_value is not None
+            or condition.allowed_values is not None
+        ):
+            return True
+        return self._invalid_between_bounds(lower_bound, upper_bound)
+
+    @staticmethod
+    def _has_invalid_in_operands(condition: StrategyRuleCondition) -> bool:
+        return (
+            condition.allowed_values is None
+            or not condition.allowed_values.is_collection
+            or condition.expected_value is not None
+            or condition.lower_bound is not None
+            or condition.upper_bound is not None
+        )
+
+    @staticmethod
+    def _invalid_between_bounds(
+        lower_bound: StrategyRuleValue,
+        upper_bound: StrategyRuleValue,
+    ) -> bool:
+        lower = lower_bound.value
+        upper = upper_bound.value
+        if not lower_bound.is_scalar or not upper_bound.is_scalar:
+            return True
+        if isinstance(lower, bool) or isinstance(upper, bool):
+            return True
+        if isinstance(lower, Decimal) and isinstance(upper, Decimal):
+            return lower > upper
+        if isinstance(lower, str) and isinstance(upper, str):
+            return lower > upper
+        return True
+
+    @staticmethod
+    def _field_ref_contains_forbidden_token(field_ref: str) -> bool:
+        tokens = field_ref.lower().replace("-", "_").replace(".", "_").split("_")
+        return any(token in {"buy", "sell", "order", "broker", "execute"} for token in tokens)
+
+    @staticmethod
+    def _status_for(
+        issues: list[StrategyRuleSetValidationIssue],
+    ) -> StrategyRuleSetValidationStatus:
+        if not issues:
+            return StrategyRuleSetValidationStatus.VALID
+        if all(issue.severity == StrategyRuleSeverity.WARNING for issue in issues):
+            return StrategyRuleSetValidationStatus.WARNING
+        return StrategyRuleSetValidationStatus.INVALID
+
+    def _invalid_operands_issue(self, rule: StrategyRuleSpec) -> StrategyRuleSetValidationIssue:
+        return self._issue(
+            code=StrategyRuleSetValidationIssueCode.INVALID_OPERATOR_OPERANDS,
+            message="Rule operator operands are structurally invalid.",
+            rule=rule,
+            field_ref=rule.condition.field_ref,
+        )
+
+    @staticmethod
+    def _issue(
+        *,
+        code: StrategyRuleSetValidationIssueCode,
+        message: str,
+        rule: StrategyRuleSpec | None = None,
+        field_ref: str | None = None,
+    ) -> StrategyRuleSetValidationIssue:
+        return StrategyRuleSetValidationIssue(
+            code=code,
+            message=message,
+            rule_id=rule.rule_id if rule is not None else None,
+            field_ref=field_ref,
+            severity=StrategyRuleSeverity.BLOCKING,
+        )
+```
+
 ## Full Contents Of Changed Test Files
 
-### `tests/unit/test_strategy_rule_specification_foundation.py`
+### `tests/unit/test_strategy_ruleset_validation_foundation.py`
 
 ```python
 from datetime import UTC, datetime, timedelta, timezone
-from decimal import Decimal
 
 import pytest
 from pydantic import ValidationError
@@ -1496,8 +1571,16 @@ from app.domain.entities.strategy_rules import (
     StrategyRuleSpec,
     StrategyRuleValue,
 )
+from app.domain.entities.strategy_validation import (
+    StrategyRuleSetValidationIssue,
+    StrategyRuleSetValidationIssueCode,
+    StrategyRuleSetValidationReport,
+    StrategyRuleSetValidationStatus,
+)
+from app.domain.strategy_ruleset_validator import StrategyRuleSetValidator
 
 CREATED_AT = datetime(2026, 7, 18, 9, 0, tzinfo=UTC)
+CHECKED_AT = datetime(2026, 7, 18, 10, 0, tzinfo=UTC)
 
 
 def _condition(**overrides: object) -> StrategyRuleCondition:
@@ -1516,8 +1599,7 @@ def _rule(rule_id: str = "data_quality.complete", **overrides: object) -> Strate
         "category": StrategyRuleCategory.DATA_QUALITY,
         "severity": StrategyRuleSeverity.REQUIRED,
         "condition": _condition(),
-        "description": "Require a complete deterministic data-quality snapshot.",
-        "warnings": ("contract only",),
+        "description": "Require deterministic data-quality structure.",
     }
     values.update(overrides)
     return StrategyRuleSpec(**values)
@@ -1525,266 +1607,275 @@ def _rule(rule_id: str = "data_quality.complete", **overrides: object) -> Strate
 
 def _ruleset(**overrides: object) -> StrategyRuleSet:
     values: dict[str, object] = {
-        "ruleset_version": "phase4b-ruleset-v1",
-        "strategy_version": "future-strategy-spec-v1",
-        "name": "Future strategy rule specification",
-        "description": "Specification-only rule set for future deterministic checks.",
+        "ruleset_version": "phase4c-ruleset-v1",
+        "strategy_version": "future-strategy-validation-v1",
+        "name": "Future strategy ruleset validation",
+        "description": "Validation-only ruleset.",
         "created_at": CREATED_AT,
         "rules": (
-            _rule("time.session"),
             _rule("data_quality.complete"),
+            _rule(
+                "time_filter.session_exists",
+                category=StrategyRuleCategory.TIME_FILTER,
+                condition=_condition(
+                    field_ref="time_filter.session",
+                    operator=StrategyRuleOperator.EXISTS,
+                    expected_value=None,
+                ),
+            ),
         ),
     }
     values.update(overrides)
     return StrategyRuleSet(**values)
 
 
-def test_project_phase_is_phase4b_strategy_rule_specification_foundation() -> None:
-    assert constants.PROJECT_PHASE == "phase_4b_strategy_rule_specification_foundation"
+def _validate(ruleset: StrategyRuleSet) -> StrategyRuleSetValidationReport:
+    return StrategyRuleSetValidator().validate(ruleset, CHECKED_AT)
 
 
-def test_strategy_rule_models_are_immutable() -> None:
-    rule_set = _ruleset()
+def _codes(
+    report: StrategyRuleSetValidationReport,
+) -> tuple[StrategyRuleSetValidationIssueCode, ...]:
+    return tuple(issue.code for issue in report.issues)
+
+
+def test_project_phase_is_phase4c_strategy_ruleset_validation_foundation() -> None:
+    assert constants.PROJECT_PHASE == "phase_4c_strategy_ruleset_validation_foundation"
+
+
+def test_validation_issue_and_report_models_are_immutable() -> None:
+    report = _validate(_ruleset())
 
     with pytest.raises(ValidationError):
-        rule_set.enabled = True
+        report.status = StrategyRuleSetValidationStatus.INVALID
     with pytest.raises(ValidationError):
-        rule_set.rules[0].condition.field_ref = "changed"
+        StrategyRuleSetValidationIssue(
+            code=StrategyRuleSetValidationIssueCode.RULE_ENABLED,
+            message="message",
+            severity=StrategyRuleSeverity.BLOCKING,
+        ).message = "changed"
 
 
-def test_strategy_rule_set_normalizes_created_at_to_utc() -> None:
-    offset = timezone(timedelta(hours=2))
-    rule_set = _ruleset(created_at=datetime(2026, 7, 18, 11, 0, tzinfo=offset))
+def test_validation_report_normalizes_checked_at_to_utc() -> None:
+    checked_at = datetime(2026, 7, 18, 12, 0, tzinfo=timezone(timedelta(hours=2)))
+    report = StrategyRuleSetValidator().validate(_ruleset(), checked_at)
 
-    assert rule_set.created_at == CREATED_AT
+    assert report.checked_at == CHECKED_AT
 
 
-def test_strategy_rule_set_rejects_duplicate_rule_id() -> None:
+def test_clean_disabled_ruleset_validates_as_valid() -> None:
+    report = _validate(_ruleset())
+
+    assert report.status == StrategyRuleSetValidationStatus.VALID
+    assert report.issues == ()
+    assert report.rule_count == 2
+    assert report.enabled_rule_count == 0
+
+
+def test_enabled_ruleset_validates_as_invalid() -> None:
+    report = _validate(_ruleset(enabled=True))
+
+    assert report.status == StrategyRuleSetValidationStatus.INVALID
+    assert StrategyRuleSetValidationIssueCode.RULESET_ENABLED in _codes(report)
+
+
+def test_enabled_rule_validates_as_invalid() -> None:
+    report = _validate(_ruleset(rules=(_rule(enabled=True),)))
+
+    assert report.status == StrategyRuleSetValidationStatus.INVALID
+    assert report.enabled_rule_count == 1
+    assert StrategyRuleSetValidationIssueCode.RULE_ENABLED in _codes(report)
+
+
+def test_unknown_field_ref_validates_as_invalid() -> None:
+    report = _validate(
+        _ruleset(
+            rules=(
+                _rule(
+                    condition=_condition(field_ref="unknown_context.value"),
+                ),
+            )
+        )
+    )
+
+    assert report.status == StrategyRuleSetValidationStatus.INVALID
+    assert StrategyRuleSetValidationIssueCode.UNKNOWN_FIELD_REF in _codes(report)
+
+
+def test_category_field_ref_mismatch_validates_as_invalid() -> None:
+    report = _validate(
+        _ruleset(
+            rules=(
+                _rule(
+                    category=StrategyRuleCategory.DATA_QUALITY,
+                    condition=_condition(field_ref="market_context.regime"),
+                ),
+            )
+        )
+    )
+
+    assert report.status == StrategyRuleSetValidationStatus.INVALID
+    assert StrategyRuleSetValidationIssueCode.CATEGORY_FIELD_MISMATCH in _codes(report)
+
+
+def test_forbidden_execution_language_validates_as_invalid() -> None:
+    report = _validate(
+        _ruleset(rules=(_rule(description="Never buy or sell from a rule specification."),))
+    )
+
+    assert report.status == StrategyRuleSetValidationStatus.INVALID
+    assert StrategyRuleSetValidationIssueCode.FORBIDDEN_EXECUTION_LANGUAGE in _codes(report)
+
+
+def test_forbidden_scoring_language_validates_as_invalid() -> None:
+    report = _validate(_ruleset(rules=(_rule(warnings=("setup_score is not allowed here",)),)))
+
+    assert report.status == StrategyRuleSetValidationStatus.INVALID
+    assert StrategyRuleSetValidationIssueCode.FORBIDDEN_SCORING_LANGUAGE in _codes(report)
+
+
+def test_forbidden_confidence_language_validates_as_invalid() -> None:
+    report = _validate(
+        _ruleset(rules=(_rule(description="confidence and OpenAI language are forbidden."),))
+    )
+
+    assert report.status == StrategyRuleSetValidationStatus.INVALID
+    assert StrategyRuleSetValidationIssueCode.FORBIDDEN_CONFIDENCE_LANGUAGE in _codes(report)
+
+
+def test_forbidden_field_ref_validates_as_invalid() -> None:
+    report = _validate(
+        _ruleset(
+            rules=(
+                _rule(
+                    category=StrategyRuleCategory.RISK_GUARD,
+                    condition=_condition(field_ref="risk_guard.broker_state"),
+                ),
+            )
+        )
+    )
+
+    assert report.status == StrategyRuleSetValidationStatus.INVALID
+    assert StrategyRuleSetValidationIssueCode.FORBIDDEN_FIELD_REF in _codes(report)
+
+
+def test_invalid_operator_operands_validate_as_invalid_when_constructed_unsafely() -> None:
+    unsafe_condition = StrategyRuleCondition.model_construct(
+        field_ref="data_quality.market_data_complete",
+        operator=StrategyRuleOperator.EXISTS,
+        expected_value=StrategyRuleValue(value=True),
+        lower_bound=None,
+        upper_bound=None,
+        allowed_values=None,
+    )
+    unsafe_rule = StrategyRuleSpec.model_construct(
+        rule_id="unsafe.operands",
+        category=StrategyRuleCategory.DATA_QUALITY,
+        severity=StrategyRuleSeverity.REQUIRED,
+        condition=unsafe_condition,
+        description="Unsafe constructed rule.",
+        enabled=False,
+        warnings=(),
+    )
+    unsafe_ruleset = StrategyRuleSet.model_construct(
+        ruleset_version="phase4c-ruleset-v1",
+        strategy_version="future-strategy-validation-v1",
+        name="Unsafe constructed ruleset",
+        description=None,
+        created_at=CREATED_AT,
+        rules=(unsafe_rule,),
+        enabled=False,
+        fingerprint=None,
+    )
+
+    report = _validate(unsafe_ruleset)
+
+    assert report.status == StrategyRuleSetValidationStatus.INVALID
+    assert StrategyRuleSetValidationIssueCode.INVALID_OPERATOR_OPERANDS in _codes(report)
+
+
+def test_empty_ruleset_and_duplicate_rule_ids_remain_model_level_rejections() -> None:
+    with pytest.raises(ValidationError):
+        _ruleset(rules=())
     with pytest.raises(ValidationError):
         _ruleset(rules=(_rule("duplicate.rule"), _rule("duplicate.rule")))
 
 
-def test_strategy_rule_identifiers_must_be_non_empty_and_deterministic() -> None:
-    with pytest.raises(ValidationError):
-        _rule(" ")
-    with pytest.raises(ValidationError):
-        _rule("bad rule id")
-    with pytest.raises(ValidationError):
-        _condition(field_ref=" ")
-    with pytest.raises(ValidationError):
-        _condition(field_ref="market context.value")
+def test_validation_report_is_not_actionable() -> None:
+    assert _validate(_ruleset()).is_actionable is False
 
 
-def test_strategy_rules_default_to_disabled_and_not_actionable() -> None:
-    rule = _rule()
-    rule_set = _ruleset(rules=(rule,))
+def test_validation_report_serializes_deterministically_and_round_trips() -> None:
+    report = _validate(_ruleset())
+    same_report = _validate(_ruleset(rules=tuple(reversed(_ruleset().rules))))
 
-    assert rule.enabled is False
-    assert rule_set.enabled is False
-    assert rule.is_actionable is False
-    assert rule_set.is_actionable is False
-
-
-def test_between_operator_requires_ordered_bounds() -> None:
-    condition = _condition(
-        operator=StrategyRuleOperator.BETWEEN,
-        expected_value=None,
-        lower_bound=StrategyRuleValue(value=Decimal("0.10")),
-        upper_bound=StrategyRuleValue(value=Decimal("0.25")),
-    )
-
-    assert condition.lower_bound == StrategyRuleValue(value=Decimal("0.10"))
-
-    with pytest.raises(ValidationError):
-        _condition(operator=StrategyRuleOperator.BETWEEN, expected_value=None)
-    with pytest.raises(ValidationError):
-        _condition(
-            operator=StrategyRuleOperator.BETWEEN,
-            expected_value=None,
-            lower_bound=StrategyRuleValue(value=Decimal("0.25")),
-            upper_bound=StrategyRuleValue(value=Decimal("0.10")),
-        )
-    with pytest.raises(ValidationError):
-        _condition(
-            operator=StrategyRuleOperator.BETWEEN,
-            expected_value=StrategyRuleValue(value=Decimal("0.10")),
-            lower_bound=StrategyRuleValue(value=Decimal("0.10")),
-            upper_bound=StrategyRuleValue(value=Decimal("0.25")),
-        )
-
-
-def test_in_operator_requires_allowed_values_collection() -> None:
-    condition = _condition(
-        operator=StrategyRuleOperator.IN,
-        expected_value=None,
-        allowed_values=StrategyRuleValue(value=("LOW", "HIGH", "HIGH")),
-    )
-
-    assert condition.allowed_values == StrategyRuleValue(value=("HIGH", "LOW"))
-
-    with pytest.raises(ValidationError):
-        _condition(operator=StrategyRuleOperator.IN, expected_value=None)
-    with pytest.raises(ValidationError):
-        _condition(
-            operator=StrategyRuleOperator.IN,
-            expected_value=None,
-            allowed_values=StrategyRuleValue(value="HIGH"),
-        )
-    with pytest.raises(ValidationError):
-        _condition(
-            operator=StrategyRuleOperator.IN,
-            expected_value=StrategyRuleValue(value="HIGH"),
-            allowed_values=StrategyRuleValue(value=("HIGH", "LOW")),
-        )
-
-
-def test_exists_operators_do_not_accept_comparison_values() -> None:
-    assert _condition(operator=StrategyRuleOperator.EXISTS, expected_value=None).operator == (
-        StrategyRuleOperator.EXISTS
-    )
-    assert _condition(operator=StrategyRuleOperator.NOT_EXISTS, expected_value=None).operator == (
-        StrategyRuleOperator.NOT_EXISTS
-    )
-
-    with pytest.raises(ValidationError):
-        _condition(operator=StrategyRuleOperator.EXISTS)
-    with pytest.raises(ValidationError):
-        _condition(
-            operator=StrategyRuleOperator.NOT_EXISTS,
-            expected_value=None,
-            allowed_values=StrategyRuleValue(value=("a", "b")),
-        )
-
-
-@pytest.mark.parametrize(
-    "operator",
-    [
-        StrategyRuleOperator.EQ,
-        StrategyRuleOperator.NE,
-        StrategyRuleOperator.GT,
-        StrategyRuleOperator.GTE,
-        StrategyRuleOperator.LT,
-        StrategyRuleOperator.LTE,
-    ],
-)
-def test_comparison_operators_require_expected_value(operator: StrategyRuleOperator) -> None:
-    expected_value = (
-        StrategyRuleValue(value=Decimal("1.0"))
-        if operator
-        in {
-            StrategyRuleOperator.GT,
-            StrategyRuleOperator.GTE,
-            StrategyRuleOperator.LT,
-            StrategyRuleOperator.LTE,
-        }
-        else StrategyRuleValue(value=True)
-    )
-
-    assert _condition(operator=operator, expected_value=expected_value).operator == operator
-
-    with pytest.raises(ValidationError):
-        _condition(operator=operator, expected_value=None)
-    with pytest.raises(ValidationError):
-        _condition(
-            operator=operator,
-            expected_value=StrategyRuleValue(value=("a", "b")),
-        )
-
-
-def test_ordered_comparison_operators_reject_boolean_expected_values() -> None:
-    with pytest.raises(ValidationError):
-        _condition(operator=StrategyRuleOperator.GT, expected_value=StrategyRuleValue(value=True))
-
-
-def test_strategy_rule_value_rejects_floats() -> None:
-    with pytest.raises(ValidationError):
-        StrategyRuleValue(value=1.2)
-    with pytest.raises(ValidationError):
-        StrategyRuleValue(value=(Decimal("1.0"), 2.0))
-
-
-def test_strategy_rule_value_decimal_json_round_trips_exactly() -> None:
-    value = StrategyRuleValue(value=Decimal("1.20"))
-    values = StrategyRuleValue(value=(Decimal("1.20"), Decimal("1.10"), Decimal("1.10")))
-
-    assert StrategyRuleValue.model_validate_json(value.model_dump_json()) == value
-    assert StrategyRuleValue.model_validate_json(values.model_dump_json()) == StrategyRuleValue(
-        value=(Decimal("1.10"), Decimal("1.20"))
+    assert report.deterministic_json() == same_report.deterministic_json()
+    assert (
+        StrategyRuleSetValidationReport.model_validate_json(report.deterministic_json()) == report
     )
 
 
-def test_strategy_rule_value_rejects_invalid_collection_values() -> None:
-    with pytest.raises(ValidationError):
-        StrategyRuleValue(value=())
-    with pytest.raises(ValidationError):
-        StrategyRuleValue(value=(Decimal("1.0"), "mixed"))
-    with pytest.raises(ValidationError):
-        StrategyRuleValue(value=(True, False))
-    with pytest.raises(ValidationError):
-        StrategyRuleValue(value=Decimal("NaN"))
+def test_validation_report_fingerprint_is_deterministic() -> None:
+    report = _validate(_ruleset())
+    same_report = _validate(_ruleset(rules=tuple(reversed(_ruleset().rules))))
+
+    assert report.fingerprint_sha256() == same_report.fingerprint_sha256()
+    assert len(report.fingerprint_sha256()) == 64
 
 
-def test_warnings_are_normalized_deterministically() -> None:
-    rule = _rule(warnings=("beta", "alpha", "alpha", " "))
+def test_validation_report_fingerprint_changes_when_issue_content_changes() -> None:
+    report = _validate(_ruleset(rules=(_rule(description="buy is forbidden"),)))
+    changed = _validate(_ruleset(rules=(_rule(warnings=("setup_score is forbidden",)),)))
 
-    assert rule.warnings == ("alpha", "beta")
-
-
-def test_rules_are_normalized_deterministically_by_rule_id() -> None:
-    rule_set = _ruleset(rules=(_rule("z.rule"), _rule("a.rule")))
-
-    assert tuple(rule.rule_id for rule in rule_set.rules) == ("a.rule", "z.rule")
+    assert report.fingerprint_sha256() != changed.fingerprint_sha256()
 
 
-def test_strategy_rule_set_serializes_deterministically_and_round_trips() -> None:
-    rule_set = _ruleset()
-    same_rule_set = _ruleset(rules=tuple(reversed(rule_set.rules)))
-
-    assert rule_set.deterministic_json() == same_rule_set.deterministic_json()
-    assert StrategyRuleSet.model_validate_json(rule_set.deterministic_json()) == rule_set
-
-
-def test_strategy_rule_fingerprints_are_deterministic() -> None:
-    rule = _rule(warnings=("beta", "alpha"))
-    same_rule = _rule(warnings=("alpha", "beta"))
-    rule_set = _ruleset()
-    same_rule_set = _ruleset(rules=tuple(reversed(rule_set.rules)))
-
-    assert rule.fingerprint_sha256() == same_rule.fingerprint_sha256()
-    assert rule_set.fingerprint_sha256() == same_rule_set.fingerprint_sha256()
-    assert len(rule_set.fingerprint_sha256()) == 64
-
-
-def test_strategy_rule_fingerprint_changes_when_key_fields_change() -> None:
-    rule_set = _ruleset()
-    changed = _ruleset(strategy_version="future-strategy-spec-v2")
-
-    assert rule_set.fingerprint_sha256() != changed.fingerprint_sha256()
-
-
-def test_strategy_rule_specs_do_not_define_scoring_confidence_or_executable_fields() -> None:
-    forbidden_fragments = (
-        "score",
-        "weight",
-        "confidence",
-        "action",
-        "execution",
-        "broker",
-        "order",
-        "position",
+def test_validation_issue_ordering_is_deterministic() -> None:
+    issues = (
+        StrategyRuleSetValidationIssue(
+            code=StrategyRuleSetValidationIssueCode.RULE_ENABLED,
+            message="b",
+            rule_id="b.rule",
+            field_ref="data_quality.b",
+            severity=StrategyRuleSeverity.BLOCKING,
+        ),
+        StrategyRuleSetValidationIssue(
+            code=StrategyRuleSetValidationIssueCode.CATEGORY_FIELD_MISMATCH,
+            message="a",
+            rule_id="a.rule",
+            field_ref="market_context.a",
+            severity=StrategyRuleSeverity.BLOCKING,
+        ),
     )
-    field_names = set(StrategyRuleSpec.model_fields) | set(StrategyRuleSet.model_fields)
-    condition_field_names = set(StrategyRuleCondition.model_fields)
-    all_field_names = field_names | condition_field_names
+    report = StrategyRuleSetValidationReport(
+        ruleset_version="phase4c-ruleset-v1",
+        strategy_version="future-strategy-validation-v1",
+        ruleset_name="Ordered report",
+        status=StrategyRuleSetValidationStatus.INVALID,
+        checked_at=CHECKED_AT,
+        issues=issues,
+        rule_count=2,
+        enabled_rule_count=1,
+    )
 
-    offenders = [
-        field_name
-        for field_name in all_field_names
-        for fragment in forbidden_fragments
-        if fragment in field_name.lower()
-    ]
+    assert _codes(report) == (
+        StrategyRuleSetValidationIssueCode.CATEGORY_FIELD_MISMATCH,
+        StrategyRuleSetValidationIssueCode.RULE_ENABLED,
+    )
 
-    assert offenders == []
+
+def test_validator_does_not_mutate_input_ruleset() -> None:
+    ruleset = _ruleset()
+    before = ruleset.deterministic_json()
+
+    _validate(ruleset)
+
+    assert ruleset.deterministic_json() == before
+
+
+def test_validator_accepts_only_strategy_ruleset_objects() -> None:
+    with pytest.raises(TypeError):
+        StrategyRuleSetValidator().validate(object(), CHECKED_AT)  # type: ignore[arg-type]
 ```
 
 ### `tests/contract/test_safety_boundaries.py`
@@ -1796,6 +1887,7 @@ from pathlib import Path
 
 import pytest
 
+import app.domain.strategy_ruleset_validator as strategy_ruleset_validator_module
 from app.adapters.disabled import (
     DisabledEconomicCalendarProvider,
     DisabledLLMProvider,
@@ -1803,7 +1895,8 @@ from app.adapters.disabled import (
 )
 from app.core.enums import Decision
 from app.core.exceptions import IntegrationDisabledError
-from app.domain.entities import Timeframe, signal_contract, strategy_rules
+from app.domain.entities import Timeframe, signal_contract, strategy_rules, strategy_validation
+from app.domain.strategy_ruleset_validator import StrategyRuleSetValidator
 from app.domain.value_objects import CurrencyPair
 from app.persistence.models import ScheduledDigestDeliveryModel
 from app.persistence.repositories.foundation import SqlAlchemyScheduledDigestDeliveryStore
@@ -2080,6 +2173,28 @@ PHASE_4B_FORBIDDEN_BEHAVIOR_TERMS = (
     "OpenAI",
     "LLM",
 )
+PHASE_4C_VALIDATION_OBJECTS = (
+    strategy_validation.StrategyRuleSetValidationIssue,
+    strategy_validation.StrategyRuleSetValidationIssueCode,
+    strategy_validation.StrategyRuleSetValidationReport,
+    strategy_validation.StrategyRuleSetValidationStatus,
+    StrategyRuleSetValidator,
+)
+PHASE_4C_FORBIDDEN_RUNTIME_IMPORTS = (
+    "app.domain.entities.market_data",
+    "app.domain.entities.context",
+    "app.domain.entities.analysis",
+    "app.domain.entities.features",
+    "app.domain.entities.signal_contract",
+    "app.adapters",
+    "app.persistence",
+    "app.telegram",
+    "app.scheduler",
+    "sqlalchemy",
+    "fastapi",
+    "httpx",
+    "openai",
+)
 
 
 def test_no_real_order_execution_code_exists() -> None:
@@ -2277,6 +2392,89 @@ def test_phase3j_digest_audit_api_route_is_absent() -> None:
     assert not Path("app/api/routes/digest_deliveries.py").exists()
 
 
+def test_phase4c_validation_objects_are_domain_only() -> None:
+    offenders: list[str] = []
+    texts = [inspect.getsource(source_object) for source_object in PHASE_4C_VALIDATION_OBJECTS]
+    for index, text in enumerate(texts):
+        lowered = text.lower()
+        for term in PHASE_4C_FORBIDDEN_RUNTIME_IMPORTS:
+            if term.lower() in lowered:
+                offenders.append(f"phase4c-validation-{index}: {term}")
+
+    assert offenders == []
+
+
+def test_phase4c_validator_signature_has_no_market_or_runtime_inputs() -> None:
+    signature = inspect.signature(StrategyRuleSetValidator.validate)
+
+    assert tuple(signature.parameters) == ("self", "ruleset", "checked_at")
+
+
+def test_phase4c_validator_module_does_not_import_runtime_dependencies() -> None:
+    source = inspect.getsource(strategy_ruleset_validator_module).lower()
+    import_lines = tuple(
+        line
+        for line in source.splitlines()
+        if line.startswith("import ") or line.startswith("from ")
+    )
+
+    offenders = [
+        term
+        for term in PHASE_4C_FORBIDDEN_RUNTIME_IMPORTS
+        if any(term.lower() in line for line in import_lines)
+    ]
+
+    assert offenders == []
+
+
+def test_phase4c_does_not_add_validation_api_routes() -> None:
+    route_files = tuple(Path("app/api/routes").glob("*.py"))
+    offenders = [
+        str(file_path)
+        for file_path in route_files
+        if "validation" in file_path.name.lower()
+        or "ruleset" in file_path.name.lower()
+        or "StrategyRuleSetValidationReport" in file_path.read_text(encoding="utf-8")
+    ]
+
+    assert offenders == []
+
+
+def test_phase4c_does_not_add_telegram_validation_or_signal_handlers() -> None:
+    source = Path("app/telegram/commands.py").read_text(encoding="utf-8")
+
+    assert "validation_command" not in source
+    assert "ruleset_command" not in source
+    assert 'CommandHandler("validate"' not in source
+    assert 'CommandHandler("signal"' not in source
+    assert "StrategyRuleSetValidationReport" not in source
+
+
+def test_phase4c_does_not_add_scheduler_validation_or_signal_jobs() -> None:
+    scheduler_text = "\n".join(
+        file_path.read_text(encoding="utf-8") for file_path in Path("app/scheduler").glob("*.py")
+    )
+
+    assert "StrategyRuleSetValidator" not in scheduler_text
+    assert "StrategyRuleSetValidationReport" not in scheduler_text
+    assert "ruleset_validation_job" not in scheduler_text
+    assert "generate_signal" not in scheduler_text
+
+
+def test_phase4c_does_not_add_strategy_validation_service() -> None:
+    service_files = tuple(Path("app/services").glob("*.py"))
+    offenders = [
+        str(file_path)
+        for file_path in service_files
+        if "validation" in file_path.name.lower()
+        or "ruleset" in file_path.name.lower()
+        or "StrategyRuleSetValidator" in file_path.read_text(encoding="utf-8")
+        or "StrategyRuleSetValidationReport" in file_path.read_text(encoding="utf-8")
+    ]
+
+    assert offenders == []
+
+
 @pytest.mark.asyncio
 async def test_disabled_market_data_provider_fails_before_external_call() -> None:
     with pytest.raises(IntegrationDisabledError):
@@ -2345,6 +2543,316 @@ def test_safety_scanner_rejects_execution_http_endpoints(tmp_path: Path) -> None
     assert scan_files([file_path])
 ```
 
+### `tests/unit/test_strategy_rule_specification_foundation.py`
+
+```python
+from datetime import UTC, datetime, timedelta, timezone
+from decimal import Decimal
+
+import pytest
+from pydantic import ValidationError
+
+from app.core import constants
+from app.domain.entities.strategy_rules import (
+    StrategyRuleCategory,
+    StrategyRuleCondition,
+    StrategyRuleOperator,
+    StrategyRuleSet,
+    StrategyRuleSeverity,
+    StrategyRuleSpec,
+    StrategyRuleValue,
+)
+
+CREATED_AT = datetime(2026, 7, 18, 9, 0, tzinfo=UTC)
+
+
+def _condition(**overrides: object) -> StrategyRuleCondition:
+    values: dict[str, object] = {
+        "field_ref": "data_quality.market_data_complete",
+        "operator": StrategyRuleOperator.EQ,
+        "expected_value": StrategyRuleValue(value=True),
+    }
+    values.update(overrides)
+    return StrategyRuleCondition(**values)
+
+
+def _rule(rule_id: str = "data_quality.complete", **overrides: object) -> StrategyRuleSpec:
+    values: dict[str, object] = {
+        "rule_id": rule_id,
+        "category": StrategyRuleCategory.DATA_QUALITY,
+        "severity": StrategyRuleSeverity.REQUIRED,
+        "condition": _condition(),
+        "description": "Require a complete deterministic data-quality snapshot.",
+        "warnings": ("contract only",),
+    }
+    values.update(overrides)
+    return StrategyRuleSpec(**values)
+
+
+def _ruleset(**overrides: object) -> StrategyRuleSet:
+    values: dict[str, object] = {
+        "ruleset_version": "phase4b-ruleset-v1",
+        "strategy_version": "future-strategy-spec-v1",
+        "name": "Future strategy rule specification",
+        "description": "Specification-only rule set for future deterministic checks.",
+        "created_at": CREATED_AT,
+        "rules": (
+            _rule("time.session"),
+            _rule("data_quality.complete"),
+        ),
+    }
+    values.update(overrides)
+    return StrategyRuleSet(**values)
+
+
+def test_project_phase_has_advanced_to_phase4c_strategy_ruleset_validation_foundation() -> None:
+    assert constants.PROJECT_PHASE == "phase_4c_strategy_ruleset_validation_foundation"
+
+
+def test_strategy_rule_models_are_immutable() -> None:
+    rule_set = _ruleset()
+
+    with pytest.raises(ValidationError):
+        rule_set.enabled = True
+    with pytest.raises(ValidationError):
+        rule_set.rules[0].condition.field_ref = "changed"
+
+
+def test_strategy_rule_set_normalizes_created_at_to_utc() -> None:
+    offset = timezone(timedelta(hours=2))
+    rule_set = _ruleset(created_at=datetime(2026, 7, 18, 11, 0, tzinfo=offset))
+
+    assert rule_set.created_at == CREATED_AT
+
+
+def test_strategy_rule_set_rejects_duplicate_rule_id() -> None:
+    with pytest.raises(ValidationError):
+        _ruleset(rules=(_rule("duplicate.rule"), _rule("duplicate.rule")))
+
+
+def test_strategy_rule_identifiers_must_be_non_empty_and_deterministic() -> None:
+    with pytest.raises(ValidationError):
+        _rule(" ")
+    with pytest.raises(ValidationError):
+        _rule("bad rule id")
+    with pytest.raises(ValidationError):
+        _condition(field_ref=" ")
+    with pytest.raises(ValidationError):
+        _condition(field_ref="market context.value")
+
+
+def test_strategy_rules_default_to_disabled_and_not_actionable() -> None:
+    rule = _rule()
+    rule_set = _ruleset(rules=(rule,))
+
+    assert rule.enabled is False
+    assert rule_set.enabled is False
+    assert rule.is_actionable is False
+    assert rule_set.is_actionable is False
+
+
+def test_between_operator_requires_ordered_bounds() -> None:
+    condition = _condition(
+        operator=StrategyRuleOperator.BETWEEN,
+        expected_value=None,
+        lower_bound=StrategyRuleValue(value=Decimal("0.10")),
+        upper_bound=StrategyRuleValue(value=Decimal("0.25")),
+    )
+
+    assert condition.lower_bound == StrategyRuleValue(value=Decimal("0.10"))
+
+    with pytest.raises(ValidationError):
+        _condition(operator=StrategyRuleOperator.BETWEEN, expected_value=None)
+    with pytest.raises(ValidationError):
+        _condition(
+            operator=StrategyRuleOperator.BETWEEN,
+            expected_value=None,
+            lower_bound=StrategyRuleValue(value=Decimal("0.25")),
+            upper_bound=StrategyRuleValue(value=Decimal("0.10")),
+        )
+    with pytest.raises(ValidationError):
+        _condition(
+            operator=StrategyRuleOperator.BETWEEN,
+            expected_value=StrategyRuleValue(value=Decimal("0.10")),
+            lower_bound=StrategyRuleValue(value=Decimal("0.10")),
+            upper_bound=StrategyRuleValue(value=Decimal("0.25")),
+        )
+
+
+def test_in_operator_requires_allowed_values_collection() -> None:
+    condition = _condition(
+        operator=StrategyRuleOperator.IN,
+        expected_value=None,
+        allowed_values=StrategyRuleValue(value=("LOW", "HIGH", "HIGH")),
+    )
+
+    assert condition.allowed_values == StrategyRuleValue(value=("HIGH", "LOW"))
+
+    with pytest.raises(ValidationError):
+        _condition(operator=StrategyRuleOperator.IN, expected_value=None)
+    with pytest.raises(ValidationError):
+        _condition(
+            operator=StrategyRuleOperator.IN,
+            expected_value=None,
+            allowed_values=StrategyRuleValue(value="HIGH"),
+        )
+    with pytest.raises(ValidationError):
+        _condition(
+            operator=StrategyRuleOperator.IN,
+            expected_value=StrategyRuleValue(value="HIGH"),
+            allowed_values=StrategyRuleValue(value=("HIGH", "LOW")),
+        )
+
+
+def test_exists_operators_do_not_accept_comparison_values() -> None:
+    assert _condition(operator=StrategyRuleOperator.EXISTS, expected_value=None).operator == (
+        StrategyRuleOperator.EXISTS
+    )
+    assert _condition(operator=StrategyRuleOperator.NOT_EXISTS, expected_value=None).operator == (
+        StrategyRuleOperator.NOT_EXISTS
+    )
+
+    with pytest.raises(ValidationError):
+        _condition(operator=StrategyRuleOperator.EXISTS)
+    with pytest.raises(ValidationError):
+        _condition(
+            operator=StrategyRuleOperator.NOT_EXISTS,
+            expected_value=None,
+            allowed_values=StrategyRuleValue(value=("a", "b")),
+        )
+
+
+@pytest.mark.parametrize(
+    "operator",
+    [
+        StrategyRuleOperator.EQ,
+        StrategyRuleOperator.NE,
+        StrategyRuleOperator.GT,
+        StrategyRuleOperator.GTE,
+        StrategyRuleOperator.LT,
+        StrategyRuleOperator.LTE,
+    ],
+)
+def test_comparison_operators_require_expected_value(operator: StrategyRuleOperator) -> None:
+    expected_value = (
+        StrategyRuleValue(value=Decimal("1.0"))
+        if operator
+        in {
+            StrategyRuleOperator.GT,
+            StrategyRuleOperator.GTE,
+            StrategyRuleOperator.LT,
+            StrategyRuleOperator.LTE,
+        }
+        else StrategyRuleValue(value=True)
+    )
+
+    assert _condition(operator=operator, expected_value=expected_value).operator == operator
+
+    with pytest.raises(ValidationError):
+        _condition(operator=operator, expected_value=None)
+    with pytest.raises(ValidationError):
+        _condition(
+            operator=operator,
+            expected_value=StrategyRuleValue(value=("a", "b")),
+        )
+
+
+def test_ordered_comparison_operators_reject_boolean_expected_values() -> None:
+    with pytest.raises(ValidationError):
+        _condition(operator=StrategyRuleOperator.GT, expected_value=StrategyRuleValue(value=True))
+
+
+def test_strategy_rule_value_rejects_floats() -> None:
+    with pytest.raises(ValidationError):
+        StrategyRuleValue(value=1.2)
+    with pytest.raises(ValidationError):
+        StrategyRuleValue(value=(Decimal("1.0"), 2.0))
+
+
+def test_strategy_rule_value_decimal_json_round_trips_exactly() -> None:
+    value = StrategyRuleValue(value=Decimal("1.20"))
+    values = StrategyRuleValue(value=(Decimal("1.20"), Decimal("1.10"), Decimal("1.10")))
+
+    assert StrategyRuleValue.model_validate_json(value.model_dump_json()) == value
+    assert StrategyRuleValue.model_validate_json(values.model_dump_json()) == StrategyRuleValue(
+        value=(Decimal("1.10"), Decimal("1.20"))
+    )
+
+
+def test_strategy_rule_value_rejects_invalid_collection_values() -> None:
+    with pytest.raises(ValidationError):
+        StrategyRuleValue(value=())
+    with pytest.raises(ValidationError):
+        StrategyRuleValue(value=(Decimal("1.0"), "mixed"))
+    with pytest.raises(ValidationError):
+        StrategyRuleValue(value=(True, False))
+    with pytest.raises(ValidationError):
+        StrategyRuleValue(value=Decimal("NaN"))
+
+
+def test_warnings_are_normalized_deterministically() -> None:
+    rule = _rule(warnings=("beta", "alpha", "alpha", " "))
+
+    assert rule.warnings == ("alpha", "beta")
+
+
+def test_rules_are_normalized_deterministically_by_rule_id() -> None:
+    rule_set = _ruleset(rules=(_rule("z.rule"), _rule("a.rule")))
+
+    assert tuple(rule.rule_id for rule in rule_set.rules) == ("a.rule", "z.rule")
+
+
+def test_strategy_rule_set_serializes_deterministically_and_round_trips() -> None:
+    rule_set = _ruleset()
+    same_rule_set = _ruleset(rules=tuple(reversed(rule_set.rules)))
+
+    assert rule_set.deterministic_json() == same_rule_set.deterministic_json()
+    assert StrategyRuleSet.model_validate_json(rule_set.deterministic_json()) == rule_set
+
+
+def test_strategy_rule_fingerprints_are_deterministic() -> None:
+    rule = _rule(warnings=("beta", "alpha"))
+    same_rule = _rule(warnings=("alpha", "beta"))
+    rule_set = _ruleset()
+    same_rule_set = _ruleset(rules=tuple(reversed(rule_set.rules)))
+
+    assert rule.fingerprint_sha256() == same_rule.fingerprint_sha256()
+    assert rule_set.fingerprint_sha256() == same_rule_set.fingerprint_sha256()
+    assert len(rule_set.fingerprint_sha256()) == 64
+
+
+def test_strategy_rule_fingerprint_changes_when_key_fields_change() -> None:
+    rule_set = _ruleset()
+    changed = _ruleset(strategy_version="future-strategy-spec-v2")
+
+    assert rule_set.fingerprint_sha256() != changed.fingerprint_sha256()
+
+
+def test_strategy_rule_specs_do_not_define_scoring_confidence_or_executable_fields() -> None:
+    forbidden_fragments = (
+        "score",
+        "weight",
+        "confidence",
+        "action",
+        "execution",
+        "broker",
+        "order",
+        "position",
+    )
+    field_names = set(StrategyRuleSpec.model_fields) | set(StrategyRuleSet.model_fields)
+    condition_field_names = set(StrategyRuleCondition.model_fields)
+    all_field_names = field_names | condition_field_names
+
+    offenders = [
+        field_name
+        for field_name in all_field_names
+        for fragment in forbidden_fragments
+        if fragment in field_name.lower()
+    ]
+
+    assert offenders == []
+```
+
 ### `tests/unit/test_signal_contract_foundation.py`
 
 ```python
@@ -2409,8 +2917,8 @@ def _contract(**overrides: object) -> SignalContract:
     return SignalContract(**values)
 
 
-def test_project_phase_has_advanced_to_phase4b_strategy_rule_specification_foundation() -> None:
-    assert constants.PROJECT_PHASE == "phase_4b_strategy_rule_specification_foundation"
+def test_project_phase_has_advanced_to_phase4c_strategy_ruleset_validation_foundation() -> None:
+    assert constants.PROJECT_PHASE == "phase_4c_strategy_ruleset_validation_foundation"
 
 
 def test_signal_contract_models_are_immutable() -> None:
@@ -2540,5 +3048,5 @@ def test_signal_contract_fingerprint_changes_when_key_fields_change() -> None:
 - `AGENTS.md`
 - `PLANS.md`
 - `docs/operations.md`
-- `docs/phase4b-verification-report.md`
+- `docs/phase4c-verification-report.md`
 - `docs/chatgpt-verification-packet.md`

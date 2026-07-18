@@ -2,11 +2,11 @@
 
 AI Trading OS is a foundation for a future Forex analysis and paper-trading platform.
 
-Current project phase: phase_4b_strategy_rule_specification_foundation.
-Phase 4B is strategy rule specification foundation only. It defines typed immutable contracts for
-future rule specifications and validation/serialization rules only. External integrations are
-disabled by default. The project contains no strategy engine, no rule evaluation, no signal
-generation engine, no broker order APIs, no paper trading, and no real trading.
+Current project phase: phase_4c_strategy_ruleset_validation_foundation.
+Phase 4C is strategy ruleset validation foundation only. It defines typed immutable validation
+reports and structural checks for Phase 4B `StrategyRuleSet` objects only. External integrations are
+disabled by default. The project contains no strategy engine, no rule evaluation against market
+data, no signal generation engine, no broker order APIs, no paper trading, and no real trading.
 
 ## Start and Checks
 
@@ -43,11 +43,13 @@ generation engine, no broker order APIs, no paper trading, and no real trading.
   paper trading, broker APIs, order execution, or real trading while working in foundation phases.
   In Phase 4A, `LONG`/`SHORT` may appear only as contract enum values, not as generated
   recommendations.
-- While working in Phase 4B, strategy/rule vocabulary is allowed only inside explicit strategy rule
-  specification domain models and their tests/docs. Rule specs and rule sets must default to
-  disabled/non-actionable. Do not add rule evaluation, signal generation, setup scoring, confidence
-  scoring, Telegram signal sending, API signal routes, scheduler signal jobs, broker APIs, order
-  execution, automatic runtime loops, or paper-trading actions.
+- While working in Phase 4C, strategy validation vocabulary is allowed only inside explicit ruleset
+  validation domain models, the validation-only checker, and their tests/docs. Rule specs and rule
+  sets must remain disabled/non-actionable. Do not evaluate rules against candles, indicators,
+  economic events, context snapshots, analysis snapshots, or signal contracts. Do not add strategy
+  engines, signal generation, setup scoring, confidence scoring, Telegram signal sending, API signal
+  routes, scheduler signal jobs, broker APIs, order execution, automatic runtime loops, or
+  paper-trading actions.
 - Never fabricate market data, calendar data, agent evidence, or scan results.
 - LLM output may explain deterministic results only; it must not change prices, scores, risk, or rejected decisions.
 - Update documentation when architecture or safety boundaries change.

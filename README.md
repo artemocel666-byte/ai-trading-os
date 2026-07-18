@@ -4,7 +4,7 @@ AI Trading OS is a safety-first foundation for a future modular Forex analysis a
 
 ## Current Status
 
-- Current project phase: phase_4b_strategy_rule_specification_foundation.
+- Current project phase: phase_4c_strategy_ruleset_validation_foundation.
 - Trading strategy: not implemented.
 - Real trading: disabled and unsupported.
 - External integrations: disabled by default.
@@ -18,6 +18,8 @@ AI Trading OS is a safety-first foundation for a future modular Forex analysis a
 - Phase 4A: signal contract foundation only; contracts default to `NOT_ACTIONABLE`.
 - Phase 4B: strategy rule specification foundation only; rule specs and rule sets default to
   disabled/non-actionable.
+- Phase 4C: strategy ruleset validation foundation only; validates `StrategyRuleSet` structure
+  without evaluating market data.
 
 ## Safety Warning
 
@@ -130,6 +132,19 @@ provide trading recommendations, does not calculate entries/stops/targets, does 
 position size, does not calculate setup score or confidence, does not call AI/OpenAI/LLM services,
 does not send Telegram signals, does not use broker APIs, does not execute orders, and does not
 enable paper or real trading.
+
+## Phase 4C Status
+
+Phase 4C is strategy ruleset validation foundation only. It adds immutable validation issue/report
+models and a deterministic validator that checks `StrategyRuleSet` structure, disabled flags, static
+field-reference registry membership, category/field compatibility, forbidden action/scoring/
+confidence language, and validation-report determinism. Phase 4C does not evaluate rules against
+market data, indicators, economic events, context snapshots, analysis snapshots, or signal
+contracts. It does not generate signals, does not provide trading recommendations, does not
+calculate entries/stops/targets, does not calculate position size, does not calculate setup score or
+confidence, does not call AI/OpenAI/LLM services, does not send Telegram signals, does not use
+broker APIs, does not execute orders, and does not enable paper or real trading. Rule specs and rule
+sets remain disabled/non-actionable.
 
 ## Prerequisites
 

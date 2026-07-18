@@ -107,6 +107,13 @@ runtime jobs, expose API endpoints, add Telegram signal handlers, add persistenc
 providers, call AI/OpenAI/LLM services, contact brokers, calculate scores, or produce trading
 guidance. Rule specs and rule sets default to disabled/non-actionable.
 
+Phase 4C adds strategy ruleset validation domain models and a validation-only checker for
+`StrategyRuleSet` structure. It does not evaluate rules against market data, indicators, events,
+context snapshots, analysis snapshots, or signal contracts. It does not register runtime jobs,
+expose API endpoints, add Telegram signal handlers, add persistence migrations, call providers, call
+AI/OpenAI/LLM services, contact brokers, calculate scores/confidence, or produce trading guidance.
+Rule specs and rule sets remain disabled/non-actionable.
+
 ## Telegram Bot Local Setup
 
 Create the bot in Telegram before enabling the `bot` service:
