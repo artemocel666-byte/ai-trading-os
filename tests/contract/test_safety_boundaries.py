@@ -201,12 +201,14 @@ PHASE_3H_FORBIDDEN_TERMS = (
     "paper_trading",
     "order_execution",
 )
-PHASE_3I_FILES = (Path("migrations/versions/0003_phase3i_scheduled_digest_deliveries.py"),)
-PHASE_3I_SOURCE_OBJECTS = (
+PHASE_3I_DIGEST_AUDIT_FILES = (
+    Path("migrations/versions/0003_phase3i_scheduled_digest_deliveries.py"),
+)
+PHASE_3I_DIGEST_AUDIT_SOURCE_OBJECTS = (
     ScheduledDigestDeliveryModel,
     SqlAlchemyScheduledDigestDeliveryStore,
 )
-PHASE_3I_FORBIDDEN_TERMS = (
+PHASE_3I_DIGEST_AUDIT_FORBIDDEN_TERMS = (
     "bullish",
     "bearish",
     "overbought",
@@ -224,6 +226,29 @@ PHASE_3I_FORBIDDEN_TERMS = (
     "setup",
     "score",
     "confidence",
+    "OpenAI",
+    "broker",
+    "paper_trading",
+    "order_execution",
+)
+PHASE_3I_SNAPSHOT_VERSIONING_FILES = (
+    Path("app/core/constants.py"),
+    Path("app/domain/entities/features.py"),
+    Path("app/domain/entities/context.py"),
+    Path("app/domain/entities/analysis.py"),
+    Path("app/domain/feature_engine.py"),
+    Path("app/domain/context_engine.py"),
+    Path("app/domain/analysis_engine.py"),
+)
+PHASE_3I_SNAPSHOT_VERSIONING_FORBIDDEN_TERMS = (
+    "LONG",
+    "SHORT",
+    "BUY",
+    "SELL",
+    "NO_TRADE",
+    "signal",
+    "setup_score",
+    "recommendation",
     "OpenAI",
     "broker",
     "paper_trading",
@@ -444,13 +469,27 @@ def test_phase3h_scheduled_digest_files_do_not_add_decision_or_execution_terms()
 
 def test_phase3i_digest_audit_files_do_not_add_decision_or_execution_terms() -> None:
     offenders: list[str] = []
-    texts = [path.read_text(encoding="utf-8") for path in PHASE_3I_FILES]
-    texts.extend(inspect.getsource(source_object) for source_object in PHASE_3I_SOURCE_OBJECTS)
+    texts = [path.read_text(encoding="utf-8") for path in PHASE_3I_DIGEST_AUDIT_FILES]
+    texts.extend(
+        inspect.getsource(source_object) for source_object in PHASE_3I_DIGEST_AUDIT_SOURCE_OBJECTS
+    )
     for index, text in enumerate(texts):
         lowered = text.lower()
-        for term in PHASE_3I_FORBIDDEN_TERMS:
+        for term in PHASE_3I_DIGEST_AUDIT_FORBIDDEN_TERMS:
             if term.lower() in lowered:
                 offenders.append(f"phase3i-source-{index}: {term}")
+
+    assert offenders == []
+
+
+def test_phase3i_snapshot_versioning_files_do_not_add_decision_or_execution_terms() -> None:
+    offenders: list[str] = []
+    for file_path in PHASE_3I_SNAPSHOT_VERSIONING_FILES:
+        text = file_path.read_text(encoding="utf-8")
+        lowered = text.lower()
+        for term in PHASE_3I_SNAPSHOT_VERSIONING_FORBIDDEN_TERMS:
+            if term.lower() in lowered:
+                offenders.append(f"{file_path}: {term}")
 
     assert offenders == []
 

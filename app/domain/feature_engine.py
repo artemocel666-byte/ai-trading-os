@@ -3,6 +3,7 @@ from collections.abc import Sequence
 from datetime import datetime
 from decimal import Decimal
 
+from app.core import constants
 from app.core.time import normalize_to_utc
 from app.domain.entities.data_quality import TIMEFRAME_TO_DELTA, build_feature_snapshot
 from app.domain.entities.features import (
@@ -184,6 +185,7 @@ class MarketFeatureEngine:
             economic_events=economic_events,
         )
         return MarketFeatureSnapshot(
+            schema_version=constants.FEATURE_SNAPSHOT_SCHEMA_VERSION,
             window=window,
             candle_summary=_build_candle_summary(
                 expected_candle_count=len(expected_open_times),
@@ -195,6 +197,9 @@ class MarketFeatureEngine:
             economic_event_summary=_build_event_summary(
                 input_event_count=len(economic_events),
                 events=usable_events,
+            ),
+            data_completeness_ratio=_completeness_ratio(
+                expected=len(expected_open_times), used=len(usable_candles)
             ),
             quality_issues=tuple(issues),
             data_quality_issues=data_quality_snapshot.quality_issues,
@@ -238,6 +243,12 @@ def _dedupe_candles_by_open_time(candles: Sequence[Candle]) -> tuple[Candle, ...
     return tuple(selected[open_time] for open_time in sorted(selected))
 
 
+def _completeness_ratio(*, expected: int, used: int) -> Decimal:
+    if expected <= 0:
+        return Decimal("0")
+    return min(Decimal(used) / Decimal(expected), Decimal("1"))
+
+
 def _build_candle_summary(
     *,
     expected_candle_count: int,
@@ -273,6 +284,8 @@ def _build_candle_summary(
         true_ranges=true_ranges,
         average_true_range=_mean(true_ranges),
         market_data_complete=market_data_complete,
+        used_candle_open_times=tuple(candle.open_time for candle in candles),
+        used_candle_close_times=tuple(candle.close_time for candle in candles),
     )
 
 

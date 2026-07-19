@@ -400,6 +400,7 @@ def _metadata(
         }
     )
     return AnalysisSnapshotMetadata(
+        schema_version=constants.ANALYSIS_SNAPSHOT_SCHEMA_VERSION,
         project_phase=constants.PROJECT_PHASE,
         snapshot_id=snapshot_id,
         feature_snapshot_id=feature_snapshot_id,

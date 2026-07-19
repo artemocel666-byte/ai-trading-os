@@ -1,12 +1,13 @@
 from datetime import datetime
 from decimal import Decimal
-from typing import Any
+from typing import Any, Protocol
 from uuid import UUID, uuid4
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from app.core.enums import AgentVerdict, ConfidenceLevel, Direction
 from app.core.time import normalize_to_utc
+from app.domain.entities.analysis import AnalysisSnapshot
 from app.domain.value_objects import CurrencyPair
 
 
@@ -70,6 +71,20 @@ class AgentReport(BaseModel):
     @classmethod
     def timestamps_must_be_timezone_aware(cls, value: datetime) -> datetime:
         return normalize_to_utc(value)
+
+
+class AnalysisAgent(Protocol):
+    """Read-only analysis contract for future Phase 4 agents.
+
+    An agent receives one immutable AnalysisSnapshot and returns one AgentReport.
+    It must not perform I/O, query a database, call a market-data or LLM provider,
+    or mutate the snapshot. It must not return a trading decision, a direction
+    beyond Direction.NEUTRAL, or an execution instruction. This contract is
+    unimplemented and unwired; Phase 4 defines concrete agents against it.
+    """
+
+    def evaluate(self, snapshot: AnalysisSnapshot) -> AgentReport:
+        """Return a deterministic, evidence-backed report for one snapshot."""
 
 
 class ChiefAIRequest(BaseModel):

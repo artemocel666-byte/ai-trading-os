@@ -44,6 +44,15 @@ trading, and no real trading.
   paper trading, broker APIs, order execution, or real trading while working in foundation phases.
   In Phase 4A, `LONG`/`SHORT` may appear only as contract enum values, not as generated
   recommendations.
+- While working in Phase 3H, output is limited to neutral readiness reports and readiness digests.
+  Scheduled delivery must remain disabled by default. Do not add Telegram trading signals, entry
+  guidance, LONG/SHORT advice, buy/sell recommendations, automatic runtime loops, or paper-trading
+  actions.
+- While working in the merged Phase 3I snapshot versioning/evidence slice, schema versioning,
+  data-completeness ratios, and evidence timestamps are descriptive-only and must not influence
+  readiness status, quality checks, or any branching decision. The `AnalysisAgent` Protocol in
+  `app/schemas/agents.py` must remain unimplemented and unwired to any service, route, or
+  scheduler.
 - While working in Phase 4D, strategy registry vocabulary is allowed only inside explicit ruleset
   registry/fixture domain models, the registry loader, and their tests/docs. Rule specs, rule sets,
   registry items, and registry snapshots must remain disabled/non-actionable. Do not evaluate rules

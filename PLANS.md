@@ -40,6 +40,11 @@
 - Phase 3I persistent digest delivery audit foundation: neutral scheduled digest delivery audit
   table, SQLAlchemy-backed deduplication store, UoW integration, and safety tests confirming no
   strategy/signals/trading activation.
+- Merged Phase 3I snapshot versioning and evidence foundation: `schema_version` fields on feature,
+  context, and analysis snapshot metadata; deterministic `data_completeness_ratio` on
+  feature/context snapshots; candle-level `used_candle_open_times`/`used_candle_close_times`
+  evidence timestamps on feature snapshots; an unwired, read-only `AnalysisAgent` Protocol in
+  `app/schemas/agents.py`; and safety tests confirming no strategy/signals/trading activation.
 - Phase 4A signal contract foundation: immutable contract/value models, validation rules,
   deterministic serialization, deterministic fingerprinting, and safety tests confirming no signal
   generation or execution activation.
@@ -62,17 +67,20 @@ indicator/context foundation, Phase 3D deterministic analysis snapshot/readiness
 Phase 3E local Telegram readiness-report foundation, Phase 3F deterministic readiness scheduler and
 snapshot digest foundation, Phase 3G manual Telegram digest command foundation, Phase 3H neutral
 scheduled digest delivery foundation, and Phase 3I persistent neutral digest delivery audit
-foundation. Phase 4A signal contract foundation is contract-only and defines future signal contract
-shapes without generating signals or trading recommendations. Phase 4B strategy rule specification
-foundation is specification-only and defines future rule set shapes without evaluating rules or
-activating strategy logic. Phase 4C strategy ruleset validation foundation validates the structure of
-Phase 4B rule sets without evaluating market data or producing decisions. Phase 4D strategy ruleset
-registry foundation loads disabled built-in rule set fixtures and validates them through the Phase
-4C validator without evaluating data or producing decisions. Production Twelve Data and FMP adapters
+foundation plus the merged Phase 3I snapshot versioning/evidence foundation. Phase 4A signal
+contract foundation is contract-only and defines future signal contract shapes without generating
+signals or trading recommendations. Phase 4B strategy rule specification foundation is
+specification-only and defines future rule set shapes without evaluating rules or activating
+strategy logic. Phase 4C strategy ruleset validation foundation validates the structure of Phase 4B
+rule sets without evaluating market data or producing decisions. Phase 4D strategy ruleset registry
+foundation loads disabled built-in rule set fixtures and validates them through the Phase 4C
+validator without evaluating data or producing decisions. Production Twelve Data and FMP adapters
 exist, but live integrations remain disabled by default. Scanning state can be enabled or disabled,
 Telegram can request readiness reports and readiness digests, and scheduled digest orchestration
-remains disabled by default. No strategy engine, rule evaluation against market data, signal
-generation, AI agent, paper-trading, or execution flow is connected.
+remains disabled by default. Snapshots carry schema versions, deterministic data-completeness ratios,
+and candle-level evidence timestamps. A read-only agent contract exists but is unimplemented and
+unwired. No strategy engine, rule evaluation against market data, signal generation, concrete AI
+agent, paper-trading, or execution flow is connected.
 
 ## Future Phases
 
@@ -87,6 +95,7 @@ generation, AI agent, paper-trading, or execution flow is connected.
 - Phase 3G: manual Telegram digest command foundation — completed without trading decisions
 - Phase 3H: neutral scheduled digest delivery foundation — completed without trading decisions
 - Phase 3I: persistent digest delivery audit foundation — completed without trading decisions
+- Merged Phase 3I snapshot versioning/evidence foundation — completed without trading decisions
 - Phase 4A: signal contract foundation — contract-only, no signal generation or trading decisions
 - Phase 4B: strategy rule specification foundation — specification-only, no rule evaluation or trading decisions
 - Phase 4C: strategy ruleset validation foundation — validation-only, no market-data rule evaluation

@@ -15,6 +15,8 @@ AI Trading OS is a safety-first foundation for a future modular Forex analysis a
 - Phase 3G: manual Telegram `/digest` readiness digest command only.
 - Phase 3H: neutral scheduled digest delivery foundation only, disabled by default.
 - Phase 3I: persistent neutral digest delivery audit foundation only.
+- Merged Phase 3I snapshot versioning/evidence: schema versions, completeness ratios, candle
+  evidence timestamps, and an unwired read-only agent contract only.
 - Phase 4A: signal contract foundation only; contracts default to `NOT_ACTIONABLE`.
 - Phase 4B: strategy rule specification foundation only; rule specs and rule sets default to
   disabled/non-actionable.
@@ -105,7 +107,7 @@ default and no automatic delivery loop is registered in the worker. It does not 
 AI output, strategy decisions, setup scoring, confidence scoring, trade directions, recommendations,
 signals, broker activity, paper trading, order execution, or real trading.
 
-## Phase 3I Status
+## Phase 3I Digest Audit Status
 
 Phase 3I adds persistent audit storage for neutral scheduled readiness digest delivery records. It
 stores delivered digest deduplication keys, delivery timestamps, sender names, project phase,
@@ -162,6 +164,19 @@ size, does not calculate setup score or confidence, does not call AI/OpenAI/LLM 
 send Telegram signals, does not use broker APIs, does not execute orders, and does not enable paper
 or real trading. Rule specs, rule sets, registry items, and registry snapshots remain
 disabled/non-actionable.
+
+## Merged Phase 3I Snapshot Versioning Status
+
+Phase 3I adds a snapshot versioning and evidence foundation over Phase 3A-3H. It adds a
+`schema_version` field to feature, context, and analysis snapshot metadata; a deterministic
+`data_completeness_ratio` (used candles / expected candles, bounded to `[0, 1]`) on feature and
+context snapshots; candle-level `used_candle_open_times`/`used_candle_close_times` evidence
+timestamps on the feature candle summary; and an unwired, read-only `AnalysisAgent` Protocol
+alongside the existing `AgentReport`/`EvidenceReference` contract in `app/schemas/agents.py`. It
+does not implement or wire any agent, does not add a Decision Engine, registry, or Risk Engine, and
+does not add strategy decisions, setup scoring, confidence scoring, trade directions,
+recommendations, signals, AI output, broker activity, paper trading, order execution, or real
+trading.
 
 ## Prerequisites
 

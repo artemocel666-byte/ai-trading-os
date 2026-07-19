@@ -100,6 +100,7 @@ class AnalysisInputAudit(BaseModel):
 
 
 class AnalysisSnapshotMetadata(BaseModel):
+    schema_version: int = Field(ge=1)
     project_phase: str = Field(min_length=1)
     snapshot_id: str = Field(min_length=64, max_length=64)
     feature_snapshot_id: str | None = Field(default=None, min_length=64, max_length=64)
