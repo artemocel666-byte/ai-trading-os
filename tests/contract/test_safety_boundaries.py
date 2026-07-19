@@ -4,6 +4,7 @@ from pathlib import Path
 
 import pytest
 
+import app.domain.disabled_pipeline_report_shell as disabled_pipeline_report_shell_module
 import app.domain.strategy_ruleset_registry as strategy_ruleset_registry_module
 import app.domain.strategy_ruleset_validator as strategy_ruleset_validator_module
 from app.adapters.disabled import (
@@ -13,8 +14,10 @@ from app.adapters.disabled import (
 )
 from app.core.enums import Decision
 from app.core.exceptions import IntegrationDisabledError
+from app.domain.disabled_pipeline_report_shell import DisabledPipelineReportShell
 from app.domain.entities import (
     Timeframe,
+    pipeline_report,
     signal_contract,
     strategy_registry,
     strategy_rules,
@@ -376,6 +379,57 @@ PHASE_4D_FORBIDDEN_BEHAVIOR_TERMS = (
     "signal_generator",
     "signal_engine",
     "decision_engine",
+    "setup_scoring",
+    "confidence_scoring",
+    "calculate_entry",
+    "calculate_stop",
+    "calculate_target",
+    "calculate_position_size",
+    "send_signal",
+    "telegram_signal",
+    "submit_order",
+    "execute_order",
+    "paper_trading",
+    "real_trading",
+    "backtesting",
+    "trading_simulator",
+    "OpenAI",
+    "LLM",
+)
+PHASE_4E_REPORT_OBJECTS = (
+    pipeline_report.DisabledPipelineBlocker,
+    pipeline_report.DisabledPipelineBlockerCode,
+    pipeline_report.DisabledPipelineReport,
+    pipeline_report.DisabledPipelineStatus,
+    DisabledPipelineReportShell,
+)
+PHASE_4E_FORBIDDEN_RUNTIME_IMPORTS = (
+    "app.domain.entities.market_data",
+    "app.domain.entities.context",
+    "app.domain.entities.analysis",
+    "app.domain.entities.features",
+    "app.domain.entities.signal_contract",
+    "app.adapters",
+    "app.persistence",
+    "app.telegram",
+    "app.scheduler",
+    "sqlalchemy",
+    "fastapi",
+    "httpx",
+    "openai",
+)
+PHASE_4E_FORBIDDEN_BEHAVIOR_TERMS = (
+    "strategy_engine",
+    "trading_decision_engine",
+    "decision_engine",
+    "strategy_evaluator",
+    "rule_engine",
+    "rule_evaluator",
+    "evaluate_rules",
+    "market_data_rule",
+    "generate_signal",
+    "signal_generator",
+    "signal_engine",
     "setup_scoring",
     "confidence_scoring",
     "calculate_entry",
@@ -788,6 +842,129 @@ def test_phase4d_does_not_add_strategy_registry_service() -> None:
         or "strategy" in file_path.name.lower()
         or "ruleset" in file_path.name.lower()
         or "StrategyRuleSetRegistry" in file_path.read_text(encoding="utf-8")
+    ]
+
+    assert offenders == []
+
+
+def test_phase4e_report_shell_objects_are_domain_only() -> None:
+    offenders: list[str] = []
+    texts = [inspect.getsource(source_object) for source_object in PHASE_4E_REPORT_OBJECTS]
+    for index, text in enumerate(texts):
+        lowered = text.lower()
+        for term in PHASE_4E_FORBIDDEN_RUNTIME_IMPORTS:
+            if term.lower() in lowered:
+                offenders.append(f"phase4e-report-{index}: {term}")
+
+    assert offenders == []
+
+
+def test_phase4e_report_shell_objects_do_not_add_evaluation_or_execution_terms() -> None:
+    offenders: list[str] = []
+    texts = [inspect.getsource(source_object) for source_object in PHASE_4E_REPORT_OBJECTS]
+    for index, text in enumerate(texts):
+        lowered = text.lower()
+        for term in PHASE_4E_FORBIDDEN_BEHAVIOR_TERMS:
+            if term.lower() in lowered:
+                offenders.append(f"phase4e-report-{index}: {term}")
+
+    assert offenders == []
+
+
+def test_phase4e_report_shell_signatures_have_no_market_or_runtime_inputs() -> None:
+    assert tuple(inspect.signature(DisabledPipelineReportShell.__init__).parameters) == (
+        "self",
+        "registry",
+        "enabled",
+    )
+    assert tuple(inspect.signature(DisabledPipelineReportShell.build_report).parameters) == (
+        "self",
+        "created_at",
+    )
+
+
+def test_phase4e_report_shell_module_does_not_import_runtime_dependencies() -> None:
+    source = inspect.getsource(disabled_pipeline_report_shell_module).lower()
+    import_lines = tuple(
+        line
+        for line in source.splitlines()
+        if line.startswith("import ") or line.startswith("from ")
+    )
+
+    offenders = [
+        term
+        for term in PHASE_4E_FORBIDDEN_RUNTIME_IMPORTS
+        if any(term.lower() in line for line in import_lines)
+    ]
+
+    assert offenders == []
+
+
+def test_phase4e_report_model_has_no_decision_signal_price_or_scoring_fields() -> None:
+    fields = set(pipeline_report.DisabledPipelineReport.model_fields)
+
+    assert fields.isdisjoint(
+        {
+            "decision",
+            "recommendation",
+            "signal_direction",
+            "direction",
+            "entry",
+            "entry_price",
+            "stop_loss",
+            "take_profit",
+            "target",
+            "position_size",
+            "setup_score",
+            "confidence",
+            "confidence_score",
+        }
+    )
+
+
+def test_phase4e_does_not_add_pipeline_api_routes() -> None:
+    route_files = tuple(Path("app/api/routes").glob("*.py"))
+    offenders = [
+        str(file_path)
+        for file_path in route_files
+        if "pipeline" in file_path.name.lower()
+        or "strategy" in file_path.name.lower()
+        or "signal" in file_path.name.lower()
+        or "DisabledPipelineReport" in file_path.read_text(encoding="utf-8")
+    ]
+
+    assert offenders == []
+
+
+def test_phase4e_does_not_add_telegram_pipeline_or_signal_handlers() -> None:
+    source = Path("app/telegram/commands.py").read_text(encoding="utf-8")
+
+    assert "pipeline_command" not in source
+    assert "strategy_command" not in source
+    assert "signal_command" not in source
+    assert 'CommandHandler("pipeline"' not in source
+    assert 'CommandHandler("signal"' not in source
+    assert "DisabledPipelineReport" not in source
+
+
+def test_phase4e_does_not_add_scheduler_pipeline_or_signal_jobs() -> None:
+    scheduler_text = "\n".join(
+        file_path.read_text(encoding="utf-8") for file_path in Path("app/scheduler").glob("*.py")
+    )
+
+    assert "DisabledPipelineReportShell" not in scheduler_text
+    assert "pipeline_job" not in scheduler_text
+    assert "generate_signal" not in scheduler_text
+
+
+def test_phase4e_does_not_add_disabled_pipeline_service() -> None:
+    service_files = tuple(Path("app/services").glob("*.py"))
+    offenders = [
+        str(file_path)
+        for file_path in service_files
+        if "pipeline" in file_path.name.lower()
+        or "strategy" in file_path.name.lower()
+        or "DisabledPipelineReport" in file_path.read_text(encoding="utf-8")
     ]
 
     assert offenders == []

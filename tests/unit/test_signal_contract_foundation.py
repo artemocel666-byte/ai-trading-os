@@ -59,8 +59,8 @@ def _contract(**overrides: object) -> SignalContract:
     return SignalContract(**values)
 
 
-def test_project_phase_has_advanced_to_phase4d_strategy_ruleset_registry_foundation() -> None:
-    assert constants.PROJECT_PHASE == "phase_4d_strategy_ruleset_registry_foundation"
+def test_project_phase_has_advanced_to_phase4e_disabled_pipeline_report_shell_foundation() -> None:
+    assert constants.PROJECT_PHASE == "phase_4e_disabled_pipeline_report_shell_foundation"
 
 
 def test_signal_contract_models_are_immutable() -> None:

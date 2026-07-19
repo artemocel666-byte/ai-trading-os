@@ -123,6 +123,14 @@ providers, call AI/OpenAI/LLM services, contact brokers, calculate scores/confid
 trading guidance. Rule specs, rule sets, registry items, and registry snapshots remain
 disabled/non-actionable.
 
+Phase 4E adds disabled pipeline report shell domain models only. It consumes only Phase 4D registry
+snapshots, summarizes registry counts and blockers, and produces deterministic non-actionable
+reports. It is not a decision engine. It does not evaluate rules against market data, indicators,
+events, context snapshots, analysis snapshots, or signal contracts. It does not register runtime
+jobs, expose API endpoints, add Telegram signal handlers, add persistence migrations, call
+providers, call AI/OpenAI/LLM services, contact brokers, calculate scores/confidence, or produce
+trading guidance. Pipeline reports remain disabled/non-actionable.
+
 ## Telegram Bot Local Setup
 
 Create the bot in Telegram before enabling the `bot` service:

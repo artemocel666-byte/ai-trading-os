@@ -2,12 +2,12 @@
 
 AI Trading OS is a foundation for a future Forex analysis and paper-trading platform.
 
-Current project phase: phase_4d_strategy_ruleset_registry_foundation.
-Phase 4D is strategy ruleset registry/fixture foundation only. It defines immutable registry
-items/snapshots and loads disabled built-in `StrategyRuleSet` fixtures through the Phase 4C
-validator. External integrations are disabled by default. The project contains no strategy engine,
-no rule evaluation against market data, no signal generation engine, no broker order APIs, no paper
-trading, and no real trading.
+Current project phase: phase_4e_disabled_pipeline_report_shell_foundation.
+Phase 4E is disabled pipeline report shell foundation only. It defines immutable disabled pipeline
+report models and a disabled shell that consumes only Phase 4D registry snapshots. External
+integrations are disabled by default. The project contains no strategy engine, no rule evaluation
+against market data, no signal generation engine, no broker order APIs, no paper trading, and no
+real trading.
 
 ## Start and Checks
 
@@ -60,6 +60,13 @@ trading, and no real trading.
   contracts. Do not add strategy engines, signal generation, setup scoring, confidence scoring,
   Telegram signal sending, API signal routes, scheduler signal jobs, broker APIs, order execution,
   automatic runtime loops, or paper-trading actions.
+- While working in Phase 4E, disabled pipeline report vocabulary is allowed only inside explicit
+  pipeline report domain models, the disabled report shell, and their tests/docs. Pipeline reports
+  must remain disabled/non-actionable. The shell may consume only Phase 4D registry snapshots. Do
+  not evaluate rules against candles, indicators, economic events, context snapshots, analysis
+  snapshots, or signal contracts. Do not add strategy engines, decision engines, signal generation,
+  setup scoring, confidence scoring, Telegram signal sending, API signal routes, scheduler signal
+  jobs, broker APIs, order execution, automatic runtime loops, or paper-trading actions.
 - Never fabricate market data, calendar data, agent evidence, or scan results.
 - LLM output may explain deterministic results only; it must not change prices, scores, risk, or rejected decisions.
 - Update documentation when architecture or safety boundaries change.

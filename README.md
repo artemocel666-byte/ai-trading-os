@@ -4,7 +4,7 @@ AI Trading OS is a safety-first foundation for a future modular Forex analysis a
 
 ## Current Status
 
-- Current project phase: phase_4d_strategy_ruleset_registry_foundation.
+- Current project phase: phase_4e_disabled_pipeline_report_shell_foundation.
 - Trading strategy: not implemented.
 - Real trading: disabled and unsupported.
 - External integrations: disabled by default.
@@ -24,6 +24,8 @@ AI Trading OS is a safety-first foundation for a future modular Forex analysis a
   without evaluating market data.
 - Phase 4D: strategy ruleset registry/fixture foundation only; loads disabled built-in
   `StrategyRuleSet` fixtures and validates them through the Phase 4C validator.
+- Phase 4E: disabled pipeline report shell foundation only; summarizes Phase 4D registry snapshots
+  in deterministic non-actionable reports.
 
 ## Safety Warning
 
@@ -177,6 +179,21 @@ does not implement or wire any agent, does not add a Decision Engine, registry, 
 does not add strategy decisions, setup scoring, confidence scoring, trade directions,
 recommendations, signals, AI output, broker activity, paper trading, order execution, or real
 trading.
+
+## Phase 4E Status
+
+Phase 4E is disabled pipeline report shell foundation only. It adds immutable blocker/report models
+and a disabled shell that consumes only Phase 4D registry snapshots, counts registered rule sets,
+records registry validation status, records whether everything remains disabled/non-actionable, and
+produces deterministic disabled pipeline reports.
+
+Phase 4E does not evaluate rules against market data, candles, indicators, economic events, context
+snapshots, analysis snapshots, or signal contracts. It is not a decision engine. It does not
+generate signals, does not provide trading recommendations, does not calculate entries/stops/
+targets, does not calculate position size, does not calculate setup score or confidence, does not
+call AI/OpenAI/LLM services, does not send Telegram signals, does not use broker APIs, does not
+execute orders, and does not enable paper or real trading. Pipeline reports remain
+disabled/non-actionable.
 
 ## Prerequisites
 

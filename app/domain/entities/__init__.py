@@ -45,6 +45,12 @@ from app.domain.entities.features import (
     MarketFeatureSnapshot,
 )
 from app.domain.entities.market_data import Candle, EconomicEvent, EconomicImpact, Timeframe
+from app.domain.entities.pipeline_report import (
+    DisabledPipelineBlocker,
+    DisabledPipelineBlockerCode,
+    DisabledPipelineReport,
+    DisabledPipelineStatus,
+)
 from app.domain.entities.readiness import (
     SnapshotDigest,
     SnapshotDigestIssueCount,
@@ -115,6 +121,10 @@ __all__ = [
     "CurrencyEventCount",
     "DataQualityIssue",
     "DataQualityIssueCode",
+    "DisabledPipelineBlocker",
+    "DisabledPipelineBlockerCode",
+    "DisabledPipelineReport",
+    "DisabledPipelineStatus",
     "EconomicEvent",
     "EconomicEventAvailability",
     "EconomicEventFeatureSummary",

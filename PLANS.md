@@ -58,6 +58,10 @@
   deterministic disabled built-in `StrategyRuleSet` fixtures, Phase 4C validation reports, and
   safety tests confirming no market-data rule evaluation, signal generation, scoring, or execution
   activation.
+- Phase 4E disabled pipeline report shell foundation: immutable disabled pipeline report models, a
+  disabled shell over Phase 4D registry snapshots, deterministic report serialization/
+  fingerprinting, and safety tests confirming no decision engine, rule evaluation, signal
+  generation, scoring, or execution activation.
 
 ## Current Implementation Status
 
@@ -68,17 +72,19 @@ Phase 3E local Telegram readiness-report foundation, Phase 3F deterministic read
 snapshot digest foundation, Phase 3G manual Telegram digest command foundation, Phase 3H neutral
 scheduled digest delivery foundation, and Phase 3I persistent neutral digest delivery audit
 foundation plus the merged Phase 3I snapshot versioning/evidence foundation. Phase 4A signal
-contract foundation is contract-only and defines future signal contract shapes without generating
-signals or trading recommendations. Phase 4B strategy rule specification foundation is
-specification-only and defines future rule set shapes without evaluating rules or activating
-strategy logic. Phase 4C strategy ruleset validation foundation validates the structure of Phase 4B
-rule sets without evaluating market data or producing decisions. Phase 4D strategy ruleset registry
-foundation loads disabled built-in rule set fixtures and validates them through the Phase 4C
-validator without evaluating data or producing decisions. Production Twelve Data and FMP adapters
-exist, but live integrations remain disabled by default. Scanning state can be enabled or disabled,
-Telegram can request readiness reports and readiness digests, and scheduled digest orchestration
-remains disabled by default. Snapshots carry schema versions, deterministic data-completeness ratios,
-and candle-level evidence timestamps. A read-only agent contract exists but is unimplemented and
+contract foundation is contract-only and defines future signal contract
+shapes without generating signals or trading recommendations. Phase 4B strategy rule specification
+foundation is specification-only and defines future rule set shapes without evaluating rules or
+activating strategy logic. Phase 4C strategy ruleset validation foundation validates the structure of
+Phase 4B rule sets without evaluating market data or producing decisions. Phase 4D strategy ruleset
+registry foundation loads disabled built-in rule set fixtures and validates them through the Phase
+4C validator without evaluating data or producing decisions. Phase 4E disabled pipeline report shell
+foundation consumes only Phase 4D registry snapshots and produces deterministic disabled reports
+without becoming a decision engine. Production Twelve Data and FMP adapters exist, but live
+integrations remain disabled by default. Scanning state can be enabled or disabled, Telegram can
+request readiness reports and readiness digests, and scheduled digest orchestration remains disabled
+by default. Snapshots carry schema versions, deterministic data-completeness ratios, and
+candle-level evidence timestamps. A read-only agent contract exists but is unimplemented and
 unwired. No strategy engine, rule evaluation against market data, signal generation, concrete AI
 agent, paper-trading, or execution flow is connected.
 
@@ -100,7 +106,8 @@ agent, paper-trading, or execution flow is connected.
 - Phase 4B: strategy rule specification foundation — specification-only, no rule evaluation or trading decisions
 - Phase 4C: strategy ruleset validation foundation — validation-only, no market-data rule evaluation
 - Phase 4D: strategy ruleset registry foundation — registry/fixture-only, no market-data rule evaluation
-- Phase 4E+: future analytical agents and Decision Engine work remains not started
+- Phase 4E: disabled pipeline report shell foundation — report-shell-only, no decision engine
+- Phase 4F+: future analytical agents and Decision Engine work remains not started
 - Phase 5: Russian Chief AI explanations
 - Phase 6: Telegram signal delivery
 - Phase 7: backtesting and paper trading
@@ -122,6 +129,6 @@ agent, paper-trading, or execution flow is connected.
 
 ## Next Planned Task
 
-Phase 4D strategy ruleset registry foundation is the current task. Later Phase 4 behavior,
+Phase 4E disabled pipeline report shell foundation is the current task. Later Phase 4 behavior,
 including rule evaluation against market data, analytical agents, signal generation, and
 decision-engine work, has not started and is not active.
