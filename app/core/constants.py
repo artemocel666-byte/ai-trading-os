@@ -1,4 +1,4 @@
-PROJECT_PHASE = "phase_4e_disabled_pipeline_report_shell_foundation"
+PROJECT_PHASE = "phase_4g_strategy_decision_composition_foundation"
 STRATEGY_IMPLEMENTED = False
 REAL_TRADING_ENABLED = False
 

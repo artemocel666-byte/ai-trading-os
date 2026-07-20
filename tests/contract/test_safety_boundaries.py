@@ -3,8 +3,12 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
 
 import app.domain.disabled_pipeline_report_shell as disabled_pipeline_report_shell_module
+import app.domain.strategy_decision_composer as strategy_decision_composer_module
+import app.domain.strategy_field_resolver as strategy_field_resolver_module
+import app.domain.strategy_rule_evaluator as strategy_rule_evaluator_module
 import app.domain.strategy_ruleset_registry as strategy_ruleset_registry_module
 import app.domain.strategy_ruleset_validator as strategy_ruleset_validator_module
 from app.adapters.disabled import (
@@ -14,15 +18,21 @@ from app.adapters.disabled import (
 )
 from app.core.enums import Decision
 from app.core.exceptions import IntegrationDisabledError
+from app.domain.analysis_engine import AnalysisEngine
 from app.domain.disabled_pipeline_report_shell import DisabledPipelineReportShell
 from app.domain.entities import (
     Timeframe,
+    pipeline_decision,
     pipeline_report,
+    rule_evaluation,
     signal_contract,
     strategy_registry,
     strategy_rules,
     strategy_validation,
 )
+from app.domain.strategy_decision_composer import StrategyDecisionComposer
+from app.domain.strategy_field_resolver import resolve_field
+from app.domain.strategy_rule_evaluator import StrategyRuleEvaluator
 from app.domain.strategy_ruleset_registry import StrategyRuleSetRegistry
 from app.domain.strategy_ruleset_validator import StrategyRuleSetValidator
 from app.domain.value_objects import CurrencyPair
@@ -430,6 +440,93 @@ PHASE_4E_FORBIDDEN_BEHAVIOR_TERMS = (
     "generate_signal",
     "signal_generator",
     "signal_engine",
+    "setup_scoring",
+    "confidence_scoring",
+    "calculate_entry",
+    "calculate_stop",
+    "calculate_target",
+    "calculate_position_size",
+    "send_signal",
+    "telegram_signal",
+    "submit_order",
+    "execute_order",
+    "paper_trading",
+    "real_trading",
+    "backtesting",
+    "trading_simulator",
+    "OpenAI",
+    "LLM",
+)
+PHASE_4F_EVALUATOR_OBJECTS = (
+    rule_evaluation.RuleEvaluationResult,
+    rule_evaluation.RuleEvaluationStatus,
+    rule_evaluation.RuleSetEvaluationReport,
+    rule_evaluation.RuleSetEvaluationStatus,
+    StrategyRuleEvaluator,
+)
+PHASE_4F_FORBIDDEN_RUNTIME_IMPORTS = (
+    "app.domain.entities.signal_contract",
+    "app.adapters",
+    "app.persistence",
+    "app.telegram",
+    "app.scheduler",
+    "app.api",
+    "sqlalchemy",
+    "fastapi",
+    "httpx",
+    "openai",
+)
+PHASE_4F_FORBIDDEN_BEHAVIOR_TERMS = (
+    "strategy_engine",
+    "trading_decision_engine",
+    "decision_engine",
+    "generate_signal",
+    "signal_generator",
+    "signal_engine",
+    "setup_scoring",
+    "confidence_scoring",
+    "calculate_entry",
+    "calculate_stop",
+    "calculate_target",
+    "calculate_position_size",
+    "send_signal",
+    "telegram_signal",
+    "submit_order",
+    "execute_order",
+    "paper_trading",
+    "real_trading",
+    "backtesting",
+    "trading_simulator",
+    "OpenAI",
+    "LLM",
+)
+PHASE_4G_COMPOSER_OBJECTS = (
+    pipeline_decision.PipelineDecisionReport,
+    pipeline_decision.PipelineDecisionStatus,
+    pipeline_decision.SkippedRuleset,
+    pipeline_decision.SkippedRulesetReason,
+    StrategyDecisionComposer,
+)
+PHASE_4G_FORBIDDEN_RUNTIME_IMPORTS = (
+    "app.domain.entities.signal_contract",
+    "app.adapters",
+    "app.persistence",
+    "app.telegram",
+    "app.scheduler",
+    "app.api",
+    "sqlalchemy",
+    "fastapi",
+    "httpx",
+    "openai",
+)
+PHASE_4G_FORBIDDEN_BEHAVIOR_TERMS = (
+    "strategy_engine",
+    "trading_decision_engine",
+    "generate_signal",
+    "signal_generator",
+    "signal_engine",
+    "signalcontract",
+    "signal_contract",
     "setup_scoring",
     "confidence_scoring",
     "calculate_entry",
@@ -965,6 +1062,296 @@ def test_phase4e_does_not_add_disabled_pipeline_service() -> None:
         if "pipeline" in file_path.name.lower()
         or "strategy" in file_path.name.lower()
         or "DisabledPipelineReport" in file_path.read_text(encoding="utf-8")
+    ]
+
+    assert offenders == []
+
+
+def test_phase4f_evaluator_objects_do_not_import_forbidden_runtime_dependencies() -> None:
+    offenders: list[str] = []
+    texts = [inspect.getsource(source_object) for source_object in PHASE_4F_EVALUATOR_OBJECTS]
+    for index, text in enumerate(texts):
+        lowered = text.lower()
+        for term in PHASE_4F_FORBIDDEN_RUNTIME_IMPORTS:
+            if term.lower() in lowered:
+                offenders.append(f"phase4f-evaluator-{index}: {term}")
+
+    assert offenders == []
+
+
+def test_phase4f_evaluator_objects_do_not_add_generation_or_execution_terms() -> None:
+    offenders: list[str] = []
+    texts = [inspect.getsource(source_object) for source_object in PHASE_4F_EVALUATOR_OBJECTS]
+    for index, text in enumerate(texts):
+        lowered = text.lower()
+        for term in PHASE_4F_FORBIDDEN_BEHAVIOR_TERMS:
+            if term.lower() in lowered:
+                offenders.append(f"phase4f-evaluator-{index}: {term}")
+
+    assert offenders == []
+
+
+def test_phase4f_evaluator_signatures_are_locked() -> None:
+    assert tuple(inspect.signature(StrategyRuleEvaluator.evaluate_rule).parameters) == (
+        "self",
+        "rule",
+        "snapshot",
+    )
+    assert tuple(inspect.signature(StrategyRuleEvaluator.evaluate_ruleset).parameters) == (
+        "self",
+        "ruleset",
+        "snapshot",
+        "evaluated_at",
+    )
+
+
+def test_phase4f_modules_do_not_import_forbidden_runtime_dependencies() -> None:
+    for module in (strategy_rule_evaluator_module, strategy_field_resolver_module):
+        source = inspect.getsource(module).lower()
+        import_lines = tuple(
+            line
+            for line in source.splitlines()
+            if line.startswith("import ") or line.startswith("from ")
+        )
+        offenders = [
+            term
+            for term in PHASE_4F_FORBIDDEN_RUNTIME_IMPORTS
+            if any(term.lower() in line for line in import_lines)
+        ]
+
+        assert offenders == []
+
+
+def test_phase4f_report_models_have_no_price_or_direction_fields() -> None:
+    forbidden_fields = {
+        "decision",
+        "recommendation",
+        "signal_direction",
+        "direction",
+        "entry",
+        "entry_price",
+        "stop_loss",
+        "take_profit",
+        "target",
+        "position_size",
+        "setup_score",
+        "confidence",
+        "confidence_score",
+    }
+
+    assert set(rule_evaluation.RuleSetEvaluationReport.model_fields).isdisjoint(forbidden_fields)
+    assert set(rule_evaluation.RuleEvaluationResult.model_fields).isdisjoint(forbidden_fields)
+
+
+def test_phase4f_evaluation_report_must_remain_non_actionable() -> None:
+    with pytest.raises(ValidationError):
+        rule_evaluation.RuleSetEvaluationReport(
+            ruleset_version="v1",
+            strategy_version="v1",
+            ruleset_name="test",
+            status=rule_evaluation.RuleSetEvaluationStatus.READY_FOR_REVIEW,
+            evaluated_at=datetime.now(UTC),
+            source_snapshot_id="a" * 64,
+            results=(),
+            blocking_failure_count=0,
+            required_failure_count=0,
+            warning_failure_count=0,
+            is_actionable=True,
+        )
+
+
+def test_phase4f_unknown_field_ref_resolves_to_none_without_raising() -> None:
+    snapshot = AnalysisEngine().build_snapshot(
+        pair=CurrencyPair(value="EURUSD"),
+        timeframe=Timeframe.M15,
+        window_start=datetime(2026, 7, 20, 8, 0, tzinfo=UTC),
+        window_end=datetime(2026, 7, 20, 8, 15, tzinfo=UTC),
+        as_of=datetime(2026, 7, 20, 8, 15, tzinfo=UTC),
+        candles=[],
+        economic_events=[],
+        moving_average_windows=(3,),
+    )
+
+    assert resolve_field("unknown_context.does_not_exist", snapshot) is None
+
+
+def test_phase4f_does_not_add_strategy_evaluation_api_routes() -> None:
+    route_files = tuple(Path("app/api/routes").glob("*.py"))
+    offenders = [
+        str(file_path)
+        for file_path in route_files
+        if "evaluat" in file_path.name.lower()
+        or "strategy" in file_path.name.lower()
+        or "signal" in file_path.name.lower()
+        or "StrategyRuleEvaluator" in file_path.read_text(encoding="utf-8")
+    ]
+
+    assert offenders == []
+
+
+def test_phase4f_does_not_add_telegram_evaluation_or_signal_handlers() -> None:
+    source = Path("app/telegram/commands.py").read_text(encoding="utf-8")
+
+    assert "evaluate_command" not in source
+    assert "strategy_command" not in source
+    assert "signal_command" not in source
+    assert 'CommandHandler("evaluate"' not in source
+    assert 'CommandHandler("signal"' not in source
+    assert "StrategyRuleEvaluator" not in source
+
+
+def test_phase4f_does_not_add_scheduler_evaluation_or_signal_jobs() -> None:
+    scheduler_text = "\n".join(
+        file_path.read_text(encoding="utf-8") for file_path in Path("app/scheduler").glob("*.py")
+    )
+
+    assert "StrategyRuleEvaluator" not in scheduler_text
+    assert "evaluation_job" not in scheduler_text
+    assert "generate_signal" not in scheduler_text
+
+
+def test_phase4f_does_not_add_strategy_evaluation_service() -> None:
+    service_files = tuple(Path("app/services").glob("*.py"))
+    offenders = [
+        str(file_path)
+        for file_path in service_files
+        if "evaluat" in file_path.name.lower()
+        or "strategy" in file_path.name.lower()
+        or "StrategyRuleEvaluator" in file_path.read_text(encoding="utf-8")
+    ]
+
+    assert offenders == []
+
+
+def test_phase4g_composer_objects_do_not_import_forbidden_runtime_dependencies() -> None:
+    offenders: list[str] = []
+    texts = [inspect.getsource(source_object) for source_object in PHASE_4G_COMPOSER_OBJECTS]
+    for index, text in enumerate(texts):
+        lowered = text.lower()
+        for term in PHASE_4G_FORBIDDEN_RUNTIME_IMPORTS:
+            if term.lower() in lowered:
+                offenders.append(f"phase4g-composer-{index}: {term}")
+
+    assert offenders == []
+
+
+def test_phase4g_composer_objects_do_not_add_generation_or_execution_terms() -> None:
+    offenders: list[str] = []
+    texts = [inspect.getsource(source_object) for source_object in PHASE_4G_COMPOSER_OBJECTS]
+    for index, text in enumerate(texts):
+        lowered = text.lower()
+        for term in PHASE_4G_FORBIDDEN_BEHAVIOR_TERMS:
+            if term.lower() in lowered:
+                offenders.append(f"phase4g-composer-{index}: {term}")
+
+    assert offenders == []
+
+
+def test_phase4g_composer_signature_is_locked() -> None:
+    assert tuple(inspect.signature(StrategyDecisionComposer.compose).parameters) == (
+        "self",
+        "snapshot",
+        "evaluated_at",
+    )
+
+
+def test_phase4g_module_does_not_import_forbidden_runtime_dependencies() -> None:
+    source = inspect.getsource(strategy_decision_composer_module).lower()
+    import_lines = tuple(
+        line
+        for line in source.splitlines()
+        if line.startswith("import ") or line.startswith("from ")
+    )
+    offenders = [
+        term
+        for term in PHASE_4G_FORBIDDEN_RUNTIME_IMPORTS
+        if any(term.lower() in line for line in import_lines)
+    ]
+
+    assert offenders == []
+
+
+def test_phase4g_report_has_no_price_or_direction_fields() -> None:
+    forbidden_fields = {
+        "decision",
+        "recommendation",
+        "signal_direction",
+        "direction",
+        "entry",
+        "entry_price",
+        "stop_loss",
+        "take_profit",
+        "target",
+        "position_size",
+        "setup_score",
+        "confidence",
+        "confidence_score",
+    }
+
+    assert set(pipeline_decision.PipelineDecisionReport.model_fields).isdisjoint(forbidden_fields)
+
+
+def test_phase4g_pipeline_decision_report_must_remain_non_actionable() -> None:
+    with pytest.raises(ValidationError):
+        pipeline_decision.PipelineDecisionReport(
+            pipeline_version="v1",
+            project_phase="test",
+            status=pipeline_decision.PipelineDecisionStatus.READY_FOR_REVIEW,
+            evaluated_at=datetime.now(UTC),
+            source_snapshot_id="a" * 64,
+            ruleset_reports=(),
+            skipped_rulesets=(),
+            evaluated_ruleset_count=0,
+            blocked_ruleset_count=0,
+            not_ready_ruleset_count=0,
+            is_actionable=True,
+        )
+
+
+def test_phase4g_does_not_add_decision_api_routes() -> None:
+    route_files = tuple(Path("app/api/routes").glob("*.py"))
+    offenders = [
+        str(file_path)
+        for file_path in route_files
+        if "decision" in file_path.name.lower()
+        or "compose" in file_path.name.lower()
+        or "strategy" in file_path.name.lower()
+        or "signal" in file_path.name.lower()
+        or "StrategyDecisionComposer" in file_path.read_text(encoding="utf-8")
+    ]
+
+    assert offenders == []
+
+
+def test_phase4g_does_not_add_telegram_decision_or_signal_handlers() -> None:
+    source = Path("app/telegram/commands.py").read_text(encoding="utf-8")
+
+    assert "decision_command" not in source
+    assert "strategy_command" not in source
+    assert "signal_command" not in source
+    assert 'CommandHandler("decision"' not in source
+    assert 'CommandHandler("signal"' not in source
+    assert "StrategyDecisionComposer" not in source
+
+
+def test_phase4g_does_not_add_scheduler_decision_or_signal_jobs() -> None:
+    scheduler_text = "\n".join(
+        file_path.read_text(encoding="utf-8") for file_path in Path("app/scheduler").glob("*.py")
+    )
+
+    assert "StrategyDecisionComposer" not in scheduler_text
+    assert "decision_job" not in scheduler_text
+    assert "generate_signal" not in scheduler_text
+
+
+def test_phase4g_does_not_add_strategy_decision_service() -> None:
+    service_files = tuple(Path("app/services").glob("*.py"))
+    offenders = [
+        str(file_path)
+        for file_path in service_files
+        if "decision" in file_path.name.lower()
+        or "strategy" in file_path.name.lower()
+        or "StrategyDecisionComposer" in file_path.read_text(encoding="utf-8")
     ]
 
     assert offenders == []

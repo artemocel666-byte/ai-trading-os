@@ -4,7 +4,9 @@ AI Trading OS is a safety-first foundation for a future modular Forex analysis a
 
 ## Current Status
 
-- Current project phase: phase_4e_disabled_pipeline_report_shell_foundation.
+- Current project phase: phase_4g_strategy_decision_composition_foundation.
+- Phase 4 (4A-4G) is complete: declarative rules -> validation -> registry -> evaluator ->
+  composed pipeline decision, all disabled/non-actionable. Phase 5 (Chief AI explanations) is next.
 - Trading strategy: not implemented.
 - Real trading: disabled and unsupported.
 - External integrations: disabled by default.
@@ -26,6 +28,11 @@ AI Trading OS is a safety-first foundation for a future modular Forex analysis a
   `StrategyRuleSet` fixtures and validates them through the Phase 4C validator.
 - Phase 4E: disabled pipeline report shell foundation only; summarizes Phase 4D registry snapshots
   in deterministic non-actionable reports.
+- Phase 4F: strategy rule evaluation foundation only; resolves rule `field_ref` values against real
+  analysis snapshots and produces deterministic, unconditionally non-actionable evaluation reports.
+- Phase 4G: strategy decision composition foundation only; composes evaluation reports across every
+  registered ruleset into one deterministic, unconditionally non-actionable pipeline decision. This
+  completes Phase 4.
 
 ## Safety Warning
 
@@ -194,6 +201,40 @@ targets, does not calculate position size, does not calculate setup score or con
 call AI/OpenAI/LLM services, does not send Telegram signals, does not use broker APIs, does not
 execute orders, and does not enable paper or real trading. Pipeline reports remain
 disabled/non-actionable.
+
+## Phase 4F Status
+
+Phase 4F is strategy rule evaluation foundation only. It adds a field resolver registry
+(`app/domain/strategy_field_resolver.py`) that resolves the three existing `field_ref` values
+(`data_quality.closed_candles_available`, `market_context.snapshot_ready`,
+`time_filter.session_name`) against a real `AnalysisSnapshot`, and a `StrategyRuleEvaluator`
+(`app/domain/strategy_rule_evaluator.py`) that applies rule operators
+(EXISTS/NOT_EXISTS/EQ/NE/GT/GTE/LT/LTE/BETWEEN/IN) and aggregates results by severity into a
+deterministic `RuleSetEvaluationReport` (`BLOCKED`/`NOT_READY`/`READY_FOR_REVIEW`).
+
+Phase 4F does not construct a `SignalContract`, does not become a decision engine, does not
+evaluate against live/enabled data sources (no provider calls), does not calculate
+entries/stops/targets, does not calculate position size, does not call AI/OpenAI/LLM services, does
+not send Telegram signals, does not use broker APIs, does not execute orders, and does not enable
+paper or real trading. `RuleSetEvaluationReport.is_actionable` is unconditionally `False`, enforced
+by the model itself.
+
+## Phase 4G Status — Phase 4 Complete
+
+Phase 4G is strategy decision composition foundation only. It adds `StrategyDecisionComposer`
+(`app/domain/strategy_decision_composer.py`), which loads every registered ruleset from the Phase
+4D registry, skips structurally invalid ones (recorded as `SkippedRuleset` entries), evaluates the
+valid ones through the Phase 4F `StrategyRuleEvaluator`, and combines the results into one
+deterministic `PipelineDecisionReport` (`BLOCKED`/`NOT_READY`/`READY_FOR_REVIEW`).
+
+This closes Phase 4: the full declarative rule pipeline (declare -> validate -> register -> evaluate
+-> compose) now runs end to end against real `AnalysisSnapshot` data. Phase 4G does not construct a
+`SignalContract`, does not calculate entries/stops/targets, does not calculate position size, does
+not call AI/OpenAI/LLM services, does not send Telegram signals, does not use broker APIs, does not
+execute orders, and does not enable paper or real trading. `PipelineDecisionReport.is_actionable` is
+unconditionally `False`, enforced by the model itself. Real `SignalContract` price-level
+construction is deliberately deferred to Phase 6, where actual price levels are needed for Telegram
+signal delivery.
 
 ## Prerequisites
 

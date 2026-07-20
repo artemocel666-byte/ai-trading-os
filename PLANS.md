@@ -62,6 +62,18 @@
   disabled shell over Phase 4D registry snapshots, deterministic report serialization/
   fingerprinting, and safety tests confirming no decision engine, rule evaluation, signal
   generation, scoring, or execution activation.
+- Phase 4F strategy rule evaluation foundation: a field resolver registry mapping the three
+  existing `field_ref` values to real `AnalysisSnapshot` data, an operator evaluator (EXISTS/
+  NOT_EXISTS/EQ/NE/GT/GTE/LT/LTE/BETWEEN/IN), severity-based aggregation into a deterministic
+  `RuleSetEvaluationReport` (BLOCKED/NOT_READY/READY_FOR_REVIEW), unconditionally non-actionable
+  reports, and safety tests confirming no `SignalContract` construction, decision engine, signal
+  generation, or execution activation.
+- Phase 4G strategy decision composition foundation (closes Phase 4): a composer that loads every
+  registered ruleset from the Phase 4D registry, skips structurally invalid ones, evaluates the
+  valid ones through the Phase 4F evaluator, and combines the results into one deterministic
+  `PipelineDecisionReport` (BLOCKED/NOT_READY/READY_FOR_REVIEW), unconditionally non-actionable,
+  and safety tests confirming no `SignalContract` construction, price/risk calculation, or
+  execution activation.
 
 ## Current Implementation Status
 
@@ -80,13 +92,23 @@ Phase 4B rule sets without evaluating market data or producing decisions. Phase 
 registry foundation loads disabled built-in rule set fixtures and validates them through the Phase
 4C validator without evaluating data or producing decisions. Phase 4E disabled pipeline report shell
 foundation consumes only Phase 4D registry snapshots and produces deterministic disabled reports
-without becoming a decision engine. Production Twelve Data and FMP adapters exist, but live
+without becoming a decision engine. Phase 4F strategy rule evaluation foundation resolves rule
+`field_ref` values against real `AnalysisSnapshot` data and produces deterministic, unconditionally
+non-actionable `RuleSetEvaluationReport` objects without constructing a `SignalContract` or becoming
+a decision engine. Phase 4G strategy decision composition foundation composes those evaluation
+reports across every registered ruleset into one deterministic, unconditionally non-actionable
+`PipelineDecisionReport`, without constructing a `SignalContract` or calculating price levels. This
+closes Phase 4: the full declarative rule pipeline now runs end to end against real data, with
+signal-contract price-level construction deliberately deferred to Phase 6. Production Twelve Data
+and FMP adapters exist, but live
 integrations remain disabled by default. Scanning state can be enabled or disabled, Telegram can
 request readiness reports and readiness digests, and scheduled digest orchestration remains disabled
 by default. Snapshots carry schema versions, deterministic data-completeness ratios, and
 candle-level evidence timestamps. A read-only agent contract exists but is unimplemented and
-unwired. No strategy engine, rule evaluation against market data, signal generation, concrete AI
-agent, paper-trading, or execution flow is connected.
+unwired. Phase 4 (4A-4G) is complete: rules declared as data, validated, registered, evaluated
+against real snapshots, and composed into one deterministic pipeline decision. No `SignalContract`
+is ever constructed, no strategy engine, no signal generation, concrete AI agent, paper-trading, or
+execution flow is connected.
 
 ## Future Phases
 
@@ -107,10 +129,15 @@ agent, paper-trading, or execution flow is connected.
 - Phase 4C: strategy ruleset validation foundation — validation-only, no market-data rule evaluation
 - Phase 4D: strategy ruleset registry foundation — registry/fixture-only, no market-data rule evaluation
 - Phase 4E: disabled pipeline report shell foundation — report-shell-only, no decision engine
-- Phase 4F+: future analytical agents and Decision Engine work remains not started
-- Phase 5: Russian Chief AI explanations
-- Phase 6: Telegram signal delivery
-- Phase 7: backtesting and paper trading
+- Phase 4F: strategy rule evaluation foundation — evaluator-only, unconditionally non-actionable,
+  no SignalContract construction, no decision engine
+- Phase 4G: strategy decision composition foundation — composes evaluation reports across every
+  registered ruleset into one deterministic, unconditionally non-actionable pipeline decision;
+  **closes Phase 4**
+- Phase 5: Russian Chief AI explanations — not started
+- Phase 6: Telegram signal delivery — includes the deferred `SignalContract` price-level
+  (entry/stop/take-profit) construction that Phase 4 deliberately did not build; not started
+- Phase 7: backtesting and paper trading — not started
 
 ## Explicit Non-Goals
 
@@ -129,6 +156,6 @@ agent, paper-trading, or execution flow is connected.
 
 ## Next Planned Task
 
-Phase 4E disabled pipeline report shell foundation is the current task. Later Phase 4 behavior,
-including rule evaluation against market data, analytical agents, signal generation, and
-decision-engine work, has not started and is not active.
+Phase 4 is complete as of Phase 4G. Phase 5 (Russian Chief AI explanations) is the next planned
+task and has not started. Real `SignalContract` price-level construction is deliberately deferred to
+Phase 6 and is not active.

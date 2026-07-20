@@ -45,6 +45,12 @@ from app.domain.entities.features import (
     MarketFeatureSnapshot,
 )
 from app.domain.entities.market_data import Candle, EconomicEvent, EconomicImpact, Timeframe
+from app.domain.entities.pipeline_decision import (
+    PipelineDecisionReport,
+    PipelineDecisionStatus,
+    SkippedRuleset,
+    SkippedRulesetReason,
+)
 from app.domain.entities.pipeline_report import (
     DisabledPipelineBlocker,
     DisabledPipelineBlockerCode,
@@ -62,6 +68,12 @@ from app.domain.entities.readiness import (
     SnapshotSchedulePlan,
     SnapshotWindow,
     digest_status_from_analysis,
+)
+from app.domain.entities.rule_evaluation import (
+    RuleEvaluationResult,
+    RuleEvaluationStatus,
+    RuleSetEvaluationReport,
+    RuleSetEvaluationStatus,
 )
 from app.domain.entities.scheduled_digest import (
     ScheduledDigestConfig,
@@ -140,8 +152,14 @@ __all__ = [
     "MarketFeatureSnapshot",
     "MovingAverageSeries",
     "MovingAverageSummary",
+    "PipelineDecisionReport",
+    "PipelineDecisionStatus",
     "RangeContextSummary",
     "ReturnDistributionSummary",
+    "RuleEvaluationResult",
+    "RuleEvaluationStatus",
+    "RuleSetEvaluationReport",
+    "RuleSetEvaluationStatus",
     "ScheduledDigestConfig",
     "ScheduledDigestDecision",
     "ScheduledDigestDecisionReason",
@@ -154,6 +172,8 @@ __all__ = [
     "SignalLifecycleStatus",
     "SignalPricePlan",
     "SignalRiskPlan",
+    "SkippedRuleset",
+    "SkippedRulesetReason",
     "SnapshotDigest",
     "SnapshotDigestIssueCount",
     "SnapshotDigestItem",

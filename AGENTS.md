@@ -2,12 +2,14 @@
 
 AI Trading OS is a foundation for a future Forex analysis and paper-trading platform.
 
-Current project phase: phase_4e_disabled_pipeline_report_shell_foundation.
-Phase 4E is disabled pipeline report shell foundation only. It defines immutable disabled pipeline
-report models and a disabled shell that consumes only Phase 4D registry snapshots. External
-integrations are disabled by default. The project contains no strategy engine, no rule evaluation
-against market data, no signal generation engine, no broker order APIs, no paper trading, and no
-real trading.
+Current project phase: phase_4g_strategy_decision_composition_foundation.
+Phase 4G closes Phase 4. It composes every valid registered ruleset's `RuleSetEvaluationReport`
+(Phase 4F) into one deterministic, non-actionable `PipelineDecisionReport`. Constructing a real
+`SignalContract` with price levels (entry/stop/take-profit) is explicitly deferred to Phase 6,
+where real price levels are actually needed; no price/risk calculation logic exists yet. External
+integrations are disabled by default. The project contains no strategy engine, no signal generation
+engine, no `SignalContract` construction, no broker order APIs, no paper trading, and no real
+trading.
 
 ## Start and Checks
 
@@ -40,10 +42,11 @@ real trading.
 - Telegram user-facing text must be Russian.
 - Every Telegram message must contain exactly one semantic emoji at the beginning.
 - Never add real trading execution, broker order APIs, real account credentials, or live position management.
-- Never add strategy execution logic, rule evaluation, setup scoring, buy/sell recommendations,
-  paper trading, broker APIs, order execution, or real trading while working in foundation phases.
-  In Phase 4A, `LONG`/`SHORT` may appear only as contract enum values, not as generated
-  recommendations.
+- Never add strategy execution logic, setup scoring, buy/sell recommendations, paper trading,
+  broker APIs, order execution, or real trading while working in foundation phases. In Phase 4A,
+  `LONG`/`SHORT` may appear only as contract enum values, not as generated recommendations. Rule
+  evaluation against real market data is allowed starting in Phase 4F, strictly bounded by the
+  Phase 4F rule below.
 - While working in Phase 3H, output is limited to neutral readiness reports and readiness digests.
   Scheduled delivery must remain disabled by default. Do not add Telegram trading signals, entry
   guidance, LONG/SHORT advice, buy/sell recommendations, automatic runtime loops, or paper-trading
@@ -67,6 +70,20 @@ real trading.
   snapshots, or signal contracts. Do not add strategy engines, decision engines, signal generation,
   setup scoring, confidence scoring, Telegram signal sending, API signal routes, scheduler signal
   jobs, broker APIs, order execution, automatic runtime loops, or paper-trading actions.
+- While working in Phase 4F, the evaluator (`app/domain/strategy_field_resolver.py`,
+  `app/domain/strategy_rule_evaluator.py`) may only read `AnalysisSnapshot`,
+  `MarketFeatureSnapshot`, and `MarketContextSnapshot`. It must never import
+  `app.persistence`, `app.telegram`, `app.scheduler`, `app.api`, or `app.domain.entities.signal_contract`.
+  It must never construct a `SignalContract`, calculate entries/stops/targets, calculate position
+  size, or send a Telegram message. `RuleSetEvaluationReport.is_actionable` must remain `False`
+  unconditionally, enforced by the model itself, not by caller discipline.
+- While working in Phase 4G, the composer (`app/domain/strategy_decision_composer.py`) may only
+  read the Phase 4D registry and `AnalysisSnapshot`/`MarketFeatureSnapshot`/`MarketContextSnapshot`
+  through the Phase 4F evaluator. It must never import `app.domain.entities.signal_contract` or
+  construct a `SignalContract`, and must never import `app.persistence`, `app.telegram`,
+  `app.scheduler`, or `app.api`. `PipelineDecisionReport.is_actionable` must remain `False`
+  unconditionally, enforced by the model itself. Real price-level (entry/stop/take-profit)
+  construction is out of scope until Phase 6.
 - Never fabricate market data, calendar data, agent evidence, or scan results.
 - LLM output may explain deterministic results only; it must not change prices, scores, risk, or rejected decisions.
 - Update documentation when architecture or safety boundaries change.
