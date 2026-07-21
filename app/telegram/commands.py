@@ -10,12 +10,14 @@ from app.core.enums import MessageType
 from app.core.exceptions import NotImplementedFeatureError
 from app.core.time import normalize_to_utc, utc_now
 from app.domain.entities import SnapshotScheduleItem, Timeframe
+from app.domain.manual_review_report_builder import build_local_manual_review_report
 from app.domain.value_objects import CurrencyPair
 from app.services.analysis_service import AnalysisService
 from app.services.readiness_digest_service import ReadinessDigestService
 from app.services.system_state_service import SystemStateService
 from app.telegram.authorization import TelegramIdentity, is_authorized
 from app.telegram.formatter import TelegramFormatter
+from app.telegram.manual_review_formatter import format_manual_review_body
 
 DEFAULT_SNAPSHOT_CANDLE_COUNT = 12
 DEFAULT_DIGEST_ITEMS = (
@@ -110,7 +112,7 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         MessageType.EDUCATION,
         (
             "Доступные команды: /start, /help, /status, /start_scan, "
-            "/stop_scan, /scan_now, /snapshot, /digest."
+            "/stop_scan, /scan_now, /snapshot, /digest, /review."
         ),
     )
 
@@ -234,6 +236,24 @@ async def digest_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     await _reply(update, context, MessageType.REPORT, payload.text)
 
 
+async def review_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    if not await _ensure_authorized(update, context):
+        return
+    try:
+        report = build_local_manual_review_report(normalize_to_utc(utc_now()))
+    except Exception:
+        await _reply(
+            update,
+            context,
+            MessageType.DATA_UNAVAILABLE,
+            "Отчёт ручной проверки сейчас недоступен.",
+        )
+        return
+
+    body = format_manual_review_body(report)
+    await _reply(update, context, MessageType.REPORT, body)
+
+
 def _parse_snapshot_command(update: Update) -> tuple[CurrencyPair, Timeframe]:
     text = (
         update.effective_message.text
@@ -288,3 +308,4 @@ def add_handlers(application: Application[Any, Any, Any, Any, Any, Any]) -> None
     application.add_handler(CommandHandler("scan_now", scan_now_command))
     application.add_handler(CommandHandler("snapshot", snapshot_command))
     application.add_handler(CommandHandler("digest", digest_command))
+    application.add_handler(CommandHandler("review", review_command))

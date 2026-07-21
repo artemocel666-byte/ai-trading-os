@@ -11,6 +11,8 @@ from app.services.readiness_digest_service import ReadinessDigestService
 from app.telegram import commands
 from app.telegram.commands import (
     digest_command,
+    help_command,
+    review_command,
     scan_now_command,
     snapshot_command,
     start_scan_command,
@@ -180,7 +182,7 @@ async def test_snapshot_command_rejects_invalid_arguments() -> None:
     ]
 
 
-def test_add_handlers_keeps_snapshot_and_registers_digest(
+def test_add_handlers_keeps_snapshot_digest_and_registers_review(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     application = FakeHandlerApplication()
@@ -191,6 +193,7 @@ def test_add_handlers_keeps_snapshot_and_registers_digest(
     registered = {handler.command: handler.callback for handler in application.handlers}
     assert registered["snapshot"] is snapshot_command
     assert registered["digest"] is digest_command
+    assert registered["review"] is review_command
 
 
 @pytest.mark.asyncio
@@ -242,3 +245,59 @@ async def test_digest_command_rejects_invalid_arguments() -> None:
     assert update.effective_message.replies == [
         "❌ Формат команды: /digest или /digest EURUSD M15. Поддерживаются M15 и H1."
     ]
+
+
+@pytest.mark.asyncio
+async def test_review_command_returns_authorized_read_only_summary(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    factory = FakeUnitOfWorkFactory()
+    context = _context(factory)
+    update = FakeUpdate(user_id=1, chat_id=2, text="/review")
+    monkeypatch.setattr(commands, "utc_now", lambda: BASE_TIME)
+
+    await review_command(update, context)
+
+    assert len(update.effective_message.replies) == 1
+    reply = update.effective_message.replies[0]
+    assert reply.startswith("📊 ")
+    assert "READ-ONLY" in reply
+    assert "NO TRADING SIGNAL" in reply
+    assert "NON-ACTIONABLE" in reply
+    assert factory.state == {}
+    forbidden_terms = (
+        "LONG",
+        "SHORT",
+        "entry",
+        "stop loss",
+        "take profit",
+        "position size",
+        "setup score",
+        "confidence score",
+        "broker",
+        "order",
+    )
+    assert not any(term in reply for term in forbidden_terms)
+
+
+@pytest.mark.asyncio
+async def test_review_command_blocks_unauthorized_user() -> None:
+    factory = FakeUnitOfWorkFactory()
+    context = _context(factory)
+    update = FakeUpdate(user_id=99, chat_id=2, text="/review")
+
+    await review_command(update, context)
+
+    assert update.effective_message.replies == ["❌ Доступ запрещён."]
+
+
+@pytest.mark.asyncio
+async def test_help_command_includes_manual_review() -> None:
+    factory = FakeUnitOfWorkFactory()
+    context = _context(factory)
+    update = FakeUpdate(user_id=1, chat_id=2, text="/help")
+
+    await help_command(update, context)
+
+    assert len(update.effective_message.replies) == 1
+    assert "/review" in update.effective_message.replies[0]

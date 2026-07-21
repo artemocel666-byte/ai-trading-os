@@ -74,6 +74,10 @@
   `PipelineDecisionReport` (BLOCKED/NOT_READY/READY_FOR_REVIEW), unconditionally non-actionable,
   and safety tests confirming no `SignalContract` construction, price/risk calculation, or
   execution activation.
+- Phase 5 manual review layer foundation: immutable read-only report models and builder over
+  existing Phase 4G/4F/4E artifacts, deterministic stdout text/JSON rendering, an authorized manual
+  Telegram `/review` command, in-memory report comparison and completeness summaries, and safety
+  tests confirming no new evaluation, signal, scoring, AI, persistence, or execution behavior.
 
 ## Current Implementation Status
 
@@ -109,6 +113,10 @@ unwired. Phase 4 (4A-4G) is complete: rules declared as data, validated, registe
 against real snapshots, and composed into one deterministic pipeline decision. No `SignalContract`
 is ever constructed, no strategy engine, no signal generation, concrete AI agent, paper-trading, or
 execution flow is connected.
+Phase 5 adds a presentation-only manual review layer. It consumes existing immutable report
+artifacts without invoking the Phase 4 evaluator/composer and provides local stdout and authorized
+Telegram inspection plus deterministic in-memory comparison. Manual review reports are never
+persisted and remain disabled/non-actionable.
 
 ## Future Phases
 
@@ -134,7 +142,8 @@ execution flow is connected.
 - Phase 4G: strategy decision composition foundation — composes evaluation reports across every
   registered ruleset into one deterministic, unconditionally non-actionable pipeline decision;
   **closes Phase 4**
-- Phase 5: Russian Chief AI explanations — not started
+- Phase 5: read-only manual review layer foundation — completed without new rule evaluation,
+  trading output, persistence, AI, or execution behavior
 - Phase 6: Telegram signal delivery — includes the deferred `SignalContract` price-level
   (entry/stop/take-profit) construction that Phase 4 deliberately did not build; not started
 - Phase 7: backtesting and paper trading — not started
@@ -156,6 +165,5 @@ execution flow is connected.
 
 ## Next Planned Task
 
-Phase 4 is complete as of Phase 4G. Phase 5 (Russian Chief AI explanations) is the next planned
-task and has not started. Real `SignalContract` price-level construction is deliberately deferred to
-Phase 6 and is not active.
+Phase 5 manual review layer foundation is complete. Later phases have not started. Real
+`SignalContract` construction and all trading behavior remain inactive.

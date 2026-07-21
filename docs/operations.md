@@ -131,6 +131,27 @@ jobs, expose API endpoints, add Telegram signal handlers, add persistence migrat
 providers, call AI/OpenAI/LLM services, contact brokers, calculate scores/confidence, or produce
 trading guidance. Pipeline reports remain disabled/non-actionable.
 
+## Phase 5 Manual Review
+
+The Phase 5 local viewer builds a manual review report from the existing Phase 4E disabled registry
+report and prints to stdout only. It requires no database, market/calendar provider, Telegram token,
+AI service, or broker connection, and it does not write files or persist the report.
+
+```bash
+uv run python scripts/manual_review_report.py
+uv run python scripts/manual_review_report.py --format text
+uv run python scripts/manual_review_report.py --format json
+```
+
+Text output includes `READ-ONLY MANUAL REVIEW`, `NO TRADING SIGNAL`,
+`NO BUY/SELL RECOMMENDATION`, and `NON-ACTIONABLE`. JSON output uses deterministic key and section
+ordering. An incomplete source is reported through typed issues rather than replaced with invented
+data.
+
+When Telegram is enabled, an authorized user can request the same read-only summary with `/review`.
+The command performs no database read/write, provider call, scheduler registration, automatic alert,
+AI call, or persistence. It does not evaluate Phase 4 rules or produce trading guidance.
+
 ## Telegram Bot Local Setup
 
 Create the bot in Telegram before enabling the `bot` service:
@@ -160,7 +181,7 @@ DATABASE_URL=postgresql+asyncpg://ai_trading_os:ai_trading_os@postgres:5432/ai_t
 INTERNAL_API_KEY=development-internal-key-change-me
 
 TELEGRAM_ENABLED=true
-TELEGRAM_BOT_TOKEN=1234567890:AA_REPLACE_WITH_REAL_SECRET
+TELEGRAM_BOT_TOKEN=PASTE_TELEGRAM_BOT_TOKEN_HERE
 TELEGRAM_ALLOWED_USER_ID=123456789
 TELEGRAM_ALLOWED_CHAT_ID=123456789
 
@@ -194,11 +215,14 @@ Then send these commands to the bot in Telegram:
 /snapshot EURUSD M15
 /digest
 /digest EURUSD M15
+/review
 ```
 
 Expected behavior: `/snapshot EURUSD M15` returns a Russian readiness report with one leading emoji.
 `/digest` returns a Russian readiness digest with one leading emoji. These commands must not contain
-LONG/SHORT directions, entry guidance, buy/sell recommendations, or paper-trade actions.
+LONG/SHORT directions, entry guidance, buy/sell recommendations, or paper-trade actions. `/review`
+returns a Russian read-only manual review summary with one leading emoji and explicit
+`NO TRADING SIGNAL`/`NON-ACTIONABLE` markers.
 
 ## Common Failure Cases
 

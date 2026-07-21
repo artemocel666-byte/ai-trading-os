@@ -6,6 +6,8 @@ import pytest
 from pydantic import ValidationError
 
 import app.domain.disabled_pipeline_report_shell as disabled_pipeline_report_shell_module
+import app.domain.manual_review_comparison as manual_review_comparison_module
+import app.domain.manual_review_report_builder as manual_review_report_builder_module
 import app.domain.strategy_decision_composer as strategy_decision_composer_module
 import app.domain.strategy_field_resolver as strategy_field_resolver_module
 import app.domain.strategy_rule_evaluator as strategy_rule_evaluator_module
@@ -22,6 +24,7 @@ from app.domain.analysis_engine import AnalysisEngine
 from app.domain.disabled_pipeline_report_shell import DisabledPipelineReportShell
 from app.domain.entities import (
     Timeframe,
+    manual_review,
     pipeline_decision,
     pipeline_report,
     rule_evaluation,
@@ -30,6 +33,7 @@ from app.domain.entities import (
     strategy_rules,
     strategy_validation,
 )
+from app.domain.manual_review_report_builder import ManualReviewReportBuilder
 from app.domain.strategy_decision_composer import StrategyDecisionComposer
 from app.domain.strategy_field_resolver import resolve_field
 from app.domain.strategy_rule_evaluator import StrategyRuleEvaluator
@@ -535,6 +539,58 @@ PHASE_4G_FORBIDDEN_BEHAVIOR_TERMS = (
     "calculate_position_size",
     "send_signal",
     "telegram_signal",
+    "submit_order",
+    "execute_order",
+    "paper_trading",
+    "real_trading",
+    "backtesting",
+    "trading_simulator",
+    "OpenAI",
+    "LLM",
+)
+PHASE_5_DOMAIN_OBJECTS = (
+    manual_review.ManualReviewIssue,
+    manual_review.ManualReviewSection,
+    manual_review.ManualReviewReport,
+    ManualReviewReportBuilder,
+    manual_review_comparison_module.ManualReviewComparison,
+    manual_review_comparison_module.compare_manual_review_reports,
+    manual_review_comparison_module.build_manual_review_quality_summary,
+)
+PHASE_5_FILES = (
+    Path("app/domain/entities/manual_review.py"),
+    Path("app/domain/manual_review_report_builder.py"),
+    Path("app/domain/manual_review_comparison.py"),
+    Path("scripts/manual_review_report.py"),
+    Path("app/telegram/manual_review_formatter.py"),
+)
+PHASE_5_FORBIDDEN_RUNTIME_IMPORTS = (
+    "app.adapters",
+    "app.persistence",
+    "app.scheduler",
+    "app.api",
+    "sqlalchemy",
+    "fastapi",
+    "httpx",
+    "openai",
+)
+PHASE_5_FORBIDDEN_BEHAVIOR_TERMS = (
+    "strategy_engine",
+    "decision_engine",
+    "evaluate_rules",
+    "evaluate_ruleset",
+    "generate_signal",
+    "signal_generator",
+    "signal_engine",
+    "setup_scoring",
+    "confidence_scoring",
+    "calculate_entry",
+    "calculate_stop",
+    "calculate_target",
+    "calculate_position_size",
+    "send_signal",
+    "telegram_signal",
+    "place_order",
     "submit_order",
     "execute_order",
     "paper_trading",
@@ -1355,6 +1411,123 @@ def test_phase4g_does_not_add_strategy_decision_service() -> None:
     ]
 
     assert offenders == []
+
+
+def test_phase5_domain_objects_do_not_import_forbidden_runtime_dependencies() -> None:
+    offenders: list[str] = []
+    for index, source_object in enumerate(PHASE_5_DOMAIN_OBJECTS):
+        source = inspect.getsource(source_object).lower()
+        import_lines = tuple(
+            line
+            for line in source.splitlines()
+            if line.startswith("import ") or line.startswith("from ")
+        )
+        for term in PHASE_5_FORBIDDEN_RUNTIME_IMPORTS:
+            if any(term.lower() in line for line in import_lines):
+                offenders.append(f"phase5-object-{index}: {term}")
+
+    assert offenders == []
+
+
+def test_phase5_modules_do_not_add_trading_behavior_terms() -> None:
+    offenders: list[str] = []
+    for file_path in PHASE_5_FILES:
+        source = file_path.read_text(encoding="utf-8")
+        lowered = source.lower()
+        for term in PHASE_5_FORBIDDEN_BEHAVIOR_TERMS:
+            if term.lower() in lowered:
+                offenders.append(f"{file_path}: {term}")
+
+    assert offenders == []
+
+
+def test_phase5_builder_has_no_market_database_or_messaging_dependency() -> None:
+    source = inspect.getsource(manual_review_report_builder_module).lower()
+    forbidden_terms = (
+        "app.domain.entities.market_data",
+        "app.domain.entities.analysis",
+        "app.persistence",
+        "app.telegram",
+        "app.scheduler",
+        "app.adapters",
+        "sqlalchemy",
+        "httpx",
+        "openai",
+    )
+
+    assert not any(term in source for term in forbidden_terms)
+
+
+def test_phase5_comparison_is_in_memory_only() -> None:
+    source = inspect.getsource(manual_review_comparison_module).lower()
+    forbidden_terms = (
+        "app.persistence",
+        "sqlalchemy",
+        "write_text",
+        "write_bytes",
+        "open(",
+        "httpx",
+    )
+
+    assert not any(term in source for term in forbidden_terms)
+
+
+def test_phase5_models_have_no_trading_output_fields() -> None:
+    forbidden_fields = {
+        "decision",
+        "recommendation",
+        "signal",
+        "signal_direction",
+        "direction",
+        "price",
+        "entry",
+        "entry_price",
+        "stop_loss",
+        "take_profit",
+        "target",
+        "position_size",
+        "setup_score",
+        "confidence",
+        "confidence_score",
+    }
+
+    assert set(manual_review.ManualReviewReport.model_fields).isdisjoint(forbidden_fields)
+    assert set(manual_review.ManualReviewSection.model_fields).isdisjoint(forbidden_fields)
+    assert set(manual_review.ManualReviewIssue.model_fields).isdisjoint(forbidden_fields)
+    assert set(manual_review_comparison_module.ManualReviewComparison.model_fields).isdisjoint(
+        forbidden_fields
+    )
+
+
+def test_phase5_adds_no_api_route_or_scheduler_job() -> None:
+    route_source = "\n".join(
+        file_path.read_text(encoding="utf-8") for file_path in Path("app/api/routes").glob("*.py")
+    )
+    scheduler_source = "\n".join(
+        file_path.read_text(encoding="utf-8") for file_path in Path("app/scheduler").glob("*.py")
+    )
+
+    assert "ManualReview" not in route_source
+    assert "manual_review" not in route_source
+    assert "ManualReview" not in scheduler_source
+    assert "manual_review" not in scheduler_source
+    assert 'CommandHandler("signal"' not in Path("app/telegram/commands.py").read_text(
+        encoding="utf-8"
+    )
+
+
+def test_phase5_cli_has_no_runtime_file_writing() -> None:
+    source = Path("scripts/manual_review_report.py").read_text(encoding="utf-8")
+
+    assert "--output" not in source
+    assert "write_text" not in source
+    assert "write_bytes" not in source
+    assert "open(" not in source
+
+
+def test_phase5_adds_no_migration_and_phase3j_route_remains_absent() -> None:
+    assert list(Path("migrations/versions").glob("*phase5*")) == []
+    assert not Path("app/api/routes/digest_deliveries.py").exists()
 
 
 @pytest.mark.asyncio

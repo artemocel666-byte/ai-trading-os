@@ -4,9 +4,10 @@ AI Trading OS is a safety-first foundation for a future modular Forex analysis a
 
 ## Current Status
 
-- Current project phase: phase_4g_strategy_decision_composition_foundation.
-- Phase 4 (4A-4G) is complete: declarative rules -> validation -> registry -> evaluator ->
-  composed pipeline decision, all disabled/non-actionable. Phase 5 (Chief AI explanations) is next.
+- Current project phase: phase_5_manual_review_layer_foundation.
+- Phase 5 manual review layer foundation is complete: immutable read-only reports, a stdout-only
+  CLI viewer, an authorized Telegram `/review` command, and deterministic in-memory comparison and
+  quality summaries over existing disabled/non-actionable Phase 4G/4F/4E artifacts.
 - Trading strategy: not implemented.
 - Real trading: disabled and unsupported.
 - External integrations: disabled by default.
@@ -33,6 +34,8 @@ AI Trading OS is a safety-first foundation for a future modular Forex analysis a
 - Phase 4G: strategy decision composition foundation only; composes evaluation reports across every
   registered ruleset into one deterministic, unconditionally non-actionable pipeline decision. This
   completes Phase 4.
+- Phase 5: read-only manual review layer only; it presents existing reports without re-evaluating
+  rules, reading market data, persisting review output, or enabling runtime action.
 
 ## Safety Warning
 
@@ -236,6 +239,30 @@ unconditionally `False`, enforced by the model itself. Real `SignalContract` pri
 construction is deliberately deferred to Phase 6, where actual price levels are needed for Telegram
 signal delivery.
 
+## Phase 5 Status
+
+Phase 5 is a read-only manual review layer over already-created disabled/non-actionable Phase
+4G/4F/4E report artifacts. It adds immutable manual review models and a report builder, deterministic
+text/JSON rendering, the stdout-only `scripts/manual_review_report.py` viewer, an authorized manual
+Telegram `/review` command, and in-memory report comparison and completeness summaries. The builder
+accepts an existing Phase 4G `PipelineDecisionReport`; local CLI and Telegram review use the safe
+Phase 4E disabled registry report because it requires no market data, database, provider, scheduler,
+or messaging call.
+
+Phase 5 does not evaluate rules against market data, generate signals, provide recommendations,
+calculate price levels, position size, setup score, or confidence, call AI/OpenAI/LLM services, send
+automatic Telegram alerts, use broker APIs, execute orders, or enable paper or real trading. It is
+not a strategy engine or decision engine. Runtime commands print or reply only and do not write
+files or persist manual review reports.
+
+Run the local viewer with:
+
+```bash
+uv run python scripts/manual_review_report.py
+uv run python scripts/manual_review_report.py --format text
+uv run python scripts/manual_review_report.py --format json
+```
+
 ## Prerequisites
 
 - Python 3.12
@@ -330,6 +357,7 @@ For a local live Telegram test, see `docs/operations.md` and configure `TELEGRAM
 - `/scan_now` explicitly remains disconnected from analysis snapshots and does not fabricate a scan result.
 - `/snapshot` returns readiness reports only and does not produce trading guidance.
 - `/digest` returns manual readiness digests only and does not produce trading guidance.
+- `/review` returns a short authorized read-only manual review summary and persists nothing.
 - Scheduled digest delivery is disabled by default and has no automatic worker loop.
 - Worker jobs only update heartbeat and run foundation health checks.
 

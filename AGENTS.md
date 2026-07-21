@@ -2,14 +2,13 @@
 
 AI Trading OS is a foundation for a future Forex analysis and paper-trading platform.
 
-Current project phase: phase_4g_strategy_decision_composition_foundation.
-Phase 4G closes Phase 4. It composes every valid registered ruleset's `RuleSetEvaluationReport`
-(Phase 4F) into one deterministic, non-actionable `PipelineDecisionReport`. Constructing a real
-`SignalContract` with price levels (entry/stop/take-profit) is explicitly deferred to Phase 6,
-where real price levels are actually needed; no price/risk calculation logic exists yet. External
-integrations are disabled by default. The project contains no strategy engine, no signal generation
-engine, no `SignalContract` construction, no broker order APIs, no paper trading, and no real
-trading.
+Current project phase: phase_5_manual_review_layer_foundation.
+Phase 5 adds a read-only manual review layer over existing disabled/non-actionable Phase 4G/4F/4E
+reports: immutable review models, deterministic rendering and comparison, a stdout-only CLI, and an
+authorized Telegram `/review` command. It does not re-evaluate rules, read market data, persist
+review output, or enable runtime action. External integrations are disabled by default. The project
+contains no strategy engine, no signal generation engine, no `SignalContract` construction, no
+broker order APIs, no paper trading, and no real trading.
 
 ## Start and Checks
 
@@ -84,6 +83,13 @@ trading.
   `app.scheduler`, or `app.api`. `PipelineDecisionReport.is_actionable` must remain `False`
   unconditionally, enforced by the model itself. Real price-level (entry/stop/take-profit)
   construction is out of scope until Phase 6.
+- While working in Phase 5, manual review domain code may consume only already-created immutable
+  Phase 4G/4F/4E report artifacts. It must not call the Phase 4 evaluator/composer, read market data,
+  use a database/session/UoW, call providers, register scheduler jobs, persist reports, or write
+  runtime files. Reports, comparisons, CLI output, and `/review` replies must remain read-only,
+  disabled/non-actionable, and contain explicit no-signal messaging. Do not add rule evaluation,
+  strategy or decision engines, setup/confidence scoring, AI/OpenAI/LLM calls, automatic Telegram
+  alerts, broker APIs, order execution, paper trading, or real trading.
 - Never fabricate market data, calendar data, agent evidence, or scan results.
 - LLM output may explain deterministic results only; it must not change prices, scores, risk, or rejected decisions.
 - Update documentation when architecture or safety boundaries change.

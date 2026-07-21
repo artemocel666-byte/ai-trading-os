@@ -44,6 +44,16 @@ from app.domain.entities.features import (
     FeatureWindow,
     MarketFeatureSnapshot,
 )
+from app.domain.entities.manual_review import (
+    ManualReviewIssue,
+    ManualReviewIssueCode,
+    ManualReviewIssueSeverity,
+    ManualReviewReport,
+    ManualReviewSection,
+    ManualReviewSectionCode,
+    ManualReviewStatus,
+    contains_actionable_trading_text,
+)
 from app.domain.entities.market_data import Candle, EconomicEvent, EconomicImpact, Timeframe
 from app.domain.entities.pipeline_decision import (
     PipelineDecisionReport,
@@ -148,6 +158,13 @@ __all__ = [
     "FeatureSnapshot",
     "FeatureWindow",
     "IndicatorWindow",
+    "ManualReviewIssue",
+    "ManualReviewIssueCode",
+    "ManualReviewIssueSeverity",
+    "ManualReviewReport",
+    "ManualReviewSection",
+    "ManualReviewSectionCode",
+    "ManualReviewStatus",
     "MarketContextSnapshot",
     "MarketFeatureSnapshot",
     "MovingAverageSeries",
@@ -200,5 +217,6 @@ __all__ = [
     "Timeframe",
     "UpsertResult",
     "build_feature_snapshot",
+    "contains_actionable_trading_text",
     "digest_status_from_analysis",
 ]
