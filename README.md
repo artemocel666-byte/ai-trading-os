@@ -4,10 +4,11 @@ AI Trading OS is a safety-first foundation for a future modular Forex analysis a
 
 ## Current Status
 
-- Current project phase: phase_5_manual_review_layer_foundation.
-- Phase 5 manual review layer foundation is complete: immutable read-only reports, a stdout-only
-  CLI viewer, an authorized Telegram `/review` command, and deterministic in-memory comparison and
-  quality summaries over existing disabled/non-actionable Phase 4G/4F/4E artifacts.
+- Current project phase: phase_6_snapshot_backed_review_foundation.
+- Phase 6 snapshot-backed read-only review is complete: `/review EURUSD M15` builds a real analysis
+  snapshot, runs the Phase 4G composer over it, and presents the pipeline decision through the
+  Phase 5 manual review layer — still read-only and non-actionable. Phase 7 (Russian Chief AI
+  explanations) is next.
 - Trading strategy: not implemented.
 - Real trading: disabled and unsupported.
 - External integrations: disabled by default.
@@ -36,6 +37,8 @@ AI Trading OS is a safety-first foundation for a future modular Forex analysis a
   completes Phase 4.
 - Phase 5: read-only manual review layer only; it presents existing reports without re-evaluating
   rules, reading market data, persisting review output, or enabling runtime action.
+- Phase 6: snapshot-backed read-only review only; `/review EURUSD M15` composes a pipeline decision
+  over a real snapshot and presents it read-only. No signals, no buy/sell, no AI, no price levels.
 
 ## Safety Warning
 
@@ -263,6 +266,21 @@ uv run python scripts/manual_review_report.py --format text
 uv run python scripts/manual_review_report.py --format json
 ```
 
+## Phase 6 Status
+
+Phase 6 adds snapshot-backed read-only review. When called with arguments, `/review EURUSD M15`
+builds a real `AnalysisSnapshot` from stored candles through the existing `AnalysisService`, runs
+the Phase 4G `StrategyDecisionComposer` over it, and presents the resulting `PipelineDecisionReport`
+through the Phase 5 manual review layer. The bare `/review` (no arguments) still renders the
+structural Phase 4E disabled report. Wiring lives in `app/domain/snapshot_review.py` (pure domain,
+receives an already-built snapshot) and `app/telegram/snapshot_review_formatter.py` (Russian
+output).
+
+Phase 6 does not construct a `SignalContract`, calculate price levels or position size, generate
+signals, provide recommendations, call AI/OpenAI/LLM services, send automatic Telegram alerts, use
+broker APIs, execute orders, or enable paper or real trading. The snapshot-backed review is
+read-only and non-actionable.
+
 ## Prerequisites
 
 - Python 3.12
@@ -357,7 +375,9 @@ For a local live Telegram test, see `docs/operations.md` and configure `TELEGRAM
 - `/scan_now` explicitly remains disconnected from analysis snapshots and does not fabricate a scan result.
 - `/snapshot` returns readiness reports only and does not produce trading guidance.
 - `/digest` returns manual readiness digests only and does not produce trading guidance.
-- `/review` returns a short authorized read-only manual review summary and persists nothing.
+- `/review` (no args) returns a short authorized read-only structural review summary and persists
+  nothing. `/review EURUSD M15` returns a snapshot-backed read-only review over a real pipeline
+  decision — still no signals, no price levels, no AI.
 - Scheduled digest delivery is disabled by default and has no automatic worker loop.
 - Worker jobs only update heartbeat and run foundation health checks.
 

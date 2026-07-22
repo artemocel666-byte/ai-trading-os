@@ -8,6 +8,7 @@ from pydantic import ValidationError
 import app.domain.disabled_pipeline_report_shell as disabled_pipeline_report_shell_module
 import app.domain.manual_review_comparison as manual_review_comparison_module
 import app.domain.manual_review_report_builder as manual_review_report_builder_module
+import app.domain.snapshot_review as snapshot_review_module
 import app.domain.strategy_decision_composer as strategy_decision_composer_module
 import app.domain.strategy_field_resolver as strategy_field_resolver_module
 import app.domain.strategy_rule_evaluator as strategy_rule_evaluator_module
@@ -582,6 +583,46 @@ PHASE_5_FORBIDDEN_BEHAVIOR_TERMS = (
     "generate_signal",
     "signal_generator",
     "signal_engine",
+    "setup_scoring",
+    "confidence_scoring",
+    "calculate_entry",
+    "calculate_stop",
+    "calculate_target",
+    "calculate_position_size",
+    "send_signal",
+    "telegram_signal",
+    "place_order",
+    "submit_order",
+    "execute_order",
+    "paper_trading",
+    "real_trading",
+    "backtesting",
+    "trading_simulator",
+    "OpenAI",
+    "LLM",
+)
+PHASE_6_FILES = (
+    Path("app/domain/snapshot_review.py"),
+    Path("app/telegram/snapshot_review_formatter.py"),
+)
+PHASE_6_FORBIDDEN_RUNTIME_IMPORTS = (
+    "app.domain.entities.signal_contract",
+    "app.adapters",
+    "app.persistence",
+    "app.scheduler",
+    "app.api",
+    "sqlalchemy",
+    "fastapi",
+    "httpx",
+    "openai",
+)
+PHASE_6_FORBIDDEN_BEHAVIOR_TERMS = (
+    "strategy_engine",
+    "generate_signal",
+    "signal_generator",
+    "signal_engine",
+    "signalcontract",
+    "signal_contract",
     "setup_scoring",
     "confidence_scoring",
     "calculate_entry",
@@ -1528,6 +1569,85 @@ def test_phase5_cli_has_no_runtime_file_writing() -> None:
 def test_phase5_adds_no_migration_and_phase3j_route_remains_absent() -> None:
     assert list(Path("migrations/versions").glob("*phase5*")) == []
     assert not Path("app/api/routes/digest_deliveries.py").exists()
+
+
+def test_phase6_modules_do_not_import_forbidden_runtime_dependencies() -> None:
+    source = inspect.getsource(snapshot_review_module).lower()
+    import_lines = tuple(
+        line
+        for line in source.splitlines()
+        if line.startswith("import ") or line.startswith("from ")
+    )
+    offenders = [
+        term
+        for term in PHASE_6_FORBIDDEN_RUNTIME_IMPORTS
+        if any(term.lower() in line for line in import_lines)
+    ]
+
+    assert offenders == []
+
+
+def test_phase6_files_do_not_add_trading_behavior_terms() -> None:
+    offenders: list[str] = []
+    for file_path in PHASE_6_FILES:
+        lowered = file_path.read_text(encoding="utf-8").lower()
+        for term in PHASE_6_FORBIDDEN_BEHAVIOR_TERMS:
+            if term.lower() in lowered:
+                offenders.append(f"{file_path}: {term}")
+
+    assert offenders == []
+
+
+def test_phase6_snapshot_review_produces_non_actionable_report() -> None:
+    from datetime import timedelta
+    from decimal import Decimal
+
+    from app.domain.entities import Candle
+    from app.domain.snapshot_review import build_snapshot_backed_manual_review_report
+    from app.domain.value_objects import CurrencyPair as _CurrencyPair
+
+    pair = _CurrencyPair(value="EURUSD")
+    base_time = datetime(2026, 7, 20, 9, 0, tzinfo=UTC)
+    candles = [
+        Candle(
+            provider="phase6-safety-test",
+            pair=pair,
+            timeframe=Timeframe.M15,
+            open_time=base_time + (index * timedelta(minutes=15)),
+            close_time=base_time + ((index + 1) * timedelta(minutes=15)),
+            open=Decimal("1.1000"),
+            high=Decimal("1.1005"),
+            low=Decimal("1.0995"),
+            close=Decimal("1.1001"),
+            volume=Decimal("100"),
+            is_closed=True,
+        )
+        for index in range(3)
+    ]
+    snapshot = AnalysisEngine().build_snapshot(
+        pair=pair,
+        timeframe=Timeframe.M15,
+        window_start=base_time,
+        window_end=base_time + timedelta(minutes=45),
+        as_of=base_time + timedelta(minutes=45),
+        candles=candles,
+        economic_events=[],
+        moving_average_windows=(3,),
+    )
+
+    report = build_snapshot_backed_manual_review_report(snapshot, base_time)
+
+    assert report.is_actionable is False
+    assert report.enabled_for_runtime is False
+
+
+def test_phase6_review_command_does_not_construct_signal_contract() -> None:
+    review_source = Path("app/telegram/commands.py").read_text(encoding="utf-8")
+    domain_source = Path("app/domain/snapshot_review.py").read_text(encoding="utf-8")
+
+    assert "SignalContract(" not in domain_source
+    assert "SignalContract(" not in review_source
+    assert "signal_contract" not in domain_source.lower()
 
 
 @pytest.mark.asyncio

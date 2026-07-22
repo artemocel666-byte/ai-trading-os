@@ -152,6 +152,15 @@ When Telegram is enabled, an authorized user can request the same read-only summ
 The command performs no database read/write, provider call, scheduler registration, automatic alert,
 AI call, or persistence. It does not evaluate Phase 4 rules or produce trading guidance.
 
+Phase 6 adds snapshot-backed review. `/review EURUSD M15` builds a real `AnalysisSnapshot` from
+stored candles through the existing `AnalysisService`, runs the Phase 4G composer over it, and
+presents the resulting pipeline decision through the same read-only manual review layer. The bare
+`/review` (no arguments) still returns the structural Phase 4E report. The snapshot-backed path
+reads stored candles only; it constructs no `SignalContract`, calculates no price levels, calls no
+AI, sends no automatic alert, and produces no trading guidance. Seed local demo candles with
+`scripts/seed_local_snapshot_data.py` (see the Local Telegram Readiness Demo above) before trying
+`/review EURUSD M15`.
+
 ## Telegram Bot Local Setup
 
 Create the bot in Telegram before enabling the `bot` service:
@@ -216,13 +225,16 @@ Then send these commands to the bot in Telegram:
 /digest
 /digest EURUSD M15
 /review
+/review EURUSD M15
 ```
 
 Expected behavior: `/snapshot EURUSD M15` returns a Russian readiness report with one leading emoji.
 `/digest` returns a Russian readiness digest with one leading emoji. These commands must not contain
 LONG/SHORT directions, entry guidance, buy/sell recommendations, or paper-trade actions. `/review`
 returns a Russian read-only manual review summary with one leading emoji and explicit
-`NO TRADING SIGNAL`/`NON-ACTIONABLE` markers.
+`NO TRADING SIGNAL`/`NON-ACTIONABLE` markers. `/review EURUSD M15` returns a Russian snapshot-backed
+read-only review over a real Phase 4G pipeline decision, with the same no-signal/non-actionable
+markers and no price levels.
 
 ## Common Failure Cases
 

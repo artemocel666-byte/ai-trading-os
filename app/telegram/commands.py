@@ -11,6 +11,7 @@ from app.core.exceptions import NotImplementedFeatureError
 from app.core.time import normalize_to_utc, utc_now
 from app.domain.entities import SnapshotScheduleItem, Timeframe
 from app.domain.manual_review_report_builder import build_local_manual_review_report
+from app.domain.snapshot_review import build_snapshot_backed_manual_review_report
 from app.domain.value_objects import CurrencyPair
 from app.services.analysis_service import AnalysisService
 from app.services.readiness_digest_service import ReadinessDigestService
@@ -18,6 +19,7 @@ from app.services.system_state_service import SystemStateService
 from app.telegram.authorization import TelegramIdentity, is_authorized
 from app.telegram.formatter import TelegramFormatter
 from app.telegram.manual_review_formatter import format_manual_review_body
+from app.telegram.snapshot_review_formatter import format_snapshot_review_body
 
 DEFAULT_SNAPSHOT_CANDLE_COUNT = 12
 DEFAULT_DIGEST_ITEMS = (
@@ -112,7 +114,7 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         MessageType.EDUCATION,
         (
             "Доступные команды: /start, /help, /status, /start_scan, "
-            "/stop_scan, /scan_now, /snapshot, /digest, /review."
+            "/stop_scan, /scan_now, /snapshot, /digest, /review [EURUSD M15]."
         ),
     )
 
@@ -239,6 +241,9 @@ async def digest_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
 async def review_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     if not await _ensure_authorized(update, context):
         return
+    if _review_has_arguments(update):
+        await _snapshot_backed_review(update, context)
+        return
     try:
         report = build_local_manual_review_report(normalize_to_utc(utc_now()))
     except Exception:
@@ -252,6 +257,50 @@ async def review_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
 
     body = format_manual_review_body(report)
     await _reply(update, context, MessageType.REPORT, body)
+
+
+async def _snapshot_backed_review(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    try:
+        pair, timeframe = _parse_snapshot_command(update)
+    except (ValueError, ValidationError):
+        await _reply(
+            update,
+            context,
+            MessageType.REJECTED,
+            "Формат команды: /review EURUSD M15. Поддерживаются M15 и H1.",
+        )
+        return
+
+    window_start, window_end, as_of = _default_snapshot_window(timeframe)
+    try:
+        snapshot = await _analysis_service(context).build_snapshot(
+            pair=pair,
+            timeframe=timeframe,
+            window_start=window_start,
+            window_end=window_end,
+            as_of=as_of,
+        )
+        report = build_snapshot_backed_manual_review_report(snapshot, normalize_to_utc(utc_now()))
+    except Exception:
+        await _reply(
+            update,
+            context,
+            MessageType.DATA_UNAVAILABLE,
+            "Проверка по снапшоту сейчас недоступна. Проверьте базу данных и настройки сервиса.",
+        )
+        return
+
+    body = format_snapshot_review_body(report, pair, timeframe)
+    await _reply(update, context, MessageType.REPORT, body)
+
+
+def _review_has_arguments(update: Update) -> bool:
+    text = (
+        update.effective_message.text
+        if update.effective_message is not None and update.effective_message.text is not None
+        else ""
+    )
+    return len(text.split()) > 1
 
 
 def _parse_snapshot_command(update: Update) -> tuple[CurrencyPair, Timeframe]:

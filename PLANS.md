@@ -78,6 +78,12 @@
   existing Phase 4G/4F/4E artifacts, deterministic stdout text/JSON rendering, an authorized manual
   Telegram `/review` command, in-memory report comparison and completeness summaries, and safety
   tests confirming no new evaluation, signal, scoring, AI, persistence, or execution behavior.
+- Phase 6 snapshot-backed read-only review: `/review EURUSD M15` builds a real `AnalysisSnapshot`
+  from stored candles (via the existing `AnalysisService`), runs the Phase 4G composer over it, and
+  presents the resulting `PipelineDecisionReport` through the Phase 5 manual review layer. A pure
+  domain wiring function plus a Russian snapshot-review formatter, with safety tests confirming no
+  `SignalContract` construction, price levels, AI, automatic messaging, or execution behavior. The
+  bare `/review` still renders the structural Phase 4E report.
 
 ## Current Implementation Status
 
@@ -116,7 +122,10 @@ execution flow is connected.
 Phase 5 adds a presentation-only manual review layer. It consumes existing immutable report
 artifacts without invoking the Phase 4 evaluator/composer and provides local stdout and authorized
 Telegram inspection plus deterministic in-memory comparison. Manual review reports are never
-persisted and remain disabled/non-actionable.
+persisted and remain disabled/non-actionable. Phase 6 adds snapshot-backed review: `/review EURUSD
+M15` builds a real `AnalysisSnapshot` from stored candles, runs the Phase 4G composer over it, and
+presents the resulting pipeline decision through the same read-only manual review layer, still
+non-actionable and without any signal, AI, or execution behavior.
 
 ## Future Phases
 
@@ -145,7 +154,7 @@ persisted and remain disabled/non-actionable.
 - Phase 5: read-only manual review layer foundation — completed without new rule evaluation,
   trading output, persistence, AI, or execution behavior
 - Phase 6: snapshot-backed read-only review — `/review EURUSD M15` over a stored snapshot through
-  the Phase 4G composer; no signals, no buy/sell, no AI; not started
+  the Phase 4G composer; no signals, no buy/sell, no AI; completed
 - Phase 7: Russian Chief AI explanations — first LLM connection, disabled-by-default, explains
   deterministic reports in Russian without changing them; not started
 - Phase 8: Telegram signal delivery — includes the deferred `SignalContract` price-level
@@ -169,7 +178,7 @@ persisted and remain disabled/non-actionable.
 
 ## Next Planned Task
 
-Phase 5 manual review layer foundation is complete. Phase 6 (snapshot-backed read-only review) is
-the next planned task. Chief AI explanations moved to Phase 7, Telegram signal delivery to Phase 8,
-and backtesting/paper trading to Phase 9. Real `SignalContract` construction and all trading
-behavior remain inactive.
+Phase 6 snapshot-backed read-only review is complete. Phase 7 (Russian Chief AI explanations, the
+first LLM connection, disabled-by-default) is the next planned task. Telegram signal delivery is
+Phase 8 and backtesting/paper trading is Phase 9. Real `SignalContract` construction and all
+trading behavior remain inactive.

@@ -60,7 +60,7 @@ def _contract(**overrides: object) -> SignalContract:
 
 
 def test_project_phase_has_advanced_to_phase4e_disabled_pipeline_report_shell_foundation() -> None:
-    assert constants.PROJECT_PHASE == "phase_5_manual_review_layer_foundation"
+    assert constants.PROJECT_PHASE == "phase_6_snapshot_backed_review_foundation"
 
 
 def test_signal_contract_models_are_immutable() -> None:
