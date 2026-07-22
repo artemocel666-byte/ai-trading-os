@@ -236,8 +236,8 @@ This closes Phase 4: the full declarative rule pipeline (declare -> validate -> 
 not call AI/OpenAI/LLM services, does not send Telegram signals, does not use broker APIs, does not
 execute orders, and does not enable paper or real trading. `PipelineDecisionReport.is_actionable` is
 unconditionally `False`, enforced by the model itself. Real `SignalContract` price-level
-construction is deliberately deferred to Phase 6, where actual price levels are needed for Telegram
-signal delivery.
+construction is deliberately deferred to Phase 8 (Telegram signal delivery), where actual price
+levels are needed.
 
 ## Phase 5 Status
 

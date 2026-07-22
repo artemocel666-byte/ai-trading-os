@@ -63,3 +63,8 @@ signals, never uses broker APIs, never executes orders, and never enables paper 
 - **Phase 4 (4A-4G) is now complete.** Phase 5 (Russian Chief AI explanations) is the next planned
   task and has not started. Real `SignalContract` price-level construction remains deferred to
   Phase 6.
+- Renumbering note (added 2026-07-22, after this report was written): Phase 5 became the manual
+  review layer foundation, snapshot-backed review became Phase 6, Chief AI explanations moved to
+  Phase 7, and the Telegram signal delivery phase referenced above as "Phase 6" (including the
+  deferred `SignalContract` price-level construction) is now Phase 8. See `PLANS.md` for the
+  authoritative roadmap.

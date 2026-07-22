@@ -82,7 +82,9 @@ broker order APIs, no paper trading, and no real trading.
   construct a `SignalContract`, and must never import `app.persistence`, `app.telegram`,
   `app.scheduler`, or `app.api`. `PipelineDecisionReport.is_actionable` must remain `False`
   unconditionally, enforced by the model itself. Real price-level (entry/stop/take-profit)
-  construction is out of scope until Phase 6.
+  construction is out of scope until Phase 8 (Telegram signal delivery, renumbered from the
+  original Phase 6 when the roadmap gained Phase 6 snapshot-backed review and Phase 7 Chief AI
+  explanations).
 - While working in Phase 5, manual review domain code may consume only already-created immutable
   Phase 4G/4F/4E report artifacts. It must not call the Phase 4 evaluator/composer, read market data,
   use a database/session/UoW, call providers, register scheduler jobs, persist reports, or write

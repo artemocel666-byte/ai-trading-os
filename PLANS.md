@@ -103,7 +103,7 @@ a decision engine. Phase 4G strategy decision composition foundation composes th
 reports across every registered ruleset into one deterministic, unconditionally non-actionable
 `PipelineDecisionReport`, without constructing a `SignalContract` or calculating price levels. This
 closes Phase 4: the full declarative rule pipeline now runs end to end against real data, with
-signal-contract price-level construction deliberately deferred to Phase 6. Production Twelve Data
+signal-contract price-level construction deliberately deferred to Phase 8. Production Twelve Data
 and FMP adapters exist, but live
 integrations remain disabled by default. Scanning state can be enabled or disabled, Telegram can
 request readiness reports and readiness digests, and scheduled digest orchestration remains disabled
@@ -144,9 +144,13 @@ persisted and remain disabled/non-actionable.
   **closes Phase 4**
 - Phase 5: read-only manual review layer foundation — completed without new rule evaluation,
   trading output, persistence, AI, or execution behavior
-- Phase 6: Telegram signal delivery — includes the deferred `SignalContract` price-level
+- Phase 6: snapshot-backed read-only review — `/review EURUSD M15` over a stored snapshot through
+  the Phase 4G composer; no signals, no buy/sell, no AI; not started
+- Phase 7: Russian Chief AI explanations — first LLM connection, disabled-by-default, explains
+  deterministic reports in Russian without changing them; not started
+- Phase 8: Telegram signal delivery — includes the deferred `SignalContract` price-level
   (entry/stop/take-profit) construction that Phase 4 deliberately did not build; not started
-- Phase 7: backtesting and paper trading — not started
+- Phase 9: backtesting and paper trading — not started
 
 ## Explicit Non-Goals
 
@@ -165,5 +169,7 @@ persisted and remain disabled/non-actionable.
 
 ## Next Planned Task
 
-Phase 5 manual review layer foundation is complete. Later phases have not started. Real
-`SignalContract` construction and all trading behavior remain inactive.
+Phase 5 manual review layer foundation is complete. Phase 6 (snapshot-backed read-only review) is
+the next planned task. Chief AI explanations moved to Phase 7, Telegram signal delivery to Phase 8,
+and backtesting/paper trading to Phase 9. Real `SignalContract` construction and all trading
+behavior remain inactive.
