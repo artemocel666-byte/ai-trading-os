@@ -7,8 +7,11 @@ AI Trading OS is a safety-first foundation for a future modular Forex analysis a
 - Current project phase: phase_6_snapshot_backed_review_foundation.
 - Phase 6 snapshot-backed read-only review is complete: `/review EURUSD M15` builds a real analysis
   snapshot, runs the Phase 4G composer over it, and presents the pipeline decision through the
-  Phase 5 manual review layer — still read-only and non-actionable. Phase 7 (Russian Chief AI
-  explanations) is next.
+  Phase 5 manual review layer — still read-only and non-actionable.
+- Next: Phase 7 (live data and real analysis) — the ingestion service plus real analytical rules.
+  As of 2026-07-22 no code path fetches provider data, so market-data/calendar flags currently
+  change nothing; the only writer of candles is `scripts/seed_local_snapshot_data.py`. Chief AI is
+  Phase 8; signals, delivery, and paper trading are Phase 9.
 - Trading strategy: not implemented.
 - Real trading: disabled and unsupported.
 - External integrations: disabled by default.
@@ -239,8 +242,8 @@ This closes Phase 4: the full declarative rule pipeline (declare -> validate -> 
 not call AI/OpenAI/LLM services, does not send Telegram signals, does not use broker APIs, does not
 execute orders, and does not enable paper or real trading. `PipelineDecisionReport.is_actionable` is
 unconditionally `False`, enforced by the model itself. Real `SignalContract` price-level
-construction is deliberately deferred to Phase 8 (Telegram signal delivery), where actual price
-levels are needed.
+construction is deliberately deferred to Phase 9A (signals, delivery, and paper trading), where
+actual price levels are needed.
 
 ## Phase 5 Status
 

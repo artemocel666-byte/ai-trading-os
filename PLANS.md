@@ -109,7 +109,7 @@ a decision engine. Phase 4G strategy decision composition foundation composes th
 reports across every registered ruleset into one deterministic, unconditionally non-actionable
 `PipelineDecisionReport`, without constructing a `SignalContract` or calculating price levels. This
 closes Phase 4: the full declarative rule pipeline now runs end to end against real data, with
-signal-contract price-level construction deliberately deferred to Phase 8. Production Twelve Data
+signal-contract price-level construction deliberately deferred to Phase 9A. Production Twelve Data
 and FMP adapters exist, but live
 integrations remain disabled by default. Scanning state can be enabled or disabled, Telegram can
 request readiness reports and readiness digests, and scheduled digest orchestration remains disabled
@@ -130,7 +130,11 @@ non-actionable and without any signal, AI, or execution behavior.
 ## Future Phases
 
 - Phase 2: market-data and calendar adapters — completed as disabled-by-default factories plus
-  production adapters covered by MockTransport-backed contract tests
+  production adapters covered by MockTransport-backed contract tests. **Adapters only: nothing in
+  the application calls them yet.** No code path invokes `get_closed_candles`/`get_events`, so
+  enabling the flags fetches nothing. The ingestion service that actually pulls provider data into
+  the database is Phase 7A/7B. Until then the only writer of candles is
+  `scripts/seed_local_snapshot_data.py`.
 - Phase 3A: data-quality foundation — completed without trading analysis or decisions
 - Phase 3B: deterministic feature engine foundation — completed without trading decisions
 - Phase 3C: deterministic indicator/context foundation — completed without trading decisions
@@ -155,11 +159,42 @@ non-actionable and without any signal, AI, or execution behavior.
   trading output, persistence, AI, or execution behavior
 - Phase 6: snapshot-backed read-only review — `/review EURUSD M15` over a stored snapshot through
   the Phase 4G composer; no signals, no buy/sell, no AI; completed
-- Phase 7: Russian Chief AI explanations — first LLM connection, disabled-by-default, explains
+- Phase 7: live data and real analysis — closes the two gaps found on 2026-07-22 (no ingestion
+  path, placeholder-only rules); not started
+  - 7A: market-data ingestion service plus worker job, disabled by default. First code that calls
+    `MarketDataProvider.get_closed_candles` and writes results through `candles.upsert_many`.
+    Records `last_successful_market_fetch`. Decisions: per-tick window, provider rate limits,
+    behaviour on provider failure, weekend/market-closed vs missing data, optional first-run
+    backfill.
+  - 7B: economic-calendar ingestion on the same pattern via `EconomicCalendarProvider.get_events`.
+    Records `last_successful_calendar_fetch`. Decisions: forward horizon, event deduplication.
+  - 7C: real analytical `StrategyRuleSet` content replacing the three structural fixtures
+    (`data_quality.closed_candles_available`, `market_context.snapshot_ready`,
+    `time_filter.session_name`). Candidate rules: window data completeness, proximity to
+    high-impact events, volatility regime versus its own window average, session filter.
+  - 7D: historical validation of the new rules through the existing `HistoricalReplay`
+    (`app/domain/replay.py`). Decisions: how much history, what counts as a rule behaving sanely.
+  - Unlocks `MARKET_DATA_ENABLED=true`/`CALENDAR_ENABLED=true` becoming meaningful, and makes
+    `/review EURUSD M15` report real market analysis instead of placeholder checks.
+  - Still no signals, directions, price levels, or AI.
+- Phase 8: Russian Chief AI explanations — first LLM connection, disabled-by-default, explains
   deterministic reports in Russian without changing them; not started
-- Phase 8: Telegram signal delivery — includes the deferred `SignalContract` price-level
-  (entry/stop/take-profit) construction that Phase 4 deliberately did not build; not started
-- Phase 9: backtesting and paper trading — not started
+  - 8A: `ExplanationInput` contract shaped for the real `PipelineDecisionReport`, plus an output
+    validator reusing `contains_actionable_trading_text` and the one-emoji Telegram rules. No
+    network call. Do **not** reuse `ChiefAIRequest` from `app/schemas/agents.py`: it requires
+    `setup_score`/`risk_percent`, which the pipeline does not produce and which safety tests ban.
+  - 8B: production OpenAI adapter, disabled by default, covered by MockTransport contract tests
+    plus adversarial tests proving a lying model cannot change the deterministic report.
+  - 8C: Telegram wiring with fallback to the existing deterministic Russian text whenever the
+    provider is disabled/unavailable or validation fails.
+  - Unlocks `OPENAI_ENABLED=true`.
+- Phase 9: signals, delivery, and paper trading — the final phase; not started
+  - 9A: `SignalContract` assembly from `PipelineDecisionReport`, including the price-level
+    (entry/stop/take-profit) construction deferred since Phase 4. The `calculate_entry`/
+    `calculate_stop`/`calculate_target` safety-term ban is lifted only inside this slice.
+  - 9B: Telegram signal delivery — the first user-visible LONG/SHORT output in the project.
+  - 9C: paper trading — simulated positions and outcome tracking, no real money.
+  - `REAL_TRADING_ENABLED` stays `False` permanently; no broker order API is ever added.
 
 ## Explicit Non-Goals
 
@@ -178,7 +213,20 @@ non-actionable and without any signal, AI, or execution behavior.
 
 ## Next Planned Task
 
-Phase 6 snapshot-backed read-only review is complete. Phase 7 (Russian Chief AI explanations, the
-first LLM connection, disabled-by-default) is the next planned task. Telegram signal delivery is
-Phase 8 and backtesting/paper trading is Phase 9. Real `SignalContract` construction and all
-trading behavior remain inactive.
+Phase 6 snapshot-backed read-only review is complete. **Phase 7A (market-data ingestion service) is
+the next planned task.**
+
+Phase 7 must come before Chief AI: as of 2026-07-22 the application has no ingestion path at all,
+so no real market data can reach the database, and the rule registry holds only three structural
+placeholder rules. Explaining that output with an LLM would explain nothing. Chief AI is Phase 8,
+signals/delivery/paper trading is Phase 9. Real `SignalContract` construction and all trading
+behavior remain inactive until Phase 9A.
+
+### Parallel work between agents
+
+Phase 3I was once implemented twice independently. To avoid a repeat:
+
+- 7A/7B (ingestion) and 7C (rule content) touch different files and can be built in parallel by
+  different agents.
+- 7D depends on 7C.
+- Phase 8 and Phase 9 slices are strictly sequential; do not parallelize them.
