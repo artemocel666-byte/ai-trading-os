@@ -2,7 +2,6 @@ from collections.abc import Callable, Sequence
 from datetime import datetime
 
 from app.core.exceptions import ApplicationError, ErrorCode, ProviderError
-from app.core.time import normalize_to_utc
 from app.domain.entities.data_quality import TIMEFRAME_TO_DELTA
 from app.domain.entities.ingestion import (
     MarketDataIngestionConfig,
@@ -66,7 +65,6 @@ class MarketDataIngestionService:
                 config=self._config,
                 tick=tick,
                 reason=MarketDataIngestionDecisionReason.COMPLETED,
-                is_due=True,
                 should_fetch=True,
             ),
             executed=True,
@@ -145,12 +143,14 @@ class MarketDataIngestionService:
         )
 
     def _decide(self, tick: MarketDataIngestionTick) -> MarketDataIngestionDecision:
+        # Cadence is owned by the scheduler that calls run_tick. Deliberately no wall-clock
+        # gate here: ingestion windows overlap, so the exact firing moment is irrelevant, and
+        # a clock-alignment check would silently skip every scheduler-driven tick.
         if not self._config.enabled:
             return _decision(
                 config=self._config,
                 tick=tick,
                 reason=MarketDataIngestionDecisionReason.DISABLED,
-                is_due=False,
                 should_fetch=False,
             )
         if not self._config.items:
@@ -158,25 +158,12 @@ class MarketDataIngestionService:
                 config=self._config,
                 tick=tick,
                 reason=MarketDataIngestionDecisionReason.NO_ITEMS,
-                is_due=False,
-                should_fetch=False,
-            )
-        if not is_market_data_ingestion_due(
-            as_of=tick.as_of,
-            interval_minutes=self._config.interval_minutes,
-        ):
-            return _decision(
-                config=self._config,
-                tick=tick,
-                reason=MarketDataIngestionDecisionReason.NOT_DUE,
-                is_due=False,
                 should_fetch=False,
             )
         return _decision(
             config=self._config,
             tick=tick,
-            reason=MarketDataIngestionDecisionReason.DUE,
-            is_due=True,
+            reason=MarketDataIngestionDecisionReason.COMPLETED,
             should_fetch=True,
         )
 
@@ -199,27 +186,15 @@ def ingestion_window(
     return (window_start, window_end)
 
 
-def is_market_data_ingestion_due(*, as_of: datetime, interval_minutes: int) -> bool:
-    if interval_minutes < 1:
-        raise ValueError("market data ingestion interval must be at least one minute")
-    as_of_utc = normalize_to_utc(as_of)
-    if as_of_utc.second != 0 or as_of_utc.microsecond != 0:
-        return False
-    minutes_since_midnight = (as_of_utc.hour * 60) + as_of_utc.minute
-    return minutes_since_midnight % interval_minutes == 0
-
-
 def _decision(
     *,
     config: MarketDataIngestionConfig,
     tick: MarketDataIngestionTick,
     reason: MarketDataIngestionDecisionReason,
-    is_due: bool,
     should_fetch: bool,
 ) -> MarketDataIngestionDecision:
     return MarketDataIngestionDecision(
         enabled=config.enabled,
-        is_due=is_due,
         should_fetch=should_fetch,
         reason=reason,
         item_count=len(config.items),

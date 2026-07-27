@@ -14,8 +14,6 @@ from app.domain.value_objects import CurrencyPair
 class MarketDataIngestionDecisionReason(StrEnum):
     DISABLED = "DISABLED"
     NO_ITEMS = "NO_ITEMS"
-    NOT_DUE = "NOT_DUE"
-    DUE = "DUE"
     COMPLETED = "COMPLETED"
 
 
@@ -42,9 +40,15 @@ class MarketDataIngestionTick(BaseModel):
 
 
 class MarketDataIngestionDecision(BaseModel):
+    """Whether a tick should fetch.
+
+    Cadence is owned by the scheduler that invokes the tick, not by this decision: the
+    ingestion windows deliberately overlap, so the exact firing moment does not matter.
+    Only configuration gates live here.
+    """
+
     project_phase: str = Field(default_factory=lambda: constants.PROJECT_PHASE, min_length=1)
     enabled: bool
-    is_due: bool
     should_fetch: bool
     reason: MarketDataIngestionDecisionReason
     item_count: int = Field(ge=0)
@@ -59,8 +63,6 @@ class MarketDataIngestionDecision(BaseModel):
 
     @model_validator(mode="after")
     def validate_decision(self) -> Self:
-        if self.should_fetch and not self.is_due:
-            raise ValueError("market data ingestion cannot fetch when the tick is not due")
         if self.should_fetch and not self.enabled:
             raise ValueError("market data ingestion cannot fetch while disabled")
         if self.should_fetch and self.item_count == 0:

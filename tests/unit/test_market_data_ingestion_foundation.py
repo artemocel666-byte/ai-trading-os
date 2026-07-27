@@ -14,7 +14,6 @@ from app.domain.value_objects import CurrencyPair
 from app.services.market_data_ingestion_service import (
     MarketDataIngestionService,
     ingestion_window,
-    is_market_data_ingestion_due,
 )
 from app.services.system_state_service import SystemStateService
 from tests.fakes import FakeUnitOfWorkFactory
@@ -134,16 +133,24 @@ async def test_ingestion_without_items_skips() -> None:
 
 
 @pytest.mark.asyncio
-async def test_not_due_tick_skips_without_calling_provider() -> None:
-    provider = FakeMarketDataProvider()
+async def test_tick_fetches_at_any_wall_clock_moment() -> None:
+    """Regression: cadence belongs to the scheduler, not to a wall-clock alignment check.
+
+    An earlier version gated on `second == 0 and microsecond == 0`, which APScheduler never
+    satisfies, so scheduler-driven ingestion silently skipped every tick.
+    """
+    candles = [_candle(0)]
+    provider = FakeMarketDataProvider(candles_by_timeframe={Timeframe.M15: candles})
     factory = FakeUnitOfWorkFactory()
     service = _service(config=_config(items=(_item(),)), provider=provider, factory=factory)
 
-    result = await service.run_tick(as_of=DUE_TIME + timedelta(minutes=7))
+    ragged_as_of = DUE_TIME + timedelta(minutes=7, seconds=41, microseconds=3421)
+    result = await service.run_tick(as_of=ragged_as_of)
 
-    assert result.skipped is True
-    assert result.decision.reason == MarketDataIngestionDecisionReason.NOT_DUE
-    assert provider.calls == []
+    assert result.executed is True
+    assert result.succeeded is True
+    assert result.total_fetched == 1
+    assert len(provider.calls) == 1
 
 
 @pytest.mark.asyncio
@@ -267,16 +274,9 @@ def test_ingestion_window_is_deterministic_and_rejects_empty_lookback() -> None:
         ingestion_window(timeframe=Timeframe.M15, as_of=DUE_TIME, lookback_candles=0)
 
 
-def test_due_check_requires_exact_interval_boundary() -> None:
-    assert is_market_data_ingestion_due(as_of=DUE_TIME, interval_minutes=15) is True
-    assert (
-        is_market_data_ingestion_due(as_of=DUE_TIME + timedelta(minutes=7), interval_minutes=15)
-        is False
-    )
-    assert (
-        is_market_data_ingestion_due(as_of=DUE_TIME + timedelta(seconds=1), interval_minutes=15)
-        is False
-    )
+def test_no_wall_clock_gate_remains_in_the_service() -> None:
+    """The scheduler owns cadence; the service must expose no clock-alignment gate."""
+    import app.services.market_data_ingestion_service as module
 
-    with pytest.raises(ValueError, match="at least one minute"):
-        is_market_data_ingestion_due(as_of=DUE_TIME, interval_minutes=0)
+    assert not hasattr(module, "is_market_data_ingestion_due")
+    assert "NOT_DUE" not in {reason.value for reason in MarketDataIngestionDecisionReason}
