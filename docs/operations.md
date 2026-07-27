@@ -58,6 +58,34 @@ Application processes emit structured JSON logs with service, component, event, 
 
 The default `.env.example` disables Telegram, OpenAI, market data, calendar, and scanning. Disabled providers raise typed errors before external calls.
 
+## Market-Data Ingestion (Phase 7A)
+
+Ingestion is the first outbound provider call in the project. It is gated by two flags that both
+default to `false`; with either off the worker registers no ingestion job at all:
+
+```env
+MARKET_DATA_ENABLED=true
+TWELVE_DATA_API_KEY=<your key>
+MARKET_DATA_INGESTION_ENABLED=true
+MARKET_DATA_INGESTION_INTERVAL_MINUTES=15
+MARKET_DATA_INGESTION_LOOKBACK_CANDLES=48
+```
+
+The job runs on the configured interval, fetches closed candles for EURUSD M15 and H1 over a rolling
+window ending at the latest closed candle boundary, and stores them through the duplicate-safe
+repository. Windows deliberately overlap between runs so short provider gaps heal on the next tick.
+
+Operational behaviour:
+
+- Success updates `last_successful_market_fetch`, visible in `GET /api/v1/system/status`.
+- An empty provider response is a success, not a failure — the forex market is closed on weekends.
+- A failing pair is isolated: the remaining pairs still ingest on the same tick.
+- Provider errors are recorded through the standard error path (`last_error` plus an error event)
+  and never propagate into the scheduler.
+- Default load is roughly 8 provider requests per hour, well inside a free Twelve Data plan.
+
+Ingestion stores candles only. It produces no signals, price levels, scoring, AI output, or messages.
+
 ## Local Telegram Readiness Demo
 
 Phase 3E can run a local readiness report without live market or calendar integrations. Start

@@ -2,14 +2,15 @@
 
 AI Trading OS is a foundation for a future Forex analysis and paper-trading platform.
 
-Current project phase: phase_6_snapshot_backed_review_foundation.
-Phase 6 adds snapshot-backed read-only review: `/review EURUSD M15` builds a real `AnalysisSnapshot`
-from stored candles, runs the Phase 4G composer over it, and presents the resulting
-`PipelineDecisionReport` through the existing Phase 5 manual review layer. It stays read-only and
-non-actionable: no signals, no buy/sell, no AI, no price levels, no `SignalContract` construction,
-and no automatic/unsolicited messages. The bare `/review` still renders the structural Phase 4E
-disabled report. External integrations are disabled by default. The project contains no strategy
-engine, no signal generation engine, no broker order APIs, no paper trading, and no real trading.
+Current project phase: phase_7a_market_data_ingestion_foundation.
+Phase 7A adds the market-data ingestion service: a worker job that asks the market-data provider for
+closed candles and stores them through the existing duplicate-safe repository. It is the first code
+in the project that performs an outbound provider call, and it is gated by two flags that are both
+off by default (`MARKET_DATA_ENABLED`, `MARKET_DATA_INGESTION_ENABLED`); with either off the worker
+registers no ingestion job. Ingestion writes candles only — no signals, no directions, no price
+levels, no scoring, no AI, and no user-facing messages. External integrations remain disabled by
+default. The project contains no strategy engine, no signal generation engine, no
+`SignalContract` construction, no broker order APIs, no paper trading, and no real trading.
 
 ## Start and Checks
 
@@ -101,6 +102,14 @@ engine, no signal generation engine, no broker order APIs, no paper trading, and
   `app.domain.entities.signal_contract`. It must never construct a `SignalContract`, calculate price
   levels, call AI, or send an automatic/unsolicited message. `/review` output (both structural and
   snapshot-backed) must remain read-only and non-actionable.
+- While working in Phase 7A, the ingestion service (`app/services/market_data_ingestion_service.py`,
+  `app/domain/entities/ingestion.py`) may call `MarketDataProvider.get_closed_candles` and write
+  candles through `candles.upsert_many`. It must depend on the provider Protocol, never a concrete
+  adapter, and must not import `app.telegram`, `app.api`, or
+  `app.domain.entities.signal_contract`. It must never produce signals, directions, price levels,
+  scoring, AI output, or user-facing messages. Both `MARKET_DATA_ENABLED` and
+  `MARKET_DATA_INGESTION_ENABLED` must stay `false` by default. An empty provider response is a
+  normal outcome (closed market), not a failure, and one failing pair must not abort the others.
 - Never fabricate market data, calendar data, agent evidence, or scan results.
 - LLM output may explain deterministic results only; it must not change prices, scores, risk, or rejected decisions.
 - Update documentation when architecture or safety boundaries change.

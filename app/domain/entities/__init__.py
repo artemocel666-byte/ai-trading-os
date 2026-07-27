@@ -44,6 +44,14 @@ from app.domain.entities.features import (
     FeatureWindow,
     MarketFeatureSnapshot,
 )
+from app.domain.entities.ingestion import (
+    MarketDataIngestionConfig,
+    MarketDataIngestionDecision,
+    MarketDataIngestionDecisionReason,
+    MarketDataIngestionItemResult,
+    MarketDataIngestionResult,
+    MarketDataIngestionTick,
+)
 from app.domain.entities.manual_review import (
     ManualReviewIssue,
     ManualReviewIssueCode,
@@ -166,6 +174,12 @@ __all__ = [
     "ManualReviewSectionCode",
     "ManualReviewStatus",
     "MarketContextSnapshot",
+    "MarketDataIngestionConfig",
+    "MarketDataIngestionDecision",
+    "MarketDataIngestionDecisionReason",
+    "MarketDataIngestionItemResult",
+    "MarketDataIngestionResult",
+    "MarketDataIngestionTick",
     "MarketFeatureSnapshot",
     "MovingAverageSeries",
     "MovingAverageSummary",

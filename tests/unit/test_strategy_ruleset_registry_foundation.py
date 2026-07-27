@@ -44,7 +44,7 @@ def _fixture_with_changed_description() -> dict[str, StrategyRuleSet]:
 
 
 def test_project_phase_is_phase4e_disabled_pipeline_report_shell_foundation() -> None:
-    assert constants.PROJECT_PHASE == "phase_6_snapshot_backed_review_foundation"
+    assert constants.PROJECT_PHASE == "phase_7a_market_data_ingestion_foundation"
 
 
 def test_registry_item_and_snapshot_models_are_immutable() -> None:

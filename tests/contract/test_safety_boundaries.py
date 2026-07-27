@@ -19,12 +19,14 @@ from app.adapters.disabled import (
     DisabledLLMProvider,
     DisabledMarketDataProvider,
 )
+from app.core.config import Settings
 from app.core.enums import Decision
 from app.core.exceptions import IntegrationDisabledError
 from app.domain.analysis_engine import AnalysisEngine
 from app.domain.disabled_pipeline_report_shell import DisabledPipelineReportShell
 from app.domain.entities import (
     Timeframe,
+    ingestion,
     manual_review,
     pipeline_decision,
     pipeline_report,
@@ -618,6 +620,43 @@ PHASE_6_FORBIDDEN_RUNTIME_IMPORTS = (
 )
 PHASE_6_FORBIDDEN_BEHAVIOR_TERMS = (
     "strategy_engine",
+    "generate_signal",
+    "signal_generator",
+    "signal_engine",
+    "signalcontract",
+    "signal_contract",
+    "setup_scoring",
+    "confidence_scoring",
+    "calculate_entry",
+    "calculate_stop",
+    "calculate_target",
+    "calculate_position_size",
+    "send_signal",
+    "telegram_signal",
+    "place_order",
+    "submit_order",
+    "execute_order",
+    "paper_trading",
+    "real_trading",
+    "backtesting",
+    "trading_simulator",
+    "OpenAI",
+    "LLM",
+)
+PHASE_7A_FILES = (
+    Path("app/domain/entities/ingestion.py"),
+    Path("app/services/market_data_ingestion_service.py"),
+)
+PHASE_7A_FORBIDDEN_RUNTIME_IMPORTS = (
+    "app.domain.entities.signal_contract",
+    "app.telegram",
+    "app.api",
+    "fastapi",
+    "openai",
+)
+PHASE_7A_FORBIDDEN_BEHAVIOR_TERMS = (
+    "strategy_engine",
+    "decision_engine",
     "generate_signal",
     "signal_generator",
     "signal_engine",
@@ -1648,6 +1687,73 @@ def test_phase6_review_command_does_not_construct_signal_contract() -> None:
     assert "SignalContract(" not in domain_source
     assert "SignalContract(" not in review_source
     assert "signal_contract" not in domain_source.lower()
+
+
+def test_phase7a_files_do_not_import_forbidden_runtime_dependencies() -> None:
+    offenders: list[str] = []
+    for file_path in PHASE_7A_FILES:
+        import_lines = tuple(
+            line
+            for line in file_path.read_text(encoding="utf-8").lower().splitlines()
+            if line.startswith("import ") or line.startswith("from ")
+        )
+        for term in PHASE_7A_FORBIDDEN_RUNTIME_IMPORTS:
+            if any(term.lower() in line for line in import_lines):
+                offenders.append(f"{file_path}: {term}")
+
+    assert offenders == []
+
+
+def test_phase7a_files_do_not_add_trading_behavior_terms() -> None:
+    offenders: list[str] = []
+    for file_path in PHASE_7A_FILES:
+        lowered = file_path.read_text(encoding="utf-8").lower()
+        for term in PHASE_7A_FORBIDDEN_BEHAVIOR_TERMS:
+            if term.lower() in lowered:
+                offenders.append(f"{file_path}: {term}")
+
+    assert offenders == []
+
+
+def test_phase7a_ingestion_result_has_no_trading_output_fields() -> None:
+    forbidden_fields = {
+        "decision_direction",
+        "recommendation",
+        "signal",
+        "signal_direction",
+        "direction",
+        "entry",
+        "entry_price",
+        "stop_loss",
+        "take_profit",
+        "target",
+        "position_size",
+        "setup_score",
+        "confidence",
+        "confidence_score",
+    }
+
+    assert set(ingestion.MarketDataIngestionResult.model_fields).isdisjoint(forbidden_fields)
+    assert set(ingestion.MarketDataIngestionItemResult.model_fields).isdisjoint(forbidden_fields)
+
+
+def test_phase7a_ingestion_is_disabled_by_default() -> None:
+    settings = Settings(_env_file=None)
+
+    assert settings.market_data_ingestion_enabled is False
+    assert settings.market_data_enabled is False
+
+
+def test_phase7a_adds_no_telegram_command_or_api_route() -> None:
+    telegram_source = Path("app/telegram/commands.py").read_text(encoding="utf-8")
+    route_source = "\n".join(
+        file_path.read_text(encoding="utf-8") for file_path in Path("app/api/routes").glob("*.py")
+    )
+
+    assert "MarketDataIngestionService" not in telegram_source
+    assert "ingestion_command" not in telegram_source
+    assert "MarketDataIngestionService" not in route_source
+    assert "ingestion" not in route_source.lower()
 
 
 @pytest.mark.asyncio

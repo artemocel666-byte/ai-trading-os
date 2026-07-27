@@ -4,14 +4,14 @@ AI Trading OS is a safety-first foundation for a future modular Forex analysis a
 
 ## Current Status
 
-- Current project phase: phase_6_snapshot_backed_review_foundation.
+- Current project phase: phase_7a_market_data_ingestion_foundation.
 - Phase 6 snapshot-backed read-only review is complete: `/review EURUSD M15` builds a real analysis
   snapshot, runs the Phase 4G composer over it, and presents the pipeline decision through the
   Phase 5 manual review layer — still read-only and non-actionable.
-- Next: Phase 7 (live data and real analysis) — the ingestion service plus real analytical rules.
-  As of 2026-07-22 no code path fetches provider data, so market-data/calendar flags currently
-  change nothing; the only writer of candles is `scripts/seed_local_snapshot_data.py`. Chief AI is
-  Phase 8; signals, delivery, and paper trading are Phase 9.
+- Phase 7A market-data ingestion is complete: a worker job can now fetch closed candles from the
+  provider and store them, gated by two flags that both default to off. Next: Phase 7B (calendar
+  ingestion) and Phase 7C (real analytical rules, replacing the three placeholder fixtures). Chief AI
+  is Phase 8; signals, delivery, and paper trading are Phase 9.
 - Trading strategy: not implemented.
 - Real trading: disabled and unsupported.
 - External integrations: disabled by default.
@@ -284,6 +284,31 @@ signals, provide recommendations, call AI/OpenAI/LLM services, send automatic Te
 broker APIs, execute orders, or enable paper or real trading. The snapshot-backed review is
 read-only and non-actionable.
 
+## Phase 7A Status
+
+Phase 7A adds market-data ingestion — the first outbound provider call in the project. A worker job
+fetches closed candles for the configured pairs/timeframes over a rolling, deliberately overlapping
+window and stores them through the existing duplicate-safe `candles.upsert_many`, recording
+`last_successful_market_fetch` on success.
+
+To actually turn it on you need **both** flags plus a Twelve Data API key:
+
+```text
+MARKET_DATA_ENABLED=true
+TWELVE_DATA_API_KEY=<your key>
+MARKET_DATA_INGESTION_ENABLED=true
+MARKET_DATA_INGESTION_INTERVAL_MINUTES=15
+MARKET_DATA_INGESTION_LOOKBACK_CANDLES=48
+```
+
+With either flag off (the default) the worker registers no ingestion job and no network call is made.
+Behaviour worth knowing: an empty provider response is treated as success, not failure, because the
+forex market is closed on weekends; and if one pair fails, the others still ingest. Provider errors
+are recorded in system state rather than raised into the scheduler.
+
+Phase 7A stores candles only. It produces no signals, directions, price levels, scoring, AI output,
+or user-facing messages, and adds no Telegram command and no API route.
+
 ## Prerequisites
 
 - Python 3.12
@@ -330,6 +355,7 @@ Copy `.env.example` to `.env` for local overrides. The example keeps:
 TELEGRAM_ENABLED=false
 OPENAI_ENABLED=false
 MARKET_DATA_ENABLED=false
+MARKET_DATA_INGESTION_ENABLED=false
 CALENDAR_ENABLED=false
 SCAN_ENABLED=false
 SCHEDULED_DIGEST_ENABLED=false
@@ -382,7 +408,8 @@ For a local live Telegram test, see `docs/operations.md` and configure `TELEGRAM
   nothing. `/review EURUSD M15` returns a snapshot-backed read-only review over a real pipeline
   decision — still no signals, no price levels, no AI.
 - Scheduled digest delivery is disabled by default and has no automatic worker loop.
-- Worker jobs only update heartbeat and run foundation health checks.
+- Worker jobs update heartbeat, run foundation health checks, and — only when both market-data flags
+  are enabled — ingest closed candles from the provider.
 
 ## Directory Overview
 

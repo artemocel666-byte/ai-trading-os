@@ -3,9 +3,10 @@ from datetime import datetime
 from typing import Any
 
 from app.core.time import utc_now
-from app.domain.entities import ScheduledDigestDeliveryResult
+from app.domain.entities import MarketDataIngestionResult, ScheduledDigestDeliveryResult
 from app.observability.health_checks import run_application_health_check
 from app.services.health_service import HealthService
+from app.services.market_data_ingestion_service import MarketDataIngestionService
 from app.services.scheduled_digest_delivery_service import ScheduledDigestDeliveryService
 from app.services.system_state_service import SystemStateService
 
@@ -38,11 +39,33 @@ async def scheduled_digest_delivery_job(
     return result
 
 
+async def market_data_ingestion_job(
+    service: MarketDataIngestionService,
+    *,
+    as_of: datetime | None = None,
+) -> MarketDataIngestionResult:
+    result = await service.run_tick(as_of=as_of or utc_now())
+    logger.info(
+        "market_data_ingestion_checked",
+        extra={
+            "executed": result.executed,
+            "reason": result.decision.reason.value,
+            "fetched": result.total_fetched,
+            "inserted": result.total_inserted,
+            "updated": result.total_updated,
+            "failed_items": result.failed_item_count,
+        },
+    )
+    return result
+
+
 def register_jobs(
     scheduler: Any,
     *,
     system_state_service: SystemStateService,
     health_service: HealthService,
+    market_data_ingestion_service: MarketDataIngestionService | None = None,
+    market_data_ingestion_interval_minutes: int = 15,
 ) -> None:
     scheduler.add_job(
         update_worker_heartbeat_job,
@@ -60,6 +83,18 @@ def register_jobs(
         seconds=60,
         args=[health_service],
         id="application_health_check",
+        max_instances=1,
+        coalesce=True,
+        replace_existing=True,
+    )
+    if market_data_ingestion_service is None:
+        return
+    scheduler.add_job(
+        market_data_ingestion_job,
+        "interval",
+        minutes=market_data_ingestion_interval_minutes,
+        args=[market_data_ingestion_service],
+        id="market_data_ingestion",
         max_instances=1,
         coalesce=True,
         replace_existing=True,

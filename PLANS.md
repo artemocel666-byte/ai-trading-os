@@ -84,6 +84,15 @@
   domain wiring function plus a Russian snapshot-review formatter, with safety tests confirming no
   `SignalContract` construction, price levels, AI, automatic messaging, or execution behavior. The
   bare `/review` still renders the structural Phase 4E report.
+- Phase 7A market-data ingestion foundation: the first code in the project that calls a provider and
+  stores the result. `MarketDataIngestionService` fetches closed candles over a rolling, deliberately
+  overlapping window (`latest_closed_boundary` minus `lookback_candles`) and writes them through the
+  duplicate-safe `candles.upsert_many`, recording `last_successful_market_fetch` on success. A worker
+  job is registered, but only when both `MARKET_DATA_ENABLED` and `MARKET_DATA_INGESTION_ENABLED` are
+  true; both default to false. An empty provider response is a success (closed market), not a failure,
+  and a failing pair is isolated so the rest of the tick still runs. Provider errors are recorded
+  through `record_system_error` rather than raised into the scheduler. Ingestion writes candles only:
+  no signals, directions, price levels, scoring, AI, or messages.
 
 ## Current Implementation Status
 
@@ -130,11 +139,9 @@ non-actionable and without any signal, AI, or execution behavior.
 ## Future Phases
 
 - Phase 2: market-data and calendar adapters — completed as disabled-by-default factories plus
-  production adapters covered by MockTransport-backed contract tests. **Adapters only: nothing in
-  the application calls them yet.** No code path invokes `get_closed_candles`/`get_events`, so
-  enabling the flags fetches nothing. The ingestion service that actually pulls provider data into
-  the database is Phase 7A/7B. Until then the only writer of candles is
-  `scripts/seed_local_snapshot_data.py`.
+  production adapters covered by MockTransport-backed contract tests. Adapters alone do not fetch
+  anything: the market-data ingestion service that actually calls `get_closed_candles` and stores
+  the result arrived in Phase 7A. Calendar ingestion (`get_events`) is still unwired and is Phase 7B.
 - Phase 3A: data-quality foundation — completed without trading analysis or decisions
 - Phase 3B: deterministic feature engine foundation — completed without trading decisions
 - Phase 3C: deterministic indicator/context foundation — completed without trading decisions
@@ -161,11 +168,10 @@ non-actionable and without any signal, AI, or execution behavior.
   the Phase 4G composer; no signals, no buy/sell, no AI; completed
 - Phase 7: live data and real analysis — closes the two gaps found on 2026-07-22 (no ingestion
   path, placeholder-only rules); not started
-  - 7A: market-data ingestion service plus worker job, disabled by default. First code that calls
-    `MarketDataProvider.get_closed_candles` and writes results through `candles.upsert_many`.
-    Records `last_successful_market_fetch`. Decisions: per-tick window, provider rate limits,
-    behaviour on provider failure, weekend/market-closed vs missing data, optional first-run
-    backfill.
+  - 7A: market-data ingestion service plus worker job, disabled by default — **completed**. Rolling
+    overlapping window, empty response treated as success, per-item failure isolation, errors
+    recorded via `record_system_error`. First-run backfill deliberately deferred; the rolling window
+    covers roughly the last 12 hours by default.
   - 7B: economic-calendar ingestion on the same pattern via `EconomicCalendarProvider.get_events`.
     Records `last_successful_calendar_fetch`. Decisions: forward horizon, event deduplication.
   - 7C: real analytical `StrategyRuleSet` content replacing the three structural fixtures
@@ -213,14 +219,14 @@ non-actionable and without any signal, AI, or execution behavior.
 
 ## Next Planned Task
 
-Phase 6 snapshot-backed read-only review is complete. **Phase 7A (market-data ingestion service) is
-the next planned task.**
+Phase 7A market-data ingestion is complete. **Phase 7B (economic-calendar ingestion) and Phase 7C
+(real analytical rulesets) are the next planned tasks and may be built in parallel.**
 
-Phase 7 must come before Chief AI: as of 2026-07-22 the application has no ingestion path at all,
-so no real market data can reach the database, and the rule registry holds only three structural
-placeholder rules. Explaining that output with an LLM would explain nothing. Chief AI is Phase 8,
-signals/delivery/paper trading is Phase 9. Real `SignalContract` construction and all trading
-behavior remain inactive until Phase 9A.
+Phase 7 comes before Chief AI because until 7A the application had no ingestion path at all, and the
+rule registry still holds only three structural placeholder rules (7C replaces them). Explaining
+placeholder output with an LLM would explain nothing. Chief AI is Phase 8, signals/delivery/paper
+trading is Phase 9. Real `SignalContract` construction and all trading behavior remain inactive
+until Phase 9A.
 
 ### Parallel work between agents
 

@@ -36,6 +36,10 @@ class Settings(BaseSettings):
     twelve_data_api_key: SecretStr | None = None
     twelve_data_base_url: str = "https://api.twelvedata.com"
 
+    market_data_ingestion_enabled: bool = False
+    market_data_ingestion_interval_minutes: int = Field(default=15, ge=1, le=1440)
+    market_data_ingestion_lookback_candles: int = Field(default=48, ge=1, le=500)
+
     calendar_enabled: bool = False
     fmp_api_key: SecretStr | None = None
     fmp_base_url: str = "https://financialmodelingprep.com"

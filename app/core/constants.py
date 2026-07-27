@@ -1,4 +1,4 @@
-PROJECT_PHASE = "phase_6_snapshot_backed_review_foundation"
+PROJECT_PHASE = "phase_7a_market_data_ingestion_foundation"
 STRATEGY_IMPLEMENTED = False
 REAL_TRADING_ENABLED = False
 
