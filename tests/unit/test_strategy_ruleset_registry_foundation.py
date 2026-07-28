@@ -8,7 +8,7 @@ from app.domain.entities.strategy_registry import (
     StrategyRuleSetRegistryItem,
     StrategyRuleSetRegistrySnapshot,
 )
-from app.domain.entities.strategy_rules import StrategyRuleSet
+from app.domain.entities.strategy_rules import StrategyRuleOperator, StrategyRuleSet
 from app.domain.entities.strategy_validation import StrategyRuleSetValidationStatus
 from app.domain.strategy_ruleset_registry import (
     BUILTIN_STRATEGY_RULESET_FIXTURES,
@@ -18,9 +18,9 @@ from app.domain.strategy_ruleset_validator import StrategyRuleSetValidator
 
 CHECKED_AT = datetime(2026, 7, 18, 10, 0, tzinfo=UTC)
 EXPECTED_KEYS = (
-    "foundation.data_quality.minimum",
-    "foundation.market_context.minimum",
-    "foundation.time_filter.session",
+    "foundation.data_quality.v1",
+    "foundation.market_context.v1",
+    "foundation.time_filter.v1",
 )
 
 
@@ -31,20 +31,82 @@ def _snapshot(
     return (registry or StrategyRuleSetRegistry()).load_builtin_rulesets(checked_at)
 
 
+def test_every_builtin_ruleset_validates_as_valid() -> None:
+    """Guards the analytical rules against the Phase 4C vocabulary bans.
+
+    A banned token anywhere in a field_ref, description, or warning makes the ruleset INVALID,
+    and the Phase 4G composer then silently skips it — so this is the check that keeps the
+    rules actually running.
+    """
+    validator = StrategyRuleSetValidator()
+
+    for key, ruleset in BUILTIN_STRATEGY_RULESET_FIXTURES.items():
+        report = validator.validate(ruleset, CHECKED_AT)
+        assert report.status == StrategyRuleSetValidationStatus.VALID, (
+            f"{key} is {report.status.value}: "
+            f"{[(issue.code.value, issue.rule_id) for issue in report.issues]}"
+        )
+
+
+def test_builtin_rulesets_cover_the_expected_analytical_surface() -> None:
+    rules_by_key = {
+        key: {rule.rule_id for rule in ruleset.rules}
+        for key, ruleset in BUILTIN_STRATEGY_RULESET_FIXTURES.items()
+    }
+
+    assert rules_by_key["foundation.data_quality.v1"] == {
+        "data_quality.used_candle_count",
+        "data_quality.completeness_ratio",
+        "data_quality.market_data_complete",
+        "data_quality.latest_candle_age_minutes",
+    }
+    assert rules_by_key["foundation.market_context.v1"] == {
+        "market_context.snapshot_ready",
+        "market_context.volatility_ratio",
+        "market_context.max_close_drawdown",
+    }
+    assert rules_by_key["foundation.time_filter.v1"] == {
+        "time_filter.session_name_allowed",
+        "time_filter.utc_weekday",
+    }
+
+
+def test_no_builtin_rule_uses_the_always_passing_exists_operator() -> None:
+    """EXISTS only asks whether a value resolved, so it passed even on an empty database.
+
+    That was the Phase 7C defect: the rules validated the machinery, not the market.
+    """
+    for ruleset in BUILTIN_STRATEGY_RULESET_FIXTURES.values():
+        for rule in ruleset.rules:
+            assert rule.condition.operator not in (
+                StrategyRuleOperator.EXISTS,
+                StrategyRuleOperator.NOT_EXISTS,
+            ), f"{rule.rule_id} still uses a presence-only operator"
+
+
+def test_builtin_rules_remain_disabled_and_non_actionable() -> None:
+    for ruleset in BUILTIN_STRATEGY_RULESET_FIXTURES.values():
+        assert ruleset.enabled is False
+        assert ruleset.is_actionable is False
+        for rule in ruleset.rules:
+            assert rule.enabled is False
+            assert rule.is_actionable is False
+
+
 def _fixture_with_changed_description() -> dict[str, StrategyRuleSet]:
     fixtures = dict(BUILTIN_STRATEGY_RULESET_FIXTURES)
-    base_ruleset = fixtures["foundation.data_quality.minimum"]
+    base_ruleset = fixtures["foundation.data_quality.v1"]
     changed_rule = base_ruleset.rules[0].model_copy(
         update={"description": "Validate an alternate disabled structural fixture."}
     )
-    fixtures["foundation.data_quality.minimum"] = base_ruleset.model_copy(
+    fixtures["foundation.data_quality.v1"] = base_ruleset.model_copy(
         update={"rules": (changed_rule,)}
     )
     return fixtures
 
 
 def test_project_phase_is_phase4e_disabled_pipeline_report_shell_foundation() -> None:
-    assert constants.PROJECT_PHASE == "phase_7a_market_data_ingestion_foundation"
+    assert constants.PROJECT_PHASE == "phase_7c_analytical_ruleset_foundation"
 
 
 def test_registry_item_and_snapshot_models_are_immutable() -> None:
@@ -111,13 +173,13 @@ def test_registry_item_and_snapshot_are_not_actionable() -> None:
 
 def test_get_by_key_returns_expected_item() -> None:
     item = StrategyRuleSetRegistry().get_by_key(
-        "foundation.time_filter.session",
+        "foundation.time_filter.v1",
         CHECKED_AT,
     )
 
     assert item is not None
-    assert item.registry_key == "foundation.time_filter.session"
-    assert item.ruleset == BUILTIN_STRATEGY_RULESET_FIXTURES["foundation.time_filter.session"]
+    assert item.registry_key == "foundation.time_filter.v1"
+    assert item.ruleset == BUILTIN_STRATEGY_RULESET_FIXTURES["foundation.time_filter.v1"]
     assert item.validation_report.status == StrategyRuleSetValidationStatus.VALID
 
 
@@ -164,15 +226,13 @@ def test_registry_does_not_mutate_rulesets() -> None:
 
 def test_invalid_fixture_still_appears_with_invalid_report() -> None:
     fixtures = dict(BUILTIN_STRATEGY_RULESET_FIXTURES)
-    invalid_ruleset = fixtures["foundation.data_quality.minimum"].model_copy(
-        update={"enabled": True}
-    )
-    fixtures["foundation.data_quality.minimum"] = invalid_ruleset
+    invalid_ruleset = fixtures["foundation.data_quality.v1"].model_copy(update={"enabled": True})
+    fixtures["foundation.data_quality.v1"] = invalid_ruleset
 
     snapshot = _snapshot(StrategyRuleSetRegistry(fixtures=fixtures))
 
     invalid_item = snapshot.items[0]
-    assert invalid_item.registry_key == "foundation.data_quality.minimum"
+    assert invalid_item.registry_key == "foundation.data_quality.v1"
     assert invalid_item.validation_report.status == StrategyRuleSetValidationStatus.INVALID
     assert snapshot.invalid_count == 1
     assert snapshot.valid_count == 2

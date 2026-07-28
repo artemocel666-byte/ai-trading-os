@@ -95,20 +95,102 @@ def test_unknown_field_ref_resolves_to_none() -> None:
     assert resolve_field("market_context.unknown_leaf", snapshot) is None
 
 
+def test_data_quality_value_resolvers() -> None:
+    ready = _snapshot(12)
+    empty = _snapshot(0)
+
+    assert resolve_field("data_quality.used_candle_count", ready) == Decimal("12")
+    assert resolve_field("data_quality.completeness_ratio", ready) == Decimal("1")
+    assert resolve_field("data_quality.market_data_complete", ready) is True
+    assert resolve_field("data_quality.latest_candle_age_minutes", ready) == Decimal("0")
+
+    # A window the engine could not build reports "unavailable" rather than a fabricated value.
+    for field_ref in (
+        "data_quality.used_candle_count",
+        "data_quality.completeness_ratio",
+        "data_quality.market_data_complete",
+        "data_quality.latest_candle_age_minutes",
+    ):
+        assert resolve_field(field_ref, empty) is None
+
+
+def test_market_context_value_resolvers() -> None:
+    ready = _snapshot(12)
+    empty = _snapshot(0)
+
+    volatility_ratio = resolve_field("market_context.volatility_ratio", ready)
+    assert isinstance(volatility_ratio, Decimal)
+    assert volatility_ratio > Decimal("0")
+    assert isinstance(resolve_field("market_context.max_close_drawdown", ready), Decimal)
+
+    assert resolve_field("market_context.volatility_ratio", empty) is None
+    assert resolve_field("market_context.max_close_drawdown", empty) is None
+
+
+def test_volatility_ratio_never_divides_by_zero() -> None:
+    """A perfectly flat window has a zero average true range; the ratio must be unavailable."""
+    flat_price = Decimal("1.1000")
+    flat_candles = [
+        Candle(
+            provider="flat-window-test",
+            pair=PAIR,
+            timeframe=Timeframe.M15,
+            open_time=BASE_TIME + (index * timedelta(minutes=15)),
+            close_time=BASE_TIME + ((index + 1) * timedelta(minutes=15)),
+            open=flat_price,
+            high=flat_price,
+            low=flat_price,
+            close=flat_price,
+            volume=Decimal("100"),
+            is_closed=True,
+        )
+        for index in range(12)
+    ]
+    snapshot = AnalysisEngine().build_snapshot(
+        pair=PAIR,
+        timeframe=Timeframe.M15,
+        window_start=BASE_TIME,
+        window_end=BASE_TIME + timedelta(minutes=180),
+        as_of=BASE_TIME + timedelta(minutes=180),
+        candles=flat_candles,
+        economic_events=[],
+        moving_average_windows=(3,),
+    )
+
+    assert resolve_field("market_context.volatility_ratio", snapshot) is None
+
+
+def test_time_filter_weekday_resolver() -> None:
+    # BASE_TIME is 2026-07-20, a Monday -> weekday index 0.
+    assert resolve_field("time_filter.utc_weekday", _snapshot(12)) == Decimal("0")
+
+
 def test_evaluator_passes_builtin_data_quality_fixture() -> None:
-    snapshot = _snapshot(3)
-    ruleset = BUILTIN_STRATEGY_RULESET_FIXTURES["foundation.data_quality.minimum"]
+    # A healthy window needs at least the BLOCKING minimum of eight usable candles.
+    snapshot = _snapshot(12)
+    ruleset = BUILTIN_STRATEGY_RULESET_FIXTURES["foundation.data_quality.v1"]
 
     report = StrategyRuleEvaluator().evaluate_ruleset(ruleset, snapshot, BASE_TIME)
 
     assert report.status == RuleSetEvaluationStatus.READY_FOR_REVIEW
-    assert report.results[0].status == RuleEvaluationStatus.PASSED
+    assert all(result.status == RuleEvaluationStatus.PASSED for result in report.results)
     assert report.is_actionable is False
+
+
+def test_evaluator_blocks_a_window_with_too_few_candles() -> None:
+    """The BLOCKING data-quality rule is what makes a thin window visibly different."""
+    snapshot = _snapshot(3)
+    ruleset = BUILTIN_STRATEGY_RULESET_FIXTURES["foundation.data_quality.v1"]
+
+    report = StrategyRuleEvaluator().evaluate_ruleset(ruleset, snapshot, BASE_TIME)
+
+    assert report.status == RuleSetEvaluationStatus.BLOCKED
+    assert report.blocking_failure_count == 1
 
 
 def test_evaluator_reports_unavailable_when_snapshot_has_no_feature_data() -> None:
     empty = _snapshot(0)
-    ruleset = BUILTIN_STRATEGY_RULESET_FIXTURES["foundation.market_context.minimum"]
+    ruleset = BUILTIN_STRATEGY_RULESET_FIXTURES["foundation.market_context.v1"]
 
     report = StrategyRuleEvaluator().evaluate_ruleset(ruleset, empty, BASE_TIME)
 
@@ -121,7 +203,7 @@ def test_evaluator_reports_unavailable_when_snapshot_has_no_feature_data() -> No
 
 def test_evaluator_is_deterministic_for_identical_inputs() -> None:
     snapshot = _snapshot(3)
-    ruleset = BUILTIN_STRATEGY_RULESET_FIXTURES["foundation.data_quality.minimum"]
+    ruleset = BUILTIN_STRATEGY_RULESET_FIXTURES["foundation.data_quality.v1"]
     evaluator = StrategyRuleEvaluator()
 
     first = evaluator.evaluate_ruleset(ruleset, snapshot, BASE_TIME)
@@ -214,7 +296,7 @@ def test_severity_aggregation(
 
 def test_rule_set_evaluation_report_rejects_actionable_true() -> None:
     snapshot = _snapshot(3)
-    ruleset = BUILTIN_STRATEGY_RULESET_FIXTURES["foundation.data_quality.minimum"]
+    ruleset = BUILTIN_STRATEGY_RULESET_FIXTURES["foundation.data_quality.v1"]
     report = StrategyRuleEvaluator().evaluate_ruleset(ruleset, snapshot, BASE_TIME)
 
     with pytest.raises(ValidationError):

@@ -2,15 +2,16 @@
 
 AI Trading OS is a foundation for a future Forex analysis and paper-trading platform.
 
-Current project phase: phase_7a_market_data_ingestion_foundation.
-Phase 7A adds the market-data ingestion service: a worker job that asks the market-data provider for
-closed candles and stores them through the existing duplicate-safe repository. It is the first code
-in the project that performs an outbound provider call, and it is gated by two flags that are both
-off by default (`MARKET_DATA_ENABLED`, `MARKET_DATA_INGESTION_ENABLED`); with either off the worker
-registers no ingestion job. Ingestion writes candles only — no signals, no directions, no price
-levels, no scoring, no AI, and no user-facing messages. External integrations remain disabled by
-default. The project contains no strategy engine, no signal generation engine, no
-`SignalContract` construction, no broker order APIs, no paper trading, and no real trading.
+Current project phase: phase_7c_analytical_ruleset_foundation.
+Phase 7C replaces the three placeholder rule fixtures with nine analytical rules across three
+rulesets (data quality, market context, time filter). The placeholders used the `EXISTS` operator,
+which only asks whether a value resolved, so they passed even against an empty database; the new
+rules read actual values, so the pipeline finally reports different statuses for different data.
+The rules are descriptive only: they answer "can this window be trusted" and "what regime is this",
+never "what should be traded". No directions, no price levels, no scoring, no AI. Rules and rulesets
+stay `enabled=False`. External integrations remain disabled by default. The project contains no
+strategy engine, no signal generation engine, no `SignalContract` construction, no broker order
+APIs, no paper trading, and no real trading.
 
 ## Start and Checks
 
@@ -110,6 +111,15 @@ default. The project contains no strategy engine, no signal generation engine, n
   scoring, AI output, or user-facing messages. Both `MARKET_DATA_ENABLED` and
   `MARKET_DATA_INGESTION_ENABLED` must stay `false` by default. An empty provider response is a
   normal outcome (closed market), not a failure, and one failing pair must not abort the others.
+- While working in Phase 7C, built-in rules (`app/domain/strategy_ruleset_registry.py`) and their
+  resolvers (`app/domain/strategy_field_resolver.py`) may read values the snapshot already computes,
+  and nothing else: 7C adds no new indicator math, which belongs to the Phase 3B/3C engines. Rules
+  must stay descriptive — no direction, no entry, no price levels, no scoring, no recommendation —
+  and must keep `enabled=False` so they remain non-actionable. Do not use `EXISTS`/`NOT_EXISTS` for
+  an analytical rule: those only test presence and pass on empty data. A resolver must return `None`
+  when its source is missing rather than substituting a value, and must never raise or divide by
+  zero. Every threshold must be calibrated against real observed data and the evidence recorded in
+  the phase verification report.
 - Never fabricate market data, calendar data, agent evidence, or scan results.
 - LLM output may explain deterministic results only; it must not change prices, scores, risk, or rejected decisions.
 - Update documentation when architecture or safety boundaries change.

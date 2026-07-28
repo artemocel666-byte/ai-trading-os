@@ -4,14 +4,16 @@ AI Trading OS is a safety-first foundation for a future modular Forex analysis a
 
 ## Current Status
 
-- Current project phase: phase_7a_market_data_ingestion_foundation.
+- Current project phase: phase_7c_analytical_ruleset_foundation.
 - Phase 6 snapshot-backed read-only review is complete: `/review EURUSD M15` builds a real analysis
   snapshot, runs the Phase 4G composer over it, and presents the pipeline decision through the
   Phase 5 manual review layer — still read-only and non-actionable.
 - Phase 7A market-data ingestion is complete: a worker job can now fetch closed candles from the
-  provider and store them, gated by two flags that both default to off. Next: Phase 7B (calendar
-  ingestion) and Phase 7C (real analytical rules, replacing the three placeholder fixtures). Chief AI
-  is Phase 8; signals, delivery, and paper trading are Phase 9.
+  provider and store them, gated by two flags that both default to off.
+- Phase 7C analytical rulesets are complete: nine descriptive rules replaced the three placeholder
+  fixtures, so `/review` now reports different statuses for different data instead of always
+  reporting the same thing. Next: Phase 7B (calendar ingestion) and Phase 7D (historical validation).
+  Chief AI is Phase 8; signals, delivery, and paper trading are Phase 9.
 - Trading strategy: not implemented.
 - Real trading: disabled and unsupported.
 - External integrations: disabled by default.
@@ -308,6 +310,29 @@ are recorded in system state rather than raised into the scheduler.
 
 Phase 7A stores candles only. It produces no signals, directions, price levels, scoring, AI output,
 or user-facing messages, and adds no Telegram command and no API route.
+
+## Phase 7C Status
+
+Phase 7C replaced the three placeholder rule fixtures with nine analytical rules across three
+rulesets. The placeholders used the `EXISTS` operator, which only asks whether a value resolved —
+so they passed identically on live market data and on an empty database, and `/review` always
+answered the same thing. The new rules read actual values.
+
+| Ruleset | Rules |
+| --- | --- |
+| `foundation.data_quality.v1` | used candle count ≥ 8 (BLOCKING), completeness ratio ≥ 0.8, market-data completeness, latest-candle age ≤ 90 min |
+| `foundation.market_context.v1` | context readiness, volatility ratio within 0.4–2.5 of its own window average, max close-to-close drawdown ≤ 0.01 |
+| `foundation.time_filter.v1` | London/New York liquidity session, weekday |
+
+Severity drives the outcome: a BLOCKING failure makes the pipeline `BLOCKED`, a REQUIRED failure
+makes it `NOT_READY`, and WARNING failures are recorded while the pipeline stays
+`READY_FOR_REVIEW`. So `/review EURUSD M15` now answers `READ_ONLY` on a fresh full window,
+`INCOMPLETE` on a stale or sparse one, and `BLOCKED` when there are too few candles.
+
+These rules are descriptive only. They answer "can this window be trusted" and "what regime is
+this" — never "what should be traded". No directions, price levels, scoring, or AI. Rules and
+rulesets remain `enabled=False` and non-actionable. A rule on proximity to high-impact events was
+deliberately left out because it needs the calendar from Phase 7B.
 
 ## Prerequisites
 

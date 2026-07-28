@@ -93,6 +93,15 @@
   and a failing pair is isolated so the rest of the tick still runs. Provider errors are recorded
   through `record_system_error` rather than raised into the scheduler. Ingestion writes candles only:
   no signals, directions, price levels, scoring, AI, or messages.
+- Phase 7C analytical ruleset foundation: nine descriptive rules across three rulesets replacing the
+  three placeholder fixtures. The placeholders used `EXISTS`, which only asks whether a value
+  resolved, so they passed identically on live data and on an empty database. The new rules read
+  values, so the pipeline reports different statuses for different data — the property the project
+  had been missing. Adds seven value resolvers (used candle count, completeness ratio, market-data
+  completeness, latest-candle age, volatility ratio, max close-to-close drawdown, UTC weekday), each
+  returning `None` when its source is absent rather than substituting a value. Thresholds were
+  calibrated against live Twelve Data windows and the evidence recorded in the verification report.
+  Rules stay `enabled=False` and produce no direction, price level, scoring, or AI output.
 
 ## Current Implementation Status
 
@@ -174,10 +183,12 @@ non-actionable and without any signal, AI, or execution behavior.
     covers roughly the last 12 hours by default.
   - 7B: economic-calendar ingestion on the same pattern via `EconomicCalendarProvider.get_events`.
     Records `last_successful_calendar_fetch`. Decisions: forward horizon, event deduplication.
-  - 7C: real analytical `StrategyRuleSet` content replacing the three structural fixtures
-    (`data_quality.closed_candles_available`, `market_context.snapshot_ready`,
-    `time_filter.session_name`). Candidate rules: window data completeness, proximity to
-    high-impact events, volatility regime versus its own window average, session filter.
+  - 7C: real analytical `StrategyRuleSet` content replacing the three structural fixtures —
+    **completed**. Nine rules: data quality (used candle count, completeness ratio, market-data
+    completeness, latest-candle age), market context (context readiness, volatility ratio versus its
+    own window average, max close-to-close drawdown), and time filter (liquidity session, weekday).
+    A rule on proximity to high-impact events was deliberately left out because it needs the
+    calendar from 7B.
   - 7D: historical validation of the new rules through the existing `HistoricalReplay`
     (`app/domain/replay.py`). Decisions: how much history, what counts as a rule behaving sanely.
   - Unlocks `MARKET_DATA_ENABLED=true`/`CALENDAR_ENABLED=true` becoming meaningful, and makes
@@ -219,14 +230,16 @@ non-actionable and without any signal, AI, or execution behavior.
 
 ## Next Planned Task
 
-Phase 7A market-data ingestion is complete. **Phase 7B (economic-calendar ingestion) and Phase 7C
-(real analytical rulesets) are the next planned tasks and may be built in parallel.**
+Phase 7A market-data ingestion and Phase 7C analytical rulesets are complete. **Phase 7B
+(economic-calendar ingestion) and Phase 7D (historical validation through `HistoricalReplay`) are
+the next planned tasks.** 7B unlocks the event-proximity rule that 7C deliberately left out; 7D
+should revisit the 7C thresholds against a real distribution, since they were calibrated on a thin
+sample of live windows.
 
-Phase 7 comes before Chief AI because until 7A the application had no ingestion path at all, and the
-rule registry still holds only three structural placeholder rules (7C replaces them). Explaining
-placeholder output with an LLM would explain nothing. Chief AI is Phase 8, signals/delivery/paper
-trading is Phase 9. Real `SignalContract` construction and all trading behavior remain inactive
-until Phase 9A.
+Phase 7 comes before Chief AI because until 7A the application had no ingestion path at all, and
+until 7C the rules passed identically on live data and on an empty database. Explaining that output
+with an LLM would have explained nothing. Chief AI is Phase 8, signals/delivery/paper trading is
+Phase 9. Real `SignalContract` construction and all trading behavior remain inactive until Phase 9A.
 
 ### Parallel work between agents
 

@@ -59,7 +59,8 @@ def _snapshot(candle_count: int):
 
 
 def test_compose_all_builtin_rulesets_ready_for_review() -> None:
-    snapshot = _snapshot(3)
+    # A healthy window needs at least the BLOCKING minimum of eight usable candles.
+    snapshot = _snapshot(12)
 
     report = StrategyDecisionComposer().compose(snapshot, BASE_TIME)
 
@@ -67,6 +68,20 @@ def test_compose_all_builtin_rulesets_ready_for_review() -> None:
     assert report.skipped_rulesets == ()
     assert report.status == PipelineDecisionStatus.READY_FOR_REVIEW
     assert report.is_actionable is False
+
+
+def test_compose_distinguishes_a_healthy_window_from_a_thin_one() -> None:
+    """The property Phase 7C exists to create.
+
+    Before 7C the placeholder rules used EXISTS, so both windows produced an identical
+    READY_FOR_REVIEW report and the bot's reply never reflected the data.
+    """
+    healthy = StrategyDecisionComposer().compose(_snapshot(12), BASE_TIME)
+    thin = StrategyDecisionComposer().compose(_snapshot(3), BASE_TIME)
+
+    assert healthy.status == PipelineDecisionStatus.READY_FOR_REVIEW
+    assert thin.status == PipelineDecisionStatus.BLOCKED
+    assert healthy.status != thin.status
 
 
 def test_compose_reports_not_ready_when_required_rule_fails() -> None:

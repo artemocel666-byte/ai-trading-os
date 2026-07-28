@@ -45,11 +45,11 @@ def _blocker_codes(report: DisabledPipelineReport) -> tuple[DisabledPipelineBloc
 
 def _fixture_with_changed_description() -> dict[str, StrategyRuleSet]:
     fixtures = dict(BUILTIN_STRATEGY_RULESET_FIXTURES)
-    base_ruleset = fixtures["foundation.data_quality.minimum"]
+    base_ruleset = fixtures["foundation.data_quality.v1"]
     changed_rule = base_ruleset.rules[0].model_copy(
         update={"description": "Validate a changed disabled report-shell fixture."}
     )
-    fixtures["foundation.data_quality.minimum"] = base_ruleset.model_copy(
+    fixtures["foundation.data_quality.v1"] = base_ruleset.model_copy(
         update={"rules": (changed_rule,)}
     )
     return fixtures
@@ -62,7 +62,7 @@ def _snapshot_from_registry(
 
 
 def test_project_phase_is_phase4e_disabled_pipeline_report_shell_foundation() -> None:
-    assert constants.PROJECT_PHASE == "phase_7a_market_data_ingestion_foundation"
+    assert constants.PROJECT_PHASE == "phase_7c_analytical_ruleset_foundation"
 
 
 def test_blocker_and_report_models_are_immutable() -> None:
@@ -126,16 +126,16 @@ def test_empty_registry_snapshot_adds_empty_blocker() -> None:
 
 def test_invalid_registry_snapshot_adds_invalid_blocker() -> None:
     fixtures = dict(BUILTIN_STRATEGY_RULESET_FIXTURES)
-    fixtures["foundation.data_quality.minimum"] = fixtures[
-        "foundation.data_quality.minimum"
-    ].model_copy(update={"enabled": True})
+    fixtures["foundation.data_quality.v1"] = fixtures["foundation.data_quality.v1"].model_copy(
+        update={"enabled": True}
+    )
     snapshot = _snapshot_from_registry(StrategyRuleSetRegistry(fixtures=fixtures))
 
     report = _report(DisabledPipelineReportShell(registry=StaticSnapshotRegistry(snapshot)))
 
     assert DisabledPipelineBlockerCode.REGISTRY_INVALID in _blocker_codes(report)
     assert any(
-        blocker.registry_key == "foundation.data_quality.minimum"
+        blocker.registry_key == "foundation.data_quality.v1"
         for blocker in report.blockers
         if blocker.code == DisabledPipelineBlockerCode.REGISTRY_INVALID
     )
