@@ -11,7 +11,7 @@ from app.core.exceptions import NotImplementedFeatureError
 from app.core.time import normalize_to_utc, utc_now
 from app.domain.entities import SnapshotScheduleItem, Timeframe
 from app.domain.manual_review_report_builder import build_local_manual_review_report
-from app.domain.snapshot_review import build_snapshot_backed_manual_review_report
+from app.domain.snapshot_review import build_snapshot_backed_review
 from app.domain.value_objects import CurrencyPair
 from app.services.analysis_service import AnalysisService
 from app.services.readiness_digest_service import ReadinessDigestService
@@ -280,7 +280,7 @@ async def _snapshot_backed_review(update: Update, context: ContextTypes.DEFAULT_
             window_end=window_end,
             as_of=as_of,
         )
-        report = build_snapshot_backed_manual_review_report(snapshot, normalize_to_utc(utc_now()))
+        result = build_snapshot_backed_review(snapshot, normalize_to_utc(utc_now()))
     except Exception:
         await _reply(
             update,
@@ -290,7 +290,7 @@ async def _snapshot_backed_review(update: Update, context: ContextTypes.DEFAULT_
         )
         return
 
-    body = format_snapshot_review_body(report, pair, timeframe)
+    body = format_snapshot_review_body(result, pair, timeframe)
     await _reply(update, context, MessageType.REPORT, body)
 
 

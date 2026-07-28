@@ -4,7 +4,10 @@ from decimal import Decimal
 from app.domain.analysis_engine import AnalysisEngine
 from app.domain.entities import Candle, Timeframe
 from app.domain.entities.manual_review import ManualReviewReport
-from app.domain.snapshot_review import build_snapshot_backed_manual_review_report
+from app.domain.snapshot_review import (
+    build_snapshot_backed_manual_review_report,
+    build_snapshot_backed_review,
+)
 from app.domain.value_objects import CurrencyPair
 from app.telegram.snapshot_review_formatter import format_snapshot_review_body
 
@@ -77,9 +80,9 @@ def test_snapshot_backed_review_is_deterministic() -> None:
 
 
 def test_snapshot_review_formatter_states_snapshot_is_used_and_stays_neutral() -> None:
-    report = build_snapshot_backed_manual_review_report(_snapshot(3), BASE_TIME)
+    result = build_snapshot_backed_review(_snapshot(12), BASE_TIME)
 
-    body = format_snapshot_review_body(report, PAIR, Timeframe.M15)
+    body = format_snapshot_review_body(result, PAIR, Timeframe.M15)
 
     assert "EURUSD M15" in body
     assert "Рыночный снапшот: используется" in body
@@ -97,3 +100,31 @@ def test_snapshot_review_formatter_states_snapshot_is_used_and_stays_neutral() -
         "broker",
     )
     assert not any(term in body for term in forbidden_terms)
+
+
+def test_formatter_reports_the_actual_rule_outcomes() -> None:
+    """Without this the reply looks identical whether nine real rules ran or three placeholders."""
+    result = build_snapshot_backed_review(_snapshot(12), BASE_TIME)
+
+    body = format_snapshot_review_body(result, PAIR, Timeframe.M15)
+
+    assert "Правила: пройдено 9 из 9" in body
+    assert "качество данных: 4 из 4" in body
+    assert "рыночный контекст: 3 из 3" in body
+    assert "временной фильтр: 2 из 2" in body
+    assert "свечей 12 из 12" in body
+
+
+def test_formatter_makes_a_degraded_window_visibly_different() -> None:
+    healthy = format_snapshot_review_body(
+        build_snapshot_backed_review(_snapshot(12), BASE_TIME), PAIR, Timeframe.M15
+    )
+    degraded = format_snapshot_review_body(
+        build_snapshot_backed_review(_snapshot(3), BASE_TIME), PAIR, Timeframe.M15
+    )
+
+    assert healthy != degraded
+    assert "Правила: пройдено 9 из 9" in healthy
+    assert "Правила: пройдено 9 из 9" not in degraded
+    assert "не пройдено: " in degraded
+    assert "data_quality.used_candle_count" in degraded
