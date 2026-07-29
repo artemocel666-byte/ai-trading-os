@@ -2,16 +2,18 @@
 
 AI Trading OS is a foundation for a future Forex analysis and paper-trading platform.
 
-Current project phase: phase_7c_analytical_ruleset_foundation.
-Phase 7C replaces the three placeholder rule fixtures with nine analytical rules across three
-rulesets (data quality, market context, time filter). The placeholders used the `EXISTS` operator,
-which only asks whether a value resolved, so they passed even against an empty database; the new
-rules read actual values, so the pipeline finally reports different statuses for different data.
-The rules are descriptive only: they answer "can this window be trusted" and "what regime is this",
-never "what should be traded". No directions, no price levels, no scoring, no AI. Rules and rulesets
-stay `enabled=False`. External integrations remain disabled by default. The project contains no
-strategy engine, no signal generation engine, no `SignalContract` construction, no broker order
-APIs, no paper trading, and no real trading.
+Current project phase: phase_7b_calendar_ingestion_foundation.
+Phase 7B adds economic-calendar ingestion and the two event rules that consume it, bringing the
+rule set to eleven across four rulesets (data quality, market context, event context, time filter).
+Calendar ingestion is gated by two flags that are both off by default (`CALENDAR_ENABLED`,
+`CALENDAR_INGESTION_ENABLED`). The ingestion window straddles the tick, reaching forward over
+announced releases, because calendars are published ahead of time; the analysis snapshot still only
+exposes what happened at or before `as_of`, so the rules read backwards. Rules stay descriptive:
+they answer "can this window be trusted" and "what regime is this", never "what should be traded".
+No directions, no price levels, no scoring, no AI. Rules and rulesets stay `enabled=False`. External
+integrations remain disabled by default. The project contains no strategy engine, no signal
+generation engine, no `SignalContract` construction, no broker order APIs, no paper trading, and no
+real trading.
 
 ## Start and Checks
 
@@ -120,6 +122,15 @@ APIs, no paper trading, and no real trading.
   when its source is missing rather than substituting a value, and must never raise or divide by
   zero. Every threshold must be calibrated against real observed data and the evidence recorded in
   the phase verification report.
+- While working in Phase 7B, calendar ingestion
+  (`app/services/economic_calendar_ingestion_service.py`,
+  `app/domain/entities/calendar_ingestion.py`) may call `EconomicCalendarProvider.get_events` and
+  write events through `economic_events.upsert_many`, depending on the provider Protocol and never a
+  concrete adapter. Both `CALENDAR_ENABLED` and `CALENDAR_INGESTION_ENABLED` stay `false` by
+  default. An empty response is a normal outcome (a quiet calendar), not a failure, and provider
+  errors are recorded rather than raised into the scheduler. Ingest forward but evaluate backward:
+  storing announced releases is legitimate, while surfacing post-`as_of` events into a snapshot
+  would break the Phase 3D no-future-data proof and must stay a separate, deliberate decision.
 - Never fabricate market data, calendar data, agent evidence, or scan results.
 - LLM output may explain deterministic results only; it must not change prices, scores, risk, or rejected decisions.
 - Update documentation when architecture or safety boundaries change.

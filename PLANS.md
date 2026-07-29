@@ -102,6 +102,15 @@
   returning `None` when its source is absent rather than substituting a value. Thresholds were
   calibrated against live Twelve Data windows and the evidence recorded in the verification report.
   Rules stay `enabled=False` and produce no direction, price level, scoring, or AI output.
+- Phase 7B calendar ingestion foundation: `EconomicCalendarIngestionService` fetches scheduled
+  events over a window that straddles the tick (default 24h back, 72h forward, since calendars are
+  published ahead) and stores them through the duplicate-safe `economic_events.upsert_many`,
+  recording `last_successful_calendar_fetch`. A worker job is registered only when both
+  `CALENDAR_ENABLED` and `CALENDAR_INGESTION_ENABLED` are true; both default to false. An empty
+  response is a success (a quiet calendar), and provider errors are recorded rather than raised.
+  Ships the `foundation.event_context.v1` ruleset — high-impact event count and minutes since the
+  latest event — so the data has a consumer, bringing the rule set to eleven across four rulesets.
+  Ingest forward, evaluate backward: the snapshot still proves no post-`as_of` data was used.
 
 ## Current Implementation Status
 
@@ -181,8 +190,10 @@ non-actionable and without any signal, AI, or execution behavior.
     overlapping window, empty response treated as success, per-item failure isolation, errors
     recorded via `record_system_error`. First-run backfill deliberately deferred; the rolling window
     covers roughly the last 12 hours by default.
-  - 7B: economic-calendar ingestion on the same pattern via `EconomicCalendarProvider.get_events`.
-    Records `last_successful_calendar_fetch`. Decisions: forward horizon, event deduplication.
+  - 7B: economic-calendar ingestion on the same pattern via `EconomicCalendarProvider.get_events` —
+    **completed**. The window straddles the tick (default 24h back, 72h forward) because calendars
+    are published ahead. Records `last_successful_calendar_fetch`. Ships the two event rules that
+    consume the data, so the slice is end to end rather than another unused adapter.
   - 7C: real analytical `StrategyRuleSet` content replacing the three structural fixtures —
     **completed**. Nine rules: data quality (used candle count, completeness ratio, market-data
     completeness, latest-candle age), market context (context readiness, volatility ratio versus its
@@ -230,11 +241,11 @@ non-actionable and without any signal, AI, or execution behavior.
 
 ## Next Planned Task
 
-Phase 7A market-data ingestion and Phase 7C analytical rulesets are complete. **Phase 7B
-(economic-calendar ingestion) and Phase 7D (historical validation through `HistoricalReplay`) are
-the next planned tasks.** 7B unlocks the event-proximity rule that 7C deliberately left out; 7D
-should revisit the 7C thresholds against a real distribution, since they were calibrated on a thin
-sample of live windows.
+Phase 7A market-data ingestion, 7C analytical rulesets, and 7B calendar ingestion are complete.
+**Phase 7D (historical validation through `HistoricalReplay`) is the next planned task, but it is
+gated on accumulating history.** As of 2026-07-28 storage held roughly one day of M15 candles, which
+is too thin to re-derive the 7C thresholds from a real distribution; either let the worker run for
+several days or add the backfill that Phase 7A deliberately deferred.
 
 Phase 7 comes before Chief AI because until 7A the application had no ingestion path at all, and
 until 7C the rules passed identically on live data and on an empty database. Explaining that output

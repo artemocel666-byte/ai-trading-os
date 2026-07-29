@@ -3,6 +3,7 @@ from decimal import Decimal
 
 from app.core.time import normalize_to_utc
 from app.domain.entities.analysis import AnalysisSnapshot
+from app.domain.entities.market_data import EconomicImpact
 
 FieldResolution = bool | Decimal | str | None
 
@@ -89,6 +90,29 @@ def _resolve_max_close_drawdown(snapshot: AnalysisSnapshot) -> FieldResolution:
     return snapshot.context_snapshot.return_distribution.max_close_to_close_drawdown
 
 
+def _resolve_high_impact_event_count(snapshot: AnalysisSnapshot) -> FieldResolution:
+    """Count high-impact events the window actually used.
+
+    A quiet window legitimately measures zero, which is a real observation rather than a
+    substituted value, so this stays a number instead of becoming unavailable.
+    """
+    if snapshot.context_snapshot is None:
+        return None
+    counts = snapshot.context_snapshot.event_context.counts_by_impact
+    return Decimal(sum(entry.count for entry in counts if entry.impact == EconomicImpact.HIGH))
+
+
+def _resolve_minutes_since_latest_event(snapshot: AnalysisSnapshot) -> FieldResolution:
+    """Minutes since the most recent event in the window.
+
+    Returns None when the window holds no event at all: there is nothing to measure, and a
+    fabricated large number would read as a real observation.
+    """
+    if snapshot.context_snapshot is None:
+        return None
+    return snapshot.context_snapshot.event_context.minutes_since_latest_event
+
+
 def _resolve_utc_weekday(snapshot: AnalysisSnapshot) -> FieldResolution:
     as_of_utc_weekday = (
         snapshot.context_snapshot.time_context.as_of_utc_weekday
@@ -107,6 +131,8 @@ FIELD_RESOLVERS: Mapping[str, Callable[[AnalysisSnapshot], FieldResolution]] = {
     "market_context.snapshot_ready": _resolve_market_context_snapshot_ready,
     "market_context.volatility_ratio": _resolve_volatility_ratio,
     "market_context.max_close_drawdown": _resolve_max_close_drawdown,
+    "event_context.high_impact_event_count": _resolve_high_impact_event_count,
+    "event_context.minutes_since_latest_event": _resolve_minutes_since_latest_event,
     "time_filter.session_name": _resolve_time_filter_session_name,
     "time_filter.utc_weekday": _resolve_utc_weekday,
 }

@@ -86,6 +86,35 @@ Operational behaviour:
 
 Ingestion stores candles only. It produces no signals, price levels, scoring, AI output, or messages.
 
+## Economic-Calendar Ingestion (Phase 7B)
+
+Gated by two flags that both default to `false`:
+
+```env
+CALENDAR_ENABLED=true
+FMP_API_KEY=<your key>
+CALENDAR_INGESTION_ENABLED=true
+CALENDAR_INGESTION_INTERVAL_MINUTES=60
+CALENDAR_INGESTION_LOOKBACK_HOURS=24
+CALENDAR_INGESTION_HORIZON_HOURS=72
+```
+
+The job fetches scheduled events for the configured currencies (EUR and USD by default) over a
+window that straddles the tick: back over recent releases and forward over announced ones, because
+calendars are published ahead of time. Events are stored through the duplicate-safe repository, so
+overlapping windows update rather than duplicate.
+
+Operational behaviour:
+
+- Success updates `last_successful_calendar_fetch`, visible in `GET /api/v1/system/status`.
+- An empty response is a success, not a failure — quiet calendar days exist.
+- Provider errors are recorded through the standard error path and never propagate into the
+  scheduler.
+- Note that the FMP economic calendar may be restricted on the free plan. If it is, the tick records
+  a provider error and reports `failed`; the worker keeps running.
+
+Ingestion stores events only. It produces no signals, price levels, scoring, AI output, or messages.
+
 ## Local Telegram Readiness Demo
 
 Phase 3E can run a local readiness report without live market or calendar integrations. Start

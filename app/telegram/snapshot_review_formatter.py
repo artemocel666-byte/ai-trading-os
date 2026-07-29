@@ -10,6 +10,7 @@ from app.domain.value_objects import CurrencyPair
 _RULESET_TITLES_RU = {
     "Foundation data quality": "качество данных",
     "Foundation market context": "рыночный контекст",
+    "Foundation event context": "события",
     "Foundation time filter": "временной фильтр",
 }
 

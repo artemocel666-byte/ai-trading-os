@@ -10,6 +10,13 @@ from app.domain.entities.analysis import (
     AnalysisSnapshotMetadata,
     AnalysisWindow,
 )
+from app.domain.entities.calendar_ingestion import (
+    CalendarIngestionConfig,
+    CalendarIngestionDecision,
+    CalendarIngestionDecisionReason,
+    CalendarIngestionResult,
+    CalendarIngestionTick,
+)
 from app.domain.entities.context import (
     CandleShapeSummary,
     ContextCurrencyCount,
@@ -140,6 +147,11 @@ __all__ = [
     "AnalysisSnapshot",
     "AnalysisSnapshotMetadata",
     "AnalysisWindow",
+    "CalendarIngestionConfig",
+    "CalendarIngestionDecision",
+    "CalendarIngestionDecisionReason",
+    "CalendarIngestionResult",
+    "CalendarIngestionTick",
     "Candle",
     "CandleAvailability",
     "CandleFeatureSummary",

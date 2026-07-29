@@ -3,8 +3,13 @@ from datetime import datetime
 from typing import Any
 
 from app.core.time import utc_now
-from app.domain.entities import MarketDataIngestionResult, ScheduledDigestDeliveryResult
+from app.domain.entities import (
+    CalendarIngestionResult,
+    MarketDataIngestionResult,
+    ScheduledDigestDeliveryResult,
+)
 from app.observability.health_checks import run_application_health_check
+from app.services.economic_calendar_ingestion_service import EconomicCalendarIngestionService
 from app.services.health_service import HealthService
 from app.services.market_data_ingestion_service import MarketDataIngestionService
 from app.services.scheduled_digest_delivery_service import ScheduledDigestDeliveryService
@@ -59,6 +64,26 @@ async def market_data_ingestion_job(
     return result
 
 
+async def economic_calendar_ingestion_job(
+    service: EconomicCalendarIngestionService,
+    *,
+    as_of: datetime | None = None,
+) -> CalendarIngestionResult:
+    result = await service.run_tick(as_of=as_of or utc_now())
+    logger.info(
+        "economic_calendar_ingestion_checked",
+        extra={
+            "executed": result.executed,
+            "reason": result.decision.reason.value,
+            "fetched": result.fetched_count,
+            "inserted": result.inserted_count,
+            "updated": result.updated_count,
+            "failed": result.failed,
+        },
+    )
+    return result
+
+
 def register_jobs(
     scheduler: Any,
     *,
@@ -66,6 +91,8 @@ def register_jobs(
     health_service: HealthService,
     market_data_ingestion_service: MarketDataIngestionService | None = None,
     market_data_ingestion_interval_minutes: int = 15,
+    calendar_ingestion_service: EconomicCalendarIngestionService | None = None,
+    calendar_ingestion_interval_minutes: int = 60,
 ) -> None:
     scheduler.add_job(
         update_worker_heartbeat_job,
@@ -87,15 +114,25 @@ def register_jobs(
         coalesce=True,
         replace_existing=True,
     )
-    if market_data_ingestion_service is None:
-        return
-    scheduler.add_job(
-        market_data_ingestion_job,
-        "interval",
-        minutes=market_data_ingestion_interval_minutes,
-        args=[market_data_ingestion_service],
-        id="market_data_ingestion",
-        max_instances=1,
-        coalesce=True,
-        replace_existing=True,
-    )
+    if market_data_ingestion_service is not None:
+        scheduler.add_job(
+            market_data_ingestion_job,
+            "interval",
+            minutes=market_data_ingestion_interval_minutes,
+            args=[market_data_ingestion_service],
+            id="market_data_ingestion",
+            max_instances=1,
+            coalesce=True,
+            replace_existing=True,
+        )
+    if calendar_ingestion_service is not None:
+        scheduler.add_job(
+            economic_calendar_ingestion_job,
+            "interval",
+            minutes=calendar_ingestion_interval_minutes,
+            args=[calendar_ingestion_service],
+            id="economic_calendar_ingestion",
+            max_instances=1,
+            coalesce=True,
+            replace_existing=True,
+        )

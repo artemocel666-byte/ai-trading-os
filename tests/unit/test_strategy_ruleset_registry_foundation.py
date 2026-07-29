@@ -19,6 +19,7 @@ from app.domain.strategy_ruleset_validator import StrategyRuleSetValidator
 CHECKED_AT = datetime(2026, 7, 18, 10, 0, tzinfo=UTC)
 EXPECTED_KEYS = (
     "foundation.data_quality.v1",
+    "foundation.event_context.v1",
     "foundation.market_context.v1",
     "foundation.time_filter.v1",
 )
@@ -65,6 +66,10 @@ def test_builtin_rulesets_cover_the_expected_analytical_surface() -> None:
         "market_context.volatility_ratio",
         "market_context.max_close_drawdown",
     }
+    assert rules_by_key["foundation.event_context.v1"] == {
+        "event_context.high_impact_event_count",
+        "event_context.minutes_since_latest_event",
+    }
     assert rules_by_key["foundation.time_filter.v1"] == {
         "time_filter.session_name_allowed",
         "time_filter.utc_weekday",
@@ -106,7 +111,7 @@ def _fixture_with_changed_description() -> dict[str, StrategyRuleSet]:
 
 
 def test_project_phase_is_phase4e_disabled_pipeline_report_shell_foundation() -> None:
-    assert constants.PROJECT_PHASE == "phase_7c_analytical_ruleset_foundation"
+    assert constants.PROJECT_PHASE == "phase_7b_calendar_ingestion_foundation"
 
 
 def test_registry_item_and_snapshot_models_are_immutable() -> None:
@@ -156,8 +161,8 @@ def test_all_builtin_fixtures_and_rules_are_disabled() -> None:
 def test_all_builtin_fixtures_validate_valid_through_phase4c_validator() -> None:
     snapshot = _snapshot()
 
-    assert snapshot.item_count == 3
-    assert snapshot.valid_count == 3
+    assert snapshot.item_count == 4
+    assert snapshot.valid_count == 4
     assert snapshot.invalid_count == 0
     assert {item.validation_report.status for item in snapshot.items} == {
         StrategyRuleSetValidationStatus.VALID
@@ -235,7 +240,7 @@ def test_invalid_fixture_still_appears_with_invalid_report() -> None:
     assert invalid_item.registry_key == "foundation.data_quality.v1"
     assert invalid_item.validation_report.status == StrategyRuleSetValidationStatus.INVALID
     assert snapshot.invalid_count == 1
-    assert snapshot.valid_count == 2
+    assert snapshot.valid_count == 3
 
 
 def test_registry_rejects_actionable_models() -> None:

@@ -1,4 +1,4 @@
-PROJECT_PHASE = "phase_7c_analytical_ruleset_foundation"
+PROJECT_PHASE = "phase_7b_calendar_ingestion_foundation"
 STRATEGY_IMPLEMENTED = False
 REAL_TRADING_ENABLED = False
 

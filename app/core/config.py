@@ -44,6 +44,11 @@ class Settings(BaseSettings):
     fmp_api_key: SecretStr | None = None
     fmp_base_url: str = "https://financialmodelingprep.com"
 
+    calendar_ingestion_enabled: bool = False
+    calendar_ingestion_interval_minutes: int = Field(default=60, ge=1, le=1440)
+    calendar_ingestion_lookback_hours: int = Field(default=24, ge=1, le=168)
+    calendar_ingestion_horizon_hours: int = Field(default=72, ge=1, le=336)
+
     provider_connect_timeout_seconds: float = Field(default=5.0, gt=0, le=30)
     provider_read_timeout_seconds: float = Field(default=10.0, gt=0, le=60)
     provider_write_timeout_seconds: float = Field(default=5.0, gt=0, le=30)

@@ -4,16 +4,19 @@ AI Trading OS is a safety-first foundation for a future modular Forex analysis a
 
 ## Current Status
 
-- Current project phase: phase_7c_analytical_ruleset_foundation.
+- Current project phase: phase_7b_calendar_ingestion_foundation.
 - Phase 6 snapshot-backed read-only review is complete: `/review EURUSD M15` builds a real analysis
   snapshot, runs the Phase 4G composer over it, and presents the pipeline decision through the
   Phase 5 manual review layer — still read-only and non-actionable.
 - Phase 7A market-data ingestion is complete: a worker job can now fetch closed candles from the
   provider and store them, gated by two flags that both default to off.
-- Phase 7C analytical rulesets are complete: nine descriptive rules replaced the three placeholder
+- Phase 7C analytical rulesets are complete: descriptive rules replaced the three placeholder
   fixtures, so `/review` now reports different statuses for different data instead of always
-  reporting the same thing. Next: Phase 7B (calendar ingestion) and Phase 7D (historical validation).
-  Chief AI is Phase 8; signals, delivery, and paper trading are Phase 9.
+  reporting the same thing.
+- Phase 7B calendar ingestion is complete: scheduled economic events are fetched into storage and
+  consumed by an event ruleset, bringing the rule set to eleven across four rulesets. Next: Phase 7D
+  (historical validation), which is gated on accumulating more history. Chief AI is Phase 8;
+  signals, delivery, and paper trading are Phase 9.
 - Trading strategy: not implemented.
 - Real trading: disabled and unsupported.
 - External integrations: disabled by default.
@@ -334,6 +337,36 @@ this" — never "what should be traded". No directions, price levels, scoring, o
 rulesets remain `enabled=False` and non-actionable. A rule on proximity to high-impact events was
 deliberately left out because it needs the calendar from Phase 7B.
 
+## Phase 7B Status
+
+Phase 7B adds economic-calendar ingestion and the event rules that consume it. Shipping ingestion
+without a consumer is the defect this project already hit twice, so the rules are part of the slice.
+
+Enable it with **both** flags plus an FMP API key:
+
+```text
+CALENDAR_ENABLED=true
+FMP_API_KEY=<your key>
+CALENDAR_INGESTION_ENABLED=true
+CALENDAR_INGESTION_INTERVAL_MINUTES=60
+CALENDAR_INGESTION_LOOKBACK_HOURS=24
+CALENDAR_INGESTION_HORIZON_HOURS=72
+```
+
+The window straddles the tick — it reaches back over recent releases and forward over announced
+ones, because calendars are published in advance. Storing a future scheduled release is not
+lookahead bias; the analysis snapshot still only exposes what happened at or before `as_of`, so the
+rules read backwards. That is why there is no "event in the next 30 minutes" rule: surfacing future
+events into a snapshot would break the Phase 3D no-future-data proof and is a separate decision.
+
+The new `foundation.event_context.v1` ruleset adds two rules: no high-impact release inside the
+window, and enough time elapsed since the most recent one. On a window with no release at all the
+second rule reports `UNAVAILABLE` rather than passing — there is nothing to measure, and `/review`
+renders that distinctly from a failure.
+
+An empty provider response is a success, not a failure: quiet calendar days exist. Provider errors
+are recorded in system state rather than raised into the scheduler.
+
 ## Prerequisites
 
 - Python 3.12
@@ -382,6 +415,7 @@ OPENAI_ENABLED=false
 MARKET_DATA_ENABLED=false
 MARKET_DATA_INGESTION_ENABLED=false
 CALENDAR_ENABLED=false
+CALENDAR_INGESTION_ENABLED=false
 SCAN_ENABLED=false
 SCHEDULED_DIGEST_ENABLED=false
 ```

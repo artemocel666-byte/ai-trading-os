@@ -5,7 +5,7 @@ import pytest
 from pydantic import ValidationError
 
 from app.domain.analysis_engine import AnalysisEngine
-from app.domain.entities import Candle, Timeframe
+from app.domain.entities import Candle, EconomicEvent, EconomicImpact, Timeframe
 from app.domain.entities.rule_evaluation import (
     RuleEvaluationStatus,
     RuleSetEvaluationStatus,
@@ -158,6 +158,49 @@ def test_volatility_ratio_never_divides_by_zero() -> None:
     )
 
     assert resolve_field("market_context.volatility_ratio", snapshot) is None
+
+
+def test_event_context_resolvers_without_events() -> None:
+    """A quiet window measures zero high-impact events, but has no "time since" to report."""
+    ready = _snapshot(12)
+
+    assert resolve_field("event_context.high_impact_event_count", ready) == Decimal("0")
+    assert resolve_field("event_context.minutes_since_latest_event", ready) is None
+
+
+def test_event_context_resolvers_with_a_high_impact_event() -> None:
+    candles = [_candle(index) for index in range(12)]
+    window_end = BASE_TIME + timedelta(minutes=180)
+    event = EconomicEvent(
+        provider="event-resolver-test",
+        provider_event_id="eur-cpi",
+        title="Consumer Price Index",
+        currency="EUR",
+        country=None,
+        impact=EconomicImpact.HIGH,
+        scheduled_at=BASE_TIME + timedelta(minutes=60),
+        fetched_at=BASE_TIME,
+    )
+    snapshot = AnalysisEngine().build_snapshot(
+        pair=PAIR,
+        timeframe=Timeframe.M15,
+        window_start=BASE_TIME,
+        window_end=window_end,
+        as_of=window_end,
+        candles=candles,
+        economic_events=[event],
+        moving_average_windows=(3,),
+    )
+
+    assert resolve_field("event_context.high_impact_event_count", snapshot) == Decimal("1")
+    assert resolve_field("event_context.minutes_since_latest_event", snapshot) == Decimal("120")
+
+
+def test_event_context_resolvers_report_unavailable_without_context() -> None:
+    empty = _snapshot(0)
+
+    assert resolve_field("event_context.high_impact_event_count", empty) is None
+    assert resolve_field("event_context.minutes_since_latest_event", empty) is None
 
 
 def test_time_filter_weekday_resolver() -> None:

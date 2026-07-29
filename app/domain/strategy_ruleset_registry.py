@@ -70,6 +70,8 @@ MAXIMUM_VOLATILITY_RATIO = Decimal("2.5")
 # decline. The sample is only two windows; Phase 7D replay over real history should revisit it.
 MAXIMUM_CLOSE_DRAWDOWN = Decimal("0.01")
 LAST_WEEKDAY_INDEX = Decimal("4")
+MAXIMUM_HIGH_IMPACT_EVENT_COUNT = Decimal("0")
+MINIMUM_MINUTES_SINCE_LATEST_EVENT = Decimal("30")
 
 BUILTIN_STRATEGY_RULESET_FIXTURES: Mapping[str, StrategyRuleSet] = MappingProxyType(
     {
@@ -171,6 +173,41 @@ BUILTIN_STRATEGY_RULESET_FIXTURES: Mapping[str, StrategyRuleSet] = MappingProxyT
                     description=(
                         "The largest close-to-close decline inside the window stays within a "
                         "usual range for the timeframe."
+                    ),
+                ),
+            ),
+            enabled=False,
+        ),
+        "foundation.event_context.v1": StrategyRuleSet(
+            ruleset_version="foundation-event-context-v1",
+            strategy_version=DEFAULT_STRATEGY_VERSION,
+            name="Foundation event context",
+            description="Descriptive checks on scheduled events inside the window.",
+            created_at=BUILTIN_RULESET_CREATED_AT,
+            rules=(
+                _foundation_rule(
+                    rule_id="event_context.high_impact_event_count",
+                    category=StrategyRuleCategory.EVENT_CONTEXT,
+                    severity=StrategyRuleSeverity.WARNING,
+                    field_ref="event_context.high_impact_event_count",
+                    operator=StrategyRuleOperator.LTE,
+                    expected_value=MAXIMUM_HIGH_IMPACT_EVENT_COUNT,
+                    description=(
+                        "No high-impact scheduled release falls inside the window; when one does, "
+                        "the observed values may still be settling."
+                    ),
+                ),
+                _foundation_rule(
+                    rule_id="event_context.minutes_since_latest_event",
+                    category=StrategyRuleCategory.EVENT_CONTEXT,
+                    severity=StrategyRuleSeverity.WARNING,
+                    field_ref="event_context.minutes_since_latest_event",
+                    operator=StrategyRuleOperator.GTE,
+                    expected_value=MINIMUM_MINUTES_SINCE_LATEST_EVENT,
+                    description=(
+                        "Enough time has passed since the most recent release. Reported as "
+                        "unavailable when the window holds no release at all, which is the calm "
+                        "case rather than a failure."
                     ),
                 ),
             ),

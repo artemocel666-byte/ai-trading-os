@@ -647,6 +647,10 @@ PHASE_7A_FILES = (
     Path("app/domain/entities/ingestion.py"),
     Path("app/services/market_data_ingestion_service.py"),
 )
+PHASE_7B_FILES = (
+    Path("app/domain/entities/calendar_ingestion.py"),
+    Path("app/services/economic_calendar_ingestion_service.py"),
+)
 PHASE_7A_FORBIDDEN_RUNTIME_IMPORTS = (
     "app.domain.entities.signal_contract",
     "app.telegram",
@@ -1742,6 +1746,50 @@ def test_phase7a_ingestion_is_disabled_by_default() -> None:
 
     assert settings.market_data_ingestion_enabled is False
     assert settings.market_data_enabled is False
+
+
+def test_phase7b_files_do_not_import_forbidden_runtime_dependencies() -> None:
+    offenders: list[str] = []
+    for file_path in PHASE_7B_FILES:
+        import_lines = tuple(
+            line
+            for line in file_path.read_text(encoding="utf-8").lower().splitlines()
+            if line.startswith("import ") or line.startswith("from ")
+        )
+        for term in PHASE_7A_FORBIDDEN_RUNTIME_IMPORTS:
+            if any(term.lower() in line for line in import_lines):
+                offenders.append(f"{file_path}: {term}")
+
+    assert offenders == []
+
+
+def test_phase7b_files_do_not_add_trading_behavior_terms() -> None:
+    offenders: list[str] = []
+    for file_path in PHASE_7B_FILES:
+        lowered = file_path.read_text(encoding="utf-8").lower()
+        for term in PHASE_7A_FORBIDDEN_BEHAVIOR_TERMS:
+            if term.lower() in lowered:
+                offenders.append(f"{file_path}: {term}")
+
+    assert offenders == []
+
+
+def test_phase7b_calendar_ingestion_is_disabled_by_default() -> None:
+    settings = Settings(_env_file=None)
+
+    assert settings.calendar_ingestion_enabled is False
+    assert settings.calendar_enabled is False
+
+
+def test_phase7b_adds_no_telegram_command_or_api_route() -> None:
+    telegram_source = Path("app/telegram/commands.py").read_text(encoding="utf-8")
+    route_source = "\n".join(
+        file_path.read_text(encoding="utf-8") for file_path in Path("app/api/routes").glob("*.py")
+    )
+
+    assert "EconomicCalendarIngestionService" not in telegram_source
+    assert "calendar_ingestion_command" not in telegram_source
+    assert "EconomicCalendarIngestionService" not in route_source
 
 
 def test_phase7a_adds_no_telegram_command_or_api_route() -> None:

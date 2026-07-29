@@ -4,6 +4,7 @@ from decimal import Decimal
 from app.domain.analysis_engine import AnalysisEngine
 from app.domain.entities import Candle, Timeframe
 from app.domain.entities.manual_review import ManualReviewReport
+from app.domain.entities.rule_evaluation import RuleEvaluationStatus
 from app.domain.snapshot_review import (
     build_snapshot_backed_manual_review_report,
     build_snapshot_backed_review,
@@ -66,7 +67,7 @@ def test_snapshot_backed_review_reflects_real_pipeline_decision() -> None:
     )
     joined = " ".join(pipeline_section.details)
     # The 4G composer evaluated the three built-in rulesets against the real snapshot.
-    assert "Reviewed rule-set reports: 3" in joined
+    assert "Reviewed rule-set reports: 4" in joined
 
 
 def test_snapshot_backed_review_is_deterministic() -> None:
@@ -103,16 +104,33 @@ def test_snapshot_review_formatter_states_snapshot_is_used_and_stays_neutral() -
 
 
 def test_formatter_reports_the_actual_rule_outcomes() -> None:
-    """Without this the reply looks identical whether nine real rules ran or three placeholders."""
+    """Without this the reply looks identical whether real rules ran or placeholders did."""
     result = build_snapshot_backed_review(_snapshot(12), BASE_TIME)
 
     body = format_snapshot_review_body(result, PAIR, Timeframe.M15)
 
-    assert "Правила: пройдено 9 из 9" in body
+    # This window holds no scheduled event, so "time since the latest event" has nothing to
+    # measure and is reported UNAVAILABLE rather than passed: 10 of 11, not 11 of 11.
+    assert "Правила: пройдено 10 из 11" in body
     assert "качество данных: 4 из 4" in body
     assert "рыночный контекст: 3 из 3" in body
+    assert "события: 1 из 2" in body
     assert "временной фильтр: 2 из 2" in body
     assert "свечей 12 из 12" in body
+
+
+def test_quiet_calendar_is_reported_as_unavailable_not_as_a_failure() -> None:
+    result = build_snapshot_backed_review(_snapshot(12), BASE_TIME)
+
+    event_report = next(
+        report
+        for report in result.decision.ruleset_reports
+        if "event" in report.ruleset_name.lower()
+    )
+    by_rule = {item.rule_id: item.status for item in event_report.results}
+
+    assert by_rule["event_context.high_impact_event_count"] == RuleEvaluationStatus.PASSED
+    assert by_rule["event_context.minutes_since_latest_event"] == RuleEvaluationStatus.UNAVAILABLE
 
 
 def test_formatter_makes_a_degraded_window_visibly_different() -> None:
@@ -124,7 +142,7 @@ def test_formatter_makes_a_degraded_window_visibly_different() -> None:
     )
 
     assert healthy != degraded
-    assert "Правила: пройдено 9 из 9" in healthy
-    assert "Правила: пройдено 9 из 9" not in degraded
+    assert "Правила: пройдено 10 из 11" in healthy
+    assert "Правила: пройдено 10 из 11" not in degraded
     assert "не пройдено: " in degraded
     assert "data_quality.used_candle_count" in degraded
