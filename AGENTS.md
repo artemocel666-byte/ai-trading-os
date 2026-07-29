@@ -2,7 +2,11 @@
 
 AI Trading OS is a foundation for a future Forex analysis and paper-trading platform.
 
-Current project phase: phase_7b_calendar_ingestion_foundation.
+Current project phase: phase_7d1_historical_backfill_foundation.
+Phase 7D-1 adds a manual historical backfill script so later calibration has a real distribution to
+work from. It is deliberately never scheduled: on a timer it would burn provider quota repeatedly.
+It stores candles only and reports a suspected provider truncation rather than silently accepting a
+short response.
 Phase 7B adds economic-calendar ingestion and the two event rules that consume it, bringing the
 rule set to eleven across four rulesets (data quality, market context, event context, time filter).
 Calendar ingestion is gated by two flags that are both off by default (`CALENDAR_ENABLED`,
@@ -131,6 +135,13 @@ real trading.
   errors are recorded rather than raised into the scheduler. Ingest forward but evaluate backward:
   storing announced releases is legitimate, while surfacing post-`as_of` events into a snapshot
   would break the Phase 3D no-future-data proof and must stay a separate, deliberate decision.
+- While working in Phase 7D-1, the backfill
+  (`app/services/market_data_backfill_service.py`, `scripts/backfill_market_data.py`) must stay a
+  manual script and must never be registered as a scheduler job. It must chunk requests inside
+  `provider_max_request_range_days`, pace them with a delay, and flag a chunk as possibly truncated
+  when the oldest returned candle sits far after the requested start — silently accepting a short
+  response would corrupt every later calibration. A run that failed or looked truncated must not
+  report success, and the CLI must exit non-zero.
 - Never fabricate market data, calendar data, agent evidence, or scan results.
 - LLM output may explain deterministic results only; it must not change prices, scores, risk, or rejected decisions.
 - Update documentation when architecture or safety boundaries change.

@@ -4,7 +4,7 @@ AI Trading OS is a safety-first foundation for a future modular Forex analysis a
 
 ## Current Status
 
-- Current project phase: phase_7b_calendar_ingestion_foundation.
+- Current project phase: phase_7d1_historical_backfill_foundation.
 - Phase 6 snapshot-backed read-only review is complete: `/review EURUSD M15` builds a real analysis
   snapshot, runs the Phase 4G composer over it, and presents the pipeline decision through the
   Phase 5 manual review layer — still read-only and non-actionable.
@@ -14,9 +14,10 @@ AI Trading OS is a safety-first foundation for a future modular Forex analysis a
   fixtures, so `/review` now reports different statuses for different data instead of always
   reporting the same thing.
 - Phase 7B calendar ingestion is complete: scheduled economic events are fetched into storage and
-  consumed by an event ruleset, bringing the rule set to eleven across four rulesets. Next: Phase 7D
-  (historical validation), which is gated on accumulating more history. Chief AI is Phase 8;
-  signals, delivery, and paper trading are Phase 9.
+  consumed by an event ruleset, bringing the rule set to eleven across four rulesets.
+- Phase 7D-1 historical backfill is complete: `scripts/backfill_market_data.py` fills history in
+  paced chunks so calibration has a real distribution. Next: Phase 7D-2 (historical validation
+  through replay). Chief AI is Phase 8; signals, delivery, and paper trading are Phase 9.
 - Trading strategy: not implemented.
 - Real trading: disabled and unsupported.
 - External integrations: disabled by default.
@@ -366,6 +367,29 @@ renders that distinctly from a failure.
 
 An empty provider response is a success, not a failure: quiet calendar days exist. Provider errors
 are recorded in system state rather than raised into the scheduler.
+
+## Phase 7D-1 Status
+
+Phase 7D-1 adds a manual historical backfill so later calibration works from a real distribution
+rather than the two live windows Phase 7C had to use. It is a script, never a scheduled job:
+on a timer it would spend provider quota repeatedly for no benefit.
+
+```bash
+uv run python -m scripts.backfill_market_data --days 180 --timeframe M15 --dry-run
+uv run python -m scripts.backfill_market_data --days 180 --timeframe M15
+```
+
+`--dry-run` prints the chunk plan and request count without touching the provider, so quota use can
+be checked before it is spent. At defaults, 180 days of M15 is 18 requests and of H1 is 6 — both far
+inside a free tier's daily allowance.
+
+**Read the truncation warning.** `app/adapters/twelve_data.py` sends no `outputsize`, so a provider
+result cap could silently drop the oldest bars of a chunk and leave invisible holes in history. Each
+chunk is therefore flagged `POSSIBLY TRUNCATED` when its oldest returned candle sits far after the
+requested start, and the script exits non-zero if any chunk failed or looked truncated. A run that
+prints that warning must be treated as incomplete history, not as a success.
+
+Backfill stores candles only: no signals, price levels, scoring, AI output, or messages.
 
 ## Prerequisites
 

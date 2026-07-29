@@ -651,6 +651,11 @@ PHASE_7B_FILES = (
     Path("app/domain/entities/calendar_ingestion.py"),
     Path("app/services/economic_calendar_ingestion_service.py"),
 )
+PHASE_7D1_FILES = (
+    Path("app/domain/entities/backfill.py"),
+    Path("app/services/market_data_backfill_service.py"),
+    Path("scripts/backfill_market_data.py"),
+)
 PHASE_7A_FORBIDDEN_RUNTIME_IMPORTS = (
     "app.domain.entities.signal_contract",
     "app.telegram",
@@ -1779,6 +1784,37 @@ def test_phase7b_calendar_ingestion_is_disabled_by_default() -> None:
 
     assert settings.calendar_ingestion_enabled is False
     assert settings.calendar_enabled is False
+
+
+def test_phase7d1_files_do_not_add_trading_behavior_terms() -> None:
+    offenders: list[str] = []
+    for file_path in PHASE_7D1_FILES:
+        lowered = file_path.read_text(encoding="utf-8").lower()
+        for term in PHASE_7A_FORBIDDEN_BEHAVIOR_TERMS:
+            if term.lower() in lowered:
+                offenders.append(f"{file_path}: {term}")
+
+    assert offenders == []
+
+
+def test_phase7d1_backfill_is_never_scheduled() -> None:
+    """Backfill is a deliberate manual run; on a timer it would burn provider quota repeatedly."""
+    scheduler_source = "\n".join(
+        file_path.read_text(encoding="utf-8") for file_path in Path("app/scheduler").glob("*.py")
+    )
+
+    assert "MarketDataBackfillService" not in scheduler_source
+    assert "backfill" not in scheduler_source.lower()
+
+
+def test_phase7d1_backfill_adds_no_telegram_command_or_api_route() -> None:
+    telegram_source = Path("app/telegram/commands.py").read_text(encoding="utf-8")
+    route_source = "\n".join(
+        file_path.read_text(encoding="utf-8") for file_path in Path("app/api/routes").glob("*.py")
+    )
+
+    assert "backfill" not in telegram_source.lower()
+    assert "backfill" not in route_source.lower()
 
 
 def test_phase7b_adds_no_telegram_command_or_api_route() -> None:

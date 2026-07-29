@@ -10,6 +10,7 @@ from app.domain.entities.analysis import (
     AnalysisSnapshotMetadata,
     AnalysisWindow,
 )
+from app.domain.entities.backfill import BackfillChunkResult, BackfillResult
 from app.domain.entities.calendar_ingestion import (
     CalendarIngestionConfig,
     CalendarIngestionDecision,
@@ -147,6 +148,8 @@ __all__ = [
     "AnalysisSnapshot",
     "AnalysisSnapshotMetadata",
     "AnalysisWindow",
+    "BackfillChunkResult",
+    "BackfillResult",
     "CalendarIngestionConfig",
     "CalendarIngestionDecision",
     "CalendarIngestionDecisionReason",

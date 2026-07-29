@@ -115,6 +115,53 @@ Operational behaviour:
 
 Ingestion stores events only. It produces no signals, price levels, scoring, AI output, or messages.
 
+## Historical Market-Data Backfill (Phase 7D-1)
+
+The scheduled ingestion job only ever reaches back a few hours, so history accumulates in real time.
+Backfill fills the past on demand, which is what later threshold calibration needs. It is a manual
+script and is deliberately never registered as a scheduler job: on a timer it would spend provider
+quota repeatedly for data already stored.
+
+```bash
+uv run python -m scripts.backfill_market_data --days 180 --timeframe M15 --dry-run
+```
+
+```bash
+uv run python -m scripts.backfill_market_data --days 180 --timeframe M15
+```
+
+Arguments: `--pair` (default `EURUSD`), `--timeframe`, `--days` (default 30), `--chunk-candles`,
+`--delay-seconds`, `--dry-run`, `--database-url`.
+
+`--dry-run` prints the chunk plan and the request count without contacting the provider, so quota can
+be checked before it is spent. At defaults, 180 days is 18 requests for M15 and 6 for H1. Requests go
+oldest-first, so an interrupted run leaves a contiguous recent history rather than islands, and each
+chunk is written through the duplicate-safe `candles.upsert_many` — re-running a range updates
+instead of duplicating.
+
+Requires `MARKET_DATA_ENABLED=true` and a provider key. With the provider disabled the script says so
+and exits 1 without any network call.
+
+### Reading the truncation warning
+
+`app/adapters/twelve_data.py` sends no `outputsize`, so a provider-side result cap could return only
+the newest bars of a requested chunk and silently drop the oldest. That would leave invisible holes
+in history and corrupt every calibration built on it.
+
+Each chunk is therefore checked by range coverage, not by count: when the oldest returned candle
+sits more than a quarter of the chunk duration after the requested start, the chunk is flagged and
+the line is printed with `<- POSSIBLY TRUNCATED`. The run then reports that it did not complete
+cleanly and the script exits non-zero.
+
+Counting alone would produce false alarms — a chunk spanning a weekend legitimately returns fewer
+candles. An empty chunk (closed market) is a success and is never flagged, because a response with no
+candles carries no evidence either way.
+
+If a chunk is flagged, treat that range as incomplete: narrow it with a smaller `--chunk-candles` and
+re-run that period rather than accepting the stored result.
+
+Backfill stores candles only. It produces no signals, price levels, scoring, AI output, or messages.
+
 ## Local Telegram Readiness Demo
 
 Phase 3E can run a local readiness report without live market or calendar integrations. Start

@@ -111,6 +111,15 @@
   Ships the `foundation.event_context.v1` ruleset — high-impact event count and minutes since the
   latest event — so the data has a consumer, bringing the rule set to eleven across four rulesets.
   Ingest forward, evaluate backward: the snapshot still proves no post-`as_of` data was used.
+- Phase 7D-1 historical backfill foundation: `MarketDataBackfillService` plus
+  `scripts/backfill_market_data.py` fill historical candles chunk by chunk so later calibration has
+  a real distribution instead of a two-window sample. Chunk width is the candle budget clamped by
+  `provider_max_request_range_days`; chunks run oldest-first with a pacing delay, and a failed chunk
+  is isolated so the rest of the range still fills. Because `app/adapters/twelve_data.py` sends no
+  `outputsize`, a provider result cap could silently drop the oldest bars of a chunk, so each chunk
+  is flagged `possibly_truncated` when its first returned candle sits far after the requested start,
+  and a run with any failed or truncated chunk does not report success. Deliberately a manual
+  script, never a scheduled job.
 
 ## Current Implementation Status
 
@@ -200,8 +209,12 @@ non-actionable and without any signal, AI, or execution behavior.
     own window average, max close-to-close drawdown), and time filter (liquidity session, weekday).
     A rule on proximity to high-impact events was deliberately left out because it needs the
     calendar from 7B.
-  - 7D: historical validation of the new rules through the existing `HistoricalReplay`
-    (`app/domain/replay.py`). Decisions: how much history, what counts as a rule behaving sanely.
+  - 7D-1: manual historical backfill script — **completed**. Chunks requests by candle budget
+    clamped to `provider_max_request_range_days`, paces them, and flags a chunk as possibly
+    truncated when the oldest returned candle sits far after the requested start. Never scheduled.
+  - 7D-2: historical validation of the rules through the existing `HistoricalReplay`
+    (`app/domain/replay.py`) — pending. Decisions: how much history, what counts as a rule behaving
+    sanely, and re-deriving the 7C thresholds from a real distribution.
   - Unlocks `MARKET_DATA_ENABLED=true`/`CALENDAR_ENABLED=true` becoming meaningful, and makes
     `/review EURUSD M15` report real market analysis instead of placeholder checks.
   - Still no signals, directions, price levels, or AI.
@@ -241,11 +254,13 @@ non-actionable and without any signal, AI, or execution behavior.
 
 ## Next Planned Task
 
-Phase 7A market-data ingestion, 7C analytical rulesets, and 7B calendar ingestion are complete.
-**Phase 7D (historical validation through `HistoricalReplay`) is the next planned task, but it is
-gated on accumulating history.** As of 2026-07-28 storage held roughly one day of M15 candles, which
-is too thin to re-derive the 7C thresholds from a real distribution; either let the worker run for
-several days or add the backfill that Phase 7A deliberately deferred.
+Phase 7A market-data ingestion, 7C analytical rulesets, 7B calendar ingestion, and 7D-1 historical
+backfill are complete. **Phase 7D-2 (historical validation through `HistoricalReplay`) is the next
+planned task.** The backfill removed its blocker: history no longer has to be waited for, so 7D-2
+can re-derive the 7C thresholds — calibrated on only two live windows — from a real distribution.
+Storage now holds six months of EURUSD (17 174 M15 and 4 292 H1 candles, 2026-01-30 onward); the
+live run found no provider truncation, so that distribution is complete rather than holed. See
+`docs/phase7d1-verification-report.md`.
 
 Phase 7 comes before Chief AI because until 7A the application had no ingestion path at all, and
 until 7C the rules passed identically on live data and on an empty database. Explaining that output
