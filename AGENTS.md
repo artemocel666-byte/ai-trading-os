@@ -2,7 +2,11 @@
 
 AI Trading OS is a foundation for a future Forex analysis and paper-trading platform.
 
-Current project phase: phase_7d1_historical_backfill_foundation.
+Current project phase: phase_7d2_historical_validation_foundation.
+Phase 7D-2 replays the built-in rules over stored history and reports how each one behaved, so the
+Phase 7C thresholds can be derived from an observed distribution instead of two live windows. The
+replay is read-only, never scheduled, and changes no threshold by itself: it measures, and a
+threshold moves only through a deliberate edit that records its evidence.
 Phase 7D-1 adds a manual historical backfill script so later calibration has a real distribution to
 work from. It is deliberately never scheduled: on a timer it would burn provider quota repeatedly.
 It stores candles only and reports a suspected provider truncation rather than silently accepting a
@@ -142,6 +146,16 @@ real trading.
   when the oldest returned candle sits far after the requested start — silently accepting a short
   response would corrupt every later calibration. A run that failed or looked truncated must not
   report success, and the CLI must exit non-zero.
+- While working in Phase 7D-2, the replay (`app/domain/rule_replay.py`,
+  `app/domain/rule_calibration.py`, `app/domain/entities/calibration.py`,
+  `scripts/replay_rules.py`) must stay read-only and must never be registered as a scheduler job.
+  The domain modules take candles and events as arguments and must not import `app.persistence`,
+  a session, or a unit of work — the Phase 4G boundary keeps the composer out of anything that owns
+  storage, so loading history belongs to the caller. Replay must evaluate through the real
+  `AnalysisEngine` and Phase 4G composer rather than a lookalike, otherwise the measured pass rates
+  say nothing about `/review`. It must never rewrite thresholds automatically: a threshold change is
+  a reviewable edit that records the percentile and sample size it came from. A rule that never
+  fired across real history is a defect to report, not a rule that passed.
 - Never fabricate market data, calendar data, agent evidence, or scan results.
 - LLM output may explain deterministic results only; it must not change prices, scores, risk, or rejected decisions.
 - Update documentation when architecture or safety boundaries change.

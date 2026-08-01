@@ -162,6 +162,50 @@ re-run that period rather than accepting the stored result.
 
 Backfill stores candles only. It produces no signals, price levels, scoring, AI output, or messages.
 
+## Rule Replay and Calibration (Phase 7D-2)
+
+Replays every built-in rule over stored history and reports how each one behaved. Read-only: it
+loads the range once and writes nothing. It is a manual script and is never registered as a
+scheduler job, because replaying the same past on a timer produces the same answer forever.
+
+```bash
+uv run python -m scripts.replay_rules --days 180 --timeframe M15
+```
+
+```bash
+uv run python -m scripts.replay_rules --days 180 --timeframe H1 --step-candles 4 --format json
+```
+
+Arguments: `--pair` (default `EURUSD`), `--timeframe`, `--days` (default 180), `--window-candles`
+(default 12, matching the `/review` window), `--step-candles`, `--format text|json`,
+`--database-url`.
+
+Each stored candle close is one `as_of`, so the sampled moments are exactly the moments a window
+could have been requested with fresh data. Windows are selected by time, the same way the production
+query does, so a gap in history produces a genuinely incomplete window instead of a back-filled one.
+`--step-candles` subsamples when a full walk over six months of M15 is slower than needed.
+
+### Reading the output
+
+- **Field distributions** — count, unavailable count, and min/p05/p25/median/p75/p95/max for every
+  numeric field, computed by nearest rank so each figure is a value the data actually contained.
+  Boolean and session-name fields have no distribution; their rule tallies carry the story.
+- **Rule behaviour** — passed/failed/unavailable per rule, the share of evaluated windows in which
+  it fired, and a verdict: `NEVER_FIRES`, `RARELY_FIRES`, `OFTEN_FIRES`, `ALWAYS_FIRES`, or
+  `NOT_OBSERVED`.
+
+`NEVER_FIRES` and `NOT_OBSERVED` are defects, not clean bills of health: a rule that could not
+report anything over months of real data is not protecting anything. The script exits non-zero when
+any rule lands there.
+
+Target shape for a healthy rule set: warnings fire on roughly 1–10% of windows, and blocking or
+required data-quality rules pass on nearly every window of a healthy feed. A data-quality rule that
+fails often is usually measuring our own storage gaps rather than the market.
+
+Replay never edits thresholds. Move them by hand in `app/domain/strategy_ruleset_registry.py`,
+recording in a comment which percentile and sample size the new value came from, then re-run and
+compare. Recorded evidence lives in `docs/phase7d2-verification-report.md`.
+
 ## Local Telegram Readiness Demo
 
 Phase 3E can run a local readiness report without live market or calendar integrations. Start

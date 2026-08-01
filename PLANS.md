@@ -194,7 +194,7 @@ non-actionable and without any signal, AI, or execution behavior.
 - Phase 6: snapshot-backed read-only review — `/review EURUSD M15` over a stored snapshot through
   the Phase 4G composer; no signals, no buy/sell, no AI; completed
 - Phase 7: live data and real analysis — closes the two gaps found on 2026-07-22 (no ingestion
-  path, placeholder-only rules); not started
+  path, placeholder-only rules); **completed**
   - 7A: market-data ingestion service plus worker job, disabled by default — **completed**. Rolling
     overlapping window, empty response treated as success, per-item failure isolation, errors
     recorded via `record_system_error`. First-run backfill deliberately deferred; the rolling window
@@ -212,9 +212,14 @@ non-actionable and without any signal, AI, or execution behavior.
   - 7D-1: manual historical backfill script — **completed**. Chunks requests by candle budget
     clamped to `provider_max_request_range_days`, paces them, and flags a chunk as possibly
     truncated when the oldest returned candle sits far after the requested start. Never scheduled.
-  - 7D-2: historical validation of the rules through the existing `HistoricalReplay`
-    (`app/domain/replay.py`) — pending. Decisions: how much history, what counts as a rule behaving
-    sanely, and re-deriving the 7C thresholds from a real distribution.
+  - 7D-2: historical validation of the rules — **completed**, closing Phase 7. `app/domain/
+    rule_replay.py` plus `scripts/replay_rules.py` walk stored history through the real
+    `AnalysisEngine` and Phase 4G composer and report per-rule firing rates and field
+    distributions. Read-only and never scheduled. Sane behaviour was defined before the run:
+    warnings fire on 1-10% of windows, data-quality rules pass on nearly all of them. Recalibrated
+    the volatility band (0.4/2.5 -> 0.30/3.5) and the drawdown bound (0.01 -> 0.004) against
+    16 909 M15 and 4 219 H1 windows, and fixed a rule that could never fire: the session resolver
+    returned `None` off-session, making the rule UNAVAILABLE instead of failed.
   - Unlocks `MARKET_DATA_ENABLED=true`/`CALENDAR_ENABLED=true` becoming meaningful, and makes
     `/review EURUSD M15` report real market analysis instead of placeholder checks.
   - Still no signals, directions, price levels, or AI.
@@ -254,13 +259,23 @@ non-actionable and without any signal, AI, or execution behavior.
 
 ## Next Planned Task
 
-Phase 7A market-data ingestion, 7C analytical rulesets, 7B calendar ingestion, and 7D-1 historical
-backfill are complete. **Phase 7D-2 (historical validation through `HistoricalReplay`) is the next
-planned task.** The backfill removed its blocker: history no longer has to be waited for, so 7D-2
-can re-derive the 7C thresholds — calibrated on only two live windows — from a real distribution.
-Storage now holds six months of EURUSD (17 174 M15 and 4 292 H1 candles, 2026-01-30 onward); the
-live run found no provider truncation, so that distribution is complete rather than holed. See
-`docs/phase7d1-verification-report.md`.
+**Phase 7 is complete.** Ingestion (7A), analytical rules (7C), calendar ingestion (7B), historical
+backfill (7D-1), and historical validation (7D-2) are all done: the application fetches real data,
+evaluates real rules over it, and the thresholds are derived from six months of observed EURUSD
+history rather than from guesses. See `docs/phase7d2-verification-report.md`.
+
+**Phase 8A (the `ExplanationInput` contract and output validator) is the next planned task.** It
+adds no network call: it shapes what a future Chief AI may receive and proves that whatever it
+returns cannot change a deterministic report.
+
+Two items carried out of Phase 7, to be picked up when they stop being blocked rather than as new
+phases:
+
+- The `event_context.*` thresholds remain uncalibrated. Storage holds five economic events, all
+  seeds or stubs, because Phase 7B ingestion needs an FMP key the project does not have. Re-run
+  `scripts/replay_rules.py` once real calendar history exists.
+- `MAXIMUM_CLOSE_DRAWDOWN` is a cross-timeframe compromise (see the 7D-2 report). Normalising the
+  field by average true range would remove it, and belongs with any future rule-content work.
 
 Phase 7 comes before Chief AI because until 7A the application had no ingestion path at all, and
 until 7C the rules passed identically on live data and on an empty database. Explaining that output

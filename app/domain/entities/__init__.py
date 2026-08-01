@@ -18,6 +18,12 @@ from app.domain.entities.calendar_ingestion import (
     CalendarIngestionResult,
     CalendarIngestionTick,
 )
+from app.domain.entities.calibration import (
+    FieldDistribution,
+    RuleBehaviour,
+    RuleCalibrationReport,
+    RuleOutcomeTally,
+)
 from app.domain.entities.context import (
     CandleShapeSummary,
     ContextCurrencyCount,
@@ -180,6 +186,7 @@ __all__ = [
     "FeatureIssueCode",
     "FeatureSnapshot",
     "FeatureWindow",
+    "FieldDistribution",
     "IndicatorWindow",
     "ManualReviewIssue",
     "ManualReviewIssueCode",
@@ -202,8 +209,11 @@ __all__ = [
     "PipelineDecisionStatus",
     "RangeContextSummary",
     "ReturnDistributionSummary",
+    "RuleBehaviour",
+    "RuleCalibrationReport",
     "RuleEvaluationResult",
     "RuleEvaluationStatus",
+    "RuleOutcomeTally",
     "RuleSetEvaluationReport",
     "RuleSetEvaluationStatus",
     "ScheduledDigestConfig",

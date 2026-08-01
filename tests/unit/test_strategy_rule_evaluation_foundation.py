@@ -86,7 +86,9 @@ def test_time_filter_session_name_resolver() -> None:
 
     assert resolve_field("time_filter.session_name", london) == "london"
     assert resolve_field("time_filter.session_name", overlap) == "london"
-    assert resolve_field("time_filter.session_name", quiet) is None
+    # "Neither session" is a real reading of a known hour, so the rule fails rather than going
+    # unavailable. With None here the rule could never fire, which the Phase 7D-2 replay found.
+    assert resolve_field("time_filter.session_name", quiet) == "off_session"
 
 
 def test_unknown_field_ref_resolves_to_none() -> None:

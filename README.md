@@ -4,7 +4,7 @@ AI Trading OS is a safety-first foundation for a future modular Forex analysis a
 
 ## Current Status
 
-- Current project phase: phase_7d1_historical_backfill_foundation.
+- Current project phase: phase_7d2_historical_validation_foundation.
 - Phase 6 snapshot-backed read-only review is complete: `/review EURUSD M15` builds a real analysis
   snapshot, runs the Phase 4G composer over it, and presents the pipeline decision through the
   Phase 5 manual review layer — still read-only and non-actionable.
@@ -16,8 +16,11 @@ AI Trading OS is a safety-first foundation for a future modular Forex analysis a
 - Phase 7B calendar ingestion is complete: scheduled economic events are fetched into storage and
   consumed by an event ruleset, bringing the rule set to eleven across four rulesets.
 - Phase 7D-1 historical backfill is complete: `scripts/backfill_market_data.py` fills history in
-  paced chunks so calibration has a real distribution. Next: Phase 7D-2 (historical validation
-  through replay). Chief AI is Phase 8; signals, delivery, and paper trading are Phase 9.
+  paced chunks so calibration has a real distribution.
+- Phase 7D-2 historical validation is complete: `scripts/replay_rules.py` replays every rule over
+  stored history and reports how often each one fired, which is how the Phase 7C thresholds were
+  re-derived. This closes Phase 7. Chief AI is Phase 8; signals, delivery, and paper trading are
+  Phase 9.
 - Trading strategy: not implemented.
 - Real trading: disabled and unsupported.
 - External integrations: disabled by default.
@@ -390,6 +393,25 @@ requested start, and the script exits non-zero if any chunk failed or looked tru
 prints that warning must be treated as incomplete history, not as a success.
 
 Backfill stores candles only: no signals, price levels, scoring, AI output, or messages.
+
+## Phase 7D-2 Status
+
+Phase 7D-2 replays the built-in rules over the history Phase 7D-1 stored and reports how each rule
+behaved, so thresholds come from an observed distribution rather than from two live windows.
+
+```bash
+uv run python -m scripts.replay_rules --days 180 --timeframe M15
+```
+
+The run prints two tables — the distribution of every numeric field, and per-rule passed/failed/
+unavailable counts with a behaviour verdict — and exits non-zero if any rule never fired. A rule
+that passes every window of six months cannot report anything, which is the same defect as the
+`EXISTS` operator Phase 7C removed; the exit code makes that a finding rather than a success.
+
+Replay is read-only and never scheduled. It writes nothing, and it changes no threshold by itself:
+each threshold move is a hand-made edit in `app/domain/strategy_ruleset_registry.py` that records
+the percentile and sample size behind it. Measurements and evidence live in
+`docs/phase7d2-verification-report.md`.
 
 ## Prerequisites
 

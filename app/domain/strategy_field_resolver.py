@@ -11,6 +11,7 @@ _LONDON_SESSION_START_UTC_HOUR = 7
 _LONDON_SESSION_END_UTC_HOUR = 16
 _NEW_YORK_SESSION_START_UTC_HOUR = 12
 _NEW_YORK_SESSION_END_UTC_HOUR = 21
+_OFF_SESSION = "off_session"
 
 
 def _resolve_closed_candles_available(snapshot: AnalysisSnapshot) -> FieldResolution:
@@ -26,6 +27,12 @@ def _resolve_market_context_snapshot_ready(snapshot: AnalysisSnapshot) -> FieldR
 
 
 def _resolve_time_filter_session_name(snapshot: AnalysisSnapshot) -> FieldResolution:
+    """Name the liquidity session the window ends in.
+
+    Outside London and New York this reports `off_session` rather than nothing. The hour is
+    known, so "neither session" is a real observation — returning None made the rule UNAVAILABLE
+    instead of failing, which the Phase 7D-2 replay caught: over six months it could never fire.
+    """
     as_of_utc_hour = (
         snapshot.context_snapshot.time_context.as_of_utc_hour
         if snapshot.context_snapshot is not None
@@ -35,7 +42,7 @@ def _resolve_time_filter_session_name(snapshot: AnalysisSnapshot) -> FieldResolu
         return "london"
     if _NEW_YORK_SESSION_START_UTC_HOUR <= as_of_utc_hour < _NEW_YORK_SESSION_END_UTC_HOUR:
         return "new_york"
-    return None
+    return _OFF_SESSION
 
 
 def _resolve_used_candle_count(snapshot: AnalysisSnapshot) -> FieldResolution:

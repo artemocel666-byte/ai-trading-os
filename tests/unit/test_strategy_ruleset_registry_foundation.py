@@ -111,7 +111,7 @@ def _fixture_with_changed_description() -> dict[str, StrategyRuleSet]:
 
 
 def test_project_phase_is_phase4e_disabled_pipeline_report_shell_foundation() -> None:
-    assert constants.PROJECT_PHASE == "phase_7d1_historical_backfill_foundation"
+    assert constants.PROJECT_PHASE == "phase_7d2_historical_validation_foundation"
 
 
 def test_registry_item_and_snapshot_models_are_immutable() -> None:

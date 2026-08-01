@@ -656,6 +656,12 @@ PHASE_7D1_FILES = (
     Path("app/services/market_data_backfill_service.py"),
     Path("scripts/backfill_market_data.py"),
 )
+PHASE_7D2_FILES = (
+    Path("app/domain/entities/calibration.py"),
+    Path("app/domain/rule_calibration.py"),
+    Path("app/domain/rule_replay.py"),
+    Path("scripts/replay_rules.py"),
+)
 PHASE_7A_FORBIDDEN_RUNTIME_IMPORTS = (
     "app.domain.entities.signal_contract",
     "app.telegram",
@@ -1815,6 +1821,58 @@ def test_phase7d1_backfill_adds_no_telegram_command_or_api_route() -> None:
 
     assert "backfill" not in telegram_source.lower()
     assert "backfill" not in route_source.lower()
+
+
+def test_phase7d2_files_do_not_add_trading_behavior_terms() -> None:
+    offenders: list[str] = []
+    for file_path in PHASE_7D2_FILES:
+        lowered = file_path.read_text(encoding="utf-8").lower()
+        for term in PHASE_7A_FORBIDDEN_BEHAVIOR_TERMS:
+            if term.lower() in lowered:
+                offenders.append(f"{file_path}: {term}")
+
+    assert offenders == []
+
+
+def test_phase7d2_replay_is_never_scheduled() -> None:
+    """Replay measures stored history; on a timer it would recompute the same past forever."""
+    scheduler_source = "\n".join(
+        file_path.read_text(encoding="utf-8") for file_path in Path("app/scheduler").glob("*.py")
+    )
+
+    assert "replay" not in scheduler_source.lower()
+    assert "calibration" not in scheduler_source.lower()
+
+
+def test_phase7d2_replay_never_writes_to_storage() -> None:
+    """A calibration run that mutated storage could quietly rewrite the history it measures."""
+    sources = (
+        Path("app/domain/rule_replay.py").read_text(encoding="utf-8"),
+        Path("scripts/replay_rules.py").read_text(encoding="utf-8"),
+    )
+
+    for source in sources:
+        for write_call in ("upsert_many", "commit()", "record_system_error", "delete"):
+            assert write_call not in source
+
+
+def test_phase7d2_replay_domain_module_holds_no_persistence() -> None:
+    """The composer must stay out of anything that owns a session, per the Phase 4G boundary."""
+    source = Path("app/domain/rule_replay.py").read_text(encoding="utf-8").lower()
+
+    for term in ("app.persistence", "sqlalchemy", "unit_of_work", "uow"):
+        assert term not in source
+
+
+def test_phase7d2_replay_adds_no_telegram_command_or_api_route() -> None:
+    telegram_source = Path("app/telegram/commands.py").read_text(encoding="utf-8")
+    route_source = "\n".join(
+        file_path.read_text(encoding="utf-8") for file_path in Path("app/api/routes").glob("*.py")
+    )
+
+    assert "replay_windows" not in telegram_source
+    assert "replay_windows" not in route_source
+    assert "calibration" not in route_source.lower()
 
 
 def test_phase7b_adds_no_telegram_command_or_api_route() -> None:

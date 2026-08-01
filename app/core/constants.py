@@ -1,4 +1,4 @@
-PROJECT_PHASE = "phase_7d1_historical_backfill_foundation"
+PROJECT_PHASE = "phase_7d2_historical_validation_foundation"
 STRATEGY_IMPLEMENTED = False
 REAL_TRADING_ENABLED = False
 

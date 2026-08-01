@@ -61,14 +61,22 @@ def _foundation_rule(
 MINIMUM_USED_CANDLE_COUNT = Decimal("8")
 MINIMUM_COMPLETENESS_RATIO = Decimal("0.8")
 MAXIMUM_LATEST_CANDLE_AGE_MINUTES = Decimal("90")
-MINIMUM_VOLATILITY_RATIO = Decimal("0.4")
-MAXIMUM_VOLATILITY_RATIO = Decimal("2.5")
-# Calibrated 2026-07-28 against live EURUSD Twelve Data windows: the observed maximum
-# close-to-close drawdown was 0.00046 (M15, 12 candles) and 0.00307 (H1, 12 candles). The
-# original 0.02 would never have fired. 0.01 sits roughly three times above the larger
-# observation, so it stays quiet in normal conditions while still flagging a genuinely large
-# decline. The sample is only two windows; Phase 7D replay over real history should revisit it.
-MAXIMUM_CLOSE_DRAWDOWN = Decimal("0.01")
+# Recalibrated 2026-08-01 by the Phase 7D-2 replay over six months of EURUSD (16 908 M15 and
+# 4 219 H1 observations). The band runs from roughly the third percentile to just past the
+# ninety-ninth: observed p03 was 0.2449 (M15) and 0.2613 (H1); p99 was 3.5252 (M15) and 3.6126
+# (H1). The previous 0.4/2.5 fired on 10.45% of M15 and 13.84% of H1 windows, which is too loud
+# for a warning; 0.30/3.5 fires on 5.55% and 5.74% — nearly identical on both timeframes, which
+# is why a single band is defensible here.
+MINIMUM_VOLATILITY_RATIO = Decimal("0.30")
+MAXIMUM_VOLATILITY_RATIO = Decimal("3.5")
+# Recalibrated 2026-08-01 by the same replay. Observed p95 was 0.00244 (M15) and 0.00455 (H1);
+# the previous 0.01 fired on 0.26% of M15 and 0.14% of H1 windows, so it was effectively silent.
+# This threshold compares an absolute price move against a fixed bound while the move itself
+# scales with the timeframe, so no single value is right for both: 0.0025 fires on 4.66% of M15
+# but 22.38% of H1 windows. 0.004 is the compromise that keeps both inside the intended 1-10%
+# band (1.19% M15, 7.14% H1). Normalising the field by average true range, or scoping thresholds
+# per timeframe, would remove the compromise; both are rule-content changes beyond Phase 7D-2.
+MAXIMUM_CLOSE_DRAWDOWN = Decimal("0.004")
 LAST_WEEKDAY_INDEX = Decimal("4")
 MAXIMUM_HIGH_IMPACT_EVENT_COUNT = Decimal("0")
 MINIMUM_MINUTES_SINCE_LATEST_EVENT = Decimal("30")
