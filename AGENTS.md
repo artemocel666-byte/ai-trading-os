@@ -2,7 +2,12 @@
 
 AI Trading OS is a foundation for a future Forex analysis and paper-trading platform.
 
-Current project phase: phase_8b_explanation_provider_foundation.
+Current project phase: phase_8c_explanation_delivery_foundation.
+Phase 8C delivers explanations through a separate `/explain EURUSD M15` command, gated by two flags
+that are both off by default (`OPENAI_ENABLED`, `EXPLANATION_DELIVERY_ENABLED`). The deterministic
+report is always sent in full; an explanation is appended only after passing Phase 8A validation,
+and any failure — disabled, unreachable, rejected, or out of time — becomes one honest line under
+the report. `/review` is untouched and still spends nothing. This closes Phase 8.
 Phase 8B adds the OpenAI adapter behind the Phase 8A contract: plain httpx, `OPENAI_ENABLED=false`
 by default, and wired to nothing (8C does that). It cannot return unchecked text — `explain_validated`
 runs the Phase 8A validator and the outcome carries text only when the answer was accepted. The
@@ -185,6 +190,14 @@ real trading.
   content — no market text, no third-party strings. `explain_validated` must run the Phase 8A
   validator, and a rejected answer must leave no readable text in the outcome. Cap output tokens so
   a runaway generation cannot become an unbounded bill.
+- While working in Phase 8C, the explanation may only reach a user through the `/explain` command a
+  person types. No service, scheduler job, or API route may build the provider or call it: an
+  automatic path would spend money and show model text to someone who never asked. The deterministic
+  report must be sent in full in every case, including when the model fails — the explanation is an
+  appendix and says so. Never show text that failed validation; report the issue codes instead. Both
+  `OPENAI_ENABLED` and `EXPLANATION_DELIVERY_ENABLED` default to `false`, and the call must run
+  inside `EXPLANATION_BUDGET_SECONDS` so a slow provider cannot hang a Telegram command. `/review`,
+  `/snapshot`, `/digest`, and scheduled delivery stay model-free.
 - Never fabricate market data, calendar data, agent evidence, or scan results.
 - LLM output may explain deterministic results only; it must not change prices, scores, risk, or rejected decisions.
 - Update documentation when architecture or safety boundaries change.

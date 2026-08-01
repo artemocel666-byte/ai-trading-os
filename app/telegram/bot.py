@@ -4,7 +4,12 @@ import signal
 
 from telegram.ext import ApplicationBuilder
 
-from app.core.config import get_settings
+from app.adapters.factories import (
+    ProviderClients,
+    create_explanation_provider,
+    create_provider_clients,
+)
+from app.core.config import Settings, get_settings
 from app.core.logging import configure_logging
 from app.persistence.database import create_engine, create_session_factory
 from app.persistence.session import build_uow_factory
@@ -15,6 +20,18 @@ from app.telegram.commands import add_handlers
 from app.telegram.formatter import TelegramFormatter
 
 logger = logging.getLogger(__name__)
+
+
+def _build_explanation_clients(settings: Settings) -> ProviderClients | None:
+    """HTTP clients for the explanation layer, or None when it is off.
+
+    Both gates must be open: the provider must exist (`OPENAI_ENABLED`) and delivery must be
+    permitted (`EXPLANATION_DELIVERY_ENABLED`). Off by default, so a bot started without either
+    opens no client and spends nothing.
+    """
+    if not (settings.openai_enabled and settings.explanation_delivery_enabled):
+        return None
+    return create_provider_clients(settings)
 
 
 async def run_disabled_mode() -> None:
@@ -41,6 +58,14 @@ async def run_enabled_bot() -> None:
     application.bot_data["analysis_service"] = analysis_service
     application.bot_data["readiness_digest_service"] = ReadinessDigestService(analysis_service)
     application.bot_data["formatter"] = TelegramFormatter()
+    provider_clients = _build_explanation_clients(settings)
+    application.bot_data["explanation_provider"] = (
+        create_explanation_provider(settings, client=provider_clients.explanation)
+        if provider_clients is not None
+        else None
+    )
+    if provider_clients is not None:
+        logger.info("explanation_delivery_enabled")
     add_handlers(application)
 
     stop_event = asyncio.Event()
@@ -63,6 +88,8 @@ async def run_enabled_bot() -> None:
             await application.updater.stop()
         await application.stop()
         await application.shutdown()
+        if provider_clients is not None:
+            await provider_clients.aclose()
         await engine.dispose()
         logger.info("telegram_bot_stopped")
 

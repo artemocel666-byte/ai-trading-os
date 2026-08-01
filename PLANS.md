@@ -224,7 +224,7 @@ non-actionable and without any signal, AI, or execution behavior.
     `/review EURUSD M15` report real market analysis instead of placeholder checks.
   - Still no signals, directions, price levels, or AI.
 - Phase 8: Russian Chief AI explanations — first LLM connection, disabled-by-default, explains
-  deterministic reports in Russian without changing them; not started
+  deterministic reports in Russian without changing them; **completed**
   - 8A: `ExplanationInput` contract shaped for the real `PipelineDecisionReport`, plus an output
     validator — **completed**. No network call and wired to nothing. The validator is fail-closed
     (accepted only when no finding) and rejects: empty/non-Russian/over-long text, actionable
@@ -237,8 +237,12 @@ non-actionable and without any signal, AI, or execution behavior.
     where a stub model lies six different ways and the decision fingerprint stays byte-identical.
     `explain_validated` runs the Phase 8A validator, and the outcome carries text only when the
     answer was accepted, so unchecked prose has no path out. Wired to nothing; 8C does that.
-  - 8C: Telegram wiring with fallback to the existing deterministic Russian text whenever the
-    provider is disabled/unavailable or validation fails.
+  - 8C: Telegram delivery — **completed**, closing Phase 8. A separate `/explain EURUSD M15`
+    command rather than an addition to `/review`, because every call costs money and `/review` is
+    the command you run repeatedly. The deterministic report is always sent in full; an explanation
+    is appended only after passing 8A validation, and every failure — disabled, unreachable,
+    rejected, timed out — becomes one honest line beneath it. Two flags, both off by default, and a
+    latency budget so a slow provider cannot hang a command.
   - Unlocks `OPENAI_ENABLED=true`.
 - Phase 9: signals, delivery, and paper trading — the final phase; not started
   - 9A: `SignalContract` assembly from `PipelineDecisionReport`, including the price-level
@@ -270,17 +274,18 @@ backfill (7D-1), and historical validation (7D-2) are all done: the application 
 evaluates real rules over it, and the thresholds are derived from six months of observed EURUSD
 history rather than from guesses. See `docs/phase7d2-verification-report.md`.
 
-**Phase 8A and 8B are complete** (see `docs/phase8a-verification-report.md` and
-`docs/phase8b-verification-report.md`): the contract, the fail-closed validator, and a real provider
-behind them all exist. Nothing calls the provider, and `OPENAI_ENABLED` is false.
+**Phase 8 is complete.** The contract (8A), the provider (8B), and delivery through `/explain` (8C)
+all exist, with both flags off by default. See `docs/phase8a-`, `8b-`, and
+`phase8c-verification-report.md`.
 
-**Phase 8C (Telegram wiring with a deterministic fallback) is the next planned task.** It is the
-first slice where a model's words could reach a person, so the fallback is the feature: whenever the
-provider is disabled, unavailable, or its answer fails validation, `/review` shows exactly the text
-it shows today. The explanation is an addition to that text, never a replacement for it.
+**Phase 9A (`SignalContract` assembly and price levels) is the next planned task.** It is the first
+slice that computes an entry, a protective level, and a target — work deferred since Phase 4 — and
+the `calculate_entry`/`calculate_stop`/`calculate_target` term ban lifts only inside it. Everything
+before it stayed descriptive on purpose; 9A is where that changes, so its safety boundary deserves
+more care than any slice so far.
 
-A live call has still never been made. It needs the user's key and money, and the 8B report records
-what to run and what it would cost.
+A live model call has still never been made. It needs the user's key and money; the 8B report
+records what to run and what it would cost, and `/explain` is now the way to do it.
 
 Two items carried out of Phase 7, to be picked up when they stop being blocked rather than as new
 phases:

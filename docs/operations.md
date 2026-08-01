@@ -218,7 +218,7 @@ compare. Recorded evidence lives in `docs/phase7d2-verification-report.md`.
 
 ## Chief AI Explanations (Phase 8B)
 
-Off by default and, as of 8B, called by nothing — the adapter exists, the wiring is Phase 8C.
+Off by default, behind two flags, and reachable only through the `/explain` command someone types.
 
 ```env
 OPENAI_ENABLED=true
@@ -226,7 +226,14 @@ OPENAI_API_KEY=<your key>
 OPENAI_MODEL=gpt-4.1
 OPENAI_BASE_URL=https://api.openai.com
 OPENAI_MAX_OUTPUT_TOKENS=400
+EXPLANATION_DELIVERY_ENABLED=true
+EXPLANATION_BUDGET_SECONDS=20
 ```
+
+`/explain EURUSD M15` sends the same report as `/review` and appends either a checked explanation or
+one line saying why there is none. One command is one paid request; `/review` remains free and calls
+nothing. With either flag off, `/explain` still answers — report plus "слой пояснений выключен
+настройками" — and no client is opened.
 
 With `OPENAI_ENABLED=false`, `create_explanation_provider` returns a provider that raises
 `IntegrationDisabledError` before any network call, so a misconfiguration cannot quietly spend money.

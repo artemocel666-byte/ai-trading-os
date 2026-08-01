@@ -1,3 +1,4 @@
+import asyncio
 from datetime import datetime, timedelta
 from typing import Any, cast
 
@@ -7,9 +8,15 @@ from telegram.ext import Application, CommandHandler, ContextTypes
 
 from app.core.config import Settings
 from app.core.enums import MessageType
-from app.core.exceptions import NotImplementedFeatureError
+from app.core.exceptions import (
+    IntegrationDisabledError,
+    NotImplementedFeatureError,
+    ProviderError,
+)
 from app.core.time import normalize_to_utc, utc_now
 from app.domain.entities import SnapshotScheduleItem, Timeframe
+from app.domain.explanation_contract import build_explanation_input
+from app.domain.interfaces.providers import ExplanationProvider
 from app.domain.manual_review_report_builder import build_local_manual_review_report
 from app.domain.snapshot_review import build_snapshot_backed_review
 from app.domain.value_objects import CurrencyPair
@@ -19,7 +26,11 @@ from app.services.system_state_service import SystemStateService
 from app.telegram.authorization import TelegramIdentity, is_authorized
 from app.telegram.formatter import TelegramFormatter
 from app.telegram.manual_review_formatter import format_manual_review_body
-from app.telegram.snapshot_review_formatter import format_snapshot_review_body
+from app.telegram.snapshot_review_formatter import (
+    ExplanationUnavailableReason,
+    format_explanation_section,
+    format_snapshot_review_body,
+)
 
 DEFAULT_SNAPSHOT_CANDLE_COUNT = 12
 DEFAULT_DIGEST_ITEMS = (
@@ -63,6 +74,16 @@ def _readiness_digest_service(context: ContextTypes.DEFAULT_TYPE) -> ReadinessDi
 
 def _formatter(context: ContextTypes.DEFAULT_TYPE) -> TelegramFormatter:
     return cast(TelegramFormatter, context.application.bot_data["formatter"])
+
+
+def _explanation_provider(context: ContextTypes.DEFAULT_TYPE) -> ExplanationProvider | None:
+    """The Phase 8B provider, or None when the delivery layer is off.
+
+    Absent by default: `bot.py` only puts one here when both `OPENAI_ENABLED` and
+    `EXPLANATION_DELIVERY_ENABLED` are true.
+    """
+    provider = context.application.bot_data.get("explanation_provider")
+    return cast(ExplanationProvider | None, provider)
 
 
 async def _reply(
@@ -114,7 +135,8 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         MessageType.EDUCATION,
         (
             "Доступные команды: /start, /help, /status, /start_scan, "
-            "/stop_scan, /scan_now, /snapshot, /digest, /review [EURUSD M15]."
+            "/stop_scan, /scan_now, /snapshot, /digest, /review [EURUSD M15], "
+            "/explain EURUSD M15."
         ),
     )
 
@@ -294,6 +316,87 @@ async def _snapshot_backed_review(update: Update, context: ContextTypes.DEFAULT_
     await _reply(update, context, MessageType.REPORT, body)
 
 
+async def explain_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """`/explain EURUSD M15` — the deterministic report, plus a checked model explanation.
+
+    A separate command rather than an addition to `/review` because every call costs money;
+    spending it stays a deliberate act. Whatever happens to the model call, the report itself is
+    always sent: the explanation is an appendix, never a replacement.
+    """
+    if not await _ensure_authorized(update, context):
+        return
+    try:
+        pair, timeframe = _parse_snapshot_command(update)
+    except (ValueError, ValidationError):
+        await _reply(
+            update,
+            context,
+            MessageType.REJECTED,
+            "Формат команды: /explain EURUSD M15. Поддерживаются M15 и H1.",
+        )
+        return
+
+    window_start, window_end, as_of = _default_snapshot_window(timeframe)
+    try:
+        snapshot = await _analysis_service(context).build_snapshot(
+            pair=pair,
+            timeframe=timeframe,
+            window_start=window_start,
+            window_end=window_end,
+            as_of=as_of,
+        )
+        result = build_snapshot_backed_review(snapshot, normalize_to_utc(utc_now()))
+    except Exception:
+        await _reply(
+            update,
+            context,
+            MessageType.DATA_UNAVAILABLE,
+            "Проверка по снапшоту сейчас недоступна. Проверьте базу данных и настройки сервиса.",
+        )
+        return
+
+    body = format_snapshot_review_body(result, pair, timeframe)
+    outcome, reason = await _request_explanation(context, result)
+    await _reply(
+        update,
+        context,
+        MessageType.REPORT,
+        body + format_explanation_section(outcome, reason=reason),
+    )
+
+
+async def _request_explanation(
+    context: ContextTypes.DEFAULT_TYPE,
+    result: Any,
+) -> tuple[Any, ExplanationUnavailableReason | None]:
+    """Ask the model inside a hard time budget, and turn every failure into a reason.
+
+    Nothing raised here may reach the caller: the report is already built and the reader is
+    entitled to it whether or not a model had anything to add.
+    """
+    settings = _settings(context)
+    provider = _explanation_provider(context)
+    if not settings.explanation_delivery_enabled:
+        return (None, ExplanationUnavailableReason.DELIVERY_DISABLED)
+    if provider is None:
+        return (None, ExplanationUnavailableReason.PROVIDER_DISABLED)
+
+    explanation_input = build_explanation_input(result.decision, result.snapshot)
+    try:
+        async with asyncio.timeout(settings.explanation_budget_seconds):
+            outcome = await provider.explain_validated(
+                explanation_input,
+                normalize_to_utc(utc_now()),
+            )
+    except IntegrationDisabledError:
+        return (None, ExplanationUnavailableReason.PROVIDER_DISABLED)
+    except (TimeoutError, asyncio.CancelledError):
+        return (None, ExplanationUnavailableReason.TIMED_OUT)
+    except (ProviderError, OSError, ValueError):
+        return (None, ExplanationUnavailableReason.PROVIDER_FAILED)
+    return (outcome, None)
+
+
 def _review_has_arguments(update: Update) -> bool:
     text = (
         update.effective_message.text
@@ -358,3 +461,4 @@ def add_handlers(application: Application[Any, Any, Any, Any, Any, Any]) -> None
     application.add_handler(CommandHandler("snapshot", snapshot_command))
     application.add_handler(CommandHandler("digest", digest_command))
     application.add_handler(CommandHandler("review", review_command))
+    application.add_handler(CommandHandler("explain", explain_command))

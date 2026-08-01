@@ -4,7 +4,7 @@ AI Trading OS is a safety-first foundation for a future modular Forex analysis a
 
 ## Current Status
 
-- Current project phase: phase_8b_explanation_provider_foundation.
+- Current project phase: phase_8c_explanation_delivery_foundation.
 - Phase 6 snapshot-backed read-only review is complete: `/review EURUSD M15` builds a real analysis
   snapshot, runs the Phase 4G composer over it, and presents the pipeline decision through the
   Phase 5 manual review layer — still read-only and non-actionable.
@@ -23,8 +23,10 @@ AI Trading OS is a safety-first foundation for a future modular Forex analysis a
 - Phase 8A explanation contract is complete: the project now defines what a future Chief AI may be
   shown and what it is allowed to answer, with no provider, no network call, and no wiring.
 - Phase 8B OpenAI adapter is complete: a real provider exists behind that contract, disabled by
-  default and still wired to nothing. Next: Phase 8C (Telegram output with a fallback to the
-  deterministic text). Signals, delivery, and paper trading are Phase 9.
+  default.
+- Phase 8C explanation delivery is complete: `/explain EURUSD M15` shows the deterministic report
+  and appends a checked explanation, or one honest line saying why there is none. This closes
+  Phase 8. Next: Phase 9A (signal assembly and price levels), then delivery and paper trading.
 - Trading strategy: not implemented.
 - Real trading: disabled and unsupported.
 - External integrations: disabled by default.
@@ -464,6 +466,37 @@ Two properties matter more than the HTTP details:
 Enabling it needs `OPENAI_ENABLED=true` and `OPENAI_API_KEY`; `OPENAI_MODEL`, `OPENAI_BASE_URL`, and
 `OPENAI_MAX_OUTPUT_TOKENS` (default 400) are configurable. Output tokens are capped so a runaway
 generation cannot become an unbounded bill. Nothing calls the provider yet even when enabled.
+
+## Phase 8C Status
+
+Phase 8C is the first slice where a model's words can reach a person, so the design is about what
+happens when the model is wrong, missing, or slow.
+
+`/explain EURUSD M15` renders exactly the report `/review` produces and appends one of two things:
+
+```text
+Пояснение (ИИ, проверено):
+Окно данных полное: использовано 12 свечей из 12. ...
+Пояснение не меняет решение выше.
+```
+
+```text
+Пояснение недоступно: ответ не прошёл проверку.
+Причины: ACTIONABLE_TEXT, UNKNOWN_NUMBER.
+```
+
+The deterministic report is sent in full in every case — provider disabled, unreachable, rate
+limited, rejected by validation, or out of time. There is no path where `/explain` returns less than
+`/review` would have, and text that failed validation is never shown.
+
+**It is a separate command on purpose.** Every model call costs money, and `/review` is the command
+you run repeatedly while watching data; it stays free and instant, calls nothing, and is byte-identical
+whether or not the explanation layer is configured.
+
+Both gates default to off: `OPENAI_ENABLED` (a provider exists) and `EXPLANATION_DELIVERY_ENABLED`
+(it may answer a user). `EXPLANATION_BUDGET_SECONDS` (default 20) bounds the wait, because a Telegram
+command must not hang on a provider. Nothing automatic — no service, job, or route — can call a
+model; only the typed command can.
 
 ## Prerequisites
 

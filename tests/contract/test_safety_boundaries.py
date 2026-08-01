@@ -52,6 +52,8 @@ from app.domain.value_objects import CurrencyPair
 from app.persistence.models import ScheduledDigestDeliveryModel
 from app.persistence.repositories.foundation import SqlAlchemyScheduledDigestDeliveryStore
 from app.telegram.commands import digest_command
+from app.telegram.emoji_policy import EMOJI_BY_MESSAGE_TYPE
+from app.telegram.snapshot_review_formatter import format_explanation_section
 from scripts.security_check import scan_files, scan_production_code
 
 PHASE_3B_FILES = (
@@ -1928,11 +1930,16 @@ def test_phase8a_does_not_revive_the_scored_chief_ai_request() -> None:
         assert "risk_percent" not in source
 
 
-def test_phase8a_explanation_contract_is_not_wired_anywhere() -> None:
-    wired_dirs = ("app/services", "app/telegram", "app/scheduler", "app/api")
+def test_phase8a_explanation_contract_stays_out_of_services_and_jobs() -> None:
+    """Phase 8C wires the contract into Telegram, and nowhere else.
+
+    Narrowed from "not wired anywhere" when 8C landed: an automatic path — a service, a scheduled
+    job, an API route — would spend money and put model text in front of someone who never asked
+    for it. A command a person types cannot.
+    """
     source = "\n".join(
         file_path.read_text(encoding="utf-8")
-        for directory in wired_dirs
+        for directory in ("app/services", "app/scheduler", "app/api")
         for file_path in Path(directory).rglob("*.py")
     )
 
@@ -2024,18 +2031,22 @@ def test_phase8b_only_the_adapter_can_reach_a_model() -> None:
             assert marker not in source, f"{file_path}: {marker}"
 
 
-def test_phase8b_explainer_is_not_wired_anywhere() -> None:
-    """8C does the wiring. Until then nothing can call a model by accident."""
-    wired_dirs = ("app/services", "app/telegram", "app/scheduler", "app/api")
+def test_phase8b_explainer_is_reachable_only_from_a_typed_command() -> None:
+    """Nothing automatic may call a model: no service, no scheduled job, no API route."""
     source = "\n".join(
         file_path.read_text(encoding="utf-8")
-        for directory in wired_dirs
+        for directory in ("app/services", "app/scheduler", "app/api")
         for file_path in Path(directory).rglob("*.py")
     )
 
     assert "OpenAIExplanationAdapter" not in source
     assert "create_explanation_provider" not in source
     assert "explain_validated" not in source
+
+    # Even inside Telegram, only the bot builds the provider and only /explain calls it.
+    telegram_source = Path("app/telegram/commands.py").read_text(encoding="utf-8")
+    assert "OpenAIExplanationAdapter" not in telegram_source
+    assert telegram_source.count("explain_validated") == 1
 
 
 def test_phase8b_adapter_never_returns_unvalidated_text_to_an_outcome() -> None:
@@ -2071,6 +2082,66 @@ def test_phase8b_adapter_never_returns_unvalidated_text_to_an_outcome() -> None:
             validation=accepted_report,
             is_actionable=True,
         )
+
+
+def test_phase8c_explanation_delivery_is_disabled_by_default() -> None:
+    settings = Settings(_env_file=None)
+
+    assert settings.explanation_delivery_enabled is False
+    assert settings.openai_enabled is False
+
+
+def test_phase8c_only_explain_carries_an_explanation() -> None:
+    """`/snapshot`, `/digest` and the scheduled delivery path stay model-free."""
+    commands_source = Path("app/telegram/commands.py").read_text(encoding="utf-8")
+    scheduler_source = "\n".join(
+        file_path.read_text(encoding="utf-8") for file_path in Path("app/scheduler").glob("*.py")
+    )
+    delivery_source = Path("app/services/scheduled_digest_delivery_service.py").read_text(
+        encoding="utf-8"
+    )
+
+    # Exactly one call site — the import above it does not count.
+    assert commands_source.count("format_explanation_section(") == 1
+    assert "format_explanation_section" not in scheduler_source
+    assert "format_explanation_section" not in delivery_source
+    assert "explanation" not in delivery_source.lower()
+
+
+def test_phase8c_explanation_section_never_replaces_the_report() -> None:
+    """An accepted explanation is an appendix, and says so; a rejected one shows no model text."""
+    accepted = ExplanationOutcome(
+        model_name="test-model",
+        text="Окно данных полное.",
+        validation=ExplanationValidationReport(
+            checked_at=datetime(2026, 8, 1, tzinfo=UTC),
+            issues=(),
+            accepted=True,
+        ),
+    )
+    rejected = ExplanationOutcome(
+        model_name="test-model",
+        text=None,
+        validation=ExplanationValidationReport(
+            checked_at=datetime(2026, 8, 1, tzinfo=UTC),
+            issues=(
+                ExplanationIssue(
+                    code=ExplanationIssueCode.UNKNOWN_NUMBER,
+                    detail="Числа 1.25 нет во входных данных.",
+                ),
+            ),
+            accepted=False,
+        ),
+    )
+
+    accepted_section = format_explanation_section(accepted)
+    rejected_section = format_explanation_section(rejected)
+
+    assert "Пояснение не меняет решение выше." in accepted_section
+    assert "UNKNOWN_NUMBER" in rejected_section
+    assert "Пояснение (ИИ, проверено):" not in rejected_section
+    for section in (accepted_section, rejected_section):
+        assert not any(emoji in section for emoji in EMOJI_BY_MESSAGE_TYPE.values())
 
 
 def test_phase7b_adds_no_telegram_command_or_api_route() -> None:

@@ -1,10 +1,22 @@
+import asyncio
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 
 import pytest
 
 from app.core.config import Settings
+from app.core.exceptions import (
+    IntegrationDisabledError,
+    ProviderRateLimitError,
+    ProviderUnavailableError,
+)
 from app.domain.entities import Candle, Timeframe
+from app.domain.entities.explanation import (
+    ExplanationIssue,
+    ExplanationIssueCode,
+    ExplanationOutcome,
+    ExplanationValidationReport,
+)
 from app.domain.value_objects import CurrencyPair
 from app.services.analysis_service import AnalysisService
 from app.services.readiness_digest_service import ReadinessDigestService
@@ -74,18 +86,26 @@ class FakeCommandHandler:
         self.callback = callback
 
 
-def _context(factory: FakeUnitOfWorkFactory) -> FakeContext:
+def _context(
+    factory: FakeUnitOfWorkFactory,
+    *,
+    explanation_provider: object | None = None,
+    explanation_delivery_enabled: bool = False,
+) -> FakeContext:
     settings = Settings(
         _env_file=None,
         telegram_enabled=True,
         telegram_bot_token="token",
         telegram_allowed_user_id=1,
         telegram_allowed_chat_id=2,
+        explanation_delivery_enabled=explanation_delivery_enabled,
+        explanation_budget_seconds=0.5,
     )
     analysis_service = AnalysisService(factory)
     return FakeContext(
         {
             "settings": settings,
+            "explanation_provider": explanation_provider,
             "system_state_service": __import__(
                 "app.services.system_state_service",
                 fromlist=["SystemStateService"],
@@ -335,3 +355,244 @@ async def test_help_command_includes_manual_review() -> None:
 
     assert len(update.effective_message.replies) == 1
     assert "/review" in update.effective_message.replies[0]
+
+
+class FakeExplanationProvider:
+    """Answers with a prepared outcome, or raises what a real provider would raise."""
+
+    def __init__(
+        self,
+        *,
+        outcome: object | None = None,
+        error: Exception | None = None,
+        delay_seconds: float = 0.0,
+    ) -> None:
+        self._outcome = outcome
+        self._error = error
+        self._delay_seconds = delay_seconds
+        self.calls = 0
+
+    async def explain(self, explanation_input: object) -> str:
+        raise NotImplementedError
+
+    async def explain_validated(self, explanation_input: object, checked_at: datetime) -> object:
+        self.calls += 1
+        if self._delay_seconds:
+            await asyncio.sleep(self._delay_seconds)
+        if self._error is not None:
+            raise self._error
+        return self._outcome
+
+
+def _accepted_outcome(text: str = "Окно данных полное, правила пройдены.") -> ExplanationOutcome:
+    return ExplanationOutcome(
+        model_name="test-model",
+        text=text,
+        validation=ExplanationValidationReport(checked_at=BASE_TIME, issues=(), accepted=True),
+    )
+
+
+def _rejected_outcome() -> ExplanationOutcome:
+    return ExplanationOutcome(
+        model_name="test-model",
+        text=None,
+        validation=ExplanationValidationReport(
+            checked_at=BASE_TIME,
+            issues=(
+                ExplanationIssue(
+                    code=ExplanationIssueCode.ACTIONABLE_TEXT,
+                    detail="Текст содержит торговые указания.",
+                ),
+            ),
+            accepted=False,
+        ),
+    )
+
+
+def _explain_context(
+    provider: object | None,
+    *,
+    delivery_enabled: bool = True,
+) -> tuple[FakeUnitOfWorkFactory, FakeContext]:
+    factory = FakeUnitOfWorkFactory(candles=[_candle(index) for index in range(12)])
+    context = _context(
+        factory,
+        explanation_provider=provider,
+        explanation_delivery_enabled=delivery_enabled,
+    )
+    return factory, context
+
+
+def _assert_deterministic_report_intact(reply: str) -> None:
+    """Whatever happened to the model, the report a user was owed is still there."""
+    assert reply.startswith("📊 ")
+    assert "READ-ONLY проверка по снапшоту." in reply
+    assert "EURUSD M15" in reply
+    assert "Правила: пройдено" in reply
+    assert "NO TRADING SIGNAL." in reply
+    assert "NON-ACTIONABLE." in reply
+
+
+@pytest.mark.asyncio
+async def test_explain_appends_an_accepted_explanation_to_the_full_report(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    provider = FakeExplanationProvider(outcome=_accepted_outcome())
+    _factory, context = _explain_context(provider)
+    update = FakeUpdate(user_id=1, chat_id=2, text="/explain EURUSD M15")
+    monkeypatch.setattr(commands, "utc_now", lambda: BASE_TIME + timedelta(hours=3))
+
+    await commands.explain_command(update, context)
+
+    reply = update.effective_message.replies[0]
+    _assert_deterministic_report_intact(reply)
+    assert "Пояснение (ИИ, проверено):" in reply
+    assert "Окно данных полное, правила пройдены." in reply
+    assert "Пояснение не меняет решение выше." in reply
+    assert provider.calls == 1
+    # The formatter still owns the one and only emoji.
+    assert reply.count("📊") == 1
+
+
+@pytest.mark.asyncio
+async def test_explain_reports_a_rejected_answer_without_showing_it(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    provider = FakeExplanationProvider(outcome=_rejected_outcome())
+    _factory, context = _explain_context(provider)
+    update = FakeUpdate(user_id=1, chat_id=2, text="/explain EURUSD M15")
+    monkeypatch.setattr(commands, "utc_now", lambda: BASE_TIME + timedelta(hours=3))
+
+    await commands.explain_command(update, context)
+
+    reply = update.effective_message.replies[0]
+    _assert_deterministic_report_intact(reply)
+    assert "Пояснение недоступно: ответ не прошёл проверку." in reply
+    assert "ACTIONABLE_TEXT" in reply
+    assert "Пояснение (ИИ, проверено):" not in reply
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("error", "expected_line"),
+    [
+        (IntegrationDisabledError("openai"), "провайдер выключен настройками"),
+        (ProviderRateLimitError("openai"), "провайдер не ответил"),
+        (ProviderUnavailableError("openai"), "провайдер не ответил"),
+    ],
+)
+async def test_explain_survives_provider_failures(
+    error: Exception,
+    expected_line: str,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    provider = FakeExplanationProvider(error=error)
+    _factory, context = _explain_context(provider)
+    update = FakeUpdate(user_id=1, chat_id=2, text="/explain EURUSD M15")
+    monkeypatch.setattr(commands, "utc_now", lambda: BASE_TIME + timedelta(hours=3))
+
+    await commands.explain_command(update, context)
+
+    reply = update.effective_message.replies[0]
+    _assert_deterministic_report_intact(reply)
+    assert expected_line in reply
+
+
+@pytest.mark.asyncio
+async def test_explain_gives_up_on_a_slow_model_and_still_answers(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A Telegram command must not hang on a provider; the budget ends the wait."""
+    provider = FakeExplanationProvider(outcome=_accepted_outcome(), delay_seconds=5.0)
+    _factory, context = _explain_context(provider)
+    update = FakeUpdate(user_id=1, chat_id=2, text="/explain EURUSD M15")
+    monkeypatch.setattr(commands, "utc_now", lambda: BASE_TIME + timedelta(hours=3))
+
+    await commands.explain_command(update, context)
+
+    reply = update.effective_message.replies[0]
+    _assert_deterministic_report_intact(reply)
+    assert "ответ не пришёл за отведённое время" in reply
+
+
+@pytest.mark.asyncio
+async def test_explain_with_the_layer_off_never_calls_the_provider(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    provider = FakeExplanationProvider(outcome=_accepted_outcome())
+    _factory, context = _explain_context(provider, delivery_enabled=False)
+    update = FakeUpdate(user_id=1, chat_id=2, text="/explain EURUSD M15")
+    monkeypatch.setattr(commands, "utc_now", lambda: BASE_TIME + timedelta(hours=3))
+
+    await commands.explain_command(update, context)
+
+    reply = update.effective_message.replies[0]
+    _assert_deterministic_report_intact(reply)
+    assert "слой пояснений выключен настройками" in reply
+    assert provider.calls == 0
+
+
+@pytest.mark.asyncio
+async def test_explain_without_a_provider_says_so(monkeypatch: pytest.MonkeyPatch) -> None:
+    _factory, context = _explain_context(None)
+    update = FakeUpdate(user_id=1, chat_id=2, text="/explain EURUSD M15")
+    monkeypatch.setattr(commands, "utc_now", lambda: BASE_TIME + timedelta(hours=3))
+
+    await commands.explain_command(update, context)
+
+    reply = update.effective_message.replies[0]
+    _assert_deterministic_report_intact(reply)
+    assert "провайдер выключен настройками" in reply
+
+
+@pytest.mark.asyncio
+async def test_explain_without_arguments_is_rejected() -> None:
+    _factory, context = _explain_context(None)
+    update = FakeUpdate(user_id=1, chat_id=2, text="/explain")
+
+    await commands.explain_command(update, context)
+
+    assert update.effective_message.replies[0] == (
+        "❌ Формат команды: /explain EURUSD M15. Поддерживаются M15 и H1."
+    )
+
+
+@pytest.mark.asyncio
+async def test_explain_blocks_unauthorized_user() -> None:
+    _factory, context = _explain_context(None)
+    update = FakeUpdate(user_id=99, chat_id=2, text="/explain EURUSD M15")
+
+    await commands.explain_command(update, context)
+
+    assert update.effective_message.replies == ["❌ Доступ запрещён."]
+
+
+@pytest.mark.asyncio
+async def test_review_is_unchanged_by_the_explanation_layer(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The cheap command stayed cheap: /review neither calls nor mentions a model."""
+    provider = FakeExplanationProvider(outcome=_accepted_outcome())
+    monkeypatch.setattr(commands, "utc_now", lambda: BASE_TIME + timedelta(hours=3))
+
+    _factory, plain_context = _explain_context(None, delivery_enabled=False)
+    plain_update = FakeUpdate(user_id=1, chat_id=2, text="/review EURUSD M15")
+    await review_command(plain_update, plain_context)
+
+    _factory2, wired_context = _explain_context(provider, delivery_enabled=True)
+    wired_update = FakeUpdate(user_id=1, chat_id=2, text="/review EURUSD M15")
+    await review_command(wired_update, wired_context)
+
+    assert plain_update.effective_message.replies == wired_update.effective_message.replies
+    assert "Пояснение" not in wired_update.effective_message.replies[0]
+    assert provider.calls == 0
+
+
+def test_add_handlers_registers_explain(monkeypatch: pytest.MonkeyPatch) -> None:
+    application = FakeHandlerApplication()
+    monkeypatch.setattr(commands, "CommandHandler", FakeCommandHandler)
+
+    commands.add_handlers(application)
+
+    registered = {handler.command: handler.callback for handler in application.handlers}
+    assert registered["explain"] is commands.explain_command

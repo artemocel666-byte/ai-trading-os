@@ -35,6 +35,12 @@ class Settings(BaseSettings):
     # Caps what one explanation can cost. Three or four Russian sentences fit comfortably.
     openai_max_output_tokens: int = Field(default=400, ge=50, le=4000)
 
+    # Second gate for Phase 8C: the provider may exist and still not be allowed to answer a user.
+    explanation_delivery_enabled: bool = False
+    # A Telegram command must not wait on retried provider timeouts; past this the deterministic
+    # report is sent on its own.
+    explanation_budget_seconds: float = Field(default=20.0, gt=0, le=120)
+
     market_data_enabled: bool = False
     twelve_data_api_key: SecretStr | None = None
     twelve_data_base_url: str = "https://api.twelvedata.com"

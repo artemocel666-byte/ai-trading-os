@@ -1,5 +1,7 @@
 from decimal import Decimal
+from enum import StrEnum
 
+from app.domain.entities.explanation import ExplanationOutcome
 from app.domain.entities.manual_review import ManualReviewReport
 from app.domain.entities.market_data import Timeframe
 from app.domain.entities.rule_evaluation import RuleEvaluationStatus, RuleSetEvaluationReport
@@ -101,3 +103,61 @@ def format_snapshot_review_body(
         ]
     )
     return "\n".join(lines)
+
+
+class ExplanationUnavailableReason(StrEnum):
+    """Why no explanation is attached. Each maps to one honest Russian line."""
+
+    DELIVERY_DISABLED = "DELIVERY_DISABLED"
+    PROVIDER_DISABLED = "PROVIDER_DISABLED"
+    PROVIDER_FAILED = "PROVIDER_FAILED"
+    TIMED_OUT = "TIMED_OUT"
+    REJECTED = "REJECTED"
+
+
+_REASON_LINES_RU = {
+    ExplanationUnavailableReason.DELIVERY_DISABLED: (
+        "Пояснение недоступно: слой пояснений выключен настройками."
+    ),
+    ExplanationUnavailableReason.PROVIDER_DISABLED: (
+        "Пояснение недоступно: провайдер выключен настройками."
+    ),
+    ExplanationUnavailableReason.PROVIDER_FAILED: ("Пояснение недоступно: провайдер не ответил."),
+    ExplanationUnavailableReason.TIMED_OUT: (
+        "Пояснение недоступно: ответ не пришёл за отведённое время."
+    ),
+    ExplanationUnavailableReason.REJECTED: ("Пояснение недоступно: ответ не прошёл проверку."),
+}
+
+
+def format_explanation_section(
+    outcome: ExplanationOutcome | None,
+    *,
+    reason: ExplanationUnavailableReason | None = None,
+) -> str:
+    """The appendix under a deterministic report.
+
+    An accepted explanation is shown with an explicit note that it changes nothing above it. A
+    refusal is stated with its codes rather than hidden: knowing that a model answered and was
+    turned down is exactly the thing worth telling the reader.
+    """
+    if outcome is not None and outcome.accepted and outcome.text:
+        return "\n".join(
+            [
+                "",
+                "Пояснение (ИИ, проверено):",
+                outcome.text,
+                "Пояснение не меняет решение выше.",
+            ]
+        )
+    if outcome is not None and not outcome.accepted:
+        codes = ", ".join(code.value for code in outcome.validation.issue_codes) or "нет кода"
+        return "\n".join(
+            [
+                "",
+                _REASON_LINES_RU[ExplanationUnavailableReason.REJECTED],
+                f"Причины: {codes}.",
+            ]
+        )
+    resolved = reason or ExplanationUnavailableReason.PROVIDER_FAILED
+    return "\n".join(["", _REASON_LINES_RU[resolved]])

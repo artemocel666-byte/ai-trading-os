@@ -5,7 +5,7 @@ from typing import Any, Protocol
 
 from app.core.enums import Decision
 from app.domain.entities import Candle, EconomicEvent, Timeframe
-from app.domain.entities.explanation import ExplanationInput
+from app.domain.entities.explanation import ExplanationInput, ExplanationOutcome
 from app.domain.value_objects import CurrencyPair
 
 
@@ -50,6 +50,13 @@ class ExplanationProvider(Protocol):
 
     async def explain(self, explanation_input: ExplanationInput) -> str:
         """Return a Russian explanation of an already-decided report."""
+
+    async def explain_validated(
+        self,
+        explanation_input: ExplanationInput,
+        checked_at: datetime,
+    ) -> ExplanationOutcome:
+        """Ask, then check. Callers must use this: raw model text is never fit to show."""
 
 
 class LLMProvider(Protocol):
