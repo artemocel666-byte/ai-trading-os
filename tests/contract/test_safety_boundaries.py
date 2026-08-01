@@ -36,6 +36,11 @@ from app.domain.entities import (
     strategy_rules,
     strategy_validation,
 )
+from app.domain.entities.explanation import (
+    ExplanationIssue,
+    ExplanationIssueCode,
+    ExplanationValidationReport,
+)
 from app.domain.manual_review_report_builder import ManualReviewReportBuilder
 from app.domain.strategy_decision_composer import StrategyDecisionComposer
 from app.domain.strategy_field_resolver import resolve_field
@@ -661,6 +666,20 @@ PHASE_7D2_FILES = (
     Path("app/domain/rule_calibration.py"),
     Path("app/domain/rule_replay.py"),
     Path("scripts/replay_rules.py"),
+)
+PHASE_8A_FILES = (
+    Path("app/domain/entities/explanation.py"),
+    Path("app/domain/explanation_contract.py"),
+)
+PHASE_8A_FORBIDDEN_IMPORTS = (
+    "httpx",
+    "openai",
+    "app.persistence",
+    "app.adapters",
+    "app.telegram",
+    "app.api",
+    "app.scheduler",
+    "app.schemas.agents",
 )
 PHASE_7A_FORBIDDEN_RUNTIME_IMPORTS = (
     "app.domain.entities.signal_contract",
@@ -1873,6 +1892,61 @@ def test_phase7d2_replay_adds_no_telegram_command_or_api_route() -> None:
     assert "replay_windows" not in telegram_source
     assert "replay_windows" not in route_source
     assert "calibration" not in route_source.lower()
+
+
+def test_phase8a_explanation_contract_makes_no_network_or_storage_call() -> None:
+    """8A defines what a model may see and say. It never talks to one."""
+    offenders: list[str] = []
+    for file_path in PHASE_8A_FILES:
+        import_lines = tuple(
+            line
+            for line in file_path.read_text(encoding="utf-8").lower().splitlines()
+            if line.startswith("import ") or line.startswith("from ")
+        )
+        for term in PHASE_8A_FORBIDDEN_IMPORTS:
+            if any(term.lower() in line for line in import_lines):
+                offenders.append(f"{file_path}: {term}")
+
+    assert offenders == []
+
+
+def test_phase8a_does_not_revive_the_scored_chief_ai_request() -> None:
+    """`ChiefAIRequest` requires setup_score/risk_percent, which the pipeline never produces."""
+    for file_path in PHASE_8A_FILES:
+        source = file_path.read_text(encoding="utf-8").lower()
+        assert "chiefairequest" not in source
+        assert "setup_score" not in source
+        assert "risk_percent" not in source
+
+
+def test_phase8a_explanation_contract_is_not_wired_anywhere() -> None:
+    wired_dirs = ("app/services", "app/telegram", "app/scheduler", "app/api")
+    source = "\n".join(
+        file_path.read_text(encoding="utf-8")
+        for directory in wired_dirs
+        for file_path in Path(directory).rglob("*.py")
+    )
+
+    assert "explanation_contract" not in source
+    assert "ExplanationInput" not in source
+    assert "validate_explanation_text" not in source
+
+
+def test_phase8a_validation_is_fail_closed() -> None:
+    """An accepted explanation must mean no issue was found, enforced by the model itself."""
+    with pytest.raises(ValidationError):
+        ExplanationValidationReport(
+            checked_at=datetime(2026, 8, 1, tzinfo=UTC),
+            issues=(
+                ExplanationIssue(
+                    code=ExplanationIssueCode.ACTIONABLE_TEXT,
+                    detail="Текст содержит торговые указания.",
+                ),
+            ),
+            accepted=True,
+        )
+    with pytest.raises(ValidationError):
+        ExplanationValidationReport(checked_at=datetime(2026, 8, 1, tzinfo=UTC), accepted=False)
 
 
 def test_phase7b_adds_no_telegram_command_or_api_route() -> None:

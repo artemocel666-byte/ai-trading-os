@@ -4,7 +4,7 @@ AI Trading OS is a safety-first foundation for a future modular Forex analysis a
 
 ## Current Status
 
-- Current project phase: phase_7d2_historical_validation_foundation.
+- Current project phase: phase_8a_explanation_contract_foundation.
 - Phase 6 snapshot-backed read-only review is complete: `/review EURUSD M15` builds a real analysis
   snapshot, runs the Phase 4G composer over it, and presents the pipeline decision through the
   Phase 5 manual review layer — still read-only and non-actionable.
@@ -19,7 +19,10 @@ AI Trading OS is a safety-first foundation for a future modular Forex analysis a
   paced chunks so calibration has a real distribution.
 - Phase 7D-2 historical validation is complete: `scripts/replay_rules.py` replays every rule over
   stored history and reports how often each one fired, which is how the Phase 7C thresholds were
-  re-derived. This closes Phase 7. Chief AI is Phase 8; signals, delivery, and paper trading are
+  re-derived. This closes Phase 7.
+- Phase 8A explanation contract is complete: the project now defines what a future Chief AI may be
+  shown and what it is allowed to answer, with no provider, no network call, and no wiring. Next:
+  Phase 8B (the OpenAI adapter, disabled by default). Signals, delivery, and paper trading are
   Phase 9.
 - Trading strategy: not implemented.
 - Real trading: disabled and unsupported.
@@ -412,6 +415,32 @@ Replay is read-only and never scheduled. It writes nothing, and it changes no th
 each threshold move is a hand-made edit in `app/domain/strategy_ruleset_registry.py` that records
 the percentile and sample size behind it. Measurements and evidence live in
 `docs/phase7d2-verification-report.md`.
+
+## Phase 8A Status
+
+Phase 8A settles two questions before any LLM exists in the codebase: **what a Chief AI may see**,
+and **how its answer is checked**. It adds `ExplanationInput` (`app/domain/entities/explanation.py`)
+and the builder/validator pair in `app/domain/explanation_contract.py`. There is no provider, no
+HTTP client, no API key, and no service, command, route, or job that references any of it. A safety
+test asserts that.
+
+`ExplanationInput` is a frozen projection of an already-composed `PipelineDecisionReport`: pair,
+timeframe, `as_of`, decision status, candle counts, per-ruleset pass/fail counts with the failed rule
+ids, and the numeric readings `/review` already prints. It has no direction, price level, position
+size, or scoring field — an explainer receives facts, not a handle on the pipeline.
+
+`validate_explanation_text` returns findings instead of raising, and an explanation is accepted only
+when there are none. It rejects:
+
+- empty text, text with no Cyrillic, and text over 2000 characters
+- actionable trading instructions in **English or Russian** — the Phase 5 detector matches "buy",
+  not "покупай", and the user-facing language here is Russian
+- any emoji in the body, so the Telegram formatter stays the only thing that adds one
+- **any number that was not in the input**, which is what stops a model from inventing a price
+  target; a ratio may also be written as its percentage
+
+The check is deliberately strict. A false rejection costs the deterministic text the user would have
+received anyway; a false acceptance puts an invented number in front of someone about to risk money.
 
 ## Prerequisites
 

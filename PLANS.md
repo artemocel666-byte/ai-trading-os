@@ -226,9 +226,12 @@ non-actionable and without any signal, AI, or execution behavior.
 - Phase 8: Russian Chief AI explanations — first LLM connection, disabled-by-default, explains
   deterministic reports in Russian without changing them; not started
   - 8A: `ExplanationInput` contract shaped for the real `PipelineDecisionReport`, plus an output
-    validator reusing `contains_actionable_trading_text` and the one-emoji Telegram rules. No
-    network call. Do **not** reuse `ChiefAIRequest` from `app/schemas/agents.py`: it requires
-    `setup_score`/`risk_percent`, which the pipeline does not produce and which safety tests ban.
+    validator — **completed**. No network call and wired to nothing. The validator is fail-closed
+    (accepted only when no finding) and rejects: empty/non-Russian/over-long text, actionable
+    instructions in English **and Russian**, any emoji in the body, and any number absent from the
+    input. That last check is what makes a fabricated figure impossible to slip through. The scored
+    Chief AI request stub in `app/schemas/agents.py` was deliberately not reused: it requires fields
+    the pipeline never produces and the safety tests ban.
   - 8B: production OpenAI adapter, disabled by default, covered by MockTransport contract tests
     plus adversarial tests proving a lying model cannot change the deterministic report.
   - 8C: Telegram wiring with fallback to the existing deterministic Russian text whenever the
@@ -264,9 +267,14 @@ backfill (7D-1), and historical validation (7D-2) are all done: the application 
 evaluates real rules over it, and the thresholds are derived from six months of observed EURUSD
 history rather than from guesses. See `docs/phase7d2-verification-report.md`.
 
-**Phase 8A (the `ExplanationInput` contract and output validator) is the next planned task.** It
-adds no network call: it shapes what a future Chief AI may receive and proves that whatever it
-returns cannot change a deterministic report.
+**Phase 8A is complete** (see `docs/phase8a-verification-report.md`): the contract and the
+fail-closed validator exist, with no provider and no wiring.
+
+**Phase 8B (the OpenAI adapter, disabled by default) is the next planned task.** It supplies the
+provider behind the 8A contract, covered by `MockTransport` contract tests plus adversarial tests
+that feed a lying model's output through `validate_explanation_text` and prove the deterministic
+report is unchanged. The adversarial cases 8A already rejects on real data are recorded in the 8A
+report and should be the starting set.
 
 Two items carried out of Phase 7, to be picked up when they stop being blocked rather than as new
 phases:

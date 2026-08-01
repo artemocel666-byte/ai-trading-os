@@ -2,7 +2,11 @@
 
 AI Trading OS is a foundation for a future Forex analysis and paper-trading platform.
 
-Current project phase: phase_7d2_historical_validation_foundation.
+Current project phase: phase_8a_explanation_contract_foundation.
+Phase 8A defines what a future Chief AI may be given (`ExplanationInput`) and how its answer is
+checked before anyone reads it. It contains no provider, no network call, no key, and is wired to
+nothing. Validation is fail-closed: any finding means the deterministic Russian text is used
+instead. The model may repeat numbers it was given and no others.
 Phase 7D-2 replays the built-in rules over stored history and reports how each one behaved, so the
 Phase 7C thresholds can be derived from an observed distribution instead of two live windows. The
 replay is read-only, never scheduled, and changes no threshold by itself: it measures, and a
@@ -156,6 +160,17 @@ real trading.
   say nothing about `/review`. It must never rewrite thresholds automatically: a threshold change is
   a reviewable edit that records the percentile and sample size it came from. A rule that never
   fired across real history is a defect to report, not a rule that passed.
+- While working in Phase 8A, the explanation contract (`app/domain/entities/explanation.py`,
+  `app/domain/explanation_contract.py`) must stay pure domain code: no `httpx`, no OpenAI, no
+  `app.persistence`, `app.adapters`, `app.telegram`, `app.api`, or `app.scheduler`, and no service,
+  route, command, or job may reference it — 8A ships unwired, and the adapter arrives in 8B. Do not
+  reuse the older scored Chief AI request stub in `app/schemas/agents.py`: it demands fields the
+  pipeline never produces and the safety tests ban. `ExplanationInput` carries no direction, price
+  level, position size, or scoring field, and stays non-actionable. Validation returns findings
+  rather than raising, and an explanation counts as accepted only when nothing was found; a caller
+  that sees any finding must fall back to the deterministic text rather than repair the answer. The
+  actionable-text check must cover Russian as well as English — the Phase 5 detector alone matches
+  "buy", not "покупай", and this project speaks Russian to its user.
 - Never fabricate market data, calendar data, agent evidence, or scan results.
 - LLM output may explain deterministic results only; it must not change prices, scores, risk, or rejected decisions.
 - Update documentation when architecture or safety boundaries change.
