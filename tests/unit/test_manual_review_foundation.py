@@ -81,7 +81,7 @@ def _report() -> ManualReviewReport:
 
 
 def test_phase5_project_state_remains_safe() -> None:
-    assert constants.PROJECT_PHASE == "phase_8a_explanation_contract_foundation"
+    assert constants.PROJECT_PHASE == "phase_8b_explanation_provider_foundation"
     assert constants.STRATEGY_IMPLEMENTED is False
     assert constants.REAL_TRADING_ENABLED is False
 

@@ -216,6 +216,37 @@ Replay never edits thresholds. Move them by hand in `app/domain/strategy_ruleset
 recording in a comment which percentile and sample size the new value came from, then re-run and
 compare. Recorded evidence lives in `docs/phase7d2-verification-report.md`.
 
+## Chief AI Explanations (Phase 8B)
+
+Off by default and, as of 8B, called by nothing — the adapter exists, the wiring is Phase 8C.
+
+```env
+OPENAI_ENABLED=true
+OPENAI_API_KEY=<your key>
+OPENAI_MODEL=gpt-4.1
+OPENAI_BASE_URL=https://api.openai.com
+OPENAI_MAX_OUTPUT_TOKENS=400
+```
+
+With `OPENAI_ENABLED=false`, `create_explanation_provider` returns a provider that raises
+`IntegrationDisabledError` before any network call, so a misconfiguration cannot quietly spend money.
+
+Operational behaviour:
+
+- Output tokens are capped (`OPENAI_MAX_OUTPUT_TOKENS`, default 400 — enough for three or four
+  Russian sentences). This is the ceiling on what a single explanation can cost.
+- Provider failures map to the same errors as the other adapters: 401/403 authentication, 402 plan
+  restriction, 429 rate limit, 5xx unavailable after retries, and timeouts. None of them propagate
+  as a crash into a caller that has a deterministic text to fall back on.
+- A model's answer is never used unchecked. `explain_validated` runs the Phase 8A validator, and the
+  outcome carries text only when the answer was accepted; a rejected answer leaves no readable prose
+  behind.
+- The prompt contains only the serialized Phase 8A contract — our rule ids, statuses, and numbers.
+  No market text or third-party string reaches the model.
+
+The explanation layer produces no signals, price levels, scoring, or trading instructions; it can
+only describe a decision that was already made deterministically.
+
 ## Local Telegram Readiness Demo
 
 Phase 3E can run a local readiness report without live market or calendar integrations. Start

@@ -31,6 +31,9 @@ class Settings(BaseSettings):
     openai_enabled: bool = False
     openai_api_key: SecretStr | None = None
     openai_model: str = "gpt-4.1"
+    openai_base_url: str = "https://api.openai.com"
+    # Caps what one explanation can cost. Three or four Russian sentences fit comfortably.
+    openai_max_output_tokens: int = Field(default=400, ge=50, le=4000)
 
     market_data_enabled: bool = False
     twelve_data_api_key: SecretStr | None = None

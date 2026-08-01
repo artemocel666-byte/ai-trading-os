@@ -4,7 +4,7 @@ AI Trading OS is a safety-first foundation for a future modular Forex analysis a
 
 ## Current Status
 
-- Current project phase: phase_8a_explanation_contract_foundation.
+- Current project phase: phase_8b_explanation_provider_foundation.
 - Phase 6 snapshot-backed read-only review is complete: `/review EURUSD M15` builds a real analysis
   snapshot, runs the Phase 4G composer over it, and presents the pipeline decision through the
   Phase 5 manual review layer — still read-only and non-actionable.
@@ -21,9 +21,10 @@ AI Trading OS is a safety-first foundation for a future modular Forex analysis a
   stored history and reports how often each one fired, which is how the Phase 7C thresholds were
   re-derived. This closes Phase 7.
 - Phase 8A explanation contract is complete: the project now defines what a future Chief AI may be
-  shown and what it is allowed to answer, with no provider, no network call, and no wiring. Next:
-  Phase 8B (the OpenAI adapter, disabled by default). Signals, delivery, and paper trading are
-  Phase 9.
+  shown and what it is allowed to answer, with no provider, no network call, and no wiring.
+- Phase 8B OpenAI adapter is complete: a real provider exists behind that contract, disabled by
+  default and still wired to nothing. Next: Phase 8C (Telegram output with a fallback to the
+  deterministic text). Signals, delivery, and paper trading are Phase 9.
 - Trading strategy: not implemented.
 - Real trading: disabled and unsupported.
 - External integrations: disabled by default.
@@ -441,6 +442,28 @@ when there are none. It rejects:
 
 The check is deliberately strict. A false rejection costs the deterministic text the user would have
 received anyway; a false acceptance puts an invented number in front of someone about to risk money.
+
+## Phase 8B Status
+
+Phase 8B supplies the provider behind the Phase 8A contract: `app/adapters/openai_explanations.py`,
+plain httpx against the chat-completions endpoint, in the same shape as the Twelve Data and FMP
+adapters and tested the same way — through `httpx.MockTransport`, with no key and no spend.
+
+It stays off. `OPENAI_ENABLED=false` is the default, `create_explanation_provider` returns a
+disabled provider that raises before any network call, and no service, command, route, or job
+references any of it; 8C does the wiring. A safety test asserts each of those.
+
+Two properties matter more than the HTTP details:
+
+- **Unchecked text cannot escape.** `explain_validated` runs the Phase 8A validator and returns an
+  outcome that carries text *only* when the answer was accepted. A rejected answer leaves no
+  readable prose behind, so nothing downstream can print it or try to repair it.
+- **The prompt carries only our own data** — the contract's serialized JSON. No market text, no
+  third-party strings, nothing a stranger could write, so prompt injection is not a surface here.
+
+Enabling it needs `OPENAI_ENABLED=true` and `OPENAI_API_KEY`; `OPENAI_MODEL`, `OPENAI_BASE_URL`, and
+`OPENAI_MAX_OUTPUT_TOKENS` (default 400) are configurable. Output tokens are capped so a runaway
+generation cannot become an unbounded bill. Nothing calls the provider yet even when enabled.
 
 ## Prerequisites
 

@@ -6,6 +6,7 @@ from typing import Any
 from app.core.enums import Decision
 from app.core.exceptions import IntegrationDisabledError
 from app.domain.entities import Candle, EconomicEvent, Timeframe
+from app.domain.entities.explanation import ExplanationInput
 from app.domain.value_objects import CurrencyPair
 
 
@@ -36,6 +37,13 @@ class DisabledLLMProvider:
         deterministic_decision: Decision,
         evidence: Sequence[Mapping[str, Any]],
     ) -> str:
+        raise IntegrationDisabledError("openai")
+
+
+class DisabledExplanationProvider:
+    """Phase 8B explainer, off. Refuses before any network call or token is spent."""
+
+    async def explain(self, explanation_input: ExplanationInput) -> str:
         raise IntegrationDisabledError("openai")
 
 

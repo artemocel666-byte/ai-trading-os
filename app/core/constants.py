@@ -1,4 +1,4 @@
-PROJECT_PHASE = "phase_8a_explanation_contract_foundation"
+PROJECT_PHASE = "phase_8b_explanation_provider_foundation"
 STRATEGY_IMPLEMENTED = False
 REAL_TRADING_ENABLED = False
 

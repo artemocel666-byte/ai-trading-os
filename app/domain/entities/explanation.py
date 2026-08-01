@@ -176,3 +176,35 @@ class ExplanationValidationReport(BaseModel):
     @property
     def issue_codes(self) -> tuple[ExplanationIssueCode, ...]:
         return tuple(issue.code for issue in self.issues)
+
+
+class ExplanationOutcome(BaseModel):
+    """What a caller gets back after a model has been asked and its answer checked.
+
+    `text` exists only when the validation accepted it. There is deliberately no field carrying the
+    rejected text: a caller cannot log it into a user-facing path by accident, and cannot "fix it
+    up" — the deterministic text is the fallback, not a repaired model answer.
+    """
+
+    model_name: str = Field(min_length=1, max_length=120)
+    text: str | None = None
+    validation: ExplanationValidationReport
+    is_actionable: bool = False
+
+    # `model_name` is the name of the LLM, not a Pydantic attribute; the protected namespace is
+    # cleared so the field can keep the name a reader expects.
+    model_config = ConfigDict(frozen=True, protected_namespaces=())
+
+    @model_validator(mode="after")
+    def text_presence_must_match_validation(self) -> Self:
+        if self.is_actionable:
+            raise ValueError("an explanation outcome must remain non-actionable")
+        if self.validation.accepted and not self.text:
+            raise ValueError("an accepted explanation must carry its text")
+        if not self.validation.accepted and self.text is not None:
+            raise ValueError("a rejected explanation must not carry text")
+        return self
+
+    @property
+    def accepted(self) -> bool:
+        return self.validation.accepted

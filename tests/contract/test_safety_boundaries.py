@@ -39,6 +39,7 @@ from app.domain.entities import (
 from app.domain.entities.explanation import (
     ExplanationIssue,
     ExplanationIssueCode,
+    ExplanationOutcome,
     ExplanationValidationReport,
 )
 from app.domain.manual_review_report_builder import ManualReviewReportBuilder
@@ -676,6 +677,14 @@ PHASE_8A_FORBIDDEN_IMPORTS = (
     "openai",
     "app.persistence",
     "app.adapters",
+    "app.telegram",
+    "app.api",
+    "app.scheduler",
+    "app.schemas.agents",
+)
+PHASE_8B_FILES = (Path("app/adapters/openai_explanations.py"),)
+PHASE_8B_FORBIDDEN_IMPORTS = (
+    "app.persistence",
     "app.telegram",
     "app.api",
     "app.scheduler",
@@ -1947,6 +1956,121 @@ def test_phase8a_validation_is_fail_closed() -> None:
         )
     with pytest.raises(ValidationError):
         ExplanationValidationReport(checked_at=datetime(2026, 8, 1, tzinfo=UTC), accepted=False)
+
+
+def test_phase8b_openai_is_disabled_by_default() -> None:
+    settings = Settings(_env_file=None)
+
+    assert settings.openai_enabled is False
+
+
+def test_phase8b_adapter_touches_no_other_layer() -> None:
+    offenders: list[str] = []
+    for file_path in PHASE_8B_FILES:
+        import_lines = tuple(
+            line
+            for line in file_path.read_text(encoding="utf-8").lower().splitlines()
+            if line.startswith("import ") or line.startswith("from ")
+        )
+        for term in PHASE_8B_FORBIDDEN_IMPORTS:
+            if any(term.lower() in line for line in import_lines):
+                offenders.append(f"{file_path}: {term}")
+
+    assert offenders == []
+
+
+def test_phase8b_adapter_does_not_add_trading_behavior_terms() -> None:
+    """Phase 8B is where an LLM becomes allowed — and only that ban is lifted.
+
+    "OpenAI" and "LLM" are dropped from the scanned set because this adapter is the sanctioned
+    exception the roadmap always described. Every trading-behaviour ban still applies to it: an
+    explainer may describe a decision and may never generate, score, or execute one.
+    """
+    scanned_terms = tuple(
+        term for term in PHASE_7A_FORBIDDEN_BEHAVIOR_TERMS if term.lower() not in ("openai", "llm")
+    )
+    offenders: list[str] = []
+    for file_path in PHASE_8B_FILES:
+        lowered = file_path.read_text(encoding="utf-8").lower()
+        for term in scanned_terms:
+            if term.lower() in lowered:
+                offenders.append(f"{file_path}: {term}")
+
+    assert offenders == []
+
+
+def test_phase8b_only_the_adapter_can_reach_a_model() -> None:
+    """The ban is lifted for one file, not for the codebase.
+
+    Checked by what would actually make a call — an import, the endpoint, the adapter class — not
+    by the bare word, which legitimately appears in `strategy_ruleset_validator.py`'s own ban list.
+    """
+    call_markers = (
+        "import openai",
+        "from openai",
+        "api.openai.com",
+        "chat/completions",
+        "OpenAIExplanationAdapter",
+    )
+    other_sources = tuple(
+        file_path
+        for directory in ("app/domain", "app/services", "app/telegram", "app/scheduler", "app/api")
+        for file_path in Path(directory).rglob("*.py")
+    )
+
+    for file_path in other_sources:
+        source = file_path.read_text(encoding="utf-8")
+        for marker in call_markers:
+            assert marker not in source, f"{file_path}: {marker}"
+
+
+def test_phase8b_explainer_is_not_wired_anywhere() -> None:
+    """8C does the wiring. Until then nothing can call a model by accident."""
+    wired_dirs = ("app/services", "app/telegram", "app/scheduler", "app/api")
+    source = "\n".join(
+        file_path.read_text(encoding="utf-8")
+        for directory in wired_dirs
+        for file_path in Path(directory).rglob("*.py")
+    )
+
+    assert "OpenAIExplanationAdapter" not in source
+    assert "create_explanation_provider" not in source
+    assert "explain_validated" not in source
+
+
+def test_phase8b_adapter_never_returns_unvalidated_text_to_an_outcome() -> None:
+    """The outcome model itself refuses the dangerous combination."""
+    accepted_report = ExplanationValidationReport(
+        checked_at=datetime(2026, 8, 1, tzinfo=UTC),
+        issues=(),
+        accepted=True,
+    )
+    rejected_report = ExplanationValidationReport(
+        checked_at=datetime(2026, 8, 1, tzinfo=UTC),
+        issues=(
+            ExplanationIssue(
+                code=ExplanationIssueCode.ACTIONABLE_TEXT,
+                detail="Текст содержит торговые указания.",
+            ),
+        ),
+        accepted=False,
+    )
+
+    with pytest.raises(ValidationError):
+        ExplanationOutcome(
+            model_name="test-model",
+            text="ПОКУПАЙ сейчас.",
+            validation=rejected_report,
+        )
+    with pytest.raises(ValidationError):
+        ExplanationOutcome(model_name="test-model", text=None, validation=accepted_report)
+    with pytest.raises(ValidationError):
+        ExplanationOutcome(
+            model_name="test-model",
+            text="Окно данных полное.",
+            validation=accepted_report,
+            is_actionable=True,
+        )
 
 
 def test_phase7b_adds_no_telegram_command_or_api_route() -> None:

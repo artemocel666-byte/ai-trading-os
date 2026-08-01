@@ -232,8 +232,11 @@ non-actionable and without any signal, AI, or execution behavior.
     input. That last check is what makes a fabricated figure impossible to slip through. The scored
     Chief AI request stub in `app/schemas/agents.py` was deliberately not reused: it requires fields
     the pipeline never produces and the safety tests ban.
-  - 8B: production OpenAI adapter, disabled by default, covered by MockTransport contract tests
-    plus adversarial tests proving a lying model cannot change the deterministic report.
+  - 8B: production OpenAI adapter, disabled by default — **completed**. Plain httpx in the same
+    shape as the other two adapters, covered by MockTransport contract tests plus adversarial tests
+    where a stub model lies six different ways and the decision fingerprint stays byte-identical.
+    `explain_validated` runs the Phase 8A validator, and the outcome carries text only when the
+    answer was accepted, so unchecked prose has no path out. Wired to nothing; 8C does that.
   - 8C: Telegram wiring with fallback to the existing deterministic Russian text whenever the
     provider is disabled/unavailable or validation fails.
   - Unlocks `OPENAI_ENABLED=true`.
@@ -267,14 +270,17 @@ backfill (7D-1), and historical validation (7D-2) are all done: the application 
 evaluates real rules over it, and the thresholds are derived from six months of observed EURUSD
 history rather than from guesses. See `docs/phase7d2-verification-report.md`.
 
-**Phase 8A is complete** (see `docs/phase8a-verification-report.md`): the contract and the
-fail-closed validator exist, with no provider and no wiring.
+**Phase 8A and 8B are complete** (see `docs/phase8a-verification-report.md` and
+`docs/phase8b-verification-report.md`): the contract, the fail-closed validator, and a real provider
+behind them all exist. Nothing calls the provider, and `OPENAI_ENABLED` is false.
 
-**Phase 8B (the OpenAI adapter, disabled by default) is the next planned task.** It supplies the
-provider behind the 8A contract, covered by `MockTransport` contract tests plus adversarial tests
-that feed a lying model's output through `validate_explanation_text` and prove the deterministic
-report is unchanged. The adversarial cases 8A already rejects on real data are recorded in the 8A
-report and should be the starting set.
+**Phase 8C (Telegram wiring with a deterministic fallback) is the next planned task.** It is the
+first slice where a model's words could reach a person, so the fallback is the feature: whenever the
+provider is disabled, unavailable, or its answer fails validation, `/review` shows exactly the text
+it shows today. The explanation is an addition to that text, never a replacement for it.
+
+A live call has still never been made. It needs the user's key and money, and the 8B report records
+what to run and what it would cost.
 
 Two items carried out of Phase 7, to be picked up when they stop being blocked rather than as new
 phases:

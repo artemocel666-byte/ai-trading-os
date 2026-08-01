@@ -2,7 +2,11 @@
 
 AI Trading OS is a foundation for a future Forex analysis and paper-trading platform.
 
-Current project phase: phase_8a_explanation_contract_foundation.
+Current project phase: phase_8b_explanation_provider_foundation.
+Phase 8B adds the OpenAI adapter behind the Phase 8A contract: plain httpx, `OPENAI_ENABLED=false`
+by default, and wired to nothing (8C does that). It cannot return unchecked text — `explain_validated`
+runs the Phase 8A validator and the outcome carries text only when the answer was accepted. The
+prompt contains our own serialized contract and nothing a stranger wrote.
 Phase 8A defines what a future Chief AI may be given (`ExplanationInput`) and how its answer is
 checked before anyone reads it. It contains no provider, no network call, no key, and is wired to
 nothing. Validation is fail-closed: any finding means the deterministic Russian text is used
@@ -171,6 +175,16 @@ real trading.
   that sees any finding must fall back to the deterministic text rather than repair the answer. The
   actionable-text check must cover Russian as well as English — the Phase 5 detector alone matches
   "buy", not "покупай", and this project speaks Russian to its user.
+- While working in Phase 8B, the explanation adapter (`app/adapters/openai_explanations.py`) is the
+  only file in the project allowed to reach a model, and only it is exempt from the `OpenAI`/`LLM`
+  term ban — every trading-behaviour ban still applies to it. It must not import `app.persistence`,
+  `app.telegram`, `app.api`, `app.scheduler`, or `app.schemas.agents`, and no service, command,
+  route, or job may reference it until 8C. `OPENAI_ENABLED` stays `false` by default and the
+  disabled provider must raise before any network call. The API key travels in the `Authorization`
+  header, never a query parameter. Prompts may contain only the Phase 8A contract's own serialized
+  content — no market text, no third-party strings. `explain_validated` must run the Phase 8A
+  validator, and a rejected answer must leave no readable text in the outcome. Cap output tokens so
+  a runaway generation cannot become an unbounded bill.
 - Never fabricate market data, calendar data, agent evidence, or scan results.
 - LLM output may explain deterministic results only; it must not change prices, scores, risk, or rejected decisions.
 - Update documentation when architecture or safety boundaries change.

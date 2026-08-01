@@ -5,6 +5,7 @@ from typing import Any, Protocol
 
 from app.core.enums import Decision
 from app.domain.entities import Candle, EconomicEvent, Timeframe
+from app.domain.entities.explanation import ExplanationInput
 from app.domain.value_objects import CurrencyPair
 
 
@@ -35,6 +36,20 @@ class EconomicCalendarProvider(Protocol):
         currencies: Sequence[str] | None = None,
     ) -> Sequence[EconomicEvent]:
         """Return scheduled economic events for a bounded time range."""
+
+
+class ExplanationProvider(Protocol):
+    """Phase 8B explainer contract, shaped for what the pipeline actually produces.
+
+    Added beside `LLMProvider` rather than replacing it: that older Protocol speaks in `Decision`
+    values (`LONG`/`SHORT`/`NO_TRADE`) which this pipeline never produces, from the same era as the
+    scored request Phase 8A refused. An implementation receives a Phase 8A `ExplanationInput` and
+    returns Russian prose describing it. It must not change, reorder, or extend the decision it was
+    handed, and its answer is worthless until it passes `validate_explanation_text`.
+    """
+
+    async def explain(self, explanation_input: ExplanationInput) -> str:
+        """Return a Russian explanation of an already-decided report."""
 
 
 class LLMProvider(Protocol):
