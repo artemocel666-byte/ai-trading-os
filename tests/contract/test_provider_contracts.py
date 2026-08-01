@@ -18,10 +18,12 @@ from app.adapters.twelve_data import TwelveDataMarketDataAdapter
 from app.core.config import Settings
 from app.core.exceptions import (
     ConfigurationInvalidError,
+    ErrorCode,
     IntegrationDisabledError,
     ProviderAuthenticationError,
     ProviderInvalidPayloadError,
     ProviderMalformedJsonError,
+    ProviderPlanRestrictedError,
     ProviderRateLimitError,
     ProviderTimeoutError,
     ProviderUnavailableError,
@@ -261,6 +263,54 @@ async def test_twelve_data_provider_errors(
                 datetime(2026, 7, 2, 8, 0, tzinfo=UTC),
                 datetime(2026, 7, 2, 9, 0, tzinfo=UTC),
             )
+
+
+@pytest.mark.asyncio
+async def test_twelve_data_plan_restriction_is_not_reported_as_a_bad_request() -> None:
+    """402 means the plan lacks the endpoint, not that our request was wrong.
+
+    Observed live on 2026-08-01 against the FMP calendar. Folding it into
+    ProviderUnsupportedRequestError sends the reader hunting for a request bug that does not
+    exist: no parameter change can fix a subscription.
+    """
+    adapter, client = await _market_adapter(
+        lambda request: httpx.Response(
+            status_code=402,
+            content=b"Restricted Endpoint: not available under your current subscription",
+        )
+    )
+    async with client:
+        with pytest.raises(ProviderPlanRestrictedError) as error:
+            await adapter.get_closed_candles(
+                CurrencyPair(value="EURUSD"),
+                Timeframe.M15,
+                datetime(2026, 7, 2, 8, 0, tzinfo=UTC),
+                datetime(2026, 7, 2, 9, 0, tzinfo=UTC),
+            )
+
+    assert error.value.code == ErrorCode.PROVIDER_PLAN_RESTRICTED
+    assert error.value.details["status_code"] == 402
+    assert not isinstance(error.value, ProviderUnsupportedRequestError)
+
+
+@pytest.mark.asyncio
+async def test_fmp_calendar_plan_restriction_is_not_reported_as_a_bad_request() -> None:
+    adapter, client = await _calendar_adapter(
+        lambda request: httpx.Response(
+            status_code=402,
+            content=b"Restricted Endpoint: not available under your current subscription",
+        )
+    )
+    async with client:
+        with pytest.raises(ProviderPlanRestrictedError) as error:
+            await adapter.get_events(
+                datetime(2026, 7, 2, 8, 0, tzinfo=UTC),
+                datetime(2026, 7, 2, 10, 0, tzinfo=UTC),
+                currencies=["EUR"],
+            )
+
+    assert error.value.code == ErrorCode.PROVIDER_PLAN_RESTRICTED
+    assert error.value.details["provider"] == "fmp"
 
 
 @pytest.mark.asyncio

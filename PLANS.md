@@ -272,8 +272,11 @@ Two items carried out of Phase 7, to be picked up when they stop being blocked r
 phases:
 
 - The `event_context.*` thresholds remain uncalibrated. Storage holds five economic events, all
-  seeds or stubs, because Phase 7B ingestion needs an FMP key the project does not have. Re-run
-  `scripts/replay_rules.py` once real calendar history exists.
+  seeds or stubs. Verified on 2026-08-01: an FMP key exists and works, but the economic calendar is
+  not on the free plan (`402 Restricted Endpoint`; a control call to `/stable/quote` returned 200).
+  FMP includes the calendar from Starter (one-year range) and in full from Premium. Until a plan or
+  another provider is in place, keep `CALENDAR_ENABLED=false` and re-run `scripts/replay_rules.py`
+  once real calendar history exists.
 - `MAXIMUM_CLOSE_DRAWDOWN` is a cross-timeframe compromise (see the 7D-2 report). Normalising the
   field by average true range would remove it, and belongs with any future rule-content work.
 

@@ -13,6 +13,7 @@ from app.core.exceptions import (
     ProviderAuthenticationError,
     ProviderInvalidPayloadError,
     ProviderMalformedJsonError,
+    ProviderPlanRestrictedError,
     ProviderRateLimitError,
     ProviderTimeoutError,
     ProviderUnavailableError,
@@ -208,6 +209,12 @@ class FMPEconomicCalendarAdapter:
                 )
             if response.status_code == 429:
                 raise ProviderRateLimitError(
+                    PROVIDER_NAME, details={"status_code": response.status_code}
+                )
+            if response.status_code == 402:
+                # A well-formed request the plan does not include. Distinguished from a 4xx we
+                # could fix, because nothing in the request can be corrected.
+                raise ProviderPlanRestrictedError(
                     PROVIDER_NAME, details={"status_code": response.status_code}
                 )
             if response.status_code >= 500:

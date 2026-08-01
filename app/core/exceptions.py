@@ -22,6 +22,7 @@ class ErrorCode(StrEnum):
     PROVIDER_MALFORMED_JSON = "PROVIDER_MALFORMED_JSON"
     PROVIDER_INVALID_PAYLOAD = "PROVIDER_INVALID_PAYLOAD"
     PROVIDER_UNSUPPORTED_REQUEST = "PROVIDER_UNSUPPORTED_REQUEST"
+    PROVIDER_PLAN_RESTRICTED = "PROVIDER_PLAN_RESTRICTED"
 
 
 class ApplicationError(Exception):
@@ -174,5 +175,22 @@ class ProviderUnsupportedRequestError(ProviderError):
             ErrorCode.PROVIDER_UNSUPPORTED_REQUEST,
             "Запрос к провайдеру не поддерживается.",
             status_code=400,
+            details={"provider": provider, **dict(details or {})},
+        )
+
+
+class ProviderPlanRestrictedError(ProviderError):
+    """The request was well formed; the subscription does not include this endpoint.
+
+    Kept separate from `ProviderUnsupportedRequestError` because the fix is different: nothing in
+    our request can be corrected, so retrying, narrowing the window, or debugging parameters is
+    wasted effort. Only the plan can change.
+    """
+
+    def __init__(self, provider: str, *, details: Mapping[str, Any] | None = None) -> None:
+        super().__init__(
+            ErrorCode.PROVIDER_PLAN_RESTRICTED,
+            "Эндпоинт недоступен на текущем тарифе провайдера.",
+            status_code=402,
             details={"provider": provider, **dict(details or {})},
         )

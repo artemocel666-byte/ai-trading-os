@@ -110,8 +110,18 @@ Operational behaviour:
 - An empty response is a success, not a failure — quiet calendar days exist.
 - Provider errors are recorded through the standard error path and never propagate into the
   scheduler.
-- Note that the FMP economic calendar may be restricted on the free plan. If it is, the tick records
-  a provider error and reports `failed`; the worker keeps running.
+- **The FMP economic calendar is not available on the free (Basic) plan.** Verified live on
+  2026-08-01: `/stable/economic-calendar` answers `402 Restricted Endpoint`, while `/stable/quote`
+  with the same key answers `200` — so the key is valid and only the subscription is missing. The
+  retired `/api/v3/economic_calendar` answers `403 Legacy Endpoint` for anyone who did not subscribe
+  before 2025-08-31. Per FMP's plan comparison, the calendar is included from **Starter** (limited to
+  a one-year range) and in full from **Premium**.
+- A 402 raises `ProviderPlanRestrictedError` (`PROVIDER_PLAN_RESTRICTED`), deliberately separate
+  from `ProviderUnsupportedRequestError`: no parameter change can fix a subscription, so the two
+  failures need different reactions. The tick records the error and reports `failed`; the worker
+  keeps running.
+- With no calendar subscription, set `CALENDAR_ENABLED=false`. Leaving it on spends one request an
+  hour and writes the same error into `last_error`, which masks real failures.
 
 Ingestion stores events only. It produces no signals, price levels, scoring, AI output, or messages.
 
