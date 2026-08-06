@@ -2,7 +2,13 @@
 
 AI Trading OS is a foundation for a future Forex analysis and paper-trading platform.
 
-Current project phase: phase_8c_explanation_delivery_foundation.
+Current project phase: phase_9a_price_plan_foundation.
+Phase 9A builds price levels and nothing else: `app/domain/signal_price_plan.py` takes a direction
+as an argument and places entry, protective and target levels at multiples of the window's average
+true range. It contains no strategy — nothing in this project decides "up" or "down", and a test
+asserts no function anywhere returns a `SignalDirection`. The multipliers are conventions, not
+calibrations, because judging a stop distance needs outcome measurement the project does not have.
+Contracts are `DRAFT` and `NOT_ACTIONABLE`, carry no risk plan, and are wired to nothing.
 Phase 8C delivers explanations through a separate `/explain EURUSD M15` command, gated by two flags
 that are both off by default (`OPENAI_ENABLED`, `EXPLANATION_DELIVERY_ENABLED`). The deterministic
 report is always sent in full; an explanation is appended only after passing Phase 8A validation,
@@ -206,6 +212,17 @@ real trading.
   data. Acceptance for a normalised field: firing rates across timeframes within about one
   percentage point. Dimensions must match — a fraction of price is not comparable to an absolute
   price amount without converting one of them first.
+- While working in Phase 9A, `app/domain/signal_price_plan.py` is the only file allowed to compute
+  entries, protective levels, or targets; every other module in `app/` is scanned for those terms
+  and must contain none. Distances are average-true-range multiples, never fixed prices. The module
+  must not import `app.persistence`, `app.adapters`, `app.telegram`, `app.api`, or `app.scheduler`,
+  and no service, command, route, or job may reference it — 9B does the wiring. Contracts stay
+  `DRAFT` and `NOT_ACTIONABLE` with `risk_plan=None`: position size needs an account balance the
+  project does not have and must not invent. **Direction is an argument, never a conclusion.** No
+  function anywhere may return a `SignalDirection`; the day one does, somebody is adding a strategy
+  and must say so out loud. The multipliers are uncalibrated conventions and any document mentioning
+  them must say so — earning a number here requires measuring, for each historical window, whether
+  the protective level or the target was reached first, which nothing in this project does yet.
 - Never fabricate market data, calendar data, agent evidence, or scan results.
 - LLM output may explain deterministic results only; it must not change prices, scores, risk, or rejected decisions.
 - Update documentation when architecture or safety boundaries change.

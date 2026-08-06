@@ -4,7 +4,7 @@ AI Trading OS is a safety-first foundation for a future modular Forex analysis a
 
 ## Current Status
 
-- Current project phase: phase_8c_explanation_delivery_foundation.
+- Current project phase: phase_9a_price_plan_foundation.
 - Phase 6 snapshot-backed read-only review is complete: `/review EURUSD M15` builds a real analysis
   snapshot, runs the Phase 4G composer over it, and presents the pipeline decision through the
   Phase 5 manual review layer — still read-only and non-actionable.
@@ -26,7 +26,11 @@ AI Trading OS is a safety-first foundation for a future modular Forex analysis a
   default.
 - Phase 8C explanation delivery is complete: `/explain EURUSD M15` shows the deterministic report
   and appends a checked explanation, or one honest line saying why there is none. This closes
-  Phase 8. Next: Phase 9A (signal assembly and price levels), then delivery and paper trading.
+  Phase 8.
+- Phase 9A price levels are complete: entry, protective and target levels are placed at multiples of
+  the window's average true range, with direction supplied as an input. There is still no strategy —
+  nothing in the project decides up or down, and a test enforces that. Next: direction, which needs
+  outcome measurement first, then delivery and paper trading.
 - Trading strategy: not implemented.
 - Real trading: disabled and unsupported.
 - External integrations: disabled by default.
@@ -502,6 +506,27 @@ Both gates default to off: `OPENAI_ENABLED` (a provider exists) and `EXPLANATION
 (it may answer a user). `EXPLANATION_BUDGET_SECONDS` (default 20) bounds the wait, because a Telegram
 command must not hang on a provider. Nothing automatic — no service, job, or route — can call a
 model; only the typed command can.
+
+## Phase 9A Status
+
+Phase 9A builds the price levels deferred since Phase 4 — and only those.
+`app/domain/signal_price_plan.py` places an entry band, a protective level and two targets at
+multiples of the window's average true range, anchored on the latest close. A stop twenty pips away
+is tight on one instrument and absurd on another; one placed 1.5 average candle ranges away means
+the same thing anywhere.
+
+**Direction is an argument, not a conclusion.** The pipeline produces no direction — all eleven rules
+are descriptive — so the builder is handed one. A safety test asserts that no function anywhere in
+`app/` returns a `SignalDirection`, which is the mechanical signature of a strategy appearing. That
+test failing is the signal that somebody is adding one.
+
+**The multipliers are conventions, not calibrations.** Every other threshold in this project was
+derived from an observed distribution; these could not be, because judging a protective distance
+requires knowing whether that level or the target was reached first, and nothing here measures what
+happened after a window. See `docs/phase9a-verification-report.md`.
+
+Contracts are `DRAFT` and `NOT_ACTIONABLE`, carry no risk plan — position size needs an account
+balance this project does not have — and are wired to nothing.
 
 ## Prerequisites
 

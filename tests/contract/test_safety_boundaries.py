@@ -1,5 +1,7 @@
+import ast
 import inspect
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
+from decimal import Decimal
 from pathlib import Path
 
 import pytest
@@ -25,6 +27,7 @@ from app.core.exceptions import IntegrationDisabledError
 from app.domain.analysis_engine import AnalysisEngine
 from app.domain.disabled_pipeline_report_shell import DisabledPipelineReportShell
 from app.domain.entities import (
+    Candle,
     Timeframe,
     ingestion,
     manual_review,
@@ -42,7 +45,13 @@ from app.domain.entities.explanation import (
     ExplanationOutcome,
     ExplanationValidationReport,
 )
+from app.domain.entities.signal_contract import (
+    SignalActionability,
+    SignalDirection,
+    SignalLifecycleStatus,
+)
 from app.domain.manual_review_report_builder import ManualReviewReportBuilder
+from app.domain.signal_price_plan import build_draft_contract
 from app.domain.strategy_decision_composer import StrategyDecisionComposer
 from app.domain.strategy_field_resolver import resolve_field
 from app.domain.strategy_rule_evaluator import StrategyRuleEvaluator
@@ -2233,3 +2242,124 @@ def test_safety_scanner_rejects_execution_http_endpoints(tmp_path: Path) -> None
     file_path.write_text("ORDERS_URL = 'https://broker.example/v1/orders'\n", encoding="utf-8")
 
     assert scan_files([file_path])
+
+
+PHASE_9A_PRICE_LEVEL_MODULE = Path("app/domain/signal_price_plan.py")
+PHASE_9A_PRICE_LEVEL_TERMS = ("calculate_entry", "calculate_stop", "calculate_target")
+
+
+def test_phase9a_price_level_terms_are_confined_to_one_module() -> None:
+    """The Phase 4 ban was only ever per-file; 9A makes it a real, project-wide guard.
+
+    Until now `calculate_entry` and friends appeared in per-phase file lists, so a brand new file
+    anywhere could have defined one and nothing would have failed. This is the slice where such a
+    name becomes legitimate, which is exactly when the boundary has to become enforceable: every
+    module in `app/` is scanned, and only the price-plan module may contain these terms.
+
+    It currently contains none of them either — the levels are built without a function by that
+    name — so this guards the future rather than describing the present.
+    """
+    offenders: list[str] = []
+    for file_path in Path("app").rglob("*.py"):
+        if file_path == PHASE_9A_PRICE_LEVEL_MODULE:
+            continue
+        lowered = file_path.read_text(encoding="utf-8").lower()
+        for term in PHASE_9A_PRICE_LEVEL_TERMS:
+            if term in lowered:
+                offenders.append(f"{file_path}: {term}")
+
+    assert offenders == []
+
+
+def test_phase9a_no_function_returns_a_direction() -> None:
+    """The anti-strategy invariant: nothing in this project decides "up" or "down".
+
+    A strategy has to hand a direction back to someone, so a function annotated as returning
+    `SignalDirection` is the mechanical signature of one appearing. 9A takes direction as an
+    argument and never produces it. The day this test fails, somebody is adding a strategy and
+    should be made to notice.
+    """
+    offenders: list[str] = []
+    for file_path in Path("app").rglob("*.py"):
+        tree = ast.parse(file_path.read_text(encoding="utf-8"))
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef):
+                continue
+            returns = ast.unparse(node.returns) if node.returns is not None else ""
+            if "SignalDirection" in returns:
+                offenders.append(f"{file_path}: {node.name} -> {returns}")
+
+    assert offenders == []
+
+
+def test_phase9a_price_plan_module_touches_no_other_layer() -> None:
+    import_lines = tuple(
+        line
+        for line in PHASE_9A_PRICE_LEVEL_MODULE.read_text(encoding="utf-8").lower().splitlines()
+        if line.startswith("import ") or line.startswith("from ")
+    )
+
+    for term in ("app.persistence", "app.adapters", "app.telegram", "app.api", "app.scheduler"):
+        assert not any(term in line for line in import_lines), term
+
+
+def test_phase9a_price_plan_is_not_wired_anywhere() -> None:
+    """Levels exist as machinery only. 9B is where anything may reach a user."""
+    source = "\n".join(
+        file_path.read_text(encoding="utf-8")
+        for directory in ("app/services", "app/telegram", "app/scheduler", "app/api")
+        for file_path in Path(directory).rglob("*.py")
+    )
+
+    assert "signal_price_plan" not in source
+    assert "build_price_plan" not in source
+    assert "build_draft_contract" not in source
+
+
+def test_phase9a_draft_contract_cannot_be_actionable() -> None:
+    snapshot = _price_plan_snapshot()
+
+    contract = build_draft_contract(
+        SignalDirection.LONG,
+        snapshot,
+        created_at=datetime(2026, 8, 5, tzinfo=UTC),
+    )
+
+    assert contract is not None
+    assert contract.actionability == SignalActionability.NOT_ACTIONABLE
+    assert contract.status == SignalLifecycleStatus.DRAFT
+    assert contract.is_actionable is False
+    # Position sizing needs an account balance; this project has none and invents none.
+    assert contract.risk_plan is None
+
+
+def _price_plan_snapshot():
+    base_time = datetime(2026, 7, 20, 8, 0, tzinfo=UTC)
+    step = timedelta(minutes=15)
+    candles = [
+        Candle(
+            provider="safety-price-plan",
+            pair=CurrencyPair(value="EURUSD"),
+            timeframe=Timeframe.M15,
+            open_time=base_time + (index * step),
+            close_time=base_time + ((index + 1) * step),
+            open=Decimal("1.10000") + (Decimal("0.00010") * index),
+            high=Decimal("1.10030") + (Decimal("0.00010") * index),
+            low=Decimal("1.09970") + (Decimal("0.00010") * index),
+            close=Decimal("1.10000") + (Decimal("0.00010") * index),
+            volume=Decimal("100"),
+            is_closed=True,
+        )
+        for index in range(12)
+    ]
+    as_of = base_time + (12 * step)
+    return AnalysisEngine().build_snapshot(
+        pair=CurrencyPair(value="EURUSD"),
+        timeframe=Timeframe.M15,
+        window_start=base_time,
+        window_end=as_of,
+        as_of=as_of,
+        candles=candles,
+        economic_events=[],
+        moving_average_windows=(3,),
+    )

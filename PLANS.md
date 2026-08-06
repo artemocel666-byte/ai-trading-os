@@ -245,21 +245,35 @@ non-actionable and without any signal, AI, or execution behavior.
     latency budget so a slow provider cannot hang a command.
   - Unlocks `OPENAI_ENABLED=true`.
 - Phase 9: signals, delivery, and paper trading — the final phase; not started
-  - 9A: `SignalContract` assembly from `PipelineDecisionReport`, including the price-level
-    (entry/stop/take-profit) construction deferred since Phase 4. The `calculate_entry`/
-    `calculate_stop`/`calculate_target` safety-term ban is lifted only inside this slice.
+  - 9A: price-level construction, deferred since Phase 4 — **completed 2026-08-05**, see
+    `docs/phase9a-verification-report.md`. Scoped down during planning: the original wording said
+    "assemble a `SignalContract` from a `PipelineDecisionReport`", which is impossible, because the
+    pipeline produces no direction and the contract requires one. 9A therefore builds the level
+    machinery with direction as an **input**, and adds the invariant that no function anywhere
+    returns a `SignalDirection`. The `calculate_*` term ban now applies project-wide with one
+    exempted module — before this slice it only existed in per-phase file lists, so a new file could
+    have defined one unnoticed.
   - 9B: Telegram signal delivery — the first user-visible LONG/SHORT output in the project.
   - 9C: paper trading — simulated positions and outcome tracking, no real money.
   - `REAL_TRADING_ENABLED` stays `False` permanently; no broker order API is ever added.
 
 ## Explicit Non-Goals
 
-- No broker execution.
-- No real trading.
-- No strategy logic.
-- No indicators or signal generation.
-- No OpenAI calls.
-- No fabricated market data or scan results.
+Corrected 2026-08-05. Three entries below had gone stale: they were written when the project was
+foundation-only and by Phase 8 they contradicted the roadmap outright, which is how a non-goals list
+stops being read.
+
+- No broker execution — permanent.
+- No real trading; `REAL_TRADING_ENABLED` stays `False` — permanent.
+- No fabricated market data, calendar data, or scan results — permanent.
+- ~~No strategy logic~~ — still true today and deliberately so: nothing decides direction, and a
+  safety test enforces it. It stops being a non-goal the day a direction slice is approved, and that
+  day should be a deliberate decision rather than a drift.
+- ~~No indicators or signal generation~~ — superseded. Indicators arrived in Phase 3B/3C and price
+  levels in Phase 9A. What remains banned is *generating a signal*: a direction plus levels
+  presented as a recommendation.
+- ~~No OpenAI calls~~ — superseded by Phase 8B/8C. Calls are possible, disabled by default, and
+  their output cannot change a deterministic report.
 
 ## Known Risks
 
@@ -278,7 +292,17 @@ history rather than from guesses. See `docs/phase7d2-verification-report.md`.
 all exist, with both flags off by default. See `docs/phase8a-`, `8b-`, and
 `phase8c-verification-report.md`.
 
-**Phase 9A (`SignalContract` assembly and price levels) is the next planned task.** It is the first
+**Direction is the next open question, and it blocks 9B.** Phase 9B delivers signals to a user, and
+a signal is a direction plus levels; the levels now exist and the direction does not. Before it can,
+two things are needed, in this order:
+
+1. **Outcome measurement** — for each historical window, did the protective level or the target come
+   first? The replay walks windows and evaluates rules but scores nothing. Without it, no directional
+   rule can be shown to beat a coin toss, and no level multiplier can be calibrated either.
+2. **A directional rule**, calibrated against that measurement. This is the first time the project
+   would take a market view, and it should be approved deliberately rather than arrived at.
+
+Superseded planning note: **Phase 9A (`SignalContract` assembly and price levels) was the next task.** It is the first
 slice that computes an entry, a protective level, and a target — work deferred since Phase 4 — and
 the `calculate_entry`/`calculate_stop`/`calculate_target` term ban lifts only inside it. Everything
 before it stayed descriptive on purpose; 9A is where that changes, so its safety boundary deserves
