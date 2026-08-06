@@ -42,6 +42,7 @@ EXPLAINABLE_FIELD_REFS: tuple[str, ...] = (
     "event_context.high_impact_event_count",
     "event_context.minutes_since_latest_event",
     "market_context.max_close_drawdown",
+    "market_context.max_close_drawdown_atr",
     "market_context.volatility_ratio",
     "time_filter.utc_weekday",
 )

@@ -334,8 +334,13 @@ answered the same thing. The new rules read actual values.
 | Ruleset | Rules |
 | --- | --- |
 | `foundation.data_quality.v1` | used candle count ≥ 8 (BLOCKING), completeness ratio ≥ 0.8, market-data completeness, latest-candle age ≤ 90 min |
-| `foundation.market_context.v1` | context readiness, volatility ratio within 0.4–2.5 of its own window average, max close-to-close drawdown ≤ 0.01 |
+| `foundation.market_context.v1` | context readiness, volatility ratio within 0.30–3.5 of its own window average, max close-to-close drawdown ≤ 4.0 candle ranges |
 | `foundation.time_filter.v1` | London/New York liquidity session, weekday |
+
+Thresholds shown are the current ones. They were re-derived from six months of observed history in
+Phase 7D-2, and the drawdown rule was later switched to an ATR-normalised field so that one bound
+means the same thing on M15 and H1 — see `docs/drawdown-normalisation-report.md`. The event ruleset
+(`foundation.event_context.v1`) joined in Phase 7B, bringing the set to eleven rules.
 
 Severity drives the outcome: a BLOCKING failure makes the pipeline `BLOCKED`, a REQUIRED failure
 makes it `NOT_READY`, and WARNING failures are recorded while the pipeline stays

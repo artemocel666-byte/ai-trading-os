@@ -91,7 +91,8 @@ def format_snapshot_review_body(
             f"Замеры: волатильность "
             f"{_decimal(resolve_field('market_context.volatility_ratio', snapshot))}, "
             f"просадка "
-            f"{_percent(resolve_field('market_context.max_close_drawdown', snapshot), '0.01')}, "
+            f"{_percent(resolve_field('market_context.max_close_drawdown', snapshot), '0.01')} "
+            f"({_decimal(resolve_field('market_context.max_close_drawdown_atr', snapshot))} ATR), "
             f"сессия {resolve_field('time_filter.session_name', snapshot) or _UNAVAILABLE_RU}.",
             "",
             f"Источник: {review.source_fingerprint[:12]} (отчёт решения Phase 4G).",

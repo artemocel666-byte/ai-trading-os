@@ -97,6 +97,33 @@ def _resolve_max_close_drawdown(snapshot: AnalysisSnapshot) -> FieldResolution:
     return snapshot.context_snapshot.return_distribution.max_close_to_close_drawdown
 
 
+def _resolve_max_close_drawdown_atr(snapshot: AnalysisSnapshot) -> FieldResolution:
+    """The window's deepest drawdown, measured in typical candle ranges.
+
+    The raw drawdown is a fraction of price, while the average true range is an absolute price
+    amount, so dividing one by the other directly would be dimensionally meaningless. The ATR is
+    first expressed as a fraction of the latest close, and the result is the honest question:
+    *how many ordinary candle ranges deep was this decline?*
+
+    That makes the reading comparable across timeframes, which the raw drawdown is not: a 12-candle
+    window spans 3 hours on M15 and 12 hours on H1, and price covers more ground in 12 hours.
+    """
+    if snapshot.context_snapshot is None or snapshot.feature_snapshot is None:
+        return None
+    drawdown = snapshot.context_snapshot.return_distribution.max_close_to_close_drawdown
+    candle_summary = snapshot.feature_snapshot.candle_summary
+    average_true_range = candle_summary.average_true_range
+    latest_close = candle_summary.latest_close
+    if drawdown is None or average_true_range is None or latest_close is None:
+        return None
+    if average_true_range == 0 or latest_close == 0:
+        return None
+    average_true_range_ratio = average_true_range / latest_close
+    if average_true_range_ratio == 0:
+        return None
+    return drawdown / average_true_range_ratio
+
+
 def _resolve_high_impact_event_count(snapshot: AnalysisSnapshot) -> FieldResolution:
     """Count high-impact events the window actually used.
 
@@ -138,6 +165,7 @@ FIELD_RESOLVERS: Mapping[str, Callable[[AnalysisSnapshot], FieldResolution]] = {
     "market_context.snapshot_ready": _resolve_market_context_snapshot_ready,
     "market_context.volatility_ratio": _resolve_volatility_ratio,
     "market_context.max_close_drawdown": _resolve_max_close_drawdown,
+    "market_context.max_close_drawdown_atr": _resolve_max_close_drawdown_atr,
     "event_context.high_impact_event_count": _resolve_high_impact_event_count,
     "event_context.minutes_since_latest_event": _resolve_minutes_since_latest_event,
     "time_filter.session_name": _resolve_time_filter_session_name,

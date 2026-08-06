@@ -346,3 +346,130 @@ def test_rule_set_evaluation_report_rejects_actionable_true() -> None:
 
     with pytest.raises(ValidationError):
         report.__class__(**{**report.model_dump(), "is_actionable": True})
+
+
+def _dip_candle(index: int, close: Decimal, half_range: Decimal) -> Candle:
+    """A candle at a given close with a symmetric range around it."""
+    step = timedelta(minutes=15)
+    open_time = BASE_TIME + (index * step)
+    return Candle(
+        provider="drawdown-test",
+        pair=PAIR,
+        timeframe=Timeframe.M15,
+        open_time=open_time,
+        close_time=open_time + step,
+        open=close,
+        high=close + half_range,
+        low=close - half_range,
+        close=close,
+        volume=Decimal("100"),
+        is_closed=True,
+    )
+
+
+def _dip_snapshot(*, scale: Decimal = Decimal("1"), base: Decimal = Decimal("1.1000")):
+    """Twelve candles that rise, dip, and recover, with the whole shape scaled by `scale`.
+
+    Scaling multiplies every deviation from `base` — both the drawdown and the candle ranges — so
+    a normalised reading must not move while a raw one must.
+    """
+    offsets = (
+        Decimal("0"),
+        Decimal("0.0010"),
+        Decimal("0.0020"),
+        Decimal("0.0030"),
+        Decimal("0.0020"),
+        Decimal("0.0010"),
+        Decimal("0.0005"),
+        Decimal("0.0015"),
+        Decimal("0.0025"),
+        Decimal("0.0030"),
+        Decimal("0.0035"),
+        Decimal("0.0040"),
+    )
+    candles = [
+        _dip_candle(index, base + (offset * scale), Decimal("0.0005") * scale)
+        for index, offset in enumerate(offsets)
+    ]
+    as_of = BASE_TIME + timedelta(minutes=15 * len(candles))
+    return AnalysisEngine().build_snapshot(
+        pair=PAIR,
+        timeframe=Timeframe.M15,
+        window_start=BASE_TIME,
+        window_end=as_of,
+        as_of=as_of,
+        candles=candles,
+        economic_events=[],
+        moving_average_windows=(3,),
+    )
+
+
+def test_drawdown_atr_matches_the_explicit_formula() -> None:
+    """Drawdown is a fraction of price, ATR is an absolute amount; the ratio needs both."""
+    snapshot = _dip_snapshot()
+
+    drawdown = resolve_field("market_context.max_close_drawdown", snapshot)
+    normalised = resolve_field("market_context.max_close_drawdown_atr", snapshot)
+    assert snapshot.feature_snapshot is not None
+    candle_summary = snapshot.feature_snapshot.candle_summary
+    latest_close = candle_summary.latest_close
+    average_true_range = candle_summary.average_true_range
+
+    assert isinstance(drawdown, Decimal)
+    assert isinstance(normalised, Decimal)
+    assert latest_close is not None
+    assert average_true_range is not None
+    assert normalised == drawdown / (average_true_range / latest_close)
+
+
+def test_drawdown_atr_does_not_move_when_volatility_scales() -> None:
+    """The whole point: three times the movement is not three times as unusual."""
+    calm = _dip_snapshot()
+    wild = _dip_snapshot(scale=Decimal("3"))
+
+    calm_raw = resolve_field("market_context.max_close_drawdown", calm)
+    wild_raw = resolve_field("market_context.max_close_drawdown", wild)
+    calm_normalised = resolve_field("market_context.max_close_drawdown_atr", calm)
+    wild_normalised = resolve_field("market_context.max_close_drawdown_atr", wild)
+
+    assert isinstance(calm_raw, Decimal)
+    assert isinstance(wild_raw, Decimal)
+    assert isinstance(calm_normalised, Decimal)
+    assert isinstance(wild_normalised, Decimal)
+    # The raw reading triples along with the movement...
+    assert wild_raw > calm_raw * Decimal("2.9")
+    # ...while the normalised one stays put, because the candle ranges grew with it.
+    assert abs(wild_normalised - calm_normalised) < Decimal("0.01")
+
+
+def test_drawdown_atr_is_unavailable_on_a_flat_window() -> None:
+    """A window with no range has no scale to normalise by; None beats a fabricated number."""
+    flat_candles = [_dip_candle(index, Decimal("1.1000"), Decimal("0")) for index in range(12)]
+    as_of = BASE_TIME + timedelta(minutes=15 * len(flat_candles))
+    flat = AnalysisEngine().build_snapshot(
+        pair=PAIR,
+        timeframe=Timeframe.M15,
+        window_start=BASE_TIME,
+        window_end=as_of,
+        as_of=as_of,
+        candles=flat_candles,
+        economic_events=[],
+        moving_average_windows=(3,),
+    )
+
+    assert resolve_field("market_context.max_close_drawdown_atr", flat) is None
+
+
+def test_drawdown_atr_is_unavailable_without_a_context_snapshot() -> None:
+    empty = AnalysisEngine().build_snapshot(
+        pair=PAIR,
+        timeframe=Timeframe.M15,
+        window_start=BASE_TIME,
+        window_end=BASE_TIME + timedelta(minutes=180),
+        as_of=BASE_TIME + timedelta(minutes=180),
+        candles=[],
+        economic_events=[],
+        moving_average_windows=(3,),
+    )
+
+    assert resolve_field("market_context.max_close_drawdown_atr", empty) is None

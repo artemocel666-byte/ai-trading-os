@@ -296,8 +296,13 @@ phases:
   FMP includes the calendar from Starter (one-year range) and in full from Premium. Until a plan or
   another provider is in place, keep `CALENDAR_ENABLED=false` and re-run `scripts/replay_rules.py`
   once real calendar history exists.
-- `MAXIMUM_CLOSE_DRAWDOWN` is a cross-timeframe compromise (see the 7D-2 report). Normalising the
-  field by average true range would remove it, and belongs with any future rule-content work.
+- ~~`MAXIMUM_CLOSE_DRAWDOWN` is a cross-timeframe compromise~~ — **closed 2026-08-05**, see
+  `docs/drawdown-normalisation-report.md`. The rule now reads
+  `market_context.max_close_drawdown_atr` against a bound of 4.0 typical candle ranges and fires on
+  5.65% of M15 and 5.03% of H1 windows, a 0.62 percentage-point spread against the previous 5.95.
+  The lesson generalises and is now a standing rule in `AGENTS.md`: a threshold on a raw magnitude
+  is a defect waiting to surface, because the timeframe, the instrument, and the period all change
+  what "large" means.
 
 Phase 7 comes before Chief AI because until 7A the application had no ingestion path at all, and
 until 7C the rules passed identically on live data and on an empty database. Explaining that output

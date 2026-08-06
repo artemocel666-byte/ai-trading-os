@@ -69,14 +69,17 @@ MAXIMUM_LATEST_CANDLE_AGE_MINUTES = Decimal("90")
 # is why a single band is defensible here.
 MINIMUM_VOLATILITY_RATIO = Decimal("0.30")
 MAXIMUM_VOLATILITY_RATIO = Decimal("3.5")
-# Recalibrated 2026-08-01 by the same replay. Observed p95 was 0.00244 (M15) and 0.00455 (H1);
-# the previous 0.01 fired on 0.26% of M15 and 0.14% of H1 windows, so it was effectively silent.
-# This threshold compares an absolute price move against a fixed bound while the move itself
-# scales with the timeframe, so no single value is right for both: 0.0025 fires on 4.66% of M15
-# but 22.38% of H1 windows. 0.004 is the compromise that keeps both inside the intended 1-10%
-# band (1.19% M15, 7.14% H1). Normalising the field by average true range, or scoping thresholds
-# per timeframe, would remove the compromise; both are rule-content changes beyond Phase 7D-2.
-MAXIMUM_CLOSE_DRAWDOWN = Decimal("0.004")
+# Measured in typical candle ranges, not in price: the raw drawdown is divided by the window's
+# own average true range (itself expressed as a fraction of the latest close). Calibrated
+# 2026-08-05 over six months of EURUSD — 16 508 M15 and 4 153 H1 observations — where p95 was
+# 4.1100 (M15) and 4.0061 (H1). At 4.0 the rule fires on 5.65% of M15 and 5.03% of H1 windows.
+#
+# The 0.62 percentage-point gap is the point of the change. The previous absolute bound (0.004 of
+# price) fired on 1.19% of M15 and 7.14% of H1 windows — a six-fold spread — because a 12-candle
+# window spans 3 hours on M15 and 12 hours on H1, and price covers more ground in 12 hours. The
+# normalised field asks "how many ordinary candle ranges deep was this decline", which means the
+# same thing on any timeframe.
+MAXIMUM_CLOSE_DRAWDOWN_ATR = Decimal("4.0")
 LAST_WEEKDAY_INDEX = Decimal("4")
 MAXIMUM_HIGH_IMPACT_EVENT_COUNT = Decimal("0")
 MINIMUM_MINUTES_SINCE_LATEST_EVENT = Decimal("30")
@@ -172,15 +175,15 @@ BUILTIN_STRATEGY_RULESET_FIXTURES: Mapping[str, StrategyRuleSet] = MappingProxyT
                     ),
                 ),
                 _foundation_rule(
-                    rule_id="market_context.max_close_drawdown",
+                    rule_id="market_context.max_close_drawdown_atr",
                     category=StrategyRuleCategory.MARKET_CONTEXT,
                     severity=StrategyRuleSeverity.WARNING,
-                    field_ref="market_context.max_close_drawdown",
+                    field_ref="market_context.max_close_drawdown_atr",
                     operator=StrategyRuleOperator.LTE,
-                    expected_value=MAXIMUM_CLOSE_DRAWDOWN,
+                    expected_value=MAXIMUM_CLOSE_DRAWDOWN_ATR,
                     description=(
                         "The largest close-to-close decline inside the window stays within a "
-                        "usual range for the timeframe."
+                        "usual number of candle ranges for this window."
                     ),
                 ),
             ),

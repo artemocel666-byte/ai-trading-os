@@ -198,6 +198,14 @@ real trading.
   `OPENAI_ENABLED` and `EXPLANATION_DELIVERY_ENABLED` default to `false`, and the call must run
   inside `EXPLANATION_BUDGET_SECONDS` so a slow provider cannot hang a Telegram command. `/review`,
   `/snapshot`, `/digest`, and scheduled delivery stay model-free.
+- A threshold on a raw magnitude is a defect waiting to surface. Before adding a rule over a
+  measured quantity, divide it by what is typical for that window — the timeframe, the instrument,
+  and the period all change what "large" means. `market_context.volatility_ratio` and
+  `market_context.max_close_drawdown_atr` are the pattern; the pre-2026-08-05 absolute drawdown
+  bound is the counter-example, which fired on 1.19% of M15 and 7.14% of H1 windows for the same
+  data. Acceptance for a normalised field: firing rates across timeframes within about one
+  percentage point. Dimensions must match — a fraction of price is not comparable to an absolute
+  price amount without converting one of them first.
 - Never fabricate market data, calendar data, agent evidence, or scan results.
 - LLM output may explain deterministic results only; it must not change prices, scores, risk, or rejected decisions.
 - Update documentation when architecture or safety boundaries change.
