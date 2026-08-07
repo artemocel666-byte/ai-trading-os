@@ -59,6 +59,14 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--target-multiplier", type=Decimal, default=None)
     parser.add_argument("--format", choices=("text", "json"), default="text")
     parser.add_argument(
+        "--exclude-closed-market",
+        action="store_true",
+        help=(
+            "measure only windows built entirely from traded candles; the provider returns a 24/7 "
+            "series and about 28% of it is carried forward while the market is shut"
+        ),
+    )
+    parser.add_argument(
         "--allow-synthetic",
         action="store_true",
         help="measure rows no real provider supplied; off by default because they are invented",
@@ -149,6 +157,7 @@ async def _main() -> int:
             ordered_events=sorted(economic_events, key=lambda event: event.scheduled_at),
             window_candles=args.window_candles,
             step_candles=args.step_candles,
+            skip_closed_market=args.exclude_closed_market,
         ):
             # The only forward slice in the project. It starts one candle after the window's own
             # `as_of` candle, so nothing the plan was built from is measured as its own outcome.

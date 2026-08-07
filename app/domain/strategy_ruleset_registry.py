@@ -61,14 +61,27 @@ def _foundation_rule(
 MINIMUM_USED_CANDLE_COUNT = Decimal("8")
 MINIMUM_COMPLETENESS_RATIO = Decimal("0.8")
 MAXIMUM_LATEST_CANDLE_AGE_MINUTES = Decimal("90")
-# Recalibrated 2026-08-01 by the Phase 7D-2 replay over six months of EURUSD (16 908 M15 and
-# 4 219 H1 observations). The band runs from roughly the third percentile to just past the
-# ninety-ninth: observed p03 was 0.2449 (M15) and 0.2613 (H1); p99 was 3.5252 (M15) and 3.6126
-# (H1). The previous 0.4/2.5 fired on 10.45% of M15 and 13.84% of H1 windows, which is too loud
-# for a warning; 0.30/3.5 fires on 5.55% and 5.74% — nearly identical on both timeframes, which
-# is why a single band is defensible here.
-MINIMUM_VOLATILITY_RATIO = Decimal("0.30")
-MAXIMUM_VOLATILITY_RATIO = Decimal("3.5")
+# Recalibrated 2026-08-08 over windows built **only from traded candles** — 11 973 M15 and 2 802 H1.
+# The previous 0.30/3.5 came from the same six months including weekend filler, and on clean data it
+# fires on 0.99% (M15) and 2.86% (H1): below the 1-10% corridor fixed for warning rules in 7D-2,
+# because the filler had been supplying both tails of the distribution.
+#
+# Clean percentiles:            p01     p03     p05  |    p95     p97     p99
+#   M15                      0.3354  0.4103  0.4538  | 1.9010  2.1220  2.7222
+#   H1                       0.2604  0.3224  0.3563  | 2.0417  2.2779  2.8921
+#
+# 0.35/2.3 sits near p02/p98 on M15 and p04/p97 on H1, and fires on 3.28% and 7.53%.
+#
+# **The two timeframes do not converge, and this is the honest record of that.** 7D-2 reported
+# 5.55% and 5.74% and called a single band defensible; that agreement was an artefact of
+# contamination, and clean data leaves a 4.25 percentage-point spread that no band in the sweep
+# removes — tightening the band widens it monotonically. A plausible reason: twelve M15 candles are
+# three hours inside one liquidity regime, while twelve H1 candles are half a day spanning Asia,
+# London and New York, so the window average is taken over genuinely different regimes. Unlike
+# `max_close_drawdown_atr`, which agrees to 0.02 points, this field is only partly
+# timeframe-neutral.
+MINIMUM_VOLATILITY_RATIO = Decimal("0.35")
+MAXIMUM_VOLATILITY_RATIO = Decimal("2.3")
 # Measured in typical candle ranges, not in price: the raw drawdown is divided by the window's
 # own average true range (itself expressed as a fraction of the latest close). Calibrated
 # 2026-08-05 over six months of EURUSD — 16 508 M15 and 4 153 H1 observations — where p95 was
@@ -79,6 +92,12 @@ MAXIMUM_VOLATILITY_RATIO = Decimal("3.5")
 # window spans 3 hours on M15 and 12 hours on H1, and price covers more ground in 12 hours. The
 # normalised field asks "how many ordinary candle ranges deep was this decline", which means the
 # same thing on any timeframe.
+#
+# Re-measured 2026-08-08 on traded candles only, and **left unchanged because it earned it**: p95 is
+# 4.1403 (M15) and 4.1149 (H1), and at 4.0 the rule fires on 5.98% and 5.96%. A spread of 0.02
+# percentage points, against 0.62 on the contaminated sample and 5.95 before the field was
+# normalised at all. This is the closest thing the project has to proof that normalising a threshold
+# works.
 MAXIMUM_CLOSE_DRAWDOWN_ATR = Decimal("4.0")
 LAST_WEEKDAY_INDEX = Decimal("4")
 MAXIMUM_HIGH_IMPACT_EVENT_COUNT = Decimal("0")

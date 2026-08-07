@@ -19,6 +19,7 @@ from app.domain.entities.analysis import AnalysisSnapshot
 from app.domain.entities.calibration import RuleCalibrationReport
 from app.domain.entities.data_quality import TIMEFRAME_TO_DELTA
 from app.domain.entities.market_data import Candle, EconomicEvent, Timeframe
+from app.domain.market_calendar import is_market_open
 from app.domain.rule_calibration import RuleCalibrationAccumulator
 from app.domain.strategy_decision_composer import StrategyDecisionComposer
 from app.domain.strategy_field_resolver import FIELD_RESOLVERS, FieldResolution
@@ -53,6 +54,7 @@ def iter_replay_windows(
     window_candles: int = DEFAULT_WINDOW_CANDLES,
     step_candles: int = DEFAULT_STEP_CANDLES,
     analysis_engine: AnalysisEngine | None = None,
+    skip_closed_market: bool = False,
 ) -> Iterator[ReplayWindow]:
     """Yield one snapshot per sampled moment, oldest first.
 
@@ -79,6 +81,15 @@ def iter_replay_windows(
         window_candle_slice = [
             candle for candle in window_candle_slice if candle.close_time <= window_end
         ]
+        if skip_closed_market and not all(
+            is_market_open(candle.open_time) for candle in window_candle_slice
+        ):
+            # A window holding even one carried-forward candle is not a sample of the market, and a
+            # threshold calibrated over it is partly a threshold on filler. Skipping is for
+            # calibration only: production sees these windows and fails them through
+            # `data_quality.market_open`, which is a report rather than a silence.
+            continue
+
         window_events = ordered_events[
             bisect_left(event_times, window_start) : bisect_right(event_times, window_end)
         ]
@@ -119,6 +130,7 @@ def replay_windows(
     step_candles: int = DEFAULT_STEP_CANDLES,
     analysis_engine: AnalysisEngine | None = None,
     composer: StrategyDecisionComposer | None = None,
+    skip_closed_market: bool = False,
 ) -> RuleCalibrationReport:
     """Walk stored candles and evaluate every window with the real decision path."""
     if window_candles < 1:
@@ -142,6 +154,7 @@ def replay_windows(
         window_candles=window_candles,
         step_candles=step_candles,
         analysis_engine=analysis_engine,
+        skip_closed_market=skip_closed_market,
     ):
         snapshot = window.snapshot
         decision = decision_composer.compose(snapshot, snapshot.window.as_of)

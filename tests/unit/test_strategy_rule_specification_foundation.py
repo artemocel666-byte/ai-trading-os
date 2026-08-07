@@ -58,7 +58,7 @@ def _ruleset(**overrides: object) -> StrategyRuleSet:
 
 
 def test_project_phase_has_advanced_to_phase4e_disabled_pipeline_report_shell_foundation() -> None:
-    assert constants.PROJECT_PHASE == "phase_9a5_market_data_provenance_foundation"
+    assert constants.PROJECT_PHASE == "phase_9a6_clean_calibration_foundation"
 
 
 def test_strategy_rule_models_are_immutable() -> None:

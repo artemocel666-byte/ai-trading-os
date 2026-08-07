@@ -63,7 +63,7 @@ def _snapshot(base_time: datetime, *, candle_count: int = 12):
 
 
 def test_project_phase_is_current() -> None:
-    assert constants.PROJECT_PHASE == "phase_9a5_market_data_provenance_foundation"
+    assert constants.PROJECT_PHASE == "phase_9a6_clean_calibration_foundation"
 
 
 @pytest.mark.parametrize(
@@ -157,3 +157,37 @@ def test_a_mandatory_rule_still_fails_closed_when_it_cannot_be_checked() -> None
     decision = StrategyDecisionComposer().compose(thin, thin.window.as_of)
 
     assert decision.status not in REVIEWABLE_PIPELINE_STATUSES
+
+
+def test_the_whole_window_is_judged_and_not_only_its_last_moment() -> None:
+    """A Monday-morning window reaches back into Sunday, where the prices are carried forward.
+
+    Checking `as_of` alone was the first version of this rule and it left the gap open: on H1 a
+    twelve-candle window ending at noon on Monday is built mostly from filler while its `as_of` sits
+    in a live market. One contaminated candle distorts the average true range that every other
+    measurement is normalised by.
+    """
+    # Sunday 22:00 through Monday 01:00 on M15: the first eight candles are on a shut market.
+    straddling = _snapshot(datetime(2026, 8, 9, 22, 0, tzinfo=UTC))
+
+    assert is_market_open(straddling.window.as_of) is True
+    assert resolve_field("data_quality.market_open", straddling) is False
+
+
+def test_a_window_of_traded_candles_is_not_rejected_for_ending_on_a_boundary() -> None:
+    """A Friday 23:45 candle closes at Saturday 00:00.
+
+    Judging the moment rejected 25 windows over six months that were built entirely from traded
+    candles. What a window is made of is the question; when it happens to end is not.
+    """
+    friday_evening = _snapshot(datetime(2026, 8, 7, 21, 0, tzinfo=UTC))
+
+    assert is_market_open(friday_evening.window.as_of) is False
+    assert resolve_field("data_quality.market_open", friday_evening) is True
+
+
+def test_an_empty_window_falls_back_to_the_moment() -> None:
+    """With no candles to judge, the moment is all there is — and guessing True would be worse."""
+    empty = _snapshot(CLOSED_DAY, candle_count=0)
+
+    assert resolve_field("data_quality.market_open", empty) is False

@@ -319,3 +319,31 @@ async def test_loading_history_refuses_fabricated_rows_by_default() -> None:
             end_at=SERIES_START + (40 * STEP),
             window_candles=12,
         )
+
+
+def test_the_calibration_walk_can_skip_windows_built_on_a_shut_market() -> None:
+    """Thresholds calibrated over carried-forward prices are partly thresholds on filler.
+
+    On 2026-08-08 this mattered: excluding closed-market windows moved `volatility_ratio` from
+    firing on 5.70% of six months of M15 windows to 0.99%, because the filler had been supplying
+    both tails of the distribution the band was drawn around.
+
+    Skipping is for calibration only. Production still sees these windows and fails them through
+    `data_quality.market_open`, which is a report rather than a silence.
+    """
+    # Friday 08:00 onward at M15, so the tail of the series runs into Saturday.
+    friday_start = datetime(2026, 8, 7, 8, 0, tzinfo=UTC)
+    candles = [_candle(friday_start + (index * STEP)) for index in range(12 * 8)]
+
+    everything = replay_windows(pair=PAIR, timeframe=Timeframe.M15, candles=candles)
+    traded_only = replay_windows(
+        pair=PAIR, timeframe=Timeframe.M15, candles=candles, skip_closed_market=True
+    )
+
+    assert traded_only.window_count < everything.window_count
+    assert traded_only.window_count > 0
+    market_open = next(
+        tally for tally in traded_only.tallies if tally.rule_id == "data_quality.market_open"
+    )
+    # By construction the rule cannot fire on a walk that already excluded those windows.
+    assert market_open.failed_count == 0

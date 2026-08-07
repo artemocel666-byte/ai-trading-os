@@ -125,6 +125,14 @@ def _parse_args() -> argparse.Namespace:
         ),
     )
     parser.add_argument(
+        "--exclude-closed-market",
+        action="store_true",
+        help=(
+            "calibrate only over windows built entirely from traded candles; the provider returns "
+            "a 24/7 series and about 28% of it is carried forward while the market is shut"
+        ),
+    )
+    parser.add_argument(
         "--allow-synthetic",
         action="store_true",
         help="measure rows no real provider supplied; off by default because they are invented",
@@ -228,6 +236,7 @@ async def _main() -> int:
             economic_events=economic_events,
             window_candles=args.window_candles,
             step_candles=args.step_candles,
+            skip_closed_market=args.exclude_closed_market,
         )
     except ValueError as error:
         print(f"Replay could not run: {error}")

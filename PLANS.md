@@ -278,6 +278,11 @@ non-actionable and without any signal, AI, or execution behavior.
     `docs/phase9a5-verification-report.md`. The second remediation item. 39 fabricated rows removed,
     of which 30 were seed candles sitting on real timestamps quoting prices four hundred pips out and
     winning the de-duplication. `load_history` now refuses fabricated rows by default.
+  - 9A-6: recalibration on traded candles — **completed 2026-08-08**, see
+    `docs/phase9a6-verification-report.md`. `volatility_ratio` moved to 0.35/2.3;
+    `max_close_drawdown_atr` stayed at 4.0 with a 0.02-point cross-timeframe spread; the 9A-2
+    baseline was re-measured and superseded. Two acceptance criteria proved incompatible for the
+    volatility band, and that is recorded rather than resolved by dropping one.
   - 9B: Telegram signal delivery — the first user-visible LONG/SHORT output in the project.
   - 9C: paper trading — simulated positions and outcome tracking, no real money.
   - `REAL_TRADING_ENABLED` stays `False` permanently; no broker order API is ever added.
@@ -329,11 +334,7 @@ review of 2026-08-07.
 1. ~~**Move the weekend filter into the domain**~~ — **done 2026-08-07 as 9A-4.**
 2. ~~**Clean the database**~~ — **done 2026-08-07 as 9A-5**, and it was worse than estimated: 39 rows,
    including 30 seed candles that had been replacing real observations outright.
-3. **Re-measure what was calibrated on filler** — the 7C thresholds and the 9A-2 baseline — now that
-   the pipeline can tell a traded candle from a carried-forward one and an invented one. Both
-   distributions already moved once the fabricated rows were removed: `volatility_ratio` lost its
-   maximum (10.798 to 9.348, an artificial spike), and `max_close_drawdown_atr` p95 fell from 4.089
-   to 4.042 against a threshold of 4.0.
+3. ~~**Re-measure what was calibrated on filler**~~ — **done 2026-08-08 as 9A-6.**
 4. **Close the measurement gaps found in the review**: drawdown is measured only downward, so a
    window that rose steeply reports zero risk; the entry band means the multipliers say 1.5/2.0 while
    everything behaves as 1.6/2.1; `RuleBehaviour` calls a rule OFTEN_FIRES on 68 observations out of

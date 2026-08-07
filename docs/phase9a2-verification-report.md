@@ -78,6 +78,11 @@ series, both entity validators, and shares reported as unavailable rather than z
 
 ## The baseline
 
+> **Superseded 2026-08-08.** These figures were measured over history that was about 28% weekend
+> filler and held 39 fabricated rows. The clean baseline is in `docs/phase9a6-verification-report.md`
+> — LONG 38.88% / SHORT 44.90% on M15, with ambiguity down from 2.15% to 0.63% and the two timeframes
+> agreeing to within 0.7 points. The method below stands; only the numbers moved.
+
 EURUSD, 180 days of stored history, window 12, step 1, horizon 24 candles, levels at the Phase 9A
 defaults (stop 1.5 ATR, target 2.0 ATR):
 

@@ -76,18 +76,37 @@ def _resolve_latest_candle_age_minutes(snapshot: AnalysisSnapshot) -> FieldResol
 
 
 def _resolve_market_open(snapshot: AnalysisSnapshot) -> FieldResolution:
-    """Whether the market was trading at the moment this window describes.
+    """Whether the market was trading for **every candle this window is built from**.
 
     A data-quality question, not a time preference. When the market is shut the provider still
     returns candles, and they are carried-forward prices rather than trades — see
     `app/domain/market_calendar.py`. A window built from them cannot be trusted for anything, which
     is why the rule reading this field is REQUIRED rather than a warning.
 
-    Never unavailable: the moment is always known, so "the market was shut" is a real observation
-    and not a missing value. That distinction is the Phase 7D-2 lesson — a resolver returning `None`
-    makes its rule UNAVAILABLE instead of failed, and the case it exists for passes in silence.
+    **The whole window, not only its last moment.** Checking `as_of` alone was the first version
+    and it left a gap: a Monday-morning window reaches back into Sunday, so on H1 a twelve-candle
+    window ending at noon on Monday is built mostly from filler while its `as_of` sits in a live
+    market. One contaminated candle is enough to distort the average true range that every other
+    measurement is normalised by.
+
+    Never unavailable: the timestamps are always known, so "the market was shut" is a real
+    observation and not a missing value. That distinction is the Phase 7D-2 lesson — a resolver
+    returning `None` makes its rule UNAVAILABLE instead of failed, and the case it exists for passes
+    in silence.
     """
-    return is_market_open(snapshot.window.as_of)
+    open_times = (
+        snapshot.feature_snapshot.candle_summary.used_candle_open_times
+        if snapshot.feature_snapshot is not None
+        else ()
+    )
+    if not open_times:
+        # No candles to judge, so the moment is all there is. An empty window fails plenty of other
+        # rules; this one should not also guess.
+        return is_market_open(snapshot.window.as_of)
+    # `as_of` deliberately does not get a vote of its own. A Friday 23:45 candle closes at Saturday
+    # 00:00, so judging the moment rejected 25 windows built entirely from traded candles. What the
+    # window is made of is the question; when it happens to end is not.
+    return all(is_market_open(open_time) for open_time in open_times)
 
 
 def _resolve_volatility_ratio(snapshot: AnalysisSnapshot) -> FieldResolution:

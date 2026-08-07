@@ -4,7 +4,7 @@ AI Trading OS is a safety-first foundation for a future modular Forex analysis a
 
 ## Current Status
 
-- Current project phase: phase_9a5_market_data_provenance_foundation.
+- Current project phase: phase_9a6_clean_calibration_foundation.
 - Phase 6 snapshot-backed read-only review is complete: `/review EURUSD M15` builds a real analysis
   snapshot, runs the Phase 4G composer over it, and presents the pipeline decision through the
   Phase 5 manual review layer — still read-only and non-actionable.
@@ -34,6 +34,9 @@ AI Trading OS is a safety-first foundation for a future modular Forex analysis a
 - Phase 9A-2 outcome measurement is complete: `scripts/measure_outcomes.py` walks forward from each
   historical window and records whether the target or the protective level came first. It produced
   the project's first baseline, which is what any future direction has to beat.
+- Phase 9A-6 re-derived the thresholds over traded candles only: the volatility band moved to
+  0.35/2.3, the drawdown bound stayed at 4.0 with a 0.02-point spread between timeframes, and the
+  9A-2 baseline was re-measured — ambiguity fell from 2-4% to 0.5-0.6%.
 - Phase 9A-5 makes provenance decide what counts as an observation: fabricated rows are refused by
   every calibration path, and `scripts/purge_synthetic_data.py` removed 39 of them — including 30
   seed candles that had been silently replacing real prices four hundred pips away.
@@ -352,13 +355,15 @@ answered the same thing. The new rules read actual values.
 
 | Ruleset | Rules |
 | --- | --- |
-| `foundation.data_quality.v1` | used candle count ≥ 8 (BLOCKING), completeness ratio ≥ 0.8, market-data completeness, latest-candle age ≤ 90 min |
-| `foundation.market_context.v1` | context readiness, volatility ratio within 0.30–3.5 of its own window average, max close-to-close drawdown ≤ 4.0 candle ranges |
-| `foundation.time_filter.v1` | London/New York liquidity session, weekday |
+| `foundation.data_quality.v1` | used candle count ≥ 8 (BLOCKING), completeness ratio ≥ 0.8, market-data completeness, market open for every candle (REQUIRED), latest-candle age ≤ 90 min |
+| `foundation.market_context.v1` | context readiness, volatility ratio within 0.35–2.3 of its own window average, max close-to-close drawdown ≤ 4.0 candle ranges |
+| `foundation.time_filter.v1` | London/New York liquidity session |
 
-Thresholds shown are the current ones. They were re-derived from six months of observed history in
-Phase 7D-2, and the drawdown rule was later switched to an ATR-normalised field so that one bound
-means the same thing on M15 and H1 — see `docs/drawdown-normalisation-report.md`. The event ruleset
+Thresholds shown are the current ones. They were re-derived in Phase 9A-6 over six months of history
+**built only from traded candles**, after the stored series turned out to be about 28% weekend filler
+— see `docs/phase9a6-verification-report.md`. The drawdown bound is ATR-normalised so that one number
+means the same thing on M15 and H1, and it does: 5.98% and 5.96%. The volatility band does not
+converge that way, and the report says so instead of hiding it. The event ruleset
 (`foundation.event_context.v1`) joined in Phase 7B, bringing the set to eleven rules.
 
 Severity drives the outcome: a BLOCKING failure makes the pipeline `BLOCKED`, a REQUIRED failure

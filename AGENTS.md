@@ -2,7 +2,20 @@
 
 AI Trading OS is a foundation for a future Forex analysis and paper-trading platform.
 
-Current project phase: phase_9a5_market_data_provenance_foundation.
+Current project phase: phase_9a6_clean_calibration_foundation.
+Phase 9A-6 re-derived every threshold over windows built **only from traded candles**, and
+`data_quality.market_open` now judges every candle in the window rather than only its `as_of`.
+`max_close_drawdown_atr` stays at 4.0 and earned it: 5.98% and 5.96% on M15 and H1, a 0.02-point
+spread. `volatility_ratio` moved from 0.30/3.5 to **0.35/2.3**, because on clean data the old band
+fired on 0.99% of M15 windows — the filler had been supplying both tails it was drawn around.
+**Two acceptance criteria proved incompatible for that field, and the report says so rather than
+picking a band that hides it:** the 1-10% corridor and the one-point convergence criterion cannot
+both be met, because the timeframe spread grows monotonically with how much the band fires. The
+convergence 7D-2 reported was an artefact of contamination. When a criterion cannot be met, record
+that; do not quietly drop the criterion.
+The Phase 9A-2 baseline was re-measured and is superseded: ambiguity fell from 2-4% to 0.5-0.6%,
+timeouts from ~20% to ~14%, and the two timeframes converged to within 0.7 points. The sample's
+drift is about 6 points in favour of SHORT on both. See `docs/phase9a6-verification-report.md`.
 Phase 9A-5 makes provenance decide what counts as an observation. `REAL_MARKET_DATA_PROVIDERS` in
 `app/core/constants.py` names the providers whose rows record a market; everything else is fabricated
 by definition, and `load_history` — the one door every calibration passes through — refuses it unless
