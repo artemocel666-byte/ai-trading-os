@@ -176,6 +176,54 @@ re-run that period rather than accepting the stored result.
 
 Backfill stores candles only. It produces no signals, price levels, scoring, AI output, or messages.
 
+## Fabricated Rows in Stored History
+
+The local seeder and the phase verification scripts write into the same database the calibrations
+read from, under their own provider names. On 2026-08-07 that turned out to matter: the database held
+30 `local-seed` EURUSD M15 candles **on the same timestamps as real ones**, quoting 1.1005 where the
+market was at 1.1441, plus five invented economic events — every event the project had.
+
+The collision was the dangerous part. `MarketFeatureEngine` de-duplicates by `(open_time, provider)`
+and keeps the first, `local-seed` sorts before `twelve_data`, so the invented candle replaced the
+real observation on each of those thirty timestamps without raising anything beyond a
+`DUPLICATE_CANDLE` issue.
+
+`app/core/constants.py` names the providers whose rows are real. Anything else is fabricated by
+definition — no heuristic on the values is needed, and none would have helped: the seed candles were
+well-formed OHLC with sane highs and lows.
+
+### Finding and removing them
+
+```bash
+uv run python -m scripts.purge_synthetic_data
+```
+
+Dry run by default: it prints every provider it would delete, and flags fabricated candles that
+collide with real ones. Add `--confirm` to delete. **Take a dump first** — this is not reversible
+from the script:
+
+```bash
+docker compose exec postgres pg_dump -U ai_trading_os ai_trading_os > backup.sql
+```
+
+### The guard that matters more
+
+`load_history` in `scripts/replay_rules.py` — the single door every calibration goes through —
+**refuses to run over fabricated rows**. Replay, outcome measurement and direction evaluation all
+inherit it. Test fixtures and deliberate experiments pass `--allow-synthetic`; nothing gets it by
+accident.
+
+After a purge, the calendar is genuinely empty, so both event rules become `NEVER_FIRES` and
+`NOT_OBSERVED` and `scripts/replay_rules.py` exits non-zero. That is correct: a rule that cannot be
+exercised is a finding. Acknowledge it deliberately rather than weakening the check:
+
+```bash
+uv run python -m scripts.replay_rules --days 180 \
+  --allow-quiet event_context.high_impact_event_count \
+  --allow-quiet event_context.minutes_since_latest_event \
+  --allow-quiet data_quality.latest_candle_age_minutes
+```
+
 ## Gaps in Stored History
 
 The worker does not have to run continuously, but **nothing announces a gap**. A missing Tuesday

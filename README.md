@@ -4,7 +4,7 @@ AI Trading OS is a safety-first foundation for a future modular Forex analysis a
 
 ## Current Status
 
-- Current project phase: phase_9a4_market_open_gate_foundation.
+- Current project phase: phase_9a5_market_data_provenance_foundation.
 - Phase 6 snapshot-backed read-only review is complete: `/review EURUSD M15` builds a real analysis
   snapshot, runs the Phase 4G composer over it, and presents the pipeline decision through the
   Phase 5 manual review layer — still read-only and non-actionable.
@@ -34,6 +34,9 @@ AI Trading OS is a safety-first foundation for a future modular Forex analysis a
 - Phase 9A-2 outcome measurement is complete: `scripts/measure_outcomes.py` walks forward from each
   historical window and records whether the target or the protective level came first. It produced
   the project's first baseline, which is what any future direction has to beat.
+- Phase 9A-5 makes provenance decide what counts as an observation: fabricated rows are refused by
+  every calibration path, and `scripts/purge_synthetic_data.py` removed 39 of them — including 30
+  seed candles that had been silently replacing real prices four hundred pips away.
 - Phase 9A-4 gave a warning consequences: a window recorded while the market was shut is now
   `NOT_READY` rather than trusted, and `READY_WITH_WARNINGS` stops the headline saying all is well
   while failures are listed underneath. The rule saying this already existed and failed on 28.08% of

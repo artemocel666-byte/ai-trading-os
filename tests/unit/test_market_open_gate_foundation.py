@@ -62,8 +62,8 @@ def _snapshot(base_time: datetime, *, candle_count: int = 12):
     )
 
 
-def test_project_phase_is_the_market_open_gate() -> None:
-    assert constants.PROJECT_PHASE == "phase_9a4_market_open_gate_foundation"
+def test_project_phase_is_current() -> None:
+    assert constants.PROJECT_PHASE == "phase_9a5_market_data_provenance_foundation"
 
 
 @pytest.mark.parametrize(

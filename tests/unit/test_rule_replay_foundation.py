@@ -241,6 +241,9 @@ async def test_loading_history_reads_once_and_writes_nothing() -> None:
         start_at=SERIES_START,
         end_at=SERIES_START + (40 * STEP),
         window_candles=12,
+        # Fixtures are written under a test provider name, which the loader treats as fabricated by
+        # design. Acknowledging it deliberately is the point of the flag.
+        allow_synthetic=True,
     )
     report = replay_windows(pair=PAIR, timeframe=Timeframe.M15, candles=loaded_candles)
 
@@ -294,3 +297,25 @@ def test_replay_uses_the_same_evaluation_path_as_review() -> None:
         for ruleset in decision.ruleset_reports
         for result in ruleset.results
     )
+
+
+@pytest.mark.asyncio
+async def test_loading_history_refuses_fabricated_rows_by_default() -> None:
+    """Every calibration this project has run went through this function.
+
+    On 2026-08-07 the range was found to hold 30 seed candles quoting prices four hundred pips from
+    the market, sitting on the same timestamps as real ones, plus five invented calendar events.
+    They fed the Phase 7C thresholds and the Phase 9A-2 baseline for a week without a word. Failing
+    closed costs a flag when it is wrong and catches a silent corruption when it is right.
+    """
+    factory = FakeUnitOfWorkFactory(candles=_series(30))
+
+    with pytest.raises(ValueError, match="no real provider supplied"):
+        await load_history(
+            factory,
+            pair=PAIR,
+            timeframe=Timeframe.M15,
+            start_at=SERIES_START,
+            end_at=SERIES_START + (40 * STEP),
+            window_candles=12,
+        )

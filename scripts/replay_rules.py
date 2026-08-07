@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 from decimal import Decimal
 
 from app.core.config import Settings
+from app.core.constants import REAL_MARKET_DATA_PROVIDERS
 from app.core.time import normalize_to_utc, utc_now
 from app.domain.entities import Candle, EconomicEvent, Timeframe
 from app.domain.entities.calibration import RuleCalibrationReport
@@ -34,6 +35,21 @@ def touches_closed_market(candles: Sequence[Candle]) -> bool:
     return not all(is_market_open(candle.open_time) for candle in candles)
 
 
+def synthetic_providers(
+    candles: Sequence[Candle], events: Sequence[EconomicEvent]
+) -> dict[str, int]:
+    """Rows in this range that no real provider supplied, counted by provider name.
+
+    Seed and verification scripts write under their own provider names, so this needs no heuristic:
+    anything outside `REAL_MARKET_DATA_PROVIDERS` was invented by us.
+    """
+    counts: dict[str, int] = {}
+    for provider in [candle.provider for candle in candles] + [event.provider for event in events]:
+        if provider not in REAL_MARKET_DATA_PROVIDERS:
+            counts[provider] = counts.get(provider, 0) + 1
+    return counts
+
+
 async def load_history(
     uow_factory: UnitOfWorkFactory,
     *,
@@ -43,8 +59,16 @@ async def load_history(
     end_at: datetime,
     window_candles: int,
     currencies: Sequence[str] | None = None,
+    allow_synthetic: bool = False,
 ) -> tuple[list[Candle], list[EconomicEvent]]:
-    """Read the replay range once. Read-only: no upsert, no commit, nothing written back."""
+    """Read the replay range once. Read-only: no upsert, no commit, nothing written back.
+
+    **Refuses fabricated rows by default.** Every calibration this project has ever run went through
+    here, and on 2026-08-07 the range was found to contain 30 seed candles quoting prices 400 pips
+    from the market, plus five invented calendar events — all of which fed the Phase 7C thresholds
+    and the Phase 9A-2 baseline unnoticed. Failing closed costs a flag when it is wrong and catches
+    a silent corruption when it is right.
+    """
     start_utc = normalize_to_utc(start_at)
     end_utc = normalize_to_utc(end_at)
     if end_utc <= start_utc:
@@ -66,6 +90,13 @@ async def load_history(
             start_at=start_utc - lead_in,
             end_at=end_utc,
             currencies=event_currencies,
+        )
+    fabricated = synthetic_providers(candles, economic_events)
+    if fabricated and not allow_synthetic:
+        detail = ", ".join(f"{name}={count}" for name, count in sorted(fabricated.items()))
+        raise ValueError(
+            f"this range holds rows no real provider supplied ({detail}); "
+            "run scripts/purge_synthetic_data.py, or pass --allow-synthetic to measure them anyway"
         )
     return (candles, economic_events)
 
@@ -92,6 +123,11 @@ def _parse_args() -> argparse.Namespace:
             "acknowledge a rule that this history cannot exercise, so it does not fail the run; "
             "repeatable, and every other silent rule still fails"
         ),
+    )
+    parser.add_argument(
+        "--allow-synthetic",
+        action="store_true",
+        help="measure rows no real provider supplied; off by default because they are invented",
     )
     parser.add_argument("--database-url", default=None)
     return parser.parse_args()
@@ -183,6 +219,7 @@ async def _main() -> int:
             start_at=start_at,
             end_at=end_at,
             window_candles=args.window_candles,
+            allow_synthetic=args.allow_synthetic,
         )
         report = replay_windows(
             pair=pair,

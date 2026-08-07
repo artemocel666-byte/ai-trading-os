@@ -2,7 +2,18 @@
 
 AI Trading OS is a foundation for a future Forex analysis and paper-trading platform.
 
-Current project phase: phase_9a4_market_open_gate_foundation.
+Current project phase: phase_9a5_market_data_provenance_foundation.
+Phase 9A-5 makes provenance decide what counts as an observation. `REAL_MARKET_DATA_PROVIDERS` in
+`app/core/constants.py` names the providers whose rows record a market; everything else is fabricated
+by definition, and `load_history` — the one door every calibration passes through — refuses it unless
+`--allow-synthetic` is passed. `scripts/purge_synthetic_data.py` removes such rows, dry-run first.
+**Why a whitelist and not a sanity check on the values:** the seeded candles found on 2026-08-07 were
+well-formed OHLC, correctly ordered, in a plausible range — and four hundred pips from the market,
+sitting on the same timestamps as real ones. De-duplication keeps the first provider alphabetically,
+so `local-seed` beat `twelve_data` on all thirty. No check on the numbers would have caught it.
+**Verification and demo scripts must never write to a database a calibration reads** without their
+rows being distinguishable; the `provider` column is that record, so never reuse a real provider's
+name for a fixture. See `docs/phase9a5-verification-report.md`.
 Phase 9A-4 gave a warning consequences. `data_quality.market_open` is REQUIRED, so a window recorded
 while the market was shut is `NOT_READY` instead of trusted, and `READY_WITH_WARNINGS` exists so the
 headline can no longer say all is well while failures are listed underneath it.
@@ -30,7 +41,7 @@ and the market is shut from Friday evening to Sunday evening. Those rows carry p
 they depress the average true range and the return to real trading looks like a violent one-sided
 move. Anything calibrated over stored history — the Phase 7C thresholds, the Phase 9A-2 baseline —
 was measured partly on filler and should be re-measured weekend-free before anything is built on it.
-`touches_closed_market` in `scripts/replay_rules.py` is the current filter and belongs in the domain.
+The filter moved into the domain in 9A-4 (`app/domain/market_calendar.py`).
 **The held-out 40% of this history has now been examined twice and is spent.** No future candidate on
 EURUSD may claim a fresh out-of-sample test against it; genuinely unseen data now means another
 instrument or a later period.

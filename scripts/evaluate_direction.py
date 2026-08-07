@@ -107,6 +107,11 @@ def _parse_args() -> argparse.Namespace:
         ),
     )
     parser.add_argument("--format", choices=("text", "json"), default="text")
+    parser.add_argument(
+        "--allow-synthetic",
+        action="store_true",
+        help="measure rows no real provider supplied; off by default because they are invented",
+    )
     parser.add_argument("--database-url", default=None)
     return parser.parse_args()
 
@@ -154,6 +159,7 @@ async def _collect(
             start_at=start_at,
             end_at=end_at,
             window_candles=args.window_candles,
+            allow_synthetic=args.allow_synthetic,
         )
         ordered = order_candles(candles, pair=pair, timeframe=timeframe)
         if len(ordered) < args.window_candles:

@@ -274,6 +274,10 @@ non-actionable and without any signal, AI, or execution behavior.
     market was shut is `NOT_READY`; `READY_WITH_WARNINGS` exists so a failing warning reaches the
     headline. The rule saying this already existed as a WARNING and failed on 28.08% of windows while
     changing nothing, because `warning_failure_count` was computed and never used.
+  - 9A-5: market-data provenance — **completed 2026-08-07**, see
+    `docs/phase9a5-verification-report.md`. The second remediation item. 39 fabricated rows removed,
+    of which 30 were seed candles sitting on real timestamps quoting prices four hundred pips out and
+    winning the de-duplication. `load_history` now refuses fabricated rows by default.
   - 9B: Telegram signal delivery — the first user-visible LONG/SHORT output in the project.
   - 9C: paper trading — simulated positions and outcome tracking, no real money.
   - `REAL_TRADING_ENABLED` stays `False` permanently; no broker order API is ever added.
@@ -323,11 +327,13 @@ Concretely, and in this order. Item 1 is done; the rest is the remediation list 
 review of 2026-08-07.
 
 1. ~~**Move the weekend filter into the domain**~~ — **done 2026-08-07 as 9A-4.**
-2. **Clean the database.** Two `phase7b-proof` event stubs and four stray GBPUSD candles are test
-   artefacts from earlier verification runs, and they participate in calibration: the stubs fired
-   `event_context.high_impact_event_count` twelve times over six months.
+2. ~~**Clean the database**~~ — **done 2026-08-07 as 9A-5**, and it was worse than estimated: 39 rows,
+   including 30 seed candles that had been replacing real observations outright.
 3. **Re-measure what was calibrated on filler** — the 7C thresholds and the 9A-2 baseline — now that
-   the pipeline can tell a traded candle from a carried-forward one.
+   the pipeline can tell a traded candle from a carried-forward one and an invented one. Both
+   distributions already moved once the fabricated rows were removed: `volatility_ratio` lost its
+   maximum (10.798 to 9.348, an artificial spike), and `max_close_drawdown_atr` p95 fell from 4.089
+   to 4.042 against a threshold of 4.0.
 4. **Close the measurement gaps found in the review**: drawdown is measured only downward, so a
    window that rose steeply reports zero risk; the entry band means the multipliers say 1.5/2.0 while
    everything behaves as 1.6/2.1; `RuleBehaviour` calls a rule OFTEN_FIRES on 68 observations out of
