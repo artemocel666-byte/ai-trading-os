@@ -253,6 +253,13 @@ non-actionable and without any signal, AI, or execution behavior.
     returns a `SignalDirection`. The `calculate_*` term ban now applies project-wide with one
     exempted module — before this slice it only existed in per-phase file lists, so a new file could
     have defined one unnoticed.
+  - 9A-2: outcome measurement — **completed 2026-08-07**, see
+    `docs/phase9a2-verification-report.md`. The capability 9A named as missing: for each historical
+    window, walk forward and record whether the target or the protective level came first. The only
+    module in the project allowed to read past `as_of`, fenced off from the analysis path by three
+    tests. Produced the project's first baseline — EURUSD M15, 38.4% LONG / 43.1% SHORT at the 9A
+    defaults, gross of costs — and a multiplier sweep in which nothing pays for its own geometry
+    without a direction.
   - 9B: Telegram signal delivery — the first user-visible LONG/SHORT output in the project.
   - 9C: paper trading — simulated positions and outcome tracking, no real money.
   - `REAL_TRADING_ENABLED` stays `False` permanently; no broker order API is ever added.
@@ -293,14 +300,18 @@ all exist, with both flags off by default. See `docs/phase8a-`, `8b-`, and
 `phase8c-verification-report.md`.
 
 **Direction is the next open question, and it blocks 9B.** Phase 9B delivers signals to a user, and
-a signal is a direction plus levels; the levels now exist and the direction does not. Before it can,
-two things are needed, in this order:
+a signal is a direction plus levels; the levels exist and the direction does not.
 
-1. **Outcome measurement** — for each historical window, did the protective level or the target come
-   first? The replay walks windows and evaluates rules but scores nothing. Without it, no directional
-   rule can be shown to beat a coin toss, and no level multiplier can be calibrated either.
-2. **A directional rule**, calibrated against that measurement. This is the first time the project
-   would take a market view, and it should be approved deliberately rather than arrived at.
+Outcome measurement, which used to be the first of two prerequisites, was delivered as 9A-2 on
+2026-08-07. What remains is **a directional rule, calibrated against that measurement** — the first
+time this project would take a market view, and something to be approved deliberately rather than
+arrived at.
+
+The measurement set the terms it has to be judged on. A candidate is compared against the baseline
+for its own direction on the same windows, not against 50%: with no strategy at all, SHORT already
+led LONG by 4.6 п.п. on M15 and 10.9 on H1 over this six-month sample, so a rule that leans one way
+inherits that drift without earning it. Windows overlap heavily, so the counts are stable rather than
+statistically powerful, and every figure is gross of costs.
 
 Superseded planning note: **Phase 9A (`SignalContract` assembly and price levels) was the next task.** It is the first
 slice that computes an entry, a protective level, and a target — work deferred since Phase 4 — and

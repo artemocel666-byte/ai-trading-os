@@ -4,7 +4,7 @@ AI Trading OS is a safety-first foundation for a future modular Forex analysis a
 
 ## Current Status
 
-- Current project phase: phase_9a_price_plan_foundation.
+- Current project phase: phase_9a2_outcome_measurement_foundation.
 - Phase 6 snapshot-backed read-only review is complete: `/review EURUSD M15` builds a real analysis
   snapshot, runs the Phase 4G composer over it, and presents the pipeline decision through the
   Phase 5 manual review layer — still read-only and non-actionable.
@@ -29,8 +29,11 @@ AI Trading OS is a safety-first foundation for a future modular Forex analysis a
   Phase 8.
 - Phase 9A price levels are complete: entry, protective and target levels are placed at multiples of
   the window's average true range, with direction supplied as an input. There is still no strategy —
-  nothing in the project decides up or down, and a test enforces that. Next: direction, which needs
-  outcome measurement first, then delivery and paper trading.
+  nothing in the project decides up or down, and a test enforces that.
+- Phase 9A-2 outcome measurement is complete: `scripts/measure_outcomes.py` walks forward from each
+  historical window and records whether the target or the protective level came first. It produced
+  the project's first baseline, which is what any future direction has to beat. Next: direction,
+  then delivery and paper trading.
 - Trading strategy: not implemented.
 - Real trading: disabled and unsupported.
 - External integrations: disabled by default.
@@ -522,11 +525,43 @@ test failing is the signal that somebody is adding one.
 
 **The multipliers are conventions, not calibrations.** Every other threshold in this project was
 derived from an observed distribution; these could not be, because judging a protective distance
-requires knowing whether that level or the target was reached first, and nothing here measures what
-happened after a window. See `docs/phase9a-verification-report.md`.
+requires knowing whether that level or the target was reached first. Phase 9A-2 added that
+measurement and found nothing that beats them, so they stand — as conventions with a baseline
+attached rather than bare guesses. See `docs/phase9a-verification-report.md`.
 
 Contracts are `DRAFT` and `NOT_ACTIONABLE`, carry no risk plan — position size needs an account
 balance this project does not have — and are wired to nothing.
+
+## Phase 9A-2 Status
+
+Phase 9A-2 measures what happened *after* a window: for each historical moment, walk forward from the
+fixed plan and record whether the target or the protective level was reached first.
+
+```bash
+uv run python -m scripts.measure_outcomes --days 180 --timeframe M15
+```
+
+`--stop-multiplier` and `--target-multiplier` sweep the Phase 9A level conventions; `--horizon-candles`
+bounds how long a plan is given to resolve.
+
+**This is the only module in the project allowed to read data after `as_of`.** Everywhere else the
+Phase 3D invariant holds. Three tests fence the exception in: the analysis path may not name
+`outcome_measurement` at all, no service, route, command or job may reference it, and it imports no
+persistence, adapter, Telegram, API or scheduler code. A measurement that flowed back into a decision
+would be look-ahead bias with a report attached.
+
+**Ambiguity is counted, not guessed.** When one candle's range spans both levels, OHLC records four
+prices and not their order; that window is `AMBIGUOUS` and counts against the plan rather than being
+resolved the flattering way. On six months of EURUSD it is 2–4% of the sample, which is why the rest
+of the numbers are usable.
+
+**Every figure is gross of costs** — the project stores no spread — and the script says so under every
+table.
+
+The baseline, EURUSD over 180 days at the Phase 9A defaults: 38.4% of resolved M15 windows reached the
+target first going LONG, 43.1% going SHORT. The gap is drift in the sample, not skill, which is
+exactly why a future directional rule must be judged against the baseline for its own direction
+rather than against a coin toss. See `docs/phase9a2-verification-report.md`.
 
 ## Prerequisites
 

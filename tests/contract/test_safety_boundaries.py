@@ -45,12 +45,15 @@ from app.domain.entities.explanation import (
     ExplanationOutcome,
     ExplanationValidationReport,
 )
+from app.domain.entities.outcome import OutcomeKind
 from app.domain.entities.signal_contract import (
     SignalActionability,
     SignalDirection,
     SignalLifecycleStatus,
+    SignalPricePlan,
 )
 from app.domain.manual_review_report_builder import ManualReviewReportBuilder
+from app.domain.outcome_measurement import measure_outcome
 from app.domain.signal_price_plan import build_draft_contract
 from app.domain.strategy_decision_composer import StrategyDecisionComposer
 from app.domain.strategy_field_resolver import resolve_field
@@ -2363,3 +2366,92 @@ def _price_plan_snapshot():
         economic_events=[],
         moving_average_windows=(3,),
     )
+
+
+PHASE_9A2_OUTCOME_MODULE = Path("app/domain/outcome_measurement.py")
+
+# Everything that participates in producing a decision. None of it may see the future.
+PHASE_9A2_ANALYSIS_PATH = (
+    Path("app/domain/analysis_engine.py"),
+    Path("app/domain/feature_engine.py"),
+    Path("app/domain/context_engine.py"),
+    Path("app/domain/snapshot_review.py"),
+    Path("app/domain/rule_replay.py"),
+    Path("app/domain/signal_price_plan.py"),
+)
+
+
+def test_phase9a2_outcome_measurement_is_invisible_to_the_analysis_path() -> None:
+    """Forward-looking data is legitimate in exactly one module, and must stay there.
+
+    The Phase 3D invariant is that nothing after `as_of` may influence a decision. Outcome
+    measurement is the deliberate exception: it runs after a plan is fixed and reports what
+    happened. The exception stays safe only if the result cannot flow back, so the analysis path
+    is forbidden from importing it at all — including every `strategy_*` module.
+    """
+    analysis_files = list(PHASE_9A2_ANALYSIS_PATH) + sorted(
+        Path("app/domain").glob("strategy_*.py")
+    )
+
+    offenders = [
+        str(file_path)
+        for file_path in analysis_files
+        if file_path.exists() and "outcome_measurement" in file_path.read_text(encoding="utf-8")
+    ]
+
+    assert offenders == []
+
+
+def test_phase9a2_outcome_measurement_is_not_wired_anywhere() -> None:
+    """Measurement is an offline instrument. Nothing running on a timer or a command may use it."""
+    source = "\n".join(
+        file_path.read_text(encoding="utf-8")
+        for directory in ("app/services", "app/telegram", "app/scheduler", "app/api")
+        for file_path in Path(directory).rglob("*.py")
+    )
+
+    assert "outcome_measurement" not in source
+    assert "measure_outcome" not in source
+
+
+def test_phase9a2_outcome_measurement_touches_no_other_layer() -> None:
+    import_lines = tuple(
+        line
+        for line in PHASE_9A2_OUTCOME_MODULE.read_text(encoding="utf-8").lower().splitlines()
+        if line.startswith("import ") or line.startswith("from ")
+    )
+
+    for term in ("app.persistence", "app.adapters", "app.telegram", "app.api", "app.scheduler"):
+        assert not any(term in line for line in import_lines), term
+
+
+def test_phase9a2_ambiguity_is_a_named_outcome_rather_than_a_silent_choice() -> None:
+    """A candle that spans both levels cannot be adjudicated by OHLC, and must not pretend to be.
+
+    Resolving it silently — in either direction — is how a backtest flatters its author. The kind
+    exists so the rate is countable, and the conservative reading leans against the plan.
+    """
+    plan = SignalPricePlan(
+        entry_min=Decimal("1.09990"),
+        entry_max=Decimal("1.10010"),
+        stop_loss=Decimal("1.09800"),
+        take_profit_1=Decimal("1.10300"),
+    )
+    spanning = Candle(
+        provider="safety-outcome",
+        pair=CurrencyPair(value="EURUSD"),
+        timeframe=Timeframe.M15,
+        open_time=datetime(2026, 7, 20, 8, 0, tzinfo=UTC),
+        close_time=datetime(2026, 7, 20, 8, 15, tzinfo=UTC),
+        open=Decimal("1.10000"),
+        high=Decimal("1.10400"),
+        low=Decimal("1.09700"),
+        close=Decimal("1.10000"),
+        volume=Decimal("100"),
+        is_closed=True,
+    )
+
+    outcome = measure_outcome(SignalDirection.LONG, plan, [spanning])
+
+    assert outcome.kind == OutcomeKind.AMBIGUOUS
+    assert outcome.conservative_kind == OutcomeKind.STOP_FIRST

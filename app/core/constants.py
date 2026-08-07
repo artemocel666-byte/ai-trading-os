@@ -1,4 +1,4 @@
-PROJECT_PHASE = "phase_9a_price_plan_foundation"
+PROJECT_PHASE = "phase_9a2_outcome_measurement_foundation"
 STRATEGY_IMPLEMENTED = False
 REAL_TRADING_ENABLED = False
 

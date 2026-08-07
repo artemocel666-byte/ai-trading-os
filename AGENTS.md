@@ -2,7 +2,14 @@
 
 AI Trading OS is a foundation for a future Forex analysis and paper-trading platform.
 
-Current project phase: phase_9a_price_plan_foundation.
+Current project phase: phase_9a2_outcome_measurement_foundation.
+Phase 9A-2 adds outcome measurement: `app/domain/outcome_measurement.py` walks forward from a fixed
+plan and records whether the target or the protective level came first. It is the **only** module
+permitted to read data after `as_of`, and its results must never flow back into a snapshot, a rule,
+or a decision. A candle spanning both levels is `AMBIGUOUS`, counted rather than guessed. Every
+figure is gross of costs, and any document quoting one must say so. The baseline it produced
+(EURUSD M15, 38.4% LONG / 43.1% SHORT at the 9A defaults) is what any future direction has to beat —
+per direction, not against 50%. See `docs/phase9a2-verification-report.md`.
 Phase 9A builds price levels and nothing else: `app/domain/signal_price_plan.py` takes a direction
 as an argument and places entry, protective and target levels at multiples of the window's average
 true range. It contains no strategy — nothing in this project decides "up" or "down", and a test
@@ -221,8 +228,25 @@ real trading.
   project does not have and must not invent. **Direction is an argument, never a conclusion.** No
   function anywhere may return a `SignalDirection`; the day one does, somebody is adding a strategy
   and must say so out loud. The multipliers are uncalibrated conventions and any document mentioning
-  them must say so — earning a number here requires measuring, for each historical window, whether
-  the protective level or the target was reached first, which nothing in this project does yet.
+  them must say so. Since 9A-2 they at least have a measured baseline attached; a sweep found no
+  setting that pays for its own geometry without a direction, so nothing justifies moving them yet.
+- While working in Phase 9A-2, `app/domain/outcome_measurement.py` is the only module in the project
+  allowed to look past `as_of`, and `scripts/measure_outcomes.py` is the only place that slices
+  candles from after a window. Everything in the analysis path — `analysis_engine`, `feature_engine`,
+  `context_engine`, `snapshot_review`, `rule_replay`, `signal_price_plan`, every `strategy_*` module
+  — is forbidden from even naming it, and no service, route, command, or job may reference it:
+  measurement is an offline instrument, never a scheduled one. A result that flows back into a
+  decision would break the Phase 3D no-future-data proof.
+  Three reporting rules, each enforced by the shape of the result rather than by memory: a candle
+  spanning both levels is `AMBIGUOUS` and counted in the denominator, never silently resolved the
+  flattering way; an unresolved window is `TIMEOUT`, never dropped and never scored as a loss; shares
+  are `None` when nothing resolved, never a substituted zero. Every outcome is gross of costs — there
+  is no spread data — and any table quoting one must say so on the same page.
+  When comparing directions, compare against the baseline **for that direction**: the six-month
+  EURUSD sample carries a drift of its own (SHORT ahead by 4.6 п.п. on M15 and 10.9 on H1 with no
+  strategy at all), so a rule that always says SHORT would look clever for reasons that are not the
+  rule. Overlapping windows mean the counts are stable, not statistically powerful; no confidence
+  interval may be read off them.
 - Never fabricate market data, calendar data, agent evidence, or scan results.
 - LLM output may explain deterministic results only; it must not change prices, scores, risk, or rejected decisions.
 - Update documentation when architecture or safety boundaries change.
