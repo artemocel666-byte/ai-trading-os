@@ -40,7 +40,7 @@ from app.domain.strategy_decision_composer import StrategyDecisionComposer
 from app.domain.value_objects import CurrencyPair
 from app.persistence.database import create_engine, create_session_factory
 from app.persistence.session import build_uow_factory
-from scripts.replay_rules import load_history
+from scripts.replay_rules import load_history, touches_closed_market
 
 # The grid was fixed before any evaluation ran, and checked against the observed distribution of
 # `market_context.move_efficiency` (median 0.28, p75 0.47, p95 0.76 on both timeframes) so that
@@ -98,6 +98,14 @@ def _parse_args() -> argparse.Namespace:
         action="store_true",
         help="ignore pipeline readiness, measuring the hypothesis in isolation",
     )
+    parser.add_argument(
+        "--exclude-weekends",
+        action="store_true",
+        help=(
+            "drop any window whose candles or forward horizon touch a weekend, when this "
+            "provider's 24/7 series is carried-forward filler rather than traded prices"
+        ),
+    )
     parser.add_argument("--format", choices=("text", "json"), default="text")
     parser.add_argument("--database-url", default=None)
     return parser.parse_args()
@@ -152,6 +160,7 @@ async def _collect(
             raise ValueError("not enough stored candles to evaluate a single window")
 
         measured: list[MeasuredWindow] = []
+        excluded_weekend_windows = 0
         for window in iter_replay_windows(
             pair=pair,
             timeframe=timeframe,
@@ -161,6 +170,17 @@ async def _collect(
             step_candles=args.step_candles,
         ):
             snapshot = window.snapshot
+            if args.exclude_weekends:
+                # Whole windows are dropped rather than weekend candles being deleted from the
+                # series: removing candles would splice Friday straight onto Monday and invent an
+                # adjacency that never existed, trading one distortion for another. The span
+                # checked covers the window and the whole forward horizon, so an outcome can never
+                # be decided by filler even if it resolved long before reaching any.
+                span_start = max(0, window.candle_index - args.window_candles + 1)
+                span_end = window.candle_index + 1 + args.horizon_candles
+                if touches_closed_market(ordered[span_start:span_end]):
+                    excluded_weekend_windows += 1
+                    continue
             long_plan = build_price_plan(SignalDirection.LONG, snapshot)
             short_plan = build_price_plan(SignalDirection.SHORT, snapshot)
             if long_plan is None or short_plan is None:
@@ -192,6 +212,8 @@ async def _collect(
                     ),
                 )
             )
+        if excluded_weekend_windows:
+            print(f"Excluded {excluded_weekend_windows} window(s) touching a closed market.")
         return measured
     finally:
         await engine.dispose()
@@ -246,10 +268,14 @@ async def _main() -> int:
         # being chosen, or it stops being held out.
         for threshold in SWEEP_THRESHOLDS:
             for invert in (False, True):
+                # Labelled by relation to the module, never by the name of a hypothesis. An earlier
+                # version said "trend" for the un-inverted row; when the module was turned around,
+                # the label silently began describing the opposite of what it measured. A label that
+                # restates a fact recorded elsewhere is a label that will eventually lie.
                 evaluations.append(
                     evaluate_direction(
                         _proposals(in_sample, threshold=threshold, invert=invert),
-                        label=f"{'reversion' if invert else 'trend'} >= {threshold}",
+                        label=f"{'inverted' if invert else 'candidate'} >= {threshold}",
                     )
                 )
     else:
@@ -283,9 +309,10 @@ async def _main() -> int:
 
     mode = "in-sample sweep" if args.sweep else f"threshold {args.minimum_efficiency}"
     gate = "ungated" if args.ungated else "gated on pipeline readiness"
+    weekends = "weekends excluded" if args.exclude_weekends else "weekends included"
     print(
         f"Direction: {args.pair.upper()} {args.timeframe.upper()} over {args.days} days, "
-        f"{mode}, {gate}"
+        f"{mode}, {gate}, {weekends}"
     )
     print(
         f"Windows: {len(measured)} measured, split at {split_at} "

@@ -9,11 +9,18 @@ exemption holds only while four things stay true: the return type is optional, i
 outcome measurement that judges it, it imports no other layer, and nothing wired references it.
 The candidate proposes a direction **against** a conspicuously one-sided window, above an efficiency
 of 0.60, and abstains otherwise — including on any window the pipeline does not consider ready.
-The sign was chosen by an in-sample sweep that contradicted the intuitive reading, and verified once
-on held-out data. It cleared criteria fixed in advance (held-out edge +6.84 п.п. on M15, +15.48 on
-H1, coverage 13.3% and 11.2%) — but those criteria were about effect size, never significance:
-overlapping windows make the effective sample far smaller than the counts suggest, and everything is
-gross of costs. See `docs/phase9a3-verification-report.md`.
+**It was measured and it failed, and the module stays unwired and disproved.** Its apparent edge came
+from the data provider's synthetic weekend rows; exclude weekends and the in-sample result reverses
+sign on both timeframes. See the addendum in `docs/phase9a3-verification-report.md`.
+**The stored history is about 28% weekend filler.** This provider returns a continuous 24/7 series,
+and the market is shut from Friday evening to Sunday evening. Those rows carry prices forward, so
+they depress the average true range and the return to real trading looks like a violent one-sided
+move. Anything calibrated over stored history — the Phase 7C thresholds, the Phase 9A-2 baseline —
+was measured partly on filler and should be re-measured weekend-free before anything is built on it.
+`touches_closed_market` in `scripts/replay_rules.py` is the current filter and belongs in the domain.
+**The held-out 40% of this history has now been examined twice and is spent.** No future candidate on
+EURUSD may claim a fresh out-of-sample test against it; genuinely unseen data now means another
+instrument or a later period.
 Phase 9A-2 adds outcome measurement: `app/domain/outcome_measurement.py` walks forward from a fixed
 plan and records whether the target or the protective level came first. It is the **only** module
 permitted to read data after `as_of`, and its results must never flow back into a snapshot, a rule,

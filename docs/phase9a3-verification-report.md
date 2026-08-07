@@ -2,6 +2,11 @@
 
 Generated: 2026-08-07
 
+> **VERDICT RETRACTED, 2026-08-07.** The positive result below does not survive. It was produced by
+> synthetic weekend rows in the stored history. Everything from "The held-out run" onwards is void as
+> a claim about markets and is kept only as a record of what was believed and why. See the
+> **Addendum** at the end of this document, which is the current conclusion.
+
 ## Scope
 
 This is the slice where the project takes a market view for the first time. Every safety test since
@@ -178,3 +183,96 @@ consequence of a passing test.
 If it does go forward, three things should go with it: the coverage figure (it is silent on seven
 windows in eight), the ambiguity and cost caveats, and the fact that the strongest number here rests
 on the smallest sample.
+
+---
+
+# Addendum — the verdict is withdrawn
+
+Written 2026-08-07, hours after the above, and this section supersedes it.
+
+## What was wrong with the data
+
+Routine maintenance — backfilling a few days the worker had missed — closed every gap in the stored
+history *including the weekends*. Forex is shut from Friday evening to Sunday evening, so a series
+with no weekend gap is not a market record.
+
+Measured across the whole database: **28.5% of stored candles fall on a Saturday or Sunday.** They
+are not traded prices. The provider carries the last price forward, producing long runs of candles
+with byte-identical highs and lows:
+
+```text
+Sun 08-02 11:00  o=1.15354  h=1.15359  l=1.15352
+Sun 08-02 11:15  o=1.15354  h=1.15359  l=1.15352
+Sun 08-02 11:30  o=1.15354  h=1.15359  l=1.15352
+Sun 08-02 11:45  o=1.15354  h=1.15359  l=1.15352
+```
+
+and then one violently wide candle when trading actually resumes (`Sun 08-02 19:00`, range twenty
+times the preceding ones). That transition — flat filler, then a large one-sided move, then normal
+volatility — is precisely the shape this candidate keys on, and the "reversion" that followed it was
+the return to ordinary trading rather than any market behaviour.
+
+## The re-run
+
+Windows whose span or forward horizon touches a weekend are dropped entirely (`--exclude-weekends`).
+Whole windows, not weekend candles: deleting candles would splice Friday onto Monday and invent an
+adjacency that never existed.
+
+| | in-sample edge | held-out edge | coverage |
+| --- | ---: | ---: | ---: |
+| M15, weekends included (original) | +8.26 | +6.84 | 13.3% |
+| **M15, weekends excluded** | **−3.55** | **+1.59** | **8.5%** |
+| H1, weekends included (original) | +4.80 | +15.48 | 11.2% |
+| **H1, weekends excluded** | **−6.61** | **+14.39** | **7.9%** |
+
+**The in-sample edge changes sign on both timeframes.** That is the finding, and it is worse than a
+shrunken effect. The in-sample sweep is what *selected* the hypothesis; on clean data it selects the
+opposite one. The held-out numbers therefore test a configuration chosen by an artefact, and mean
+nothing whichever way they point.
+
+Against the criteria fixed in advance: edge ≥ 3 п.п. fails on M15 (+1.59), and coverage ≥ 10% fails
+on both (8.5%, 7.9%). **Two of four criteria fail outright and the selection basis is void.**
+
+The clean in-sample sweep shows no coherent structure at all:
+
+| threshold | M15 candidate edge | H1 candidate edge |
+| ---: | ---: | ---: |
+| 0.20 | +1.23 | −3.53 |
+| 0.30 | +0.72 | −2.65 |
+| 0.40 | −0.80 | −4.99 |
+| 0.50 | −2.14 | −7.92 |
+| 0.60 | −3.55 | −6.61 |
+
+On contaminated data every one of the ten cells favoured reversion. On clean data M15 flips sign as
+the threshold rises and H1 favours continuation throughout. An effect that reverses along the very
+variable it is supposed to depend on is noise.
+
+## A labelling defect found in the process
+
+The sweep labelled its un-inverted row "trend". When the module was turned around, that label began
+naming the opposite of what it measured, and the first clean sweep was briefly misread because of it.
+Rows are now labelled `candidate` and `inverted` — by relation to the module rather than by the name
+of a hypothesis, so the label cannot go stale again. No published number was affected: the verdict
+run never used those labels.
+
+## What this costs, beyond the candidate
+
+- **The held-out data is no longer clean.** It has now been examined twice. Its value as a sample
+  nothing was fitted to is spent, and no future candidate can claim a fresh out-of-sample test on
+  this history. Genuinely unseen data now means a different instrument or a later period — which is
+  a strong argument for paper trading and for a second pair.
+- **Phase 9A-2's baseline was measured on the same contaminated history**, as were the Phase 7C
+  thresholds re-derived in 7D-2. Weekend filler depresses the average true range, so level distances
+  built from it are too narrow. Those figures are not retracted — they are descriptive, not claims of
+  skill — but they should be re-measured on weekend-free data before anything is built on them.
+- **The weekend filter belongs in the domain now.** It lives in `scripts/replay_rules.py` as a
+  diagnostic, with a note saying it should move if weekends turned out to matter. They did.
+
+## What went right
+
+The candidate was written, measured, and retracted inside one day, before it was wired to anything or
+shown to anyone. The apparatus that produced a wrong answer is the same apparatus that caught it,
+which is the case for having built it. Three things did the work: criteria fixed before the run, a
+held-out sample, and a willingness to go and check the data when a positive result appeared.
+
+The plan said a negative verdict would be a successful slice. This is that, arrived at the long way.

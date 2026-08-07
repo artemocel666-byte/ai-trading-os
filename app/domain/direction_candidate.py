@@ -5,18 +5,22 @@ made that mechanical — no function anywhere may return a `SignalDirection` —
 that the day the test fails, somebody is adding a strategy and must say so out loud. This is that
 day, and this is the saying so.
 
-**A candidate, not a conclusion.** What lives here is one hypothesis, written so it can be measured
-and discarded: a window that moved in a conspicuously straight line is proposed to give some of it
-back. `docs/phase9a3-verification-report.md` records whether it cleared the acceptance criteria that
-were fixed before it was ever run. If it did not, this module stays exactly where it is — unwired,
-disproved, and useful as the shape the next candidate fills.
+**This candidate has been measured and it failed.** Verdict retracted on 2026-08-07, hours after it
+was recorded — see the addendum in `docs/phase9a3-verification-report.md`. The apparent edge came
+from the data provider's synthetic weekend rows, which make up about 28% of stored history: the
+market is shut, the provider carries prices forward, and the jump back into real trading looks
+exactly like the one-sided move this candidate keys on. Exclude weekends and the in-sample result
+reverses sign on both timeframes.
 
-**The direction of the hypothesis was chosen by measurement, not by taste.** The module was first
-written the other way round, proposing that a straight move continues, because that is the intuitive
-reading. The in-sample sweep said the opposite at every threshold on both timeframes — continuation
-lost by 5 to 8 percentage points, reversion won by the same — so the module was turned around before
-the held-out data was touched. Choosing the sign in-sample is what in-sample data is for; the
-out-of-sample run in the report is what makes the choice worth anything.
+The module stays here, unwired and disproved, because that was the plan for a negative verdict: the
+next idea should be tested by this apparatus rather than start from an empty file. **Nothing here
+should be wired to anything.** The hypothesis below is retained only so the next candidate can see
+the shape it has to fill.
+
+**What it proposes**, for the record: a window that moved in a conspicuously straight line gives
+some of it back. The sign was chosen by an in-sample sweep — the module was first written the
+intuitive way, proposing that a straight move continues, and the sweep contradicted it at every
+threshold. That sweep is now known to have been reading filler.
 
 **Abstention is a first-class answer.** The return type is optional and the safety test requires it
 to stay optional. A rule that always has an opinion is worse than one that knows when to be quiet,
@@ -33,12 +37,10 @@ from app.domain.entities.analysis import AnalysisSnapshot
 from app.domain.entities.pipeline_decision import PipelineDecisionReport, PipelineDecisionStatus
 from app.domain.entities.signal_contract import SignalDirection
 
-# Chosen in-sample over the first 60% of six months of EURUSD, from the grid 0.20/0.30/0.40/0.50/
-# 0.60, by the rule "highest edge with coverage of at least 10%", and never adjusted after the
-# out-of-sample run. The grid was checked against the observed distribution of
-# `market_context.move_efficiency` first: median 0.28, p75 0.47, p95 0.76 on both M15 and H1, so
-# every value in it separates a real part of the sample. 0.60 sits near p88 — the candidate speaks
-# only about the most one-sided eighth of windows, and says nothing about the rest.
+# Chosen in-sample over the first 60% of six months of EURUSD, by "highest edge with coverage of at
+# least 10%" — on data since found to be about 28% synthetic weekend filler. The value is retained
+# so the retracted result can be reproduced exactly, and it carries no recommendation. On
+# weekend-free data this threshold is the worst of the grid on both timeframes.
 DEFAULT_MINIMUM_EFFICIENCY = Decimal("0.60")
 
 
@@ -60,11 +62,11 @@ def propose_direction(
     Passing no `decision` measures the hypothesis in isolation, which is what the evaluation harness
     does when it reports the ungated variant. Production would always pass one.
 
-    The proposal is **against** the window's own movement. A plausible reading of why: over twelve
-    candles a conspicuously straight push is more often exhaustion than the start of something, and
-    with a protective level and a target placed symmetrically in average true ranges, the retrace
-    reaches the near side first. That is a story fitted to a result, though, and stories are cheap —
-    the number in the report is the only part of this paragraph that was earned.
+    The proposal is **against** the window's own movement. The mechanism once written here — a
+    straight push being exhaustion rather than initiation — was a story fitted to a result, and the
+    result has since been retracted. It is left out rather than left standing: an explanation for
+    something that did not happen is worse than no explanation, because it survives in the reader's
+    memory after the number that prompted it is gone.
     """
     if decision is not None and decision.status != PipelineDecisionStatus.READY_FOR_REVIEW:
         return None
