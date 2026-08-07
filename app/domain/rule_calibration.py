@@ -93,6 +93,7 @@ class RuleCalibrationAccumulator:
         self._rules: dict[str, _RuleCounts] = {}
         self._fields: dict[str, _FieldSample] = {}
         self._ready_for_review = 0
+        self._warned = 0
         self._not_ready = 0
         self._blocked = 0
 
@@ -112,6 +113,8 @@ class RuleCalibrationAccumulator:
                 self._blocked += 1
             elif ruleset_report.status == RuleSetEvaluationStatus.NOT_READY:
                 self._not_ready += 1
+            elif ruleset_report.status == RuleSetEvaluationStatus.READY_WITH_WARNINGS:
+                self._warned += 1
             else:
                 self._ready_for_review += 1
             for result in ruleset_report.results:
@@ -170,6 +173,7 @@ class RuleCalibrationAccumulator:
             tallies=tallies,
             distributions=distributions,
             ready_for_review_ruleset_count=self._ready_for_review,
+            warned_ruleset_count=self._warned,
             not_ready_ruleset_count=self._not_ready,
             blocked_ruleset_count=self._blocked,
         )

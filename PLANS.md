@@ -268,6 +268,12 @@ non-actionable and without any signal, AI, or execution behavior.
     module stays in the tree, unwired and disproved, so the next idea reuses the apparatus. The
     anti-strategy AST invariant is now scoped to one exempted module with four narrower tests in its
     place, and that stands regardless of the verdict.
+  - 9A-4: the market-open gate — **completed 2026-08-07**, see
+    `docs/phase9a4-verification-report.md`. A remediation slice, the first item from the full project
+    review of the same day. `data_quality.market_open` is REQUIRED, so a window recorded while the
+    market was shut is `NOT_READY`; `READY_WITH_WARNINGS` exists so a failing warning reaches the
+    headline. The rule saying this already existed as a WARNING and failed on 28.08% of windows while
+    changing nothing, because `warning_failure_count` was computed and never used.
   - 9B: Telegram signal delivery — the first user-visible LONG/SHORT output in the project.
   - 9C: paper trading — simulated positions and outcome tracking, no real money.
   - `REAL_TRADING_ENABLED` stays `False` permanently; no broker order API is ever added.
@@ -313,16 +319,22 @@ it sits underneath every number this project has calibrated: the Phase 7C thresh
 7D-2, and the Phase 9A-2 baseline and multiplier sweep. Nothing further should be built on that
 history until it is filtered.
 
-Concretely, and in this order:
+Concretely, and in this order. Item 1 is done; the rest is the remediation list from the full project
+review of 2026-08-07.
 
-1. **Move the weekend filter into the domain.** It currently lives in `scripts/replay_rules.py` as
-   `touches_closed_market`, a diagnostic. Closed-market data is a real data-quality concern and
-   belongs where the readiness rules can see it.
-2. **Re-measure what was calibrated on filler** — the 7C thresholds and the 9A-2 baseline — and
-   record whether they move.
-3. **A second instrument.** The held-out 40% of EURUSD has now been examined twice and is spent, so
+1. ~~**Move the weekend filter into the domain**~~ — **done 2026-08-07 as 9A-4.**
+2. **Clean the database.** Two `phase7b-proof` event stubs and four stray GBPUSD candles are test
+   artefacts from earlier verification runs, and they participate in calibration: the stubs fired
+   `event_context.high_impact_event_count` twelve times over six months.
+3. **Re-measure what was calibrated on filler** — the 7C thresholds and the 9A-2 baseline — now that
+   the pipeline can tell a traded candle from a carried-forward one.
+4. **Close the measurement gaps found in the review**: drawdown is measured only downward, so a
+   window that rose steeply reports zero risk; the entry band means the multipliers say 1.5/2.0 while
+   everything behaves as 1.6/2.1; `RuleBehaviour` calls a rule OFTEN_FIRES on 68 observations out of
+   17,078 because it ignores availability.
+5. **A second instrument.** The held-out 40% of EURUSD has been examined twice and is spent, so
    genuinely unseen data means a different pair or a later period. GBPUSD backfill is one evening.
-4. **Then, and only then, another directional candidate** — or the decision to stop looking for one.
+6. **Then, and only then, another directional candidate** — or the decision to stop looking for one.
 
 9B (delivery) is not blocked by a task but by the absence of anything worth delivering: there is no
 direction that survives inspection. 9C (paper trading) is the cheapest source of genuinely fresh

@@ -112,10 +112,10 @@ def test_formatter_reports_the_actual_rule_outcomes() -> None:
     # This window holds no scheduled event, so "time since the latest event" has nothing to
     # measure and is reported UNAVAILABLE rather than passed: 10 of 11, not 11 of 11.
     assert "Правила: пройдено 10 из 11" in body
-    assert "качество данных: 4 из 4" in body
+    assert "качество данных: 5 из 5" in body
     assert "рыночный контекст: 3 из 3" in body
     assert "события: 1 из 2" in body
-    assert "временной фильтр: 2 из 2" in body
+    assert "временной фильтр: 1 из 1" in body
     assert "свечей 12 из 12" in body
 
 

@@ -52,8 +52,8 @@ def _quiet(index: int) -> Candle:
     return _candle(index, low="1.09950", high="1.10050")
 
 
-def test_project_phase_is_outcome_measurement_foundation() -> None:
-    assert constants.PROJECT_PHASE == "phase_9a3_market_view_candidate_foundation"
+def test_project_phase_is_current() -> None:
+    assert constants.PROJECT_PHASE == "phase_9a4_market_open_gate_foundation"
 
 
 def test_target_reached_cleanly_is_target_first() -> None:

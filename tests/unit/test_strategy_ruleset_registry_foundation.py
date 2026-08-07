@@ -60,6 +60,7 @@ def test_builtin_rulesets_cover_the_expected_analytical_surface() -> None:
         "data_quality.completeness_ratio",
         "data_quality.market_data_complete",
         "data_quality.latest_candle_age_minutes",
+        "data_quality.market_open",
     }
     assert rules_by_key["foundation.market_context.v1"] == {
         "market_context.snapshot_ready",
@@ -70,9 +71,11 @@ def test_builtin_rulesets_cover_the_expected_analytical_surface() -> None:
         "event_context.high_impact_event_count",
         "event_context.minutes_since_latest_event",
     }
+    # `time_filter.utc_weekday` used to sit here as a second warning. It said the same thing as
+    # `data_quality.market_open` and, being a warning, said it to nobody: it failed on 28.08% of six
+    # months of windows without changing a single verdict.
     assert rules_by_key["foundation.time_filter.v1"] == {
         "time_filter.session_name_allowed",
-        "time_filter.utc_weekday",
     }
 
 
@@ -111,7 +114,7 @@ def _fixture_with_changed_description() -> dict[str, StrategyRuleSet]:
 
 
 def test_project_phase_is_phase4e_disabled_pipeline_report_shell_foundation() -> None:
-    assert constants.PROJECT_PHASE == "phase_9a3_market_view_candidate_foundation"
+    assert constants.PROJECT_PHASE == "phase_9a4_market_open_gate_foundation"
 
 
 def test_registry_item_and_snapshot_models_are_immutable() -> None:

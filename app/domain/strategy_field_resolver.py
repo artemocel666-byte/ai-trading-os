@@ -4,6 +4,7 @@ from decimal import Decimal
 from app.core.time import normalize_to_utc
 from app.domain.entities.analysis import AnalysisSnapshot
 from app.domain.entities.market_data import EconomicImpact
+from app.domain.market_calendar import is_market_open
 
 FieldResolution = bool | Decimal | str | None
 
@@ -72,6 +73,21 @@ def _resolve_latest_candle_age_minutes(snapshot: AnalysisSnapshot) -> FieldResol
     delta = normalize_to_utc(snapshot.window.as_of) - normalize_to_utc(latest_close_time)
     total_seconds = (delta.days * 86_400) + delta.seconds
     return Decimal(total_seconds) / Decimal("60")
+
+
+def _resolve_market_open(snapshot: AnalysisSnapshot) -> FieldResolution:
+    """Whether the market was trading at the moment this window describes.
+
+    A data-quality question, not a time preference. When the market is shut the provider still
+    returns candles, and they are carried-forward prices rather than trades — see
+    `app/domain/market_calendar.py`. A window built from them cannot be trusted for anything, which
+    is why the rule reading this field is REQUIRED rather than a warning.
+
+    Never unavailable: the moment is always known, so "the market was shut" is a real observation
+    and not a missing value. That distinction is the Phase 7D-2 lesson — a resolver returning `None`
+    makes its rule UNAVAILABLE instead of failed, and the case it exists for passes in silence.
+    """
+    return is_market_open(snapshot.window.as_of)
 
 
 def _resolve_volatility_ratio(snapshot: AnalysisSnapshot) -> FieldResolution:
@@ -195,6 +211,7 @@ FIELD_RESOLVERS: Mapping[str, Callable[[AnalysisSnapshot], FieldResolution]] = {
     "data_quality.completeness_ratio": _resolve_completeness_ratio,
     "data_quality.market_data_complete": _resolve_market_data_complete,
     "data_quality.latest_candle_age_minutes": _resolve_latest_candle_age_minutes,
+    "data_quality.market_open": _resolve_market_open,
     "market_context.snapshot_ready": _resolve_market_context_snapshot_ready,
     "market_context.volatility_ratio": _resolve_volatility_ratio,
     "market_context.max_close_drawdown": _resolve_max_close_drawdown,

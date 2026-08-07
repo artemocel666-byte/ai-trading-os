@@ -196,6 +196,8 @@ def _decision_warnings(decision: PipelineDecisionReport | None) -> tuple[str, ..
         return ()
     if decision.status == PipelineDecisionStatus.READY_FOR_REVIEW:
         return ()
+    # READY_WITH_WARNINGS reaches here too, and should: a plan built over a window that failed a
+    # warning is still a plan built over a flawed window, and the contract says so on its face.
     return (f"pipeline_status:{decision.status.value}",)
 
 

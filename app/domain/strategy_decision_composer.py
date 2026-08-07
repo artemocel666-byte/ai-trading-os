@@ -55,10 +55,15 @@ class StrategyDecisionComposer:
         not_ready_count = sum(
             1 for report in ruleset_reports if report.status == RuleSetEvaluationStatus.NOT_READY
         )
+        warned_count = sum(
+            1
+            for report in ruleset_reports
+            if report.status == RuleSetEvaluationStatus.READY_WITH_WARNINGS
+        )
         return PipelineDecisionReport(
             pipeline_version=COMPOSER_PIPELINE_VERSION,
             project_phase=constants.PROJECT_PHASE,
-            status=_status_for(blocked_count, not_ready_count),
+            status=_status_for(blocked_count, not_ready_count, warned_count),
             evaluated_at=normalized_evaluated_at,
             source_snapshot_id=snapshot.metadata.snapshot_id,
             ruleset_reports=tuple(ruleset_reports),
@@ -66,13 +71,19 @@ class StrategyDecisionComposer:
             evaluated_ruleset_count=len(ruleset_reports),
             blocked_ruleset_count=blocked_count,
             not_ready_ruleset_count=not_ready_count,
+            warned_ruleset_count=warned_count,
             is_actionable=False,
         )
 
 
-def _status_for(blocked_count: int, not_ready_count: int) -> PipelineDecisionStatus:
+def _status_for(
+    blocked_count: int, not_ready_count: int, warned_count: int
+) -> PipelineDecisionStatus:
+    """The worst ruleset outcome decides the pipeline verdict."""
     if blocked_count > 0:
         return PipelineDecisionStatus.BLOCKED
     if not_ready_count > 0:
         return PipelineDecisionStatus.NOT_READY
+    if warned_count > 0:
+        return PipelineDecisionStatus.READY_WITH_WARNINGS
     return PipelineDecisionStatus.READY_FOR_REVIEW

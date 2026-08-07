@@ -11,9 +11,24 @@ from app.domain.entities.rule_evaluation import RuleSetEvaluationReport, RuleSet
 
 
 class PipelineDecisionStatus(StrEnum):
+    """The pipeline's verdict, worst first.
+
+    `READY_WITH_WARNINGS` was added on 2026-08-07 so a warning stops being invisible in the
+    headline. Before it, a window could fail "the market was open" and still be announced
+    READY_FOR_REVIEW, with the failure listed only underneath. See `RuleSetEvaluationStatus`.
+    """
+
     BLOCKED = "BLOCKED"
     NOT_READY = "NOT_READY"
+    READY_WITH_WARNINGS = "READY_WITH_WARNINGS"
     READY_FOR_REVIEW = "READY_FOR_REVIEW"
+
+
+#: States in which a window may be looked at at all. Neither is ever actionable.
+REVIEWABLE_PIPELINE_STATUSES = (
+    PipelineDecisionStatus.READY_FOR_REVIEW,
+    PipelineDecisionStatus.READY_WITH_WARNINGS,
+)
 
 
 class SkippedRulesetReason(StrEnum):
@@ -52,6 +67,7 @@ class PipelineDecisionReport(BaseModel):
     evaluated_ruleset_count: int = Field(ge=0)
     blocked_ruleset_count: int = Field(ge=0)
     not_ready_ruleset_count: int = Field(ge=0)
+    warned_ruleset_count: int = Field(default=0, ge=0)
     is_actionable: bool = False
     fingerprint: str | None = Field(default=None, min_length=64, max_length=64)
 
@@ -97,10 +113,17 @@ class PipelineDecisionReport(BaseModel):
             for report in self.ruleset_reports
             if report.status == RuleSetEvaluationStatus.NOT_READY
         )
+        warned_count = sum(
+            1
+            for report in self.ruleset_reports
+            if report.status == RuleSetEvaluationStatus.READY_WITH_WARNINGS
+        )
         if self.blocked_ruleset_count != blocked_count:
             raise ValueError("blocked_ruleset_count must match BLOCKED ruleset_reports")
         if self.not_ready_ruleset_count != not_ready_count:
             raise ValueError("not_ready_ruleset_count must match NOT_READY ruleset_reports")
+        if self.warned_ruleset_count != warned_count:
+            raise ValueError("warned_ruleset_count must match READY_WITH_WARNINGS ruleset_reports")
         if self.blocked_ruleset_count > 0 and self.status != PipelineDecisionStatus.BLOCKED:
             raise ValueError("a blocked ruleset must produce a BLOCKED pipeline status")
         if (
@@ -112,9 +135,17 @@ class PipelineDecisionReport(BaseModel):
         if (
             self.blocked_ruleset_count == 0
             and self.not_ready_ruleset_count == 0
+            and self.warned_ruleset_count > 0
+            and self.status != PipelineDecisionStatus.READY_WITH_WARNINGS
+        ):
+            raise ValueError("a warned ruleset alone must produce READY_WITH_WARNINGS")
+        if (
+            self.blocked_ruleset_count == 0
+            and self.not_ready_ruleset_count == 0
+            and self.warned_ruleset_count == 0
             and self.status != PipelineDecisionStatus.READY_FOR_REVIEW
         ):
-            raise ValueError("no blocked or not-ready rulesets must be READY_FOR_REVIEW")
+            raise ValueError("no failing rulesets at all must be READY_FOR_REVIEW")
         return self
 
     def canonical_payload(self) -> dict[str, Any]:

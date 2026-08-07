@@ -133,6 +133,7 @@ class RuleCalibrationReport(BaseModel):
     tallies: tuple[RuleOutcomeTally, ...] = ()
     distributions: tuple[FieldDistribution, ...] = ()
     ready_for_review_ruleset_count: int = Field(default=0, ge=0)
+    warned_ruleset_count: int = Field(default=0, ge=0)
     not_ready_ruleset_count: int = Field(default=0, ge=0)
     blocked_ruleset_count: int = Field(default=0, ge=0)
     is_actionable: bool = False

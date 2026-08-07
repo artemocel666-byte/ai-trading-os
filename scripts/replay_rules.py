@@ -11,6 +11,7 @@ from app.domain.entities import Candle, EconomicEvent, Timeframe
 from app.domain.entities.calibration import RuleCalibrationReport
 from app.domain.entities.data_quality import TIMEFRAME_TO_DELTA
 from app.domain.interfaces.unit_of_work import UnitOfWork
+from app.domain.market_calendar import is_market_open
 from app.domain.rule_replay import (
     DEFAULT_STEP_CANDLES,
     DEFAULT_WINDOW_CANDLES,
@@ -22,27 +23,15 @@ from app.persistence.session import build_uow_factory
 
 UnitOfWorkFactory = Callable[[], UnitOfWork]
 
-# Saturday and Sunday, as ISO weekday numbers.
-_CLOSED_MARKET_WEEKDAYS = frozenset({6, 7})
-
 
 def touches_closed_market(candles: Sequence[Candle]) -> bool:
-    """Whether any of these candles falls on a weekend, when the market is shut.
+    """Whether any of these candles was recorded while the market was shut.
 
-    Measured on 2026-08-07: this provider returns a continuous 24/7 series, and about 28% of stored
-    rows land on a Saturday or Sunday. Those rows are not traded prices — long runs carry identical
-    highs and lows, then one violently wide candle appears when trading actually resumes. Anything
-    calibrated over them is partly measuring the filler and the artificial jump out of it.
-
-    Deliberately the whole of Saturday and Sunday rather than the true session boundary, which
-    drifts with daylight saving and differs by venue. This over-excludes — the real Sunday-evening
-    reopen goes too — and over-excluding is the safe direction for a check whose purpose is to find
-    out whether a result depends on the filler.
-
-    A diagnostic helper, kept in `scripts/` on purpose: if the answer turns out to be that weekends
-    matter, this belongs in the domain as a real market-calendar concern rather than here.
+    The definition now lives in `app/domain/market_calendar.py`, where the analysis path reads it
+    too. This wrapper stays because a script needs the question asked of a *range* of candles rather
+    than a moment: a window is contaminated if any candle in it is filler, not only its last one.
     """
-    return any(candle.open_time.isoweekday() in _CLOSED_MARKET_WEEKDAYS for candle in candles)
+    return not all(is_market_open(candle.open_time) for candle in candles)
 
 
 async def load_history(
@@ -126,6 +115,7 @@ def _print_report(report: RuleCalibrationReport) -> None:
     )
     print(
         f"Ruleset outcomes: ready={report.ready_for_review_ruleset_count} "
+        f"warned={report.warned_ruleset_count} "
         f"not_ready={report.not_ready_ruleset_count} blocked={report.blocked_ruleset_count}"
     )
 

@@ -120,18 +120,32 @@ class StrategyRuleEvaluator:
         results = tuple(self.evaluate_rule(rule, snapshot) for rule in ruleset.rules)
         blocking_failure_count = _failure_count(results, StrategyRuleSeverity.BLOCKING)
         required_failure_count = _failure_count(results, StrategyRuleSeverity.REQUIRED)
-        warning_failure_count = _failure_count(results, StrategyRuleSeverity.WARNING)
+        # Warnings count only what was *observed* to be wrong. For the two mandatory tiers an
+        # unresolvable field is disqualifying — you must not proceed on an unchecked mandatory
+        # condition, so `_failure_count` treats UNAVAILABLE as failure and that is fail-closed.
+        # A warning is different: it exists to colour a verdict when something is seen to be off,
+        # and "we could not check" is silence rather than a finding. Counting it would make the
+        # warning permanent — `event_context.minutes_since_latest_event` is unavailable in 99.6% of
+        # windows because the calendar is empty, so every window in the project would be warned and
+        # the distinction would carry no information at all.
+        warning_failure_count = _observed_failure_count(results, StrategyRuleSeverity.WARNING)
+        unavailable_count = sum(
+            1 for result in results if result.status == RuleEvaluationStatus.UNAVAILABLE
+        )
         return RuleSetEvaluationReport(
             ruleset_version=ruleset.ruleset_version,
             strategy_version=ruleset.strategy_version,
             ruleset_name=ruleset.name,
-            status=_status_for(blocking_failure_count, required_failure_count),
+            status=_status_for(
+                blocking_failure_count, required_failure_count, warning_failure_count
+            ),
             evaluated_at=normalize_to_utc(evaluated_at),
             source_snapshot_id=snapshot.metadata.snapshot_id,
             results=results,
             blocking_failure_count=blocking_failure_count,
             required_failure_count=required_failure_count,
             warning_failure_count=warning_failure_count,
+            unavailable_count=unavailable_count,
             is_actionable=False,
         )
 
@@ -140,6 +154,11 @@ def _failure_count(
     results: Sequence[RuleEvaluationResult],
     severity: StrategyRuleSeverity,
 ) -> int:
+    """Anything that did not pass, including a field that could not be resolved.
+
+    Fail-closed, and used for the two mandatory tiers: a mandatory condition nobody could check has
+    not been satisfied.
+    """
     return sum(
         1
         for result in results
@@ -147,11 +166,33 @@ def _failure_count(
     )
 
 
+def _observed_failure_count(
+    results: Sequence[RuleEvaluationResult],
+    severity: StrategyRuleSeverity,
+) -> int:
+    """Only what was checked and found wanting. Unavailable fields are silence, not findings."""
+    return sum(
+        1
+        for result in results
+        if result.severity == severity and result.status == RuleEvaluationStatus.FAILED
+    )
+
+
 def _status_for(
-    blocking_failure_count: int, required_failure_count: int
+    blocking_failure_count: int,
+    required_failure_count: int,
+    warning_failure_count: int,
 ) -> RuleSetEvaluationStatus:
+    """Worst severity that failed decides the status.
+
+    `warning_failure_count` was previously computed by the caller and never passed here, so warnings
+    could not affect anything. That is why a weekend window came out READY_FOR_REVIEW while the rule
+    saying the market was shut sat failed in the same report.
+    """
     if blocking_failure_count > 0:
         return RuleSetEvaluationStatus.BLOCKED
     if required_failure_count > 0:
         return RuleSetEvaluationStatus.NOT_READY
+    if warning_failure_count > 0:
+        return RuleSetEvaluationStatus.READY_WITH_WARNINGS
     return RuleSetEvaluationStatus.READY_FOR_REVIEW

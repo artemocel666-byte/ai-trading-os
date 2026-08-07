@@ -2,7 +2,20 @@
 
 AI Trading OS is a foundation for a future Forex analysis and paper-trading platform.
 
-Current project phase: phase_9a3_market_view_candidate_foundation.
+Current project phase: phase_9a4_market_open_gate_foundation.
+Phase 9A-4 gave a warning consequences. `data_quality.market_open` is REQUIRED, so a window recorded
+while the market was shut is `NOT_READY` instead of trusted, and `READY_WITH_WARNINGS` exists so the
+headline can no longer say all is well while failures are listed underneath it.
+**The lesson is bigger than the fix.** A rule saying exactly this already existed as a WARNING and
+failed on 28.08% of six months of windows; `warning_failure_count` was computed and never passed to
+the status calculation, so the project observed its own contamination, printed it in every replay,
+and built three phases on top. **A severity that cannot change an output is a comment.** Before
+adding a check, establish what failing it does.
+Two rules follow from it. A field that is always knowable must never resolve to `None` — "the market
+was shut" is an observation, and returning `None` makes the rule UNAVAILABLE rather than failed,
+which is silence. And an unavailable *warning* is silence rather than a finding, while an unavailable
+*mandatory* rule fails closed: a mandatory condition nobody could check has not been satisfied.
+See `docs/phase9a4-verification-report.md`.
 Phase 9A-3 is where this project first takes a market view. `app/domain/direction_candidate.py` is
 the **only** module exempt from the rule that no function may return a `SignalDirection`, and the
 exemption holds only while four things stay true: the return type is optional, it cannot import the

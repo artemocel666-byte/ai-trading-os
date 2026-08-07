@@ -12,6 +12,10 @@ services:
       POSTGRES_PASSWORD: ai_trading_os
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    # Bound to loopback only: this is for local inspection with a GUI client, not for exposing the
+    # database to the network. 5433 on the host avoids clashing with a natively installed Postgres.
+    ports:
+      - "127.0.0.1:5433:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ai_trading_os -d ai_trading_os"]
       interval: 5s
@@ -61,9 +65,24 @@ services:
         condition: service_completed_successfully
     ports:
       - "127.0.0.1:8000:8000"
-    command: ["uvicorn", "app.main:create_app", "--factory", "--host", "0.0.0.0", "--port", "8000"]
+    command:
+      [
+        "uvicorn",
+        "app.main:create_app",
+        "--factory",
+        "--host",
+        "0.0.0.0",
+        "--port",
+        "8000",
+      ]
     healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3)"]
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3)",
+        ]
       interval: 10s
       timeout: 5s
       retries: 12

@@ -316,7 +316,7 @@ def _rule(
     [
         (StrategyRuleSeverity.BLOCKING, RuleSetEvaluationStatus.BLOCKED),
         (StrategyRuleSeverity.REQUIRED, RuleSetEvaluationStatus.NOT_READY),
-        (StrategyRuleSeverity.WARNING, RuleSetEvaluationStatus.READY_FOR_REVIEW),
+        (StrategyRuleSeverity.WARNING, RuleSetEvaluationStatus.READY_WITH_WARNINGS),
     ],
 )
 def test_severity_aggregation(

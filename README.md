@@ -4,7 +4,7 @@ AI Trading OS is a safety-first foundation for a future modular Forex analysis a
 
 ## Current Status
 
-- Current project phase: phase_9a3_market_view_candidate_foundation.
+- Current project phase: phase_9a4_market_open_gate_foundation.
 - Phase 6 snapshot-backed read-only review is complete: `/review EURUSD M15` builds a real analysis
   snapshot, runs the Phase 4G composer over it, and presents the pipeline decision through the
   Phase 5 manual review layer — still read-only and non-actionable.
@@ -14,7 +14,8 @@ AI Trading OS is a safety-first foundation for a future modular Forex analysis a
   fixtures, so `/review` now reports different statuses for different data instead of always
   reporting the same thing.
 - Phase 7B calendar ingestion is complete: scheduled economic events are fetched into storage and
-  consumed by an event ruleset, bringing the rule set to eleven across four rulesets.
+  consumed by an event ruleset, bringing the rule set to eleven across four rulesets. (Phase 9A-4
+  later moved one of them between rulesets; the count is unchanged.)
 - Phase 7D-1 historical backfill is complete: `scripts/backfill_market_data.py` fills history in
   paced chunks so calibration has a real distribution.
 - Phase 7D-2 historical validation is complete: `scripts/replay_rules.py` replays every rule over
@@ -33,6 +34,10 @@ AI Trading OS is a safety-first foundation for a future modular Forex analysis a
 - Phase 9A-2 outcome measurement is complete: `scripts/measure_outcomes.py` walks forward from each
   historical window and records whether the target or the protective level came first. It produced
   the project's first baseline, which is what any future direction has to beat.
+- Phase 9A-4 gave a warning consequences: a window recorded while the market was shut is now
+  `NOT_READY` rather than trusted, and `READY_WITH_WARNINGS` stops the headline saying all is well
+  while failures are listed underneath. The rule saying this already existed and failed on 28.08% of
+  windows without changing anything, because its count was computed and never used.
 - Phase 9A-3 built the first market view in this project and **then disproved it**. The candidate
   initially cleared criteria fixed in advance; the stored history was then found to be about 28%
   synthetic weekend rows, and excluding them reverses the in-sample result. The module stays unwired

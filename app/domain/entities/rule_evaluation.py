@@ -17,9 +17,26 @@ class RuleEvaluationStatus(StrEnum):
 
 
 class RuleSetEvaluationStatus(StrEnum):
+    """How much of this rule set held, worst first.
+
+    `READY_WITH_WARNINGS` exists because the previous three states let a warning fail in silence.
+    `warning_failure_count` was computed and then dropped on the floor: a window could fail the
+    "the market was open" check and still be announced as READY_FOR_REVIEW, so the headline verdict
+    contradicted the list of failures printed underneath it. A severity that cannot change any
+    output is not a severity, it is a comment.
+    """
+
     BLOCKED = "BLOCKED"
     NOT_READY = "NOT_READY"
+    READY_WITH_WARNINGS = "READY_WITH_WARNINGS"
     READY_FOR_REVIEW = "READY_FOR_REVIEW"
+
+
+#: States in which a window may be looked at. Both are usable; one of them says so with caveats.
+REVIEWABLE_RULESET_STATUSES = (
+    RuleSetEvaluationStatus.READY_FOR_REVIEW,
+    RuleSetEvaluationStatus.READY_WITH_WARNINGS,
+)
 
 
 def _normalize_required_string(value: object, field_name: str) -> str:
@@ -69,7 +86,10 @@ class RuleSetEvaluationReport(BaseModel):
     results: tuple[RuleEvaluationResult, ...] = ()
     blocking_failure_count: int = Field(ge=0)
     required_failure_count: int = Field(ge=0)
+    #: Warnings observed to be wrong. Unlike the two tiers above, a field that could not be resolved
+    #: is not counted here — see `_observed_failure_count` in the evaluator for why.
     warning_failure_count: int = Field(ge=0)
+    unavailable_count: int = Field(default=0, ge=0)
     is_actionable: bool = False
     fingerprint: str | None = Field(default=None, min_length=64, max_length=64)
 
@@ -108,9 +128,17 @@ class RuleSetEvaluationReport(BaseModel):
         if (
             self.blocking_failure_count == 0
             and self.required_failure_count == 0
+            and self.warning_failure_count > 0
+            and self.status != RuleSetEvaluationStatus.READY_WITH_WARNINGS
+        ):
+            raise ValueError("a warning failure alone must be READY_WITH_WARNINGS")
+        if (
+            self.blocking_failure_count == 0
+            and self.required_failure_count == 0
+            and self.warning_failure_count == 0
             and self.status != RuleSetEvaluationStatus.READY_FOR_REVIEW
         ):
-            raise ValueError("no blocking or required failures must be READY_FOR_REVIEW")
+            raise ValueError("no failures at all must be READY_FOR_REVIEW")
         return self
 
     def canonical_payload(self) -> dict[str, Any]:

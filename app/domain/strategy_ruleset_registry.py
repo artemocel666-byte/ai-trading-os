@@ -140,6 +140,19 @@ BUILTIN_STRATEGY_RULESET_FIXTURES: Mapping[str, StrategyRuleSet] = MappingProxyT
                         "rather than stalled."
                     ),
                 ),
+                _foundation_rule(
+                    rule_id="data_quality.market_open",
+                    category=StrategyRuleCategory.DATA_QUALITY,
+                    severity=StrategyRuleSeverity.REQUIRED,
+                    field_ref="data_quality.market_open",
+                    operator=StrategyRuleOperator.EQ,
+                    expected_value=True,
+                    description=(
+                        "The currency market was trading when this window ended. While it is shut "
+                        "the provider still returns candles, and they carry the last price forward "
+                        "instead of recording trades."
+                    ),
+                ),
             ),
             enabled=False,
         ),
@@ -240,18 +253,14 @@ BUILTIN_STRATEGY_RULESET_FIXTURES: Mapping[str, StrategyRuleSet] = MappingProxyT
                     allowed_values=("london", "new_york"),
                     description=("The window ends inside one of the two main liquidity sessions."),
                 ),
-                _foundation_rule(
-                    rule_id="time_filter.utc_weekday",
-                    category=StrategyRuleCategory.TIME_FILTER,
-                    severity=StrategyRuleSeverity.WARNING,
-                    field_ref="time_filter.utc_weekday",
-                    operator=StrategyRuleOperator.LTE,
-                    expected_value=LAST_WEEKDAY_INDEX,
-                    description=(
-                        "The window ends on a weekday; at the weekend the currency market is "
-                        "closed and quotes are stale."
-                    ),
-                ),
+                # `time_filter.utc_weekday` used to be a second rule here, saying almost exactly
+                # what `data_quality.market_open` now says — and saying it as a WARNING, which the
+                # status calculation ignored entirely. It fired on 28.08% of six months of
+                # windows and changed nothing, so every calibration ran over data the project's own
+                # rule was flagging as stale. The check moved to the data-quality ruleset, where a
+                # failure has consequences, because a shut market is a fact about the data rather
+                # than a preference about trading hours. The resolver stays in the registry for its
+                # distribution; only the toothless rule is gone.
             ),
             enabled=False,
         ),

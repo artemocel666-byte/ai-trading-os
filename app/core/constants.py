@@ -1,4 +1,4 @@
-PROJECT_PHASE = "phase_9a3_market_view_candidate_foundation"
+PROJECT_PHASE = "phase_9a4_market_open_gate_foundation"
 STRATEGY_IMPLEMENTED = False
 REAL_TRADING_ENABLED = False
 

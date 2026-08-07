@@ -34,7 +34,10 @@ thing being tested must not see the test.
 from decimal import Decimal
 
 from app.domain.entities.analysis import AnalysisSnapshot
-from app.domain.entities.pipeline_decision import PipelineDecisionReport, PipelineDecisionStatus
+from app.domain.entities.pipeline_decision import (
+    REVIEWABLE_PIPELINE_STATUSES,
+    PipelineDecisionReport,
+)
 from app.domain.entities.signal_contract import SignalDirection
 
 # Chosen in-sample over the first 60% of six months of EURUSD, by "highest edge with coverage of at
@@ -68,7 +71,7 @@ def propose_direction(
     something that did not happen is worse than no explanation, because it survives in the reader's
     memory after the number that prompted it is gone.
     """
-    if decision is not None and decision.status != PipelineDecisionStatus.READY_FOR_REVIEW:
+    if decision is not None and decision.status not in REVIEWABLE_PIPELINE_STATUSES:
         return None
 
     displacement = _net_displacement(snapshot)

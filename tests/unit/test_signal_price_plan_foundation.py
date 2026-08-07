@@ -320,4 +320,4 @@ def test_precision_survives_the_trailing_zeros_storage_adds() -> None:
 
 
 def test_project_phase_is_phase9a_price_plan_foundation() -> None:
-    assert constants.PROJECT_PHASE == "phase_9a3_market_view_candidate_foundation"
+    assert constants.PROJECT_PHASE == "phase_9a4_market_open_gate_foundation"

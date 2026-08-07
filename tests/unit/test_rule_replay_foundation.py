@@ -171,8 +171,8 @@ def test_a_volatility_spike_is_reported_by_the_volatility_rule_alone() -> None:
         "data_quality.used_candle_count",
         "data_quality.completeness_ratio",
         "data_quality.market_data_complete",
+        "data_quality.market_open",
         "time_filter.session_name_allowed",
-        "time_filter.utc_weekday",
     ):
         assert by_rule[rule_id].failed_count == 0
 
