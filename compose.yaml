@@ -1,6 +1,11 @@
 services:
   postgres:
     image: postgres:16-alpine
+    # Long-running services restart with Docker itself, so a reboot or a Docker Desktop restart does
+    # not silently leave ingestion dead. `unless-stopped` still respects a deliberate
+    # `docker compose stop`. The one-shot `migrate` deliberately has no policy: it is supposed to
+    # exit.
+    restart: unless-stopped
     environment:
       POSTGRES_DB: ai_trading_os
       POSTGRES_USER: ai_trading_os
@@ -15,6 +20,7 @@ services:
 
   api:
     build: .
+    restart: unless-stopped
     env_file:
       - path: .env
         required: false
@@ -64,6 +70,7 @@ services:
 
   worker:
     build: .
+    restart: unless-stopped
     env_file:
       - path: .env
         required: false
@@ -91,6 +98,7 @@ services:
 
   bot:
     build: .
+    restart: unless-stopped
     env_file:
       - path: .env
         required: false

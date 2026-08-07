@@ -163,14 +163,103 @@ sits more than a quarter of the chunk duration after the requested start, the ch
 the line is printed with `<- POSSIBLY TRUNCATED`. The run then reports that it did not complete
 cleanly and the script exits non-zero.
 
-Counting alone would produce false alarms — a chunk spanning a weekend legitimately returns fewer
-candles. An empty chunk (closed market) is a success and is never flagged, because a response with no
-candles carries no evidence either way.
+Counting alone would produce false alarms whenever a chunk legitimately holds fewer candles than its
+span suggests. An empty chunk (closed market) is a success and is never flagged, because a response
+with no candles carries no evidence either way.
+
+The original wording here cited a weekend as that example. Measured on 2026-08-07, this provider does
+not thin out over weekends at all — it returns a continuous 24/7 series — so the weekend is a poor
+illustration even though the range-based check remains the right one.
 
 If a chunk is flagged, treat that range as incomplete: narrow it with a smaller `--chunk-candles` and
 re-run that period rather than accepting the stored result.
 
 Backfill stores candles only. It produces no signals, price levels, scoring, AI output, or messages.
+
+## Gaps in Stored History
+
+The worker does not have to run continuously, but **nothing announces a gap**. A missing Tuesday
+looks exactly like a present one until somebody queries for it, and every calibration built on that
+history silently inherits the hole. This section exists because the same diagnosis has been done from
+scratch more than once.
+
+### Why gaps appear, and why ingestion cannot heal them
+
+Each scheduled tick asks the provider for the last `MARKET_DATA_INGESTION_LOOKBACK_CANDLES` candles
+(default 48). The overlap is deliberate and it absorbs short interruptions — a missed tick, a network
+blip, a restart — without any manual step.
+
+But 48 candles is a different amount of *time* per timeframe:
+
+| timeframe | 48 candles reach back |
+| --- | --- |
+| M15 | 12 hours |
+| H1 | 48 hours |
+
+Anything older than that is invisible to the worker forever. It does not know the gap exists, so it
+never asks for it. This also explains a confusing symptom: after the same outage, H1 looks healthy
+while M15 is missing days.
+
+### Detecting a gap
+
+Ask the database where consecutive candles are further apart than one bar:
+
+```sql
+SELECT prev_ot, open_time, (open_time - prev_ot) AS gap FROM (
+  SELECT open_time, lag(open_time) OVER (ORDER BY open_time) AS prev_ot
+  FROM candles WHERE timeframe = 'M15' AND open_time >= now() - interval '30 days'
+) t WHERE open_time - prev_ot > interval '15 minutes' ORDER BY open_time;
+```
+
+The Postgres port is not published to the host, so run this inside the stack:
+
+```bash
+docker compose exec postgres psql -U ai_trading_os -d ai_trading_os
+```
+
+Worth knowing before reading the output: **this provider returns a continuous 24/7 series with no
+weekend break at all** — about 28% of stored rows fall on a Saturday or Sunday. So a healthy series
+shows *no* weekend gaps, and any gap you see is a real outage rather than a closed market. See the
+caveat below about what that data is worth.
+
+### Healing a gap
+
+Backfill the affected range. It is duplicate-safe, so overshooting the window costs a request and
+nothing else:
+
+```bash
+uv run python -m scripts.backfill_market_data --days 7 --timeframe M15
+uv run python -m scripts.backfill_market_data --days 7 --timeframe H1
+```
+
+Use `--dry-run` first to see the request count against the provider quota. A useful habit: after any
+stretch with the stack down, backfill a week on both timeframes before running any calibration.
+
+### Keeping the worker alive on Windows
+
+Containers run inside the WSL2 VM, which is started and owned by the Docker Desktop process of the
+user who launched it. Consequences worth knowing:
+
+- **Switching Windows profiles keeps it running.** The first session is not ended, so its processes
+  continue. Task Manager under the second profile shows only that profile's processes, so Docker
+  being invisible there proves nothing.
+- **Signing out stops it**, as does sleep or hibernation.
+- Every long-running service carries `restart: unless-stopped`, so a reboot or a Docker Desktop
+  restart brings them back automatically, while a deliberate `docker compose stop` is respected.
+  `migrate` has no policy on purpose — it is a one-shot job and is meant to exit.
+
+Do not reason about whether an outage happened; the candle series is a precise log of when the worker
+was alive. Query it.
+
+### The weekend caveat
+
+Weekend rows are not real market activity. The forex market is closed from Friday evening to Sunday
+evening, and the provider fills that span with carried-forward prices — long runs of candles with
+byte-identical highs and lows, then a sudden wide-ranged candle when trading actually resumes.
+
+This matters for anything calibrated over stored history, because those rows depress the average true
+range and the reopening looks like a violent one-directional move. Any analysis that treats every
+stored candle as a traded candle is measuring roughly 28% filler.
 
 ## Rule Replay and Calibration (Phase 7D-2)
 
