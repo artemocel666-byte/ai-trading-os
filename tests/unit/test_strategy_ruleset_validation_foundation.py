@@ -82,7 +82,7 @@ def _codes(
 
 
 def test_project_phase_is_phase4e_disabled_pipeline_report_shell_foundation() -> None:
-    assert constants.PROJECT_PHASE == "phase_9a2_outcome_measurement_foundation"
+    assert constants.PROJECT_PHASE == "phase_9a3_market_view_candidate_foundation"
 
 
 def test_validation_issue_and_report_models_are_immutable() -> None:

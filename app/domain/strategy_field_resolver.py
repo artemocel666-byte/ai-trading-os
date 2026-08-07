@@ -124,6 +124,39 @@ def _resolve_max_close_drawdown_atr(snapshot: AnalysisSnapshot) -> FieldResoluti
     return drawdown / average_true_range_ratio
 
 
+def _resolve_move_efficiency(snapshot: AnalysisSnapshot) -> FieldResolution:
+    """How one-sided the window's movement was, on a scale of nothing to a straight line.
+
+    Net displacement divided by distance travelled: `|Σ returns| / Σ|returns|`, which the triangle
+    inequality bounds to `[0, 1]`. One means every candle pushed the same way; zero means the window
+    sawed back and forth and finished where it started.
+
+    This fills a real gap. Everything else here measures **how far** price moved — average true
+    range, candle ranges, drawdown — and nothing measured **how straight**. Two windows with an
+    identical average true range can be a clean climb and a pointless chop, and until now they were
+    indistinguishable to every rule in the project.
+
+    Normalised by construction, which is the Phase 7D-2 lesson arriving for free: it is a ratio of
+    two quantities in the same units, so it compares across timeframes and instruments without a
+    conversion step.
+
+    **Magnitude only, never sign.** Whether the window went up or down is deliberately not returned:
+    that is a direction, and directions live in exactly one module elsewhere. This field answers
+    "was this a trend or a chop", which is a description, not a view.
+    """
+    if snapshot.feature_snapshot is None:
+        return None
+    returns = snapshot.feature_snapshot.candle_summary.per_candle_returns
+    if not returns:
+        return None
+    distance_travelled = sum((abs(value) for value in returns), Decimal("0"))
+    if distance_travelled == 0:
+        # A window of perfectly flat candles has no movement to judge the straightness of.
+        return None
+    net_displacement = abs(sum(returns, Decimal("0")))
+    return net_displacement / distance_travelled
+
+
 def _resolve_high_impact_event_count(snapshot: AnalysisSnapshot) -> FieldResolution:
     """Count high-impact events the window actually used.
 
@@ -166,6 +199,7 @@ FIELD_RESOLVERS: Mapping[str, Callable[[AnalysisSnapshot], FieldResolution]] = {
     "market_context.volatility_ratio": _resolve_volatility_ratio,
     "market_context.max_close_drawdown": _resolve_max_close_drawdown,
     "market_context.max_close_drawdown_atr": _resolve_max_close_drawdown_atr,
+    "market_context.move_efficiency": _resolve_move_efficiency,
     "event_context.high_impact_event_count": _resolve_high_impact_event_count,
     "event_context.minutes_since_latest_event": _resolve_minutes_since_latest_event,
     "time_filter.session_name": _resolve_time_filter_session_name,

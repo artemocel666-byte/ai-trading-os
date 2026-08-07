@@ -53,7 +53,7 @@ def _quiet(index: int) -> Candle:
 
 
 def test_project_phase_is_outcome_measurement_foundation() -> None:
-    assert constants.PROJECT_PHASE == "phase_9a2_outcome_measurement_foundation"
+    assert constants.PROJECT_PHASE == "phase_9a3_market_view_candidate_foundation"
 
 
 def test_target_reached_cleanly_is_target_first() -> None:

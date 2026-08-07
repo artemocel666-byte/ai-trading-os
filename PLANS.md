@@ -260,6 +260,13 @@ non-actionable and without any signal, AI, or execution behavior.
     tests. Produced the project's first baseline — EURUSD M15, 38.4% LONG / 43.1% SHORT at the 9A
     defaults, gross of costs — and a multiplier sweep in which nothing pays for its own geometry
     without a direction.
+  - 9A-3: a directional candidate and its verdict — **completed 2026-08-07**, see
+    `docs/phase9a3-verification-report.md`. The first market view in this project. An
+    efficiency-gated reversion candidate, with the sign chosen by an in-sample sweep that
+    contradicted the intuitive reading, cleared criteria fixed before any run: held-out edge over a
+    coin toss of +6.84 п.п. on M15 and +15.48 on H1, coverage 13.3% and 11.2%. The anti-strategy AST
+    invariant is now scoped to one exempted module, and four narrower tests replace it. Nothing is
+    wired; whether a market view reaches a person is a decision, not a consequence.
   - 9B: Telegram signal delivery — the first user-visible LONG/SHORT output in the project.
   - 9C: paper trading — simulated positions and outcome tracking, no real money.
   - `REAL_TRADING_ENABLED` stays `False` permanently; no broker order API is ever added.
@@ -299,19 +306,19 @@ history rather than from guesses. See `docs/phase7d2-verification-report.md`.
 all exist, with both flags off by default. See `docs/phase8a-`, `8b-`, and
 `phase8c-verification-report.md`.
 
-**Direction is the next open question, and it blocks 9B.** Phase 9B delivers signals to a user, and
-a signal is a direction plus levels; the levels exist and the direction does not.
+**Both prerequisites for 9B are now met, and the next step is a decision rather than a task.**
+Outcome measurement landed as 9A-2 and the directional candidate as 9A-3, both on 2026-08-07. A
+signal is a direction plus levels; all three parts now exist and none of them are wired to anything.
 
-Outcome measurement, which used to be the first of two prerequisites, was delivered as 9A-2 on
-2026-08-07. What remains is **a directional rule, calibrated against that measurement** — the first
-time this project would take a market view, and something to be approved deliberately rather than
-arrived at.
+What is genuinely open is whether to put a market view in front of a person. The candidate cleared
+criteria fixed before it ran, but the honest summary of what that means is narrow: an effect of the
+right size on one instrument, one six-month period, and a held-out sample whose overlapping windows
+make it far weaker than its counts suggest — gross of costs the project cannot yet compute. Phase 9B
+should begin only if that is acceptable stated plainly, and 9C paper trading is the cheapest way to
+find out whether the effect survives contact with anything.
 
-The measurement set the terms it has to be judged on. A candidate is compared against the baseline
-for its own direction on the same windows, not against 50%: with no strategy at all, SHORT already
-led LONG by 4.6 п.п. on M15 and 10.9 on H1 over this six-month sample, so a rule that leans one way
-inherits that drift without earning it. Windows overlap heavily, so the counts are stable rather than
-statistically powerful, and every figure is gross of costs.
+Two things would strengthen the ground under it, neither blocking: a second instrument, and spread
+data good enough to turn gross outcomes into net ones.
 
 Superseded planning note: **Phase 9A (`SignalContract` assembly and price levels) was the next task.** It is the first
 slice that computes an entry, a protective level, and a target — work deferred since Phase 4 — and

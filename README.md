@@ -4,7 +4,7 @@ AI Trading OS is a safety-first foundation for a future modular Forex analysis a
 
 ## Current Status
 
-- Current project phase: phase_9a2_outcome_measurement_foundation.
+- Current project phase: phase_9a3_market_view_candidate_foundation.
 - Phase 6 snapshot-backed read-only review is complete: `/review EURUSD M15` builds a real analysis
   snapshot, runs the Phase 4G composer over it, and presents the pipeline decision through the
   Phase 5 manual review layer — still read-only and non-actionable.
@@ -32,8 +32,11 @@ AI Trading OS is a safety-first foundation for a future modular Forex analysis a
   nothing in the project decides up or down, and a test enforces that.
 - Phase 9A-2 outcome measurement is complete: `scripts/measure_outcomes.py` walks forward from each
   historical window and records whether the target or the protective level came first. It produced
-  the project's first baseline, which is what any future direction has to beat. Next: direction,
-  then delivery and paper trading.
+  the project's first baseline, which is what any future direction has to beat.
+- Phase 9A-3 is the first market view in this project: `app/domain/direction_candidate.py` proposes
+  a direction against conspicuously one-sided windows and abstains on the rest. It cleared acceptance
+  criteria fixed before it was run, on held-out data, with caveats stated in full below. Nothing is
+  wired. Next: whether to deliver it (9B) and paper trading (9C).
 - Trading strategy: not implemented.
 - Real trading: disabled and unsupported.
 - External integrations: disabled by default.
@@ -562,6 +565,38 @@ The baseline, EURUSD over 180 days at the Phase 9A defaults: 38.4% of resolved M
 target first going LONG, 43.1% going SHORT. The gap is drift in the sample, not skill, which is
 exactly why a future directional rule must be judged against the baseline for its own direction
 rather than against a coin toss. See `docs/phase9a2-verification-report.md`.
+
+## Phase 9A-3 Status
+
+Phase 9A-3 is the first time this project takes a market view. `app/domain/direction_candidate.py`
+is the only module exempt from the rule that no function may return a `SignalDirection`, and Phase 9A
+wrote in advance that the day that test failed, somebody would be adding a strategy and would have to
+say so out loud. This is that.
+
+```bash
+uv run python -m scripts.evaluate_direction --days 180 --timeframe M15 --sweep
+```
+
+**The candidate.** A new descriptive field measures how *straight* a window moved rather than how
+far — `|Σ returns| / Σ|returns|`, bounded to `[0, 1]`. Above 0.60 the candidate proposes a direction
+**against** the move; below it, and on any window the pipeline does not consider ready, it returns
+`None`. It speaks about roughly one window in eight, and a safety test requires its return type to
+stay optional so it can never be made to have an opinion on all of them.
+
+**The method matters more than the candidate.** Acceptance criteria were fixed before the first run;
+the sign and threshold were chosen on the first 60% of history; the last 40% was run once. The
+comparison is against a coin toss *on the candidate's own windows*, not against the Phase 9A-2
+baseline, which carries the sample's drift. The sign was chosen by measurement and contradicted the
+intuitive reading — continuation lost at every threshold on both timeframes.
+
+**Held out**: edge over a coin toss of +6.84 percentage points on M15 (13.3% coverage) and +15.48 on
+H1 (11.2%). All four criteria met.
+
+**What that does not mean.** The criteria were about effect size, never significance — overlapping
+windows make the effective sample far smaller than the counts, so the H1 figure in particular rests
+on very little. Everything is gross of costs, on one instrument, over one six-month period. Nothing
+is wired: whether a market view reaches a person is a decision, not a consequence of a passing test.
+See `docs/phase9a3-verification-report.md`, which is mostly caveats and deliberately so.
 
 ## Prerequisites
 

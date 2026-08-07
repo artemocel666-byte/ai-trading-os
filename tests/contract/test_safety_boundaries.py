@@ -25,6 +25,7 @@ from app.core.config import Settings
 from app.core.enums import Decision
 from app.core.exceptions import IntegrationDisabledError
 from app.domain.analysis_engine import AnalysisEngine
+from app.domain.direction_candidate import propose_direction
 from app.domain.disabled_pipeline_report_shell import DisabledPipelineReportShell
 from app.domain.entities import (
     Candle,
@@ -46,6 +47,7 @@ from app.domain.entities.explanation import (
     ExplanationValidationReport,
 )
 from app.domain.entities.outcome import OutcomeKind
+from app.domain.entities.pipeline_decision import PipelineDecisionStatus
 from app.domain.entities.signal_contract import (
     SignalActionability,
     SignalDirection,
@@ -2275,15 +2277,21 @@ def test_phase9a_price_level_terms_are_confined_to_one_module() -> None:
 
 
 def test_phase9a_no_function_returns_a_direction() -> None:
-    """The anti-strategy invariant: nothing in this project decides "up" or "down".
+    """The anti-strategy invariant, now scoped to one module instead of the whole project.
 
     A strategy has to hand a direction back to someone, so a function annotated as returning
-    `SignalDirection` is the mechanical signature of one appearing. 9A takes direction as an
-    argument and never produces it. The day this test fails, somebody is adding a strategy and
-    should be made to notice.
+    `SignalDirection` is the mechanical signature of one appearing. From Phase 4 to Phase 9A-2 no
+    module in `app/` was allowed to carry that signature, and the rule written alongside it said the
+    day the test failed, somebody would be adding a strategy and would have to say so out loud.
+
+    Phase 9A-3 is that day, and `app/domain/direction_candidate.py` is the saying so. Everything
+    else in `app/` is still held to the original rule — a second module producing directions is a
+    strategy leaking out of the one place that is allowed to hold one.
     """
     offenders: list[str] = []
     for file_path in Path("app").rglob("*.py"):
+        if file_path == PHASE_9A3_DIRECTION_MODULE:
+            continue
         tree = ast.parse(file_path.read_text(encoding="utf-8"))
         for node in ast.walk(tree):
             if not isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef):
@@ -2455,3 +2463,127 @@ def test_phase9a2_ambiguity_is_a_named_outcome_rather_than_a_silent_choice() -> 
 
     assert outcome.kind == OutcomeKind.AMBIGUOUS
     assert outcome.conservative_kind == OutcomeKind.STOP_FIRST
+
+
+PHASE_9A3_DIRECTION_MODULE = Path("app/domain/direction_candidate.py")
+
+
+def test_phase9a3_direction_module_must_be_able_to_stay_silent() -> None:
+    """Whatever produces a direction must also be able to decline to.
+
+    The exemption above is only tolerable because abstention is guaranteed: every function in the
+    candidate that returns a `SignalDirection` must return an optional one. A candidate forced to
+    have an opinion on every window would be a strategy that cannot say "I don't know", which is the
+    one thing this project has insisted on everywhere else.
+    """
+    tree = ast.parse(PHASE_9A3_DIRECTION_MODULE.read_text(encoding="utf-8"))
+    directional_returns = [
+        ast.unparse(node.returns)
+        for node in ast.walk(tree)
+        if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef)
+        and node.returns is not None
+        and "SignalDirection" in ast.unparse(node.returns)
+    ]
+
+    assert directional_returns, "the exempted module should be the one producing directions"
+    for returns in directional_returns:
+        assert "None" in returns, returns
+
+
+def test_phase9a3_direction_candidate_cannot_see_what_judges_it() -> None:
+    """The candidate may not import outcome measurement.
+
+    Reading the future is legitimate in exactly one module (Phase 9A-2) and a candidate that could
+    reach it would be able to propose the direction that happened to work. That is not a hypothesis,
+    it is a leak, and it would be invisible in the results because the numbers would look excellent.
+    """
+    import_lines = tuple(
+        line
+        for line in PHASE_9A3_DIRECTION_MODULE.read_text(encoding="utf-8").splitlines()
+        if line.startswith("import ") or line.startswith("from ")
+    )
+
+    for term in ("outcome_measurement", "entities.outcome", "direction_evaluation"):
+        assert not any(term in line for line in import_lines), term
+
+
+def test_phase9a3_direction_candidate_touches_no_other_layer() -> None:
+    import_lines = tuple(
+        line
+        for line in PHASE_9A3_DIRECTION_MODULE.read_text(encoding="utf-8").lower().splitlines()
+        if line.startswith("import ") or line.startswith("from ")
+    )
+
+    for term in ("app.persistence", "app.adapters", "app.telegram", "app.api", "app.scheduler"):
+        assert not any(term in line for line in import_lines), term
+
+
+def test_phase9a3_direction_candidate_is_not_wired_anywhere() -> None:
+    """A direction reaches a user in 9B, and only if the verdict was positive."""
+    source = "\n".join(
+        file_path.read_text(encoding="utf-8")
+        for directory in ("app/services", "app/telegram", "app/scheduler", "app/api")
+        for file_path in Path(directory).rglob("*.py")
+    )
+
+    assert "direction_candidate" not in source
+    assert "propose_direction" not in source
+
+
+def test_phase9a3_move_efficiency_carries_no_sign() -> None:
+    """The descriptive half is public; only the sign is confined to the candidate.
+
+    A field that reported which way the window went would be a direction available to every rule in
+    the registry, which would make the module boundary above decorative.
+    """
+    up = _direction_snapshot(tick=Decimal("0.00020"))
+    down = _direction_snapshot(tick=Decimal("-0.00020"))
+
+    up_efficiency = resolve_field("market_context.move_efficiency", up)
+    down_efficiency = resolve_field("market_context.move_efficiency", down)
+
+    assert isinstance(up_efficiency, Decimal)
+    assert up_efficiency == down_efficiency
+    assert up_efficiency >= 0
+
+
+def test_phase9a3_candidate_abstains_on_a_window_the_rules_distrust() -> None:
+    snapshot = _direction_snapshot(tick=Decimal("0.00020"))
+    blocked = StrategyDecisionComposer().compose(snapshot, snapshot.window.as_of)
+
+    if blocked.status == PipelineDecisionStatus.READY_FOR_REVIEW:
+        pytest.skip("this fixture is ready for review, so it cannot exercise the gate")
+
+    assert propose_direction(snapshot, decision=blocked) is None
+
+
+def _direction_snapshot(*, tick: Decimal):
+    base_time = datetime(2026, 7, 20, 8, 0, tzinfo=UTC)
+    step = timedelta(minutes=15)
+    candles = [
+        Candle(
+            provider="safety-direction",
+            pair=CurrencyPair(value="EURUSD"),
+            timeframe=Timeframe.M15,
+            open_time=base_time + (index * step),
+            close_time=base_time + ((index + 1) * step),
+            open=Decimal("1.10000") + (tick * index),
+            high=Decimal("1.10030") + (tick * index) + max(tick, Decimal("0")),
+            low=Decimal("1.09970") + (tick * index) + min(tick, Decimal("0")),
+            close=Decimal("1.10000") + (tick * (index + 1)),
+            volume=Decimal("100"),
+            is_closed=True,
+        )
+        for index in range(12)
+    ]
+    as_of = base_time + (12 * step)
+    return AnalysisEngine().build_snapshot(
+        pair=CurrencyPair(value="EURUSD"),
+        timeframe=Timeframe.M15,
+        window_start=base_time,
+        window_end=as_of,
+        as_of=as_of,
+        candles=candles,
+        economic_events=[],
+        moving_average_windows=(3,),
+    )

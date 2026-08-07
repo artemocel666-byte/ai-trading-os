@@ -2,7 +2,18 @@
 
 AI Trading OS is a foundation for a future Forex analysis and paper-trading platform.
 
-Current project phase: phase_9a2_outcome_measurement_foundation.
+Current project phase: phase_9a3_market_view_candidate_foundation.
+Phase 9A-3 is where this project first takes a market view. `app/domain/direction_candidate.py` is
+the **only** module exempt from the rule that no function may return a `SignalDirection`, and the
+exemption holds only while four things stay true: the return type is optional, it cannot import the
+outcome measurement that judges it, it imports no other layer, and nothing wired references it.
+The candidate proposes a direction **against** a conspicuously one-sided window, above an efficiency
+of 0.60, and abstains otherwise — including on any window the pipeline does not consider ready.
+The sign was chosen by an in-sample sweep that contradicted the intuitive reading, and verified once
+on held-out data. It cleared criteria fixed in advance (held-out edge +6.84 п.п. on M15, +15.48 on
+H1, coverage 13.3% and 11.2%) — but those criteria were about effect size, never significance:
+overlapping windows make the effective sample far smaller than the counts suggest, and everything is
+gross of costs. See `docs/phase9a3-verification-report.md`.
 Phase 9A-2 adds outcome measurement: `app/domain/outcome_measurement.py` walks forward from a fixed
 plan and records whether the target or the protective level came first. It is the **only** module
 permitted to read data after `as_of`, and its results must never flow back into a snapshot, a rule,
@@ -247,6 +258,23 @@ real trading.
   strategy at all), so a rule that always says SHORT would look clever for reasons that are not the
   rule. Overlapping windows mean the counts are stable, not statistically powerful; no confidence
   interval may be read off them.
+- While working in Phase 9A-3 or on any later directional idea, `app/domain/direction_candidate.py`
+  is the only file in `app/` allowed to return a `SignalDirection`, and it must return an optional
+  one — a candidate that cannot abstain is not acceptable here. It may not import
+  `outcome_measurement` or anything from `app.persistence`, `app.adapters`, `app.telegram`,
+  `app.api`, or `app.scheduler`, and no service, route, command, or job may reference it. A second
+  module producing directions is a strategy leaking out of the one place allowed to hold one.
+  **A directional idea is evaluated before it is believed, and the method is not negotiable:**
+  acceptance criteria are written down *before* the first run; the threshold and the sign are chosen
+  on the first 60% of history; the remaining 40% is run **once** and never re-tuned against; and the
+  comparison is against a coin toss **on the candidate's own windows**, never against the global
+  baseline, which carries the sample's drift. Because the benchmark pools both sides of each window,
+  a hypothesis and its inversion are one signed result rather than two attempts.
+  Any figure quoted from that evaluation carries its caveats or is not quoted: overlapping windows
+  make the effective sample far smaller than the counts, so no significance may be claimed; every
+  outcome is gross of costs and the project cannot yet compute what costs would leave; and a
+  mechanism written after the numbers is a story, not evidence. A negative verdict is a result — the
+  candidate stays in the tree, unwired and disproved, so the next idea reuses the apparatus.
 - Never fabricate market data, calendar data, agent evidence, or scan results.
 - LLM output may explain deterministic results only; it must not change prices, scores, risk, or rejected decisions.
 - Update documentation when architecture or safety boundaries change.
