@@ -4,7 +4,7 @@ AI Trading OS is a safety-first foundation for a future modular Forex analysis a
 
 ## Current Status
 
-- Current project phase: phase_9a7_measurement_gaps_foundation.
+- Current project phase: phase_9a8_second_instrument_foundation.
 - Phase 6 snapshot-backed read-only review is complete: `/review EURUSD M15` builds a real analysis
   snapshot, runs the Phase 4G composer over it, and presents the pipeline decision through the
   Phase 5 manual review layer — still read-only and non-actionable.
@@ -34,6 +34,9 @@ AI Trading OS is a safety-first foundation for a future modular Forex analysis a
 - Phase 9A-2 outcome measurement is complete: `scripts/measure_outcomes.py` walks forward from each
   historical window and records whether the target or the protective level came first. It produced
   the project's first baseline, which is what any future direction has to beat.
+- Phase 9A-8 added a second instrument, NOKSEK — deliberately unlike EURUSD rather than another
+  dollar pair. The ATR-normalised excursion bound transferred untouched (2.86% and 2.19% against
+  3.43% and 2.56%); the volatility band did not and moved to 0.30/2.5.
 - Phase 9A-7 closed three measurement gaps: the drawdown measured only declines so a steep climb
   reported zero risk, the entry band made `stop=1.5` behave as 1.6 in every published figure, and a
   rule could be called "often firing" on 0.4% of the sample. The warning rule now reads a symmetric
@@ -360,7 +363,7 @@ answered the same thing. The new rules read actual values.
 | Ruleset | Rules |
 | --- | --- |
 | `foundation.data_quality.v1` | used candle count ≥ 8 (BLOCKING), completeness ratio ≥ 0.8, market-data completeness, market open for every candle (REQUIRED), latest-candle age ≤ 90 min |
-| `foundation.market_context.v1` | context readiness, volatility ratio within 0.35–2.3 of its own window average, largest close-to-close move in either direction ≤ 5.0 candle ranges |
+| `foundation.market_context.v1` | context readiness, volatility ratio within 0.30–2.5 of its own window average, largest close-to-close move in either direction ≤ 5.0 candle ranges |
 | `foundation.time_filter.v1` | London/New York liquidity session |
 
 Thresholds shown are the current ones. They were re-derived in Phase 9A-6 over six months of history

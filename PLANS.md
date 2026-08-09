@@ -287,6 +287,10 @@ non-actionable and without any signal, AI, or execution behavior.
     `docs/phase9a7-verification-report.md`. Symmetric excursion field bounded at 5.0 (3.43% / 2.56%),
     entry band no longer widening the risk geometry, availability-aware rule behaviour, and the
     baseline re-measured with the corrected geometry.
+  - 9A-8: a second instrument — **completed 2026-08-09**, see
+    `docs/phase9a8-verification-report.md`. NOKSEK chosen over GBPUSD because it is genuinely
+    unlike EURUSD. The excursion bound transferred untouched; the volatility band failed again and
+    moved to 0.30/2.5. Closes the remediation list from the 2026-08-07 review.
   - 9B: Telegram signal delivery — the first user-visible LONG/SHORT output in the project.
   - 9C: paper trading — simulated positions and outcome tracking, no real money.
   - `REAL_TRADING_ENABLED` stays `False` permanently; no broker order API is ever added.
@@ -341,8 +345,10 @@ review of 2026-08-07.
 3. ~~**Re-measure what was calibrated on filler**~~ — **done 2026-08-08 as 9A-6.**
 4. ~~**Close the measurement gaps found in the review**~~ — **done 2026-08-08 as 9A-7**, including
    both calibration follow-ups.
-5. **A second instrument.** The held-out 40% of EURUSD has been examined twice and is spent, so
-   genuinely unseen data means a different pair or a later period. GBPUSD backfill is one evening.
+5. ~~**A second instrument**~~ — **done 2026-08-09 as 9A-8**, using NOKSEK rather than GBPUSD
+   because a pair that correlates 0.85-0.9 with EURUSD is barely a second test. 180 days stored on
+   both timeframes; historical only, the worker does not ingest it. It remains available as genuinely
+   unseen data for a future candidate, and spending it on nothing would waste it.
 6. **Then, and only then, another directional candidate** — or the decision to stop looking for one.
 
 9B (delivery) is not blocked by a task but by the absence of anything worth delivering: there is no

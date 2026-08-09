@@ -2,7 +2,22 @@
 
 AI Trading OS is a foundation for a future Forex analysis and paper-trading platform.
 
-Current project phase: phase_9a7_measurement_gaps_foundation.
+Current project phase: phase_9a8_second_instrument_foundation.
+Phase 9A-8 added a second instrument, **NOKSEK rather than GBPUSD on purpose**: GBPUSD correlates
+with EURUSD at 0.85-0.9 because both are mostly a dollar move, so a threshold transferring there
+proves little. NOKSEK has no dollar, about 1.8x the relative volatility, and a different session
+profile — the harder test.
+`max_close_excursion_atr` **transferred untouched**: the bound of 5.0, calibrated on EURUSD alone,
+fires on 2.86% and 2.19% of NOKSEK windows against 3.43% and 2.56% on EURUSD. That is the strongest
+evidence here that normalising by the window's own average true range makes a threshold portable.
+`volatility_ratio` failed again — 10.88% on NOKSEK H1, outside the corridor — so the band moved to
+**0.30/2.5**, which keeps all four series inside with the most room at the floor. It is now confirmed
+twice, by a timeframe change and an instrument change, that this field is not normalised well enough;
+recorded, not resolved by dropping the criterion.
+**Calibrate across instruments, not only timeframes.** M15 against H1 is one market observed twice.
+And NOKSEK's weekend filler is *not* visibly flat, unlike EURUSD's — the value-based signature that
+made the contamination obvious on one instrument would have missed it on the other, which is why the
+closed-market rule is calendar-based. See `docs/phase9a8-verification-report.md`.
 Phase 9A-7 closed three measurement gaps, none of which was a failing test — each was a number that
 meant something other than what it was read as. The drawdown measured only declines, so a window
 that climbed steeply reported zero and a warning rule read that as calm;

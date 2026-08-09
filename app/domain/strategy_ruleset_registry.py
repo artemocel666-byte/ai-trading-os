@@ -61,27 +61,28 @@ def _foundation_rule(
 MINIMUM_USED_CANDLE_COUNT = Decimal("8")
 MINIMUM_COMPLETENESS_RATIO = Decimal("0.8")
 MAXIMUM_LATEST_CANDLE_AGE_MINUTES = Decimal("90")
-# Recalibrated 2026-08-08 over windows built **only from traded candles** — 11 973 M15 and 2 802 H1.
-# The previous 0.30/3.5 came from the same six months including weekend filler, and on clean data it
-# fires on 0.99% (M15) and 2.86% (H1): below the 1-10% corridor fixed for warning rules in 7D-2,
-# because the filler had been supplying both tails of the distribution.
+# Recalibrated 2026-08-09 over **two instruments**, traded candles only: EURUSD and NOKSEK, M15 and
+# H1, roughly 12 000 and 2 800 windows each. NOKSEK was chosen precisely because it is unlike EURUSD
+# — no dollar on either side, about 1.8x the relative volatility per candle, and a different session
+# profile — so a threshold that survives the move is evidence rather than a coincidence.
 #
-# Clean percentiles:            p01     p03     p05  |    p95     p97     p99
-#   M15                      0.3354  0.4103  0.4538  | 1.9010  2.1220  2.7222
-#   H1                       0.2604  0.3224  0.3563  | 2.0417  2.2779  2.8921
+# Share of windows outside each candidate band:
+#                     EURUSD M15   EURUSD H1   NOKSEK M15   NOKSEK H1
+#   0.35 - 2.3             3.32%       7.69%        7.19%      10.88%   <- previous, fails H1
+#   0.30 - 2.5             1.91%       4.66%        4.77%       6.79%   <- taken
+#   0.28 - 2.8             1.32%       2.82%        3.33%       5.03%
+#   0.25 - 3.0             1.02%       2.06%        2.55%       3.34%   <- too near the floor
 #
-# 0.35/2.3 sits near p02/p98 on M15 and p04/p97 on H1, and fires on 3.28% and 7.53%.
+# 0.30/2.5 keeps all four inside the 1-10% corridor with the most room at the floor, which is the
+# constraint that bit last time: the pre-2026-08-08 band had fallen to 0.99% on clean EURUSD M15.
 #
-# **The two timeframes do not converge, and this is the honest record of that.** 7D-2 reported
-# 5.55% and 5.74% and called a single band defensible; that agreement was an artefact of
-# contamination, and clean data leaves a 4.25 percentage-point spread that no band in the sweep
-# removes — tightening the band widens it monotonically. A plausible reason: twelve M15 candles are
-# three hours inside one liquidity regime, while twelve H1 candles are half a day spanning Asia,
-# London and New York, so the window average is taken over genuinely different regimes. Unlike
-# `max_close_drawdown_atr`, which agrees to 0.02 points, this field is only partly
-# timeframe-neutral.
-MINIMUM_VOLATILITY_RATIO = Decimal("0.35")
-MAXIMUM_VOLATILITY_RATIO = Decimal("2.3")
+# **The convergence criterion still cannot be met, and now for a second reason.** 9A-6 found this
+# field is only partly timeframe-neutral; adding a second instrument shows it is not
+# instrument-neutral either, leaving a 4.88 percentage-point spread across the four series that no
+# band removes. Two independent confirmations of the same weakness. Compare
+# `max_close_excursion_atr`, whose bound of 5.0 transfers across both instruments untouched.
+MINIMUM_VOLATILITY_RATIO = Decimal("0.30")
+MAXIMUM_VOLATILITY_RATIO = Decimal("2.5")
 # Measured in typical candle ranges, not in price: the raw drawdown is divided by the window's
 # own average true range (itself expressed as a fraction of the latest close). Calibrated
 # 2026-08-05 over six months of EURUSD — 16 508 M15 and 4 153 H1 observations — where p95 was
@@ -114,6 +115,13 @@ MAXIMUM_CLOSE_DRAWDOWN_ATR = Decimal("4.0")
 # 5.0 is the only bound that satisfies both acceptance criteria with margin, so it is the one taken.
 # Note how much better this field converges than the one-sided drawdown did at the same percentiles:
 # taking the larger of two measurements of the same window is less noisy than taking one of them.
+#
+# **Confirmed on a second instrument, 2026-08-09, without changing the number.** On NOKSEK the same
+# bound fires on 2.86% (M15) and 2.19% (H1), against 3.43% and 2.56% on EURUSD — a spread of 0.57
+# points across instruments on M15 and 0.37 on H1, over a pair with about 1.8x the relative
+# volatility per candle. This is the strongest evidence in the project that normalising by the
+# window's own average true range makes a threshold mean the same thing somewhere else: M15 against
+# H1 is one market seen twice, EURUSD against NOKSEK is two markets.
 MAXIMUM_CLOSE_EXCURSION_ATR = Decimal("5.0")
 LAST_WEEKDAY_INDEX = Decimal("4")
 MAXIMUM_HIGH_IMPACT_EVENT_COUNT = Decimal("0")
