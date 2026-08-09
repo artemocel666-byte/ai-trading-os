@@ -82,6 +82,12 @@ is taken over genuinely different regimes on H1, so the last candle's ratio is m
 
 This supersedes the baseline in `docs/phase9a2-verification-report.md`.
 
+> **Superseded in turn on 2026-08-08 by Phase 9A-7**, which found the entry band had been widening
+> the risk geometry: these figures were measured with an effective stop of 1.6 ATR rather than the
+> configured 1.5. The corrected numbers are in `docs/phase9a7-verification-report.md` and move by a
+> few tenths. The conclusions below — the collapse in ambiguity, the timeframe convergence, the
+> six-point drift — all survive.
+
 | | windows | LONG target% | SHORT target% | ambiguous% | timeout% |
 | --- | ---: | ---: | ---: | ---: | ---: |
 | M15 contaminated | 16,587 | 38.44% | 43.07% | 2.15% | 20.74% |

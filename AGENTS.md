@@ -12,7 +12,15 @@ multipliers nobody had set; distances now come from the anchor. And `RuleBehavio
 availability, calling a rule OFTEN_FIRES on 68 observations out of 17 078 — `RARELY_OBSERVED` is now
 judged first.
 **A constant must mean what it says at the point of use.** Before trusting a threshold, check what
-the code does with it, not only what it is named. See `docs/phase9a7-verification-report.md`.
+the code does with it, not only what it is named.
+The warning rule now reads `market_context.max_close_excursion_atr` bounded at **5.0**, firing on
+3.43% (M15) and 2.56% (H1) — a 0.87-point spread, so both acceptance criteria are met. Keeping 4.0
+would have fired at nearly 12%: a symmetric field is by construction never smaller than the one-sided
+one it replaces, so replacing a field always requires recalibrating its bound.
+The baseline is re-measured with the corrected geometry: LONG 38.50% / SHORT 44.38% on M15 and
+39.06% / 45.53% on H1, break-even 42.86%. SHORT sits above break-even on both — that is a six-month
+downtrend measured gross of costs, not an edge, and must never be quoted as one.
+See `docs/phase9a7-verification-report.md`.
 Phase 9A-6 re-derived every threshold over windows built **only from traded candles**, and
 `data_quality.market_open` now judges every candle in the window rather than only its `as_of`.
 `max_close_drawdown_atr` stays at 4.0 and earned it: 5.98% and 5.96% on M15 and H1, a 0.02-point

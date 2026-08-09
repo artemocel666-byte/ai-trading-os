@@ -65,7 +65,7 @@ def test_builtin_rulesets_cover_the_expected_analytical_surface() -> None:
     assert rules_by_key["foundation.market_context.v1"] == {
         "market_context.snapshot_ready",
         "market_context.volatility_ratio",
-        "market_context.max_close_drawdown_atr",
+        "market_context.max_close_excursion_atr",
     }
     assert rules_by_key["foundation.event_context.v1"] == {
         "event_context.high_impact_event_count",

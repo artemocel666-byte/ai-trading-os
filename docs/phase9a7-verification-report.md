@@ -7,9 +7,9 @@ Generated: 2026-08-08
 The fourth remediation item. None of these was a crash or a failing test — each was a number that
 quietly meant something other than what it was read as, which is the harder kind to notice.
 
-**This slice is partial by necessity.** Two of the three fixes need a calibration run to finish, and
-the Docker engine stopped mid-session. What is committed is correct and tested; what is outstanding
-is named at the end rather than left to be discovered.
+Two of the three fixes needed a calibration run to finish. The Docker engine stopped mid-session, so
+the code landed first with the outstanding measurements named rather than left to be discovered; both
+were completed once it came back and are recorded below.
 
 ## 1. The drawdown only ever looked one way
 
@@ -70,19 +70,60 @@ does report a drawdown of zero — so the reason the symmetric field exists stay
 One test tripped the project's own Phase 3C term ban: a comment explaining the run-up used the words
 for the two sides of a position, which context files may not contain. Reworded rather than exempted.
 
-## What is outstanding, and why
+## The excursion bound, calibrated
 
-**The rule still reads the one-sided field.** `market_context.max_close_excursion_atr` exists and is
-measured; the warning rule still points at `max_close_drawdown_atr`, because swapping it needs a
-threshold derived from the new field's distribution, and the symmetric field is by construction never
-smaller than the drawdown — so 4.0 would fire more often than the 5.98% it was calibrated for. The
-field was added without moving the rule on purpose: **a threshold moves only through a deliberate
-edit that records its evidence**, and the evidence needs a database that is currently unavailable.
+Traded candles only, six months of EURUSD: 11,813 M15 and 2,770 H1 observations.
 
-**The baselines were measured with the old geometry.** Phase 9A-2 and its 9A-6 re-measurement both
-ran with the stop at 1.6 ATR and the target at 2.1. With the fix they are 1.5 and 2.0, break-even
-moves from 43.2% to 42.86%, and every outcome share shifts slightly. The numbers in those reports are
-now stale in a small, known way, and should be re-run rather than adjusted on paper.
+| | p50 | p75 | p90 | p95 | p97 | p99 |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| M15 | 2.5832 | 3.3179 | 4.1463 | 4.6979 | 5.0903 | 5.7505 |
+| H1 | 2.5598 | 3.3141 | 4.0850 | 4.4806 | 4.8364 | 5.5860 |
 
-Both are one calibration run away. Neither changes a conclusion that has been drawn: the 9A-3
-retraction stands, and no directional claim is affected.
+| bound | M15 fires | H1 fires | spread |
+| ---: | ---: | ---: | ---: |
+| 4.0 | 11.89% | 11.55% | 0.34 |
+| 4.5 | 6.53% | 4.87% | 1.65 |
+| **5.0** | **3.43%** | **2.56%** | **0.87** |
+| 5.5 | 1.51% | 1.34% | 0.17 |
+
+**5.0 is the only bound that satisfies both acceptance criteria with margin** — inside the 1–10%
+corridor and under the one-point convergence criterion. Keeping 4.0 would have pushed the rule to
+nearly 12%, which is what should be expected: the symmetric field is by construction never smaller
+than the one-sided one it replaces.
+
+Worth noting against the volatility band, which could not meet both criteria at any setting: this
+field converges *better* than the one-sided drawdown did at the same percentiles. Taking the larger
+of two measurements of the same window is less noisy than taking one of them and calling the other
+side calm.
+
+Verified after the edit: **3.43% and 2.56%**, matching the sweep exactly.
+
+## The baseline, re-measured with the corrected geometry
+
+The stop is now 1.5 ATR from the anchor rather than an effective 1.6, and the target 2.0 rather than
+2.1. Break-even moves from 43.2% to **42.86%**.
+
+| | windows | LONG target% | SHORT target% | ambiguous% | timeout% |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| M15, old geometry (9A-6) | 11,974 | 38.88% | 44.90% | 0.63% | 13.60% |
+| **M15, corrected** | 11,814 | **38.50%** | **44.38%** | 0.63% | 11.71% |
+| H1, old geometry (9A-6) | 2,802 | 39.30% | 45.59% | 0.54% | 13.78% |
+| **H1, corrected** | 2,771 | **39.06%** | **45.53%** | 0.62% | 12.41% |
+
+The shares moved by a few tenths, as expected from a 6% change in both distances. Timeouts fell by
+about 1.5 points, which is the arithmetic showing up honestly: both levels are nearer, so more windows
+resolve inside the horizon.
+
+Everything that mattered survived the correction. The two timeframes still agree — 0.56 points apart
+on LONG and 1.15 on SHORT — and the sample's drift is still about six points in favour of SHORT (5.88
+on M15, 6.47 on H1). **That drift is the period, not skill**, and it is the number a directional
+candidate has to beat on its own windows.
+
+One reading to be careful with: SHORT now sits *above* break-even on both timeframes, by 1.5 and 2.7
+points. That is not an edge. It is a six-month downtrend measured gross of costs, available to
+anybody who decided in advance to only ever sell.
+
+## What this changes elsewhere
+
+Nothing that has been concluded. The Phase 9A-3 retraction stands, no directional claim is affected,
+and the Phase 9A-2 and 9A-6 baselines are superseded in the small, known way recorded above.

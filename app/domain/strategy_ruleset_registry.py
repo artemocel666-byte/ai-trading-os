@@ -93,12 +93,28 @@ MAXIMUM_VOLATILITY_RATIO = Decimal("2.3")
 # normalised field asks "how many ordinary candle ranges deep was this decline", which means the
 # same thing on any timeframe.
 #
-# Re-measured 2026-08-08 on traded candles only, and **left unchanged because it earned it**: p95 is
-# 4.1403 (M15) and 4.1149 (H1), and at 4.0 the rule fires on 5.98% and 5.96%. A spread of 0.02
-# percentage points, against 0.62 on the contaminated sample and 5.95 before the field was
-# normalised at all. This is the closest thing the project has to proof that normalising a threshold
-# works.
+# Re-measured 2026-08-08 on traded candles only: p95 is 4.1403 (M15) and 4.1149 (H1), and at 4.0 the
+# rule fired on 5.98% and 5.96% — a 0.02 percentage-point spread. The field is retained for its
+# distribution, but **no rule reads it any more**: it measures declines only, so a window that
+# climbed steeply and never pulled back reported zero, and a warning rule read that as calm. That
+# made the rule directional in a project with no direction. See the excursion bound below.
 MAXIMUM_CLOSE_DRAWDOWN_ATR = Decimal("4.0")
+# The largest one-sided move in **either** direction, in typical candle ranges. Calibrated
+# 2026-08-08 over traded candles only — 11 813 M15 and 2 770 H1 observations.
+#
+# Clean percentiles:        p50     p75     p90     p95     p97     p99
+#   M15                  2.5832  3.3179  4.1463  4.6979  5.0903  5.7505
+#   H1                   2.5598  3.3141  4.0850  4.4806  4.8364  5.5860
+#
+# Firing rates by bound:   4.0 -> 11.89% / 11.55%   (above the 1-10% corridor)
+#                          4.5 ->  6.53% /  4.87%   (spread 1.65, over the convergence criterion)
+#                          5.0 ->  3.43% /  2.56%   (spread 0.87 — both criteria met)
+#                          5.5 ->  1.51% /  1.34%   (bottom of the corridor)
+#
+# 5.0 is the only bound that satisfies both acceptance criteria with margin, so it is the one taken.
+# Note how much better this field converges than the one-sided drawdown did at the same percentiles:
+# taking the larger of two measurements of the same window is less noisy than taking one of them.
+MAXIMUM_CLOSE_EXCURSION_ATR = Decimal("5.0")
 LAST_WEEKDAY_INDEX = Decimal("4")
 MAXIMUM_HIGH_IMPACT_EVENT_COUNT = Decimal("0")
 MINIMUM_MINUTES_SINCE_LATEST_EVENT = Decimal("30")
@@ -207,15 +223,16 @@ BUILTIN_STRATEGY_RULESET_FIXTURES: Mapping[str, StrategyRuleSet] = MappingProxyT
                     ),
                 ),
                 _foundation_rule(
-                    rule_id="market_context.max_close_drawdown_atr",
+                    rule_id="market_context.max_close_excursion_atr",
                     category=StrategyRuleCategory.MARKET_CONTEXT,
                     severity=StrategyRuleSeverity.WARNING,
-                    field_ref="market_context.max_close_drawdown_atr",
+                    field_ref="market_context.max_close_excursion_atr",
                     operator=StrategyRuleOperator.LTE,
-                    expected_value=MAXIMUM_CLOSE_DRAWDOWN_ATR,
+                    expected_value=MAXIMUM_CLOSE_EXCURSION_ATR,
                     description=(
-                        "The largest close-to-close decline inside the window stays within a "
-                        "usual number of candle ranges for this window."
+                        "The largest one-sided close-to-close move inside the window, in either "
+                        "direction, stays within a usual number of candle ranges. Measuring only "
+                        "declines made this rule blind to a steep climb."
                     ),
                 ),
             ),

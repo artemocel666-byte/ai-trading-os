@@ -36,7 +36,8 @@ AI Trading OS is a safety-first foundation for a future modular Forex analysis a
   the project's first baseline, which is what any future direction has to beat.
 - Phase 9A-7 closed three measurement gaps: the drawdown measured only declines so a steep climb
   reported zero risk, the entry band made `stop=1.5` behave as 1.6 in every published figure, and a
-  rule could be called "often firing" on 0.4% of the sample.
+  rule could be called "often firing" on 0.4% of the sample. The warning rule now reads a symmetric
+  excursion bounded at 5.0 candle ranges, firing on 3.43% and 2.56% of M15 and H1 windows.
 - Phase 9A-6 re-derived the thresholds over traded candles only: the volatility band moved to
   0.35/2.3, the drawdown bound stayed at 4.0 with a 0.02-point spread between timeframes, and the
   9A-2 baseline was re-measured — ambiguity fell from 2-4% to 0.5-0.6%.
@@ -359,14 +360,16 @@ answered the same thing. The new rules read actual values.
 | Ruleset | Rules |
 | --- | --- |
 | `foundation.data_quality.v1` | used candle count ≥ 8 (BLOCKING), completeness ratio ≥ 0.8, market-data completeness, market open for every candle (REQUIRED), latest-candle age ≤ 90 min |
-| `foundation.market_context.v1` | context readiness, volatility ratio within 0.35–2.3 of its own window average, max close-to-close drawdown ≤ 4.0 candle ranges |
+| `foundation.market_context.v1` | context readiness, volatility ratio within 0.35–2.3 of its own window average, largest close-to-close move in either direction ≤ 5.0 candle ranges |
 | `foundation.time_filter.v1` | London/New York liquidity session |
 
 Thresholds shown are the current ones. They were re-derived in Phase 9A-6 over six months of history
 **built only from traded candles**, after the stored series turned out to be about 28% weekend filler
 — see `docs/phase9a6-verification-report.md`. The drawdown bound is ATR-normalised so that one number
-means the same thing on M15 and H1, and it does: 5.98% and 5.96%. The volatility band does not
-converge that way, and the report says so instead of hiding it. The event ruleset
+means the same thing on M15 and H1, and it does: the symmetric excursion fires on 3.43% and 2.56%,
+a 0.87-point spread. The volatility band does not converge that way, and the report says so instead
+of hiding it. See also `docs/phase9a7-verification-report.md`, which replaced the one-sided drawdown
+with a direction-neutral measurement. The event ruleset
 (`foundation.event_context.v1`) joined in Phase 7B, bringing the set to eleven rules.
 
 Severity drives the outcome: a BLOCKING failure makes the pipeline `BLOCKED`, a REQUIRED failure

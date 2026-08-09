@@ -283,11 +283,10 @@ non-actionable and without any signal, AI, or execution behavior.
     `max_close_drawdown_atr` stayed at 4.0 with a 0.02-point cross-timeframe spread; the 9A-2
     baseline was re-measured and superseded. Two acceptance criteria proved incompatible for the
     volatility band, and that is recorded rather than resolved by dropping one.
-  - 9A-7: three measurement gaps — **completed 2026-08-08, partially**, see
-    `docs/phase9a7-verification-report.md`. Symmetric excursion field, entry band no longer widening
-    the risk geometry, availability-aware rule behaviour. Two follow-ups need a calibration run: the
-    warning rule still reads the one-sided field, and the baselines were measured with the old
-    geometry.
+  - 9A-7: three measurement gaps — **completed 2026-08-08**, see
+    `docs/phase9a7-verification-report.md`. Symmetric excursion field bounded at 5.0 (3.43% / 2.56%),
+    entry band no longer widening the risk geometry, availability-aware rule behaviour, and the
+    baseline re-measured with the corrected geometry.
   - 9B: Telegram signal delivery — the first user-visible LONG/SHORT output in the project.
   - 9C: paper trading — simulated positions and outcome tracking, no real money.
   - `REAL_TRADING_ENABLED` stays `False` permanently; no broker order API is ever added.
@@ -340,10 +339,8 @@ review of 2026-08-07.
 2. ~~**Clean the database**~~ — **done 2026-08-07 as 9A-5**, and it was worse than estimated: 39 rows,
    including 30 seed candles that had been replacing real observations outright.
 3. ~~**Re-measure what was calibrated on filler**~~ — **done 2026-08-08 as 9A-6.**
-4. ~~**Close the measurement gaps found in the review**~~ — **done 2026-08-08 as 9A-7**, except two
-   follow-ups that need a calibration run: point the warning rule at
-   `market_context.max_close_excursion_atr` with a threshold derived from its own distribution, and
-   re-measure the 9A-2/9A-6 baselines now that the stop is 1.5 ATR rather than an effective 1.6.
+4. ~~**Close the measurement gaps found in the review**~~ — **done 2026-08-08 as 9A-7**, including
+   both calibration follow-ups.
 5. **A second instrument.** The held-out 40% of EURUSD has been examined twice and is spent, so
    genuinely unseen data means a different pair or a later period. GBPUSD backfill is one evening.
 6. **Then, and only then, another directional candidate** — or the decision to stop looking for one.
