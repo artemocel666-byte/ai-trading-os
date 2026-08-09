@@ -63,7 +63,7 @@ def _snapshot(base_time: datetime, *, candle_count: int = 12):
 
 
 def test_project_phase_is_current() -> None:
-    assert constants.PROJECT_PHASE == "phase_9a6_clean_calibration_foundation"
+    assert constants.PROJECT_PHASE == "phase_9a7_measurement_gaps_foundation"
 
 
 @pytest.mark.parametrize(

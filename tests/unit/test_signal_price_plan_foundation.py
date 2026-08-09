@@ -127,11 +127,39 @@ def test_distances_are_the_configured_atr_multiples(direction: SignalDirection) 
     band = average_true_range * DEFAULT_MULTIPLIERS.entry_band
     assert plan.entry_min == (anchor - band).quantize(step)
     assert plan.entry_max == (anchor + band).quantize(step)
+    # Measured from the anchor, not from the edge of the band. Until 2026-08-08 the band was added
+    # to each distance, so a configured 1.5 behaved as 1.6 and every break-even figure in the
+    # project was computed for multipliers nobody had set.
     expected_stop_distance = average_true_range * DEFAULT_MULTIPLIERS.stop
+    expected_target_distance = average_true_range * DEFAULT_MULTIPLIERS.target_1
     if direction == SignalDirection.LONG:
-        assert plan.stop_loss == (plan.entry_min - expected_stop_distance).quantize(step)
+        assert plan.stop_loss == (anchor - expected_stop_distance).quantize(step)
+        assert plan.take_profit_1 == (anchor + expected_target_distance).quantize(step)
     else:
-        assert plan.stop_loss == (plan.entry_max + expected_stop_distance).quantize(step)
+        assert plan.stop_loss == (anchor + expected_stop_distance).quantize(step)
+        assert plan.take_profit_1 == (anchor - expected_target_distance).quantize(step)
+
+
+@pytest.mark.parametrize("direction", [SignalDirection.LONG, SignalDirection.SHORT])
+def test_the_entry_band_does_not_move_the_risk_geometry(direction: SignalDirection) -> None:
+    """Widening the entry zone must not quietly widen the stop and the target with it.
+
+    The band describes where an order might sit; the multipliers describe what is risked and sought.
+    Conflating them is how `stop=1.5` came to mean 1.6 everywhere.
+    """
+    snapshot = _snapshot()
+    narrow = build_price_plan(
+        direction, snapshot, multipliers=LevelMultipliers(entry_band=Decimal("0.05"))
+    )
+    wide = build_price_plan(
+        direction, snapshot, multipliers=LevelMultipliers(entry_band=Decimal("0.40"))
+    )
+
+    assert narrow is not None
+    assert wide is not None
+    assert narrow.stop_loss == wide.stop_loss
+    assert narrow.take_profit_1 == wide.take_profit_1
+    assert wide.entry_max - wide.entry_min > narrow.entry_max - narrow.entry_min
 
 
 @pytest.mark.parametrize("direction", [SignalDirection.LONG, SignalDirection.SHORT])
@@ -320,4 +348,4 @@ def test_precision_survives_the_trailing_zeros_storage_adds() -> None:
 
 
 def test_project_phase_is_phase9a_price_plan_foundation() -> None:
-    assert constants.PROJECT_PHASE == "phase_9a6_clean_calibration_foundation"
+    assert constants.PROJECT_PHASE == "phase_9a7_measurement_gaps_foundation"

@@ -179,6 +179,7 @@ def _return_distribution(candles: Sequence[Candle]) -> ReturnDistributionSummary
         return_standard_deviation=deviation,
         realized_volatility=deviation,
         max_close_to_close_drawdown=_max_close_to_close_drawdown(close_values),
+        max_close_to_close_runup=_max_close_to_close_runup(close_values),
     )
 
 
@@ -315,6 +316,27 @@ def _max_close_to_close_drawdown(close_values: Sequence[Decimal]) -> Decimal | N
             peak = close_value
             continue
         current = (peak - close_value) / peak
+        if current > largest:
+            largest = current
+    return largest
+
+
+def _max_close_to_close_runup(close_values: Sequence[Decimal]) -> Decimal | None:
+    """The largest rise from a running trough — the drawdown seen from the other side.
+
+    Deliberately the exact mirror of `_max_close_to_close_drawdown`, trough for peak and rise for
+    fall, so the pair can be compared without an adjustment. A project with no direction cannot call
+    one of these risk and the other calm.
+    """
+    if len(close_values) < 2:
+        return None
+    trough = close_values[0]
+    largest = Decimal("0")
+    for close_value in close_values[1:]:
+        if close_value < trough:
+            trough = close_value
+            continue
+        current = (close_value - trough) / trough
         if current > largest:
             largest = current
     return largest

@@ -159,6 +159,38 @@ def _resolve_max_close_drawdown_atr(snapshot: AnalysisSnapshot) -> FieldResoluti
     return drawdown / average_true_range_ratio
 
 
+def _resolve_max_close_excursion_atr(snapshot: AnalysisSnapshot) -> FieldResolution:
+    """The window's largest one-sided move **in either direction**, in typical candle ranges.
+
+    `max_close_drawdown_atr` measures only declines, which made the warning rule directional in a
+    project that has no direction: a window that climbed steeply and never pulled back reported a
+    drawdown of zero — true for a long position, false for a short one, and the rules describe the
+    window rather than a position in it.
+
+    This takes the larger of the fall from a running peak and the rise from a running trough, then
+    normalises it the same way: the average true range is expressed as a fraction of the latest
+    close first, because the excursion is a fraction of price and the range is an absolute amount.
+    """
+    if snapshot.context_snapshot is None or snapshot.feature_snapshot is None:
+        return None
+    distribution = snapshot.context_snapshot.return_distribution
+    drawdown = distribution.max_close_to_close_drawdown
+    runup = distribution.max_close_to_close_runup
+    if drawdown is None or runup is None:
+        return None
+    candle_summary = snapshot.feature_snapshot.candle_summary
+    average_true_range = candle_summary.average_true_range
+    latest_close = candle_summary.latest_close
+    if average_true_range is None or latest_close is None:
+        return None
+    if average_true_range == 0 or latest_close == 0:
+        return None
+    average_true_range_ratio = average_true_range / latest_close
+    if average_true_range_ratio == 0:
+        return None
+    return max(drawdown, runup) / average_true_range_ratio
+
+
 def _resolve_move_efficiency(snapshot: AnalysisSnapshot) -> FieldResolution:
     """How one-sided the window's movement was, on a scale of nothing to a straight line.
 
@@ -235,6 +267,7 @@ FIELD_RESOLVERS: Mapping[str, Callable[[AnalysisSnapshot], FieldResolution]] = {
     "market_context.volatility_ratio": _resolve_volatility_ratio,
     "market_context.max_close_drawdown": _resolve_max_close_drawdown,
     "market_context.max_close_drawdown_atr": _resolve_max_close_drawdown_atr,
+    "market_context.max_close_excursion_atr": _resolve_max_close_excursion_atr,
     "market_context.move_efficiency": _resolve_move_efficiency,
     "event_context.high_impact_event_count": _resolve_high_impact_event_count,
     "event_context.minutes_since_latest_event": _resolve_minutes_since_latest_event,

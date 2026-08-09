@@ -102,6 +102,11 @@ Reward-to-risk is 1.31 in every case, and every contract reports `NOT_ACTIONABLE
 the configured 1.5 and 2.0 because the entry band adds its own 0.1 ATR on each side — arithmetic, not
 drift.
 
+> **Corrected 2026-08-08 (Phase 9A-7).** That paragraph was true and missed the point: the arithmetic
+> meant the constants did not say what they meant, and every break-even figure the project published
+> was computed for multipliers nobody had configured. Distances are now measured from the anchor, so
+> 1.5 is 1.5 and reward-to-risk is 1.33. See `docs/phase9a7-verification-report.md`.
+
 ### A defect the synthetic tests missed
 
 The first live run produced levels like `1.1385712500` — ten decimals, which no venue would accept.

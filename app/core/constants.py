@@ -1,4 +1,4 @@
-PROJECT_PHASE = "phase_9a6_clean_calibration_foundation"
+PROJECT_PHASE = "phase_9a7_measurement_gaps_foundation"
 STRATEGY_IMPLEMENTED = False
 REAL_TRADING_ENABLED = False
 

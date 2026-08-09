@@ -53,6 +53,10 @@ class LevelMultipliers:
     without knowing the future.
     """
 
+    #: Half-width of the entry zone around the anchor. It does **not** move the protective level or
+    #: the targets: those are measured from the anchor, so `stop` and `target_1` below mean exactly
+    #: what they say. Until 2026-08-08 they did not — the band was added to each distance, and
+    #: 1.5/2.0 behaved as 1.6/2.1 in every measurement the project made.
     entry_band: Decimal = Decimal("0.10")
     stop: Decimal = Decimal("1.5")
     target_1: Decimal = Decimal("2.0")
@@ -98,19 +102,23 @@ def build_price_plan(
         average_true_range * multipliers.target_2 if multipliers.target_2 is not None else None
     )
 
+    # Distances are measured from the anchor, not from the edge of the entry band. Measuring from
+    # the edge made `stop=1.5` behave as 1.6 and `target_1=2.0` as 2.1, because the band added its
+    # own 0.1 on each side — so every break-even figure in the project was computed for multipliers
+    # nobody had configured. The band is an entry zone; it is not a modifier of the risk geometry.
     if direction == SignalDirection.LONG:
-        stop_loss = _quantize(entry_min - stop_distance, decimals)
-        take_profit_1 = _quantize(entry_max + target_1_distance, decimals)
+        stop_loss = _quantize(anchor - stop_distance, decimals)
+        take_profit_1 = _quantize(anchor + target_1_distance, decimals)
         take_profit_2 = (
-            _quantize(entry_max + target_2_distance, decimals)
+            _quantize(anchor + target_2_distance, decimals)
             if target_2_distance is not None
             else None
         )
     else:
-        stop_loss = _quantize(entry_max + stop_distance, decimals)
-        take_profit_1 = _quantize(entry_min - target_1_distance, decimals)
+        stop_loss = _quantize(anchor + stop_distance, decimals)
+        take_profit_1 = _quantize(anchor - target_1_distance, decimals)
         take_profit_2 = (
-            _quantize(entry_min - target_2_distance, decimals)
+            _quantize(anchor - target_2_distance, decimals)
             if target_2_distance is not None
             else None
         )

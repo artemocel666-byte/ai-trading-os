@@ -72,6 +72,11 @@ class ReturnDistributionSummary(BaseModel):
     return_standard_deviation: Decimal | None = None
     realized_volatility: Decimal | None = None
     max_close_to_close_drawdown: Decimal | None = None
+    #: The mirror of the drawdown: the largest rise from a running trough. Added 2026-08-08 because
+    #: measuring only declines made the warning rule directional in a project with no direction — a
+    #: window that climbed steeply reported zero adverse movement, which is true for one side of a
+    #: hypothetical position and false for the other. Descriptive only, like everything here.
+    max_close_to_close_runup: Decimal | None = None
 
     model_config = ConfigDict(frozen=True)
 

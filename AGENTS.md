@@ -2,7 +2,17 @@
 
 AI Trading OS is a foundation for a future Forex analysis and paper-trading platform.
 
-Current project phase: phase_9a6_clean_calibration_foundation.
+Current project phase: phase_9a7_measurement_gaps_foundation.
+Phase 9A-7 closed three measurement gaps, none of which was a failing test — each was a number that
+meant something other than what it was read as. The drawdown measured only declines, so a window
+that climbed steeply reported zero and a warning rule read that as calm;
+`market_context.max_close_excursion_atr` takes the larger of the fall and the rise. The entry band
+was measured from, so `stop=1.5` behaved as 1.6 and every break-even figure was computed for
+multipliers nobody had set; distances now come from the anchor. And `RuleBehaviour` ignored
+availability, calling a rule OFTEN_FIRES on 68 observations out of 17 078 — `RARELY_OBSERVED` is now
+judged first.
+**A constant must mean what it says at the point of use.** Before trusting a threshold, check what
+the code does with it, not only what it is named. See `docs/phase9a7-verification-report.md`.
 Phase 9A-6 re-derived every threshold over windows built **only from traded candles**, and
 `data_quality.market_open` now judges every candle in the window rather than only its `as_of`.
 `max_close_drawdown_atr` stays at 4.0 and earned it: 5.98% and 5.96% on M15 and H1, a 0.02-point

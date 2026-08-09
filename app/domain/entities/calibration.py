@@ -14,6 +14,11 @@ from app.domain.value_objects import CurrencyPair
 # A descriptive rule has to be quiet in normal conditions and still able to fire. Below this share
 # of windows it is quiet; above it, it is firing often enough that nobody would read it.
 RARE_FIRING_SHARE = Decimal("0.10")
+#: Below this share of windows, a rule was evaluated too seldom for its firing rate to describe it.
+#: `event_context.minutes_since_latest_event` was reported as OFTEN_FIRES on 68 observations out of
+#: 17 078 windows — a 0.4% sample — because the verdict divided by what it could measure and never
+#: asked how often that was.
+RARELY_OBSERVED_SHARE = Decimal("0.05")
 
 
 class RuleBehaviour(StrEnum):
@@ -21,9 +26,15 @@ class RuleBehaviour(StrEnum):
 
     NEVER_FIRES is a defect, not a compliment: a rule that passed every window of real history
     cannot report anything, which is the Phase 7C `EXISTS` defect in a different shape.
+
+    RARELY_OBSERVED is a defect of a different kind, and it comes before the firing rate is worth
+    reading at all: a rule whose field resolves in a handful of windows has a firing rate computed
+    over almost nothing. Saying OFTEN_FIRES about 68 windows out of 17 078 is technically true and
+    practically a lie.
     """
 
     NOT_OBSERVED = "NOT_OBSERVED"
+    RARELY_OBSERVED = "RARELY_OBSERVED"
     NEVER_FIRES = "NEVER_FIRES"
     RARELY_FIRES = "RARELY_FIRES"
     OFTEN_FIRES = "OFTEN_FIRES"
@@ -97,11 +108,27 @@ class RuleOutcomeTally(BaseModel):
 
     @computed_field  # type: ignore[prop-decorator]
     @property
+    def observed_share(self) -> Decimal | None:
+        """How much of the replay this rule could be evaluated over at all."""
+        total = self.evaluated_count + self.unavailable_count
+        if total == 0:
+            return None
+        return Decimal(self.evaluated_count) / Decimal(total)
+
+    @computed_field  # type: ignore[prop-decorator]
+    @property
     def behaviour(self) -> RuleBehaviour:
-        """Derived from the counts, never supplied, so the verdict cannot drift from the data."""
+        """Derived from the counts, never supplied, so the verdict cannot drift from the data.
+
+        Availability is judged before the firing rate, because a rate computed over a handful of
+        windows describes the handful rather than the rule.
+        """
         failing_share = self.failing_share
         if failing_share is None:
             return RuleBehaviour.NOT_OBSERVED
+        observed_share = self.observed_share
+        if observed_share is not None and observed_share < RARELY_OBSERVED_SHARE:
+            return RuleBehaviour.RARELY_OBSERVED
         if self.failed_count == 0:
             return RuleBehaviour.NEVER_FIRES
         if self.passed_count == 0:
@@ -178,5 +205,10 @@ class RuleCalibrationReport(BaseModel):
         return tuple(
             tally
             for tally in self.tallies
-            if tally.behaviour in (RuleBehaviour.NEVER_FIRES, RuleBehaviour.NOT_OBSERVED)
+            if tally.behaviour
+            in (
+                RuleBehaviour.NEVER_FIRES,
+                RuleBehaviour.NOT_OBSERVED,
+                RuleBehaviour.RARELY_OBSERVED,
+            )
         )

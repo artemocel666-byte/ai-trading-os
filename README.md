@@ -4,7 +4,7 @@ AI Trading OS is a safety-first foundation for a future modular Forex analysis a
 
 ## Current Status
 
-- Current project phase: phase_9a6_clean_calibration_foundation.
+- Current project phase: phase_9a7_measurement_gaps_foundation.
 - Phase 6 snapshot-backed read-only review is complete: `/review EURUSD M15` builds a real analysis
   snapshot, runs the Phase 4G composer over it, and presents the pipeline decision through the
   Phase 5 manual review layer — still read-only and non-actionable.
@@ -34,6 +34,9 @@ AI Trading OS is a safety-first foundation for a future modular Forex analysis a
 - Phase 9A-2 outcome measurement is complete: `scripts/measure_outcomes.py` walks forward from each
   historical window and records whether the target or the protective level came first. It produced
   the project's first baseline, which is what any future direction has to beat.
+- Phase 9A-7 closed three measurement gaps: the drawdown measured only declines so a steep climb
+  reported zero risk, the entry band made `stop=1.5` behave as 1.6 in every published figure, and a
+  rule could be called "often firing" on 0.4% of the sample.
 - Phase 9A-6 re-derived the thresholds over traded candles only: the volatility band moved to
   0.35/2.3, the drawdown bound stayed at 4.0 with a 0.02-point spread between timeframes, and the
   9A-2 baseline was re-measured — ambiguity fell from 2-4% to 0.5-0.6%.
