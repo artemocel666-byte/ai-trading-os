@@ -4,7 +4,12 @@ AI Trading OS is a safety-first foundation for a future modular Forex analysis a
 
 ## Current Status
 
-- Current project phase: phase_9a8_second_instrument_foundation.
+- Current project phase: phase_9c1_forward_outcome_ledger_foundation.
+- Phase 9C-1 built the forward outcome ledger: on every closed window the worker writes down the
+  levels for both directions **before** the outcome exists, and a separate tick settles them later
+  from candles that arrived afterwards. No account, no position size, no profit and loss, no
+  direction chosen. Off by default; nothing accumulates until `FORWARD_OUTCOME_RECORDING_ENABLED=true`
+  and the worker runs. Read it with `scripts/report_forward_outcomes.py`.
 - Phase 6 snapshot-backed read-only review is complete: `/review EURUSD M15` builds a real analysis
   snapshot, runs the Phase 4G composer over it, and presents the pipeline decision through the
   Phase 5 manual review layer — still read-only and non-actionable.

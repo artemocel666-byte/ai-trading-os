@@ -75,3 +75,27 @@ The initial schema is created by Alembic revision `0001_foundation_schema`.
 - Foreign key: `signal_id -> signals.id`.
 - Fields: account balance, risk, paper position size, entry, stop, targets, status, result fields, costs, created time.
 - Indexes: signal ID, status, status + created_at.
+- **Unused since Phase 1, and deliberately so.** It assumes a direction, an account balance, a risk
+  percentage and a spread cost — four things this project does not have and will not invent. Phase
+  9C-1 added `forward_outcome_records` rather than fill it. Left in place because dropping a table
+  is destructive and an empty one is harmless.
+
+## forward_outcome_records
+
+- Added by Alembic revision `0004_phase9c1_forward_outcomes`.
+- Primary key: `id` UUID.
+- Identity: pair, timeframe, `as_of`, direction — unique together, so an overlapping worker cadence
+  cannot double-register a window.
+- Plan, fixed at write time: anchor price, entry band, protective level, first target.
+- What the pipeline said: decision status, `market_open` (nullable — the rule may be unevaluable),
+  the ids of rules observed to fail.
+- Provenance: pipeline version, ruleset versions, decision fingerprint, the multipliers and horizon
+  in force, project phase, `recorded_at`.
+- Outcome, written later and nullable until then: outcome kind, bars to resolution, `resolved_at`.
+- Check constraints: the outcome kind and `resolved_at` are set together or not at all, and a
+  pending row carries no resolution bar. A row cannot be half-settled.
+- Indexes: pair, timeframe, `as_of`, decision status, (outcome kind + `as_of`) for the pending
+  query, (pair + timeframe + `as_of`) for reading.
+- Safety boundary: **no account, balance, position size, profit, or cost field**, and a contract
+  test asserts none is ever added. A plan is never rewritten once stored; only the three outcome
+  columns are ever written a second time, and only from `NULL`.

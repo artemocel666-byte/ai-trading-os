@@ -5,11 +5,14 @@ from typing import Any
 from app.core.time import utc_now
 from app.domain.entities import (
     CalendarIngestionResult,
+    ForwardOutcomeRecordResult,
+    ForwardOutcomeResolveResult,
     MarketDataIngestionResult,
     ScheduledDigestDeliveryResult,
 )
 from app.observability.health_checks import run_application_health_check
 from app.services.economic_calendar_ingestion_service import EconomicCalendarIngestionService
+from app.services.forward_outcome_service import ForwardOutcomeService
 from app.services.health_service import HealthService
 from app.services.market_data_ingestion_service import MarketDataIngestionService
 from app.services.scheduled_digest_delivery_service import ScheduledDigestDeliveryService
@@ -84,6 +87,46 @@ async def economic_calendar_ingestion_job(
     return result
 
 
+async def forward_outcome_record_job(
+    service: ForwardOutcomeService,
+    *,
+    as_of: datetime | None = None,
+) -> ForwardOutcomeRecordResult:
+    result = await service.run_record_tick(as_of=as_of or utc_now())
+    logger.info(
+        "forward_outcome_recording_checked",
+        extra={
+            "executed": result.executed,
+            "reason": result.reason.value,
+            "considered": result.considered_count,
+            "recorded": result.recorded_count,
+            "already_present": result.already_present_count,
+            "without_a_plan": result.windows_without_a_plan,
+            "failed_items": result.failed_item_count,
+        },
+    )
+    return result
+
+
+async def forward_outcome_resolve_job(
+    service: ForwardOutcomeService,
+    *,
+    as_of: datetime | None = None,
+) -> ForwardOutcomeResolveResult:
+    result = await service.run_resolve_tick(as_of=as_of or utc_now())
+    logger.info(
+        "forward_outcome_resolution_checked",
+        extra={
+            "executed": result.executed,
+            "reason": result.reason.value,
+            "examined": result.examined_count,
+            "resolved": result.resolved_count,
+            "still_pending": result.still_pending_count,
+        },
+    )
+    return result
+
+
 def register_jobs(
     scheduler: Any,
     *,
@@ -93,6 +136,9 @@ def register_jobs(
     market_data_ingestion_interval_minutes: int = 15,
     calendar_ingestion_service: EconomicCalendarIngestionService | None = None,
     calendar_ingestion_interval_minutes: int = 60,
+    forward_outcome_service: ForwardOutcomeService | None = None,
+    forward_outcome_record_interval_minutes: int = 15,
+    forward_outcome_resolve_interval_minutes: int = 15,
 ) -> None:
     scheduler.add_job(
         update_worker_heartbeat_job,
@@ -132,6 +178,30 @@ def register_jobs(
             minutes=calendar_ingestion_interval_minutes,
             args=[calendar_ingestion_service],
             id="economic_calendar_ingestion",
+            max_instances=1,
+            coalesce=True,
+            replace_existing=True,
+        )
+    if forward_outcome_service is not None:
+        # Two jobs, never one. Recording must not be able to see a candle that a resolution in the
+        # same call has already read: keeping them apart is what makes "the plan was fixed first"
+        # a property of the schedule rather than of a comment.
+        scheduler.add_job(
+            forward_outcome_record_job,
+            "interval",
+            minutes=forward_outcome_record_interval_minutes,
+            args=[forward_outcome_service],
+            id="forward_outcome_recording",
+            max_instances=1,
+            coalesce=True,
+            replace_existing=True,
+        )
+        scheduler.add_job(
+            forward_outcome_resolve_job,
+            "interval",
+            minutes=forward_outcome_resolve_interval_minutes,
+            args=[forward_outcome_service],
+            id="forward_outcome_resolution",
             max_instances=1,
             coalesce=True,
             replace_existing=True,

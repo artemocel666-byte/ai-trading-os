@@ -63,8 +63,11 @@ from app.domain.strategy_rule_evaluator import StrategyRuleEvaluator
 from app.domain.strategy_ruleset_registry import StrategyRuleSetRegistry
 from app.domain.strategy_ruleset_validator import StrategyRuleSetValidator
 from app.domain.value_objects import CurrencyPair
-from app.persistence.models import ScheduledDigestDeliveryModel
-from app.persistence.repositories.foundation import SqlAlchemyScheduledDigestDeliveryStore
+from app.persistence.models import ForwardOutcomeRecordModel, ScheduledDigestDeliveryModel
+from app.persistence.repositories.foundation import (
+    SqlAlchemyForwardOutcomeRepository,
+    SqlAlchemyScheduledDigestDeliveryStore,
+)
 from app.telegram.commands import digest_command
 from app.telegram.emoji_policy import EMOJI_BY_MESSAGE_TYPE
 from app.telegram.snapshot_review_formatter import format_explanation_section
@@ -1540,6 +1543,15 @@ def test_phase4g_does_not_add_scheduler_decision_or_signal_jobs() -> None:
 
 
 def test_phase4g_does_not_add_strategy_decision_service() -> None:
+    """No service is a strategy, and none names the composer.
+
+    Phase 9C-1 needed the pipeline to run on a timer, which is the thing this boundary was written
+    to prevent from happening quietly. It is done through `snapshot_review` — the same read-only
+    domain entry point `/review` uses — and the permitted file is named below rather than left to
+    be discovered. Everything the boundary actually protects is unchanged: no service is *called* a
+    strategy or a decision, none constructs the composer itself, and the composed report stays
+    non-actionable by its own validator.
+    """
     service_files = tuple(Path("app/services").glob("*.py"))
     offenders = [
         str(file_path)
@@ -1550,6 +1562,15 @@ def test_phase4g_does_not_add_strategy_decision_service() -> None:
     ]
 
     assert offenders == []
+
+    composing = [
+        str(file_path)
+        for file_path in service_files
+        if file_path != PHASE_9C1_LEDGER_SERVICE
+        and "build_snapshot_backed_review" in file_path.read_text(encoding="utf-8")
+    ]
+
+    assert composing == []
 
 
 def test_phase5_domain_objects_do_not_import_forbidden_runtime_dependencies() -> None:
@@ -2250,6 +2271,10 @@ def test_safety_scanner_rejects_execution_http_endpoints(tmp_path: Path) -> None
 
 
 PHASE_9A_PRICE_LEVEL_MODULE = Path("app/domain/signal_price_plan.py")
+
+#: The one service Phase 9C-1 allows to build a plan and to measure an outcome. Named here once so
+#: every narrowing below points at the same file and none of them can drift apart.
+PHASE_9C1_LEDGER_SERVICE = Path("app/services/forward_outcome_service.py")
 PHASE_9A_PRICE_LEVEL_TERMS = ("calculate_entry", "calculate_stop", "calculate_target")
 
 
@@ -2314,17 +2339,34 @@ def test_phase9a_price_plan_module_touches_no_other_layer() -> None:
         assert not any(term in line for line in import_lines), term
 
 
-def test_phase9a_price_plan_is_not_wired_anywhere() -> None:
-    """Levels exist as machinery only. 9B is where anything may reach a user."""
-    source = "\n".join(
+def test_phase9a_price_plan_reaches_exactly_one_service() -> None:
+    """Levels are machinery. Exactly one file may build them, and it is not user-facing.
+
+    Narrowed in Phase 9C-1, which needed a plan fixed on a timer before its outcome existed. What
+    replaces the blanket ban is stricter than it was: the permitted file is named, no other file in
+    any runtime layer may reach the module at all, and `build_draft_contract` stays unreachable
+    everywhere — a draft contract is the shape that gets shown to a person, and 9B is where that
+    may first happen.
+    """
+    offenders = [
+        str(file_path)
+        for directory in ("app/services", "app/telegram", "app/scheduler", "app/api")
+        for file_path in Path(directory).rglob("*.py")
+        if file_path != PHASE_9C1_LEDGER_SERVICE
+        and (
+            "signal_price_plan" in file_path.read_text(encoding="utf-8")
+            or "build_price_plan" in file_path.read_text(encoding="utf-8")
+        )
+    ]
+
+    assert offenders == []
+
+    everywhere = "\n".join(
         file_path.read_text(encoding="utf-8")
         for directory in ("app/services", "app/telegram", "app/scheduler", "app/api")
         for file_path in Path(directory).rglob("*.py")
     )
-
-    assert "signal_price_plan" not in source
-    assert "build_price_plan" not in source
-    assert "build_draft_contract" not in source
+    assert "build_draft_contract" not in everywhere
 
 
 def test_phase9a_draft_contract_cannot_be_actionable() -> None:
@@ -2410,16 +2452,34 @@ def test_phase9a2_outcome_measurement_is_invisible_to_the_analysis_path() -> Non
     assert offenders == []
 
 
-def test_phase9a2_outcome_measurement_is_not_wired_anywhere() -> None:
-    """Measurement is an offline instrument. Nothing running on a timer or a command may use it."""
-    source = "\n".join(
-        file_path.read_text(encoding="utf-8")
+def test_phase9a2_outcome_measurement_reaches_exactly_one_service() -> None:
+    """Measurement may run on a timer in exactly one file, and nowhere near a user.
+
+    Narrowed in Phase 9C-1: settling a pre-registered plan means reading candles from after it was
+    written, which is what this module is for. The ban that mattered most is untouched — the
+    analysis path still may not import it at all, asserted separately and absolutely — and no
+    Telegram, API or scheduler file may reach it, so a measured outcome cannot become an output.
+    """
+    offenders = [
+        str(file_path)
         for directory in ("app/services", "app/telegram", "app/scheduler", "app/api")
         for file_path in Path(directory).rglob("*.py")
-    )
+        if file_path != PHASE_9C1_LEDGER_SERVICE
+        and (
+            "outcome_measurement" in file_path.read_text(encoding="utf-8")
+            or "measure_outcome" in file_path.read_text(encoding="utf-8")
+        )
+    ]
 
-    assert "outcome_measurement" not in source
-    assert "measure_outcome" not in source
+    assert offenders == []
+
+    presentation = "\n".join(
+        file_path.read_text(encoding="utf-8")
+        for directory in ("app/telegram", "app/api")
+        for file_path in Path(directory).rglob("*.py")
+    )
+    assert "outcome_measurement" not in presentation
+    assert "measure_outcome" not in presentation
 
 
 def test_phase9a2_outcome_measurement_touches_no_other_layer() -> None:
@@ -2587,3 +2647,121 @@ def _direction_snapshot(*, tick: Decimal):
         economic_events=[],
         moving_average_windows=(3,),
     )
+
+
+PHASE_9C1_LEDGER_MODEL = ForwardOutcomeRecordModel
+PHASE_9C1_LEDGER_REPOSITORY = SqlAlchemyForwardOutcomeRepository
+
+#: Column names the legacy `paper_positions` table carries and this ledger must never grow. Each
+#: one would have to be invented: the project has no account, no size, no spread and no direction
+#: it believes in. A number nobody measured looks exactly like a number somebody did.
+PHASE_9C1_FORBIDDEN_LEDGER_FIELDS = (
+    "account",
+    "balance",
+    "risk_percent",
+    "risk_amount",
+    "position_size",
+    "result_eur",
+    "result_percent",
+    "result_r",
+    "pnl",
+    "spread_cost",
+    "slippage_cost",
+)
+
+
+def test_phase9c1_recording_is_disabled_by_default() -> None:
+    settings = Settings(_env_file=None)
+
+    assert settings.forward_outcome_recording_enabled is False
+
+
+def test_phase9c1_ledger_holds_no_account_size_or_profit_field() -> None:
+    """The ledger records what was planned and what happened, and nothing that needs an account."""
+    columns = {column.name.lower() for column in PHASE_9C1_LEDGER_MODEL.__table__.columns}
+
+    offenders = sorted(
+        column
+        for column in columns
+        for forbidden in PHASE_9C1_FORBIDDEN_LEDGER_FIELDS
+        if forbidden in column
+    )
+
+    assert offenders == []
+
+    # `take_profit_1` is a price level, not an amount earned, and it is the only column here whose
+    # name may contain the word. Anything else that did would be money the project cannot compute.
+    assert {column for column in columns if "profit" in column} == {"take_profit_1"}
+
+
+def test_phase9c1_ledger_writes_no_market_data() -> None:
+    """The one service that writes to storage on a timer may write only its own table.
+
+    Recording and resolving both read candles. A ledger that could also write one would be able to
+    change the evidence it is measured against, which is the failure mode Phase 9A-5 found after
+    fabricated rows had been silently outranking real ones for months.
+    """
+    source = PHASE_9C1_LEDGER_SERVICE.read_text(encoding="utf-8")
+
+    for forbidden in ("candles.upsert", "economic_events.upsert", "uow.candles.add"):
+        assert forbidden not in source, forbidden
+
+
+def test_phase9c1_ledger_chooses_no_direction() -> None:
+    """Both directions, every window. The ledger may not acquire an opinion.
+
+    `direction_candidate` stays unwired: the 9A-3 verdict was retracted and nothing has replaced
+    it. A ledger that recorded one direction would be recording a strategy nobody has evidence for,
+    and its rows would look pre-registered while being nothing of the kind.
+    """
+    source = PHASE_9C1_LEDGER_SERVICE.read_text(encoding="utf-8")
+
+    assert "direction_candidate" not in source
+    assert "propose_direction" not in source
+    # The loop over the whole enum is the guarantee: it cannot silently become one branch.
+    assert "for direction in SignalDirection" in source
+
+
+def test_phase9c1_a_registered_plan_is_never_rewritten() -> None:
+    """Only the three outcome columns may ever be assigned after a row exists.
+
+    Pre-registration is the entire reason this ledger is worth more than replaying history later.
+    If the repository could rewrite `stop_loss` or `as_of` on a second pass, a row would no longer
+    be evidence of anything, and the change would be invisible in the data itself.
+    """
+    tree = ast.parse(inspect.getsource(PHASE_9C1_LEDGER_REPOSITORY))
+    assigned = {
+        target.attr
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Assign)
+        for target in node.targets
+        if isinstance(target, ast.Attribute)
+        and isinstance(target.value, ast.Name)
+        and target.value.id == "row"
+    }
+
+    assert assigned == {"outcome_kind", "bars_to_resolution", "resolved_at"}
+
+
+def test_phase9c1_ledger_reaches_no_user() -> None:
+    """Nothing about the ledger is shown to anyone. Delivery is 9B, if it is ever earned."""
+    presentation = "\n".join(
+        file_path.read_text(encoding="utf-8")
+        for directory in ("app/telegram", "app/api")
+        for file_path in Path(directory).rglob("*.py")
+    )
+
+    assert "forward_outcome" in PHASE_9C1_LEDGER_SERVICE.read_text(encoding="utf-8")
+    assert "forward_outcome" not in presentation
+    assert "ForwardOutcome" not in presentation
+
+
+def test_phase9c1_ledger_service_holds_no_provider_or_messaging_dependency() -> None:
+    import_lines = tuple(
+        line
+        for line in PHASE_9C1_LEDGER_SERVICE.read_text(encoding="utf-8").lower().splitlines()
+        if line.startswith("import ") or line.startswith("from ")
+    )
+
+    for term in ("app.adapters", "app.telegram", "app.api", "httpx", "openai"):
+        assert not any(term in line for line in import_lines), term

@@ -58,6 +58,16 @@ class Settings(BaseSettings):
     calendar_ingestion_lookback_hours: int = Field(default=24, ge=1, le=168)
     calendar_ingestion_horizon_hours: int = Field(default=72, ge=1, le=336)
 
+    # The forward outcome ledger (Phase 9C-1). Off by default like every integration before it, and
+    # useless without market data: it records windows built from stored candles, so enabling it
+    # without ingestion running produces nothing rather than something wrong.
+    forward_outcome_recording_enabled: bool = False
+    forward_outcome_record_interval_minutes: int = Field(default=15, ge=1, le=1440)
+    forward_outcome_resolve_interval_minutes: int = Field(default=15, ge=1, le=1440)
+    forward_outcome_window_candles: int = Field(default=12, ge=2, le=500)
+    forward_outcome_horizon_candles: int = Field(default=24, ge=1, le=500)
+    forward_outcome_resolve_batch_size: int = Field(default=500, ge=1, le=10_000)
+
     provider_connect_timeout_seconds: float = Field(default=5.0, gt=0, le=30)
     provider_read_timeout_seconds: float = Field(default=10.0, gt=0, le=60)
     provider_write_timeout_seconds: float = Field(default=5.0, gt=0, le=30)

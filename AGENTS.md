@@ -2,7 +2,19 @@
 
 AI Trading OS is a foundation for a future Forex analysis and paper-trading platform.
 
-Current project phase: phase_9a8_second_instrument_foundation.
+Current project phase: phase_9c1_forward_outcome_ledger_foundation.
+Phase 9C-1 built the forward outcome ledger, taken **before 9B** because delivery has nothing worth
+delivering. On every closed window the worker fixes the levels for **both directions** and stores
+them with the pipeline's verdict; a separate later tick settles the outcome from candles that
+arrived afterwards. No account, no position size, no profit and loss, no direction chosen.
+**Recording and resolving are two jobs on purpose**, not one: that is how "the plan was fixed before
+its future was visible" becomes a property of the schedule instead of a comment. The value is
+pre-registration, and it is checkable per row — `recorded_at` and `as_of` are both stored, so a row
+written after its own future is self-identifying.
+**When a boundary genuinely has to move, narrow it and name what may cross.** Three safety tests
+were narrowed here; each names the one permitted file and gained a stricter replacement. Routing
+around a boundary through an intermediate import would have passed the same tests and been worse.
+See `docs/phase9c1-verification-report.md`.
 Phase 9A-8 added a second instrument, **NOKSEK rather than GBPUSD on purpose**: GBPUSD correlates
 with EURUSD at 0.85-0.9 because both are mostly a dollar move, so a threshold transferring there
 proves little. NOKSEK has no dollar, about 1.8x the relative volatility, and a different session

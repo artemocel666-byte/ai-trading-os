@@ -58,6 +58,14 @@ from app.domain.entities.features import (
     FeatureWindow,
     MarketFeatureSnapshot,
 )
+from app.domain.entities.forward_outcome import (
+    MARKET_OPEN_RULE_ID,
+    ForwardOutcomeConfig,
+    ForwardOutcomeRecord,
+    ForwardOutcomeRecordResult,
+    ForwardOutcomeResolveResult,
+    ForwardOutcomeTickReason,
+)
 from app.domain.entities.ingestion import (
     MarketDataIngestionConfig,
     MarketDataIngestionDecision,
@@ -144,6 +152,7 @@ from app.domain.entities.strategy_validation import (
 )
 
 __all__ = [
+    "MARKET_OPEN_RULE_ID",
     "AnalysisInputAudit",
     "AnalysisIssue",
     "AnalysisIssueCode",
@@ -187,6 +196,11 @@ __all__ = [
     "FeatureSnapshot",
     "FeatureWindow",
     "FieldDistribution",
+    "ForwardOutcomeConfig",
+    "ForwardOutcomeRecord",
+    "ForwardOutcomeRecordResult",
+    "ForwardOutcomeResolveResult",
+    "ForwardOutcomeTickReason",
     "IndicatorWindow",
     "ManualReviewIssue",
     "ManualReviewIssueCode",

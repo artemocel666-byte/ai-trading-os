@@ -10,14 +10,19 @@ from app.core.security import redact_text
 from app.core.time import normalize_to_utc, utc_now
 from app.domain.entities import Candle, EconomicEvent, EconomicImpact, Timeframe
 from app.domain.entities.data_quality import UpsertResult
+from app.domain.entities.forward_outcome import ForwardOutcomeRecord
+from app.domain.entities.outcome import OutcomeKind
+from app.domain.entities.pipeline_decision import PipelineDecisionStatus
 from app.domain.entities.readiness import SnapshotDigestStatus, SnapshotNotificationDedupKey
 from app.domain.entities.scheduled_digest import ScheduledDigestDeliveryRecord
+from app.domain.entities.signal_contract import SignalDirection
 from app.domain.value_objects import CurrencyPair
 from app.persistence.models import (
     AuditLogModel,
     CandleModel,
     EconomicEventModel,
     ErrorEventModel,
+    ForwardOutcomeRecordModel,
     ScheduledDigestDeliveryModel,
     SystemStateModel,
 )
@@ -55,6 +60,35 @@ def _event_from_model(row: EconomicEventModel) -> EconomicEvent:
         forecast_raw=row.forecast_raw,
         previous_raw=row.previous_raw,
         fetched_at=row.fetched_at,
+    )
+
+
+def _forward_outcome_from_model(row: ForwardOutcomeRecordModel) -> ForwardOutcomeRecord:
+    return ForwardOutcomeRecord(
+        pair=CurrencyPair(value=row.pair),
+        timeframe=Timeframe(row.timeframe),
+        as_of=row.as_of,
+        direction=SignalDirection(row.direction),
+        anchor_price=row.anchor_price,
+        entry_min=row.entry_min,
+        entry_max=row.entry_max,
+        stop_loss=row.stop_loss,
+        take_profit_1=row.take_profit_1,
+        decision_status=PipelineDecisionStatus(row.decision_status),
+        market_open=row.market_open,
+        failed_rule_ids=tuple(row.failed_rule_ids_json or ()),
+        pipeline_version=row.pipeline_version,
+        ruleset_versions=tuple(row.ruleset_versions_json or ()),
+        decision_fingerprint=row.decision_fingerprint,
+        entry_band_multiplier=row.entry_band_multiplier,
+        stop_multiplier=row.stop_multiplier,
+        target_multiplier=row.target_multiplier,
+        horizon_candles=row.horizon_candles,
+        project_phase=row.project_phase,
+        recorded_at=row.recorded_at,
+        outcome_kind=OutcomeKind(row.outcome_kind) if row.outcome_kind is not None else None,
+        bars_to_resolution=row.bars_to_resolution,
+        resolved_at=row.resolved_at,
     )
 
 
@@ -300,6 +334,131 @@ class SqlAlchemyEconomicEventRepository:
             )
         )
         return [_event_from_model(row) for row in result.scalars().all()]
+
+
+class SqlAlchemyForwardOutcomeRepository:
+    """Append-then-settle storage. A stored plan is never rewritten, only settled."""
+
+    def __init__(self, session: AsyncSession) -> None:
+        self._session = session
+
+    async def add_missing(self, records: list[ForwardOutcomeRecord]) -> int:
+        inserted = 0
+        for record in records:
+            existing = await self._session.execute(self._identity_query(record))
+            if existing.scalar_one_or_none() is not None:
+                # Deliberately not an update. The plan was registered before its outcome existed,
+                # and overwriting it on a later tick would quietly destroy the one property that
+                # makes this ledger worth more than a replay.
+                continue
+            self._session.add(
+                ForwardOutcomeRecordModel(
+                    pair=record.pair.value,
+                    timeframe=record.timeframe.value,
+                    as_of=record.as_of,
+                    direction=record.direction.value,
+                    anchor_price=record.anchor_price,
+                    entry_min=record.entry_min,
+                    entry_max=record.entry_max,
+                    stop_loss=record.stop_loss,
+                    take_profit_1=record.take_profit_1,
+                    decision_status=record.decision_status.value,
+                    market_open=record.market_open,
+                    failed_rule_ids_json=list(record.failed_rule_ids),
+                    pipeline_version=record.pipeline_version,
+                    ruleset_versions_json=list(record.ruleset_versions),
+                    decision_fingerprint=record.decision_fingerprint,
+                    entry_band_multiplier=record.entry_band_multiplier,
+                    stop_multiplier=record.stop_multiplier,
+                    target_multiplier=record.target_multiplier,
+                    horizon_candles=record.horizon_candles,
+                    project_phase=record.project_phase,
+                    recorded_at=record.recorded_at,
+                    outcome_kind=(
+                        record.outcome_kind.value if record.outcome_kind is not None else None
+                    ),
+                    bars_to_resolution=record.bars_to_resolution,
+                    resolved_at=record.resolved_at,
+                )
+            )
+            inserted += 1
+        return inserted
+
+    async def list_pending(
+        self,
+        *,
+        limit: int,
+        as_of_at_or_before: datetime | None = None,
+    ) -> list[ForwardOutcomeRecord]:
+        query = select(ForwardOutcomeRecordModel).where(
+            ForwardOutcomeRecordModel.outcome_kind.is_(None)
+        )
+        if as_of_at_or_before is not None:
+            query = query.where(
+                ForwardOutcomeRecordModel.as_of <= normalize_to_utc(as_of_at_or_before)
+            )
+        result = await self._session.execute(
+            query.order_by(
+                ForwardOutcomeRecordModel.as_of.asc(),
+                ForwardOutcomeRecordModel.pair.asc(),
+                ForwardOutcomeRecordModel.timeframe.asc(),
+                ForwardOutcomeRecordModel.direction.asc(),
+            ).limit(limit)
+        )
+        return [_forward_outcome_from_model(row) for row in result.scalars().all()]
+
+    async def apply_outcomes(self, records: list[ForwardOutcomeRecord]) -> int:
+        settled = 0
+        for record in records:
+            if record.outcome_kind is None:
+                continue
+            result = await self._session.execute(self._identity_query(record))
+            row = result.scalar_one_or_none()
+            if row is None or row.outcome_kind is not None:
+                # Already settled by an earlier tick, or gone. Either way the stored answer stands:
+                # an outcome written twice would be a second look at the same future.
+                continue
+            row.outcome_kind = record.outcome_kind.value
+            row.bars_to_resolution = record.bars_to_resolution
+            row.resolved_at = record.resolved_at
+            settled += 1
+        return settled
+
+    async def list_recorded(
+        self,
+        *,
+        pair: CurrencyPair | None = None,
+        timeframe: Timeframe | None = None,
+        start_at: datetime | None = None,
+        end_at: datetime | None = None,
+    ) -> list[ForwardOutcomeRecord]:
+        query = select(ForwardOutcomeRecordModel)
+        if pair is not None:
+            query = query.where(ForwardOutcomeRecordModel.pair == pair.value)
+        if timeframe is not None:
+            query = query.where(ForwardOutcomeRecordModel.timeframe == timeframe.value)
+        if start_at is not None:
+            query = query.where(ForwardOutcomeRecordModel.as_of >= normalize_to_utc(start_at))
+        if end_at is not None:
+            query = query.where(ForwardOutcomeRecordModel.as_of <= normalize_to_utc(end_at))
+        result = await self._session.execute(
+            query.order_by(
+                ForwardOutcomeRecordModel.as_of.asc(),
+                ForwardOutcomeRecordModel.pair.asc(),
+                ForwardOutcomeRecordModel.timeframe.asc(),
+                ForwardOutcomeRecordModel.direction.asc(),
+            )
+        )
+        return [_forward_outcome_from_model(row) for row in result.scalars().all()]
+
+    @staticmethod
+    def _identity_query(record: ForwardOutcomeRecord) -> Any:
+        return select(ForwardOutcomeRecordModel).where(
+            ForwardOutcomeRecordModel.pair == record.pair.value,
+            ForwardOutcomeRecordModel.timeframe == record.timeframe.value,
+            ForwardOutcomeRecordModel.as_of == record.as_of,
+            ForwardOutcomeRecordModel.direction == record.direction.value,
+        )
 
 
 class SqlAlchemyScheduledDigestDeliveryStore:

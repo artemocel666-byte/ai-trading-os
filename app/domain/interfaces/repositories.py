@@ -4,6 +4,7 @@ from typing import Any, Protocol
 
 from app.domain.entities import Candle, EconomicEvent, Timeframe
 from app.domain.entities.data_quality import UpsertResult
+from app.domain.entities.forward_outcome import ForwardOutcomeRecord
 from app.domain.value_objects import CurrencyPair
 
 
@@ -76,3 +77,37 @@ class EconomicEventRepository(Protocol):
         provider: str | None = None,
     ) -> list[EconomicEvent]:
         """Return economic events satisfying start_at <= scheduled_at < end_at."""
+
+
+class ForwardOutcomeRepository(Protocol):
+    """Append-then-settle storage for pre-registered plans.
+
+    Deliberately not an upsert. A plan that can be rewritten after the fact is not a pre-registered
+    plan, and pre-registration is the only thing this ledger has that an offline replay does not.
+    Existing rows are left exactly as they were; only the outcome columns are ever written twice,
+    and only from `None`.
+    """
+
+    async def add_missing(self, records: list[ForwardOutcomeRecord]) -> int:
+        """Insert records whose identity is not stored yet; return how many were new."""
+
+    async def list_pending(
+        self,
+        *,
+        limit: int,
+        as_of_at_or_before: datetime | None = None,
+    ) -> list[ForwardOutcomeRecord]:
+        """Return unresolved records, oldest `as_of` first."""
+
+    async def apply_outcomes(self, records: list[ForwardOutcomeRecord]) -> int:
+        """Write the outcome of already-stored records; return how many were settled."""
+
+    async def list_recorded(
+        self,
+        *,
+        pair: CurrencyPair | None = None,
+        timeframe: Timeframe | None = None,
+        start_at: datetime | None = None,
+        end_at: datetime | None = None,
+    ) -> list[ForwardOutcomeRecord]:
+        """Return stored records in the requested window, oldest `as_of` first."""

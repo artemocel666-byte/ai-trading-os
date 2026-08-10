@@ -3,6 +3,7 @@ from typing import Any, Self
 
 from app.domain.entities import Candle, EconomicEvent, Timeframe
 from app.domain.entities.data_quality import UpsertResult
+from app.domain.entities.forward_outcome import ForwardOutcomeRecord
 from app.domain.entities.readiness import SnapshotNotificationDedupKey
 from app.domain.entities.scheduled_digest import ScheduledDigestDeliveryRecord
 from app.domain.interfaces.notifications import ScheduledDigestDeliveryStore
@@ -11,6 +12,7 @@ from app.domain.interfaces.repositories import (
     CandleRepository,
     EconomicEventRepository,
     ErrorEventRepository,
+    ForwardOutcomeRepository,
     SystemStateRepository,
 )
 from app.domain.value_objects import CurrencyPair
@@ -154,6 +156,71 @@ class FakeScheduledDigestDeliveryStore:
         return self._records.get(dedup_key.value)
 
 
+class FakeForwardOutcomeRepository:
+    """In-memory ledger with the same append-then-settle rule as the SQL one.
+
+    Keyed on the identity the unique constraint uses, so the fake cannot accept a duplicate the
+    database would reject — a fake that is more permissive than storage hides exactly the bug the
+    idempotency test exists to catch.
+    """
+
+    def __init__(self, records: dict[tuple[str, str, Any, str], ForwardOutcomeRecord]) -> None:
+        self._records = records
+
+    async def add_missing(self, records: list[ForwardOutcomeRecord]) -> int:
+        inserted = 0
+        for record in records:
+            if record.identity in self._records:
+                continue
+            self._records[record.identity] = record
+            inserted += 1
+        return inserted
+
+    async def list_pending(
+        self,
+        *,
+        limit: int,
+        as_of_at_or_before: Any = None,
+    ) -> list[ForwardOutcomeRecord]:
+        pending = [
+            record
+            for record in self._records.values()
+            if record.is_pending
+            and (as_of_at_or_before is None or record.as_of <= as_of_at_or_before)
+        ]
+        pending.sort(key=lambda record: record.identity)
+        return pending[:limit]
+
+    async def apply_outcomes(self, records: list[ForwardOutcomeRecord]) -> int:
+        settled = 0
+        for record in records:
+            stored = self._records.get(record.identity)
+            if stored is None or not stored.is_pending or record.outcome_kind is None:
+                continue
+            self._records[record.identity] = record
+            settled += 1
+        return settled
+
+    async def list_recorded(
+        self,
+        *,
+        pair: CurrencyPair | None = None,
+        timeframe: Any = None,
+        start_at: Any = None,
+        end_at: Any = None,
+    ) -> list[ForwardOutcomeRecord]:
+        selected = [
+            record
+            for record in self._records.values()
+            if (pair is None or record.pair == pair)
+            and (timeframe is None or record.timeframe == timeframe)
+            and (start_at is None or record.as_of >= start_at)
+            and (end_at is None or record.as_of <= end_at)
+        ]
+        selected.sort(key=lambda record: record.identity)
+        return selected
+
+
 class FakeUnitOfWork:
     def __init__(
         self,
@@ -161,6 +228,7 @@ class FakeUnitOfWork:
         candles: list[Candle],
         events: list[EconomicEvent],
         scheduled_digest_deliveries: dict[str, ScheduledDigestDeliveryRecord],
+        forward_outcomes: dict[tuple[str, str, Any, str], ForwardOutcomeRecord],
     ) -> None:
         self.system_state: SystemStateRepository = FakeSystemStateRepository(state)
         self.audit_logs: AuditLogRepository = FakeAuditLogRepository()
@@ -169,6 +237,9 @@ class FakeUnitOfWork:
         self.economic_events: EconomicEventRepository = FakeEconomicEventRepository(events)
         self.scheduled_digest_deliveries: ScheduledDigestDeliveryStore = (
             FakeScheduledDigestDeliveryStore(scheduled_digest_deliveries)
+        )
+        self.forward_outcomes: ForwardOutcomeRepository = FakeForwardOutcomeRepository(
+            forward_outcomes
         )
         self.committed = False
         self.rolled_back = False
@@ -199,11 +270,13 @@ class FakeUnitOfWorkFactory:
         candles: list[Candle] | None = None,
         events: list[EconomicEvent] | None = None,
         scheduled_digest_deliveries: dict[str, ScheduledDigestDeliveryRecord] | None = None,
+        forward_outcomes: dict[tuple[str, str, Any, str], ForwardOutcomeRecord] | None = None,
     ) -> None:
         self.state = state or {}
         self.candles = candles or []
         self.events = events or []
         self.scheduled_digest_deliveries = scheduled_digest_deliveries or {}
+        self.forward_outcomes = forward_outcomes if forward_outcomes is not None else {}
         self.instances: list[FakeUnitOfWork] = []
 
     def __call__(self) -> FakeUnitOfWork:
@@ -212,6 +285,7 @@ class FakeUnitOfWorkFactory:
             self.candles,
             self.events,
             self.scheduled_digest_deliveries,
+            self.forward_outcomes,
         )
         self.instances.append(uow)
         return uow

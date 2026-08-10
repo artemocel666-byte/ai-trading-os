@@ -248,6 +248,87 @@ class SignalModel(Base):
     )
 
 
+class ForwardOutcomeRecordModel(Base):
+    """A plan written before its outcome existed, and the outcome settled onto it later.
+
+    Deliberately not `paper_positions` below. That table has stood empty since Phase 1 and assumes
+    a direction, an account balance, a risk percentage and a spread cost — four things this project
+    does not have and would have to invent. This table has none of them, and a safety test asserts
+    it never grows one.
+
+    The outcome columns are nullable because a row has two lifetimes. `NULL` there means "not
+    settled yet", never "nothing happened"; `TIMEOUT` is a value and says something different.
+    """
+
+    __tablename__ = "forward_outcome_records"
+    __table_args__ = (
+        UniqueConstraint(
+            "pair",
+            "timeframe",
+            "as_of",
+            "direction",
+            name="uq_forward_outcome_identity",
+        ),
+        CheckConstraint("anchor_price > 0", name="ck_forward_outcome_anchor_positive"),
+        CheckConstraint("entry_min > 0", name="ck_forward_outcome_entry_min_positive"),
+        CheckConstraint("entry_max >= entry_min", name="ck_forward_outcome_entry_band_ordered"),
+        CheckConstraint("stop_loss > 0", name="ck_forward_outcome_stop_positive"),
+        CheckConstraint("take_profit_1 > 0", name="ck_forward_outcome_target_positive"),
+        CheckConstraint("horizon_candles >= 1", name="ck_forward_outcome_horizon_positive"),
+        CheckConstraint(
+            "bars_to_resolution IS NULL OR bars_to_resolution >= 1",
+            name="ck_forward_outcome_bars_positive",
+        ),
+        # The two lifetimes, enforced by the database rather than only by the entity: an outcome
+        # without the moment it was written cannot be read either way.
+        CheckConstraint(
+            "(outcome_kind IS NULL AND resolved_at IS NULL)"
+            " OR (outcome_kind IS NOT NULL AND resolved_at IS NOT NULL)",
+            name="ck_forward_outcome_settled_together",
+        ),
+        CheckConstraint(
+            "outcome_kind IS NOT NULL OR bars_to_resolution IS NULL",
+            name="ck_forward_outcome_pending_has_no_bars",
+        ),
+        Index("ix_forward_outcome_records_pending", "outcome_kind", "as_of"),
+        Index("ix_forward_outcome_records_pair_timeframe_as_of", "pair", "timeframe", "as_of"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID_PK, primary_key=True, default=uuid.uuid4)
+    pair: Mapped[str] = mapped_column(String(6), nullable=False, index=True)
+    timeframe: Mapped[str] = mapped_column(String(20), nullable=False, index=True)
+    as_of: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, index=True)
+    direction: Mapped[str] = mapped_column(String(20), nullable=False)
+
+    anchor_price: Mapped[Decimal] = mapped_column(Numeric(20, 10), nullable=False)
+    entry_min: Mapped[Decimal] = mapped_column(Numeric(20, 10), nullable=False)
+    entry_max: Mapped[Decimal] = mapped_column(Numeric(20, 10), nullable=False)
+    stop_loss: Mapped[Decimal] = mapped_column(Numeric(20, 10), nullable=False)
+    take_profit_1: Mapped[Decimal] = mapped_column(Numeric(20, 10), nullable=False)
+
+    decision_status: Mapped[str] = mapped_column(String(30), nullable=False, index=True)
+    market_open: Mapped[bool | None] = mapped_column(Boolean)
+    failed_rule_ids_json: Mapped[Any] = mapped_column(JSONB_TYPE, nullable=False)
+
+    pipeline_version: Mapped[str] = mapped_column(String(120), nullable=False)
+    ruleset_versions_json: Mapped[Any] = mapped_column(JSONB_TYPE, nullable=False)
+    decision_fingerprint: Mapped[str] = mapped_column(String(64), nullable=False)
+    entry_band_multiplier: Mapped[Decimal] = mapped_column(Numeric(10, 4), nullable=False)
+    stop_multiplier: Mapped[Decimal] = mapped_column(Numeric(10, 4), nullable=False)
+    target_multiplier: Mapped[Decimal] = mapped_column(Numeric(10, 4), nullable=False)
+    horizon_candles: Mapped[int] = mapped_column(Integer, nullable=False)
+    project_phase: Mapped[str] = mapped_column(String(120), nullable=False)
+    recorded_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+    outcome_kind: Mapped[str | None] = mapped_column(String(20))
+    bars_to_resolution: Mapped[int | None] = mapped_column(Integer)
+    resolved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utc_now, nullable=False
+    )
+
+
 class PaperPositionModel(Base):
     __tablename__ = "paper_positions"
     __table_args__ = (Index("ix_paper_positions_status_created", "status", "created_at"),)

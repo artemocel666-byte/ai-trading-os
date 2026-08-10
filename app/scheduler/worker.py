@@ -15,6 +15,7 @@ from app.core.config import Settings, get_settings
 from app.core.logging import configure_logging
 from app.domain.entities import (
     CalendarIngestionConfig,
+    ForwardOutcomeConfig,
     MarketDataIngestionConfig,
     SnapshotScheduleItem,
     Timeframe,
@@ -25,6 +26,7 @@ from app.persistence.database_health import SqlAlchemyDatabaseHealth
 from app.persistence.session import build_uow_factory
 from app.scheduler.jobs import register_jobs, update_worker_heartbeat_job
 from app.services.economic_calendar_ingestion_service import EconomicCalendarIngestionService
+from app.services.forward_outcome_service import ForwardOutcomeService
 from app.services.health_service import HealthService
 from app.services.market_data_ingestion_service import MarketDataIngestionService
 from app.services.system_state_service import SystemStateService
@@ -78,6 +80,17 @@ async def run_worker() -> None:
         )
         logger.info("calendar_ingestion_enabled")
 
+    forward_outcome_service: ForwardOutcomeService | None = None
+    if settings.forward_outcome_recording_enabled:
+        # No provider client: the ledger reads stored candles only, and never fetches. If ingestion
+        # is off it simply finds nothing, which is the honest failure mode.
+        forward_outcome_service = ForwardOutcomeService(
+            config=_build_forward_outcome_config(settings),
+            uow_factory=uow_factory,
+            system_state_service=system_state_service,
+        )
+        logger.info("forward_outcome_recording_enabled")
+
     scheduler = AsyncIOScheduler(timezone=settings.app_timezone)
     register_jobs(
         scheduler,
@@ -87,6 +100,11 @@ async def run_worker() -> None:
         market_data_ingestion_interval_minutes=settings.market_data_ingestion_interval_minutes,
         calendar_ingestion_service=calendar_ingestion_service,
         calendar_ingestion_interval_minutes=settings.calendar_ingestion_interval_minutes,
+        forward_outcome_service=forward_outcome_service,
+        forward_outcome_record_interval_minutes=(settings.forward_outcome_record_interval_minutes),
+        forward_outcome_resolve_interval_minutes=(
+            settings.forward_outcome_resolve_interval_minutes
+        ),
     )
 
     stop_event = asyncio.Event()
@@ -126,6 +144,37 @@ def _build_ingestion_config(settings: Settings) -> MarketDataIngestionConfig:
                 pair=pair,
                 timeframe=Timeframe.H1,
                 lookback_candle_count=lookback,
+            ),
+        ),
+    )
+
+
+def _build_forward_outcome_config(settings: Settings) -> ForwardOutcomeConfig:
+    """The same two series the worker already ingests.
+
+    Deliberately not a wider list. The ledger can only record windows the database actually holds,
+    and pointing it at a pair nobody ingests would fill it with incomplete windows that say more
+    about ingestion than about the market.
+    """
+    pair = CurrencyPair(value=DEFAULT_INGESTION_PAIR)
+    window_candles = settings.forward_outcome_window_candles
+    return ForwardOutcomeConfig(
+        enabled=True,
+        record_interval_minutes=settings.forward_outcome_record_interval_minutes,
+        resolve_interval_minutes=settings.forward_outcome_resolve_interval_minutes,
+        window_candles=window_candles,
+        horizon_candles=settings.forward_outcome_horizon_candles,
+        resolve_batch_size=settings.forward_outcome_resolve_batch_size,
+        items=(
+            SnapshotScheduleItem(
+                pair=pair,
+                timeframe=Timeframe.M15,
+                lookback_candle_count=window_candles,
+            ),
+            SnapshotScheduleItem(
+                pair=pair,
+                timeframe=Timeframe.H1,
+                lookback_candle_count=window_candles,
             ),
         ),
     )

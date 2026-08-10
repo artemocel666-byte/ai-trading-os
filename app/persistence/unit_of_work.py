@@ -9,6 +9,7 @@ from app.domain.interfaces.repositories import (
     CandleRepository,
     EconomicEventRepository,
     ErrorEventRepository,
+    ForwardOutcomeRepository,
     SystemStateRepository,
 )
 from app.persistence.repositories import (
@@ -16,6 +17,7 @@ from app.persistence.repositories import (
     SqlAlchemyCandleRepository,
     SqlAlchemyEconomicEventRepository,
     SqlAlchemyErrorEventRepository,
+    SqlAlchemyForwardOutcomeRepository,
     SqlAlchemyScheduledDigestDeliveryStore,
     SqlAlchemySystemStateRepository,
 )
@@ -32,6 +34,7 @@ class SqlAlchemyUnitOfWork:
         self._candles: CandleRepository | None = None
         self._economic_events: EconomicEventRepository | None = None
         self._scheduled_digest_deliveries: ScheduledDigestDeliveryStore | None = None
+        self._forward_outcomes: ForwardOutcomeRepository | None = None
 
     async def __aenter__(self) -> Self:
         if self._session is not None:
@@ -44,6 +47,7 @@ class SqlAlchemyUnitOfWork:
         self._candles = SqlAlchemyCandleRepository(self._session)
         self._economic_events = SqlAlchemyEconomicEventRepository(self._session)
         self._scheduled_digest_deliveries = SqlAlchemyScheduledDigestDeliveryStore(self._session)
+        self._forward_outcomes = SqlAlchemyForwardOutcomeRepository(self._session)
         return self
 
     async def __aexit__(
@@ -67,6 +71,7 @@ class SqlAlchemyUnitOfWork:
             self._candles = None
             self._economic_events = None
             self._scheduled_digest_deliveries = None
+            self._forward_outcomes = None
             self._committed = False
 
     @property
@@ -104,6 +109,12 @@ class SqlAlchemyUnitOfWork:
         if self._session is None or self._scheduled_digest_deliveries is None:
             raise RuntimeError("unit of work has not been entered")
         return self._scheduled_digest_deliveries
+
+    @property
+    def forward_outcomes(self) -> ForwardOutcomeRepository:
+        if self._session is None or self._forward_outcomes is None:
+            raise RuntimeError("unit of work has not been entered")
+        return self._forward_outcomes
 
     async def commit(self) -> None:
         if self._session is None:

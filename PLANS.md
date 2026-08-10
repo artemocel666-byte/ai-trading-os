@@ -291,8 +291,21 @@ non-actionable and without any signal, AI, or execution behavior.
     `docs/phase9a8-verification-report.md`. NOKSEK chosen over GBPUSD because it is genuinely
     unlike EURUSD. The excursion bound transferred untouched; the volatility band failed again and
     moved to 0.30/2.5. Closes the remediation list from the 2026-08-07 review.
-  - 9B: Telegram signal delivery — the first user-visible LONG/SHORT output in the project.
-  - 9C: paper trading — simulated positions and outcome tracking, no real money.
+  - 9C-1: the forward outcome ledger — **completed 2026-08-10**, see
+    `docs/phase9c1-verification-report.md`. Taken before 9B, which has nothing worth delivering. On
+    every closed window the worker fixes the levels for **both** directions and stores them with the
+    pipeline's verdict; a second tick settles the outcome later from candles that arrived
+    afterwards. No account, no position size, no profit and loss, no direction chosen — the unused
+    `paper_positions` table from Phase 1 assumes all four and stays untouched. The value is
+    pre-registration, and it is checkable per row: `recorded_at` and `as_of` are both stored, so a
+    row written after its own future is self-identifying. Three safety tests were narrowed to name
+    the one permitted service, each replaced by something stricter. Verified against real EURUSD on
+    a throwaway database: 384 rows, **zero** mismatches against a freshly computed
+    `measure_outcome`.
+  - 9B: Telegram signal delivery — the first user-visible LONG/SHORT output in the project. Still
+    blocked by the absence of anything worth delivering, not by a task.
+  - 9C-2 and beyond: reading the ledger once it holds a sample — including the question the eleven
+    rules have never been asked, whether windows they accept resolve better than windows they block.
   - `REAL_TRADING_ENABLED` stays `False` permanently; no broker order API is ever added.
 
 ## Explicit Non-Goals
@@ -355,6 +368,11 @@ review of 2026-08-07.
 direction that survives inspection. 9C (paper trading) is the cheapest source of genuinely fresh
 data and is a reasonable next build even with no candidate, because it starts accumulating the one
 thing this history can no longer provide.
+
+**9C-1 built that ledger on 2026-08-10**, and it is off by default: nothing accumulates until
+`FORWARD_OUTCOME_RECORDING_ENABLED=true` and the worker runs. The next task is therefore not code —
+it is letting it run long enough to hold a sample worth reading. About 240 rows a day on the two
+EURUSD series the worker already ingests.
 
 Still open and unchanged: spread data, without which every outcome stays gross and no result can be
 shown to survive costs.

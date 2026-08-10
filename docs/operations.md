@@ -569,6 +569,58 @@ returns a Russian read-only manual review summary with one leading emoji and exp
 read-only review over a real Phase 4G pipeline decision, with the same no-signal/non-actionable
 markers and no price levels.
 
+## The Forward Outcome Ledger (Phase 9C-1)
+
+Off by default. One flag turns on two jobs; with it off the worker registers neither:
+
+```env
+FORWARD_OUTCOME_RECORDING_ENABLED=true
+FORWARD_OUTCOME_RECORD_INTERVAL_MINUTES=15
+FORWARD_OUTCOME_RESOLVE_INTERVAL_MINUTES=15
+FORWARD_OUTCOME_HORIZON_CANDLES=24
+```
+
+The ledger reads stored candles and **never calls a provider**. It is therefore useless without
+market-data ingestion running: with ingestion off it will find nothing and record nothing, which is
+the honest failure mode rather than a silent one.
+
+Volume with the worker's current EURUSD M15 + H1 schedule: roughly **240 rows a day** — 96 M15
+windows and 24 H1 windows, each recorded for both directions.
+
+### Why there are two jobs
+
+`forward_outcome_recording` fixes the levels and stores the row. `forward_outcome_resolution`
+settles rows that are already stored, from candles that arrived later. Keeping them apart is what
+makes "the plan was fixed before its future was visible" a property of the schedule rather than of a
+comment, so **do not merge them** if you are ever tempted to save a tick.
+
+### Reading it
+
+```bash
+uv run python scripts/report_forward_outcomes.py --pair EURUSD --timeframe M15 --days 30
+```
+
+Read-only. `--traded-only` restricts to windows built entirely from traded candles;
+`--decision-status READY_FOR_REVIEW` restricts to windows the rules accepted.
+
+Two things the output will tell you that are easy to misread:
+
+- **Pending is not a failure.** A row stays pending until its horizon has genuinely elapsed. Writing
+  `TIMEOUT` early would turn a gap in ingestion into a measured result.
+- **"N distinct configurations"** means rows in the range were written under different multipliers
+  or a different horizon. They are answers to different questions; narrow the range before reading
+  the pooled figures as one sample.
+
+### If a threshold or a multiplier changes
+
+Nothing needs to be done to old rows, and nothing should be. Each row carries the configuration that
+produced it, so a change shows up as a break in the ledger rather than as a silent rewrite. Resist
+the urge to backfill: a row whose `recorded_at` sits long after its `as_of` is not pre-registered,
+and pre-registration is the only thing this ledger has that replaying history does not.
+
+That same pair of timestamps is how you check a row is genuine — a real one shows a gap of at most
+one interval.
+
 ## Common Failure Cases
 
 - Missing Telegram token while Telegram is enabled: configuration validation fails.

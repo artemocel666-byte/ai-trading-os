@@ -245,4 +245,4 @@ def test_validation_report_cannot_claim_acceptance_with_issues() -> None:
 
 
 def test_project_phase_is_phase8a_explanation_contract_foundation() -> None:
-    assert constants.PROJECT_PHASE == "phase_9a8_second_instrument_foundation"
+    assert constants.PROJECT_PHASE == "phase_9c1_forward_outcome_ledger_foundation"

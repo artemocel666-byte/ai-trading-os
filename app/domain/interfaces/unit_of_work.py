@@ -7,6 +7,7 @@ from app.domain.interfaces.repositories import (
     CandleRepository,
     EconomicEventRepository,
     ErrorEventRepository,
+    ForwardOutcomeRepository,
     SystemStateRepository,
 )
 
@@ -40,6 +41,11 @@ class UnitOfWork(Protocol):
     @property
     def scheduled_digest_deliveries(self) -> ScheduledDigestDeliveryStore:
         """Store for neutral scheduled digest delivery audit records."""
+        ...
+
+    @property
+    def forward_outcomes(self) -> ForwardOutcomeRepository:
+        """Repository for pre-registered plans and the outcomes settled onto them."""
         ...
 
     async def __aenter__(self) -> Self:
