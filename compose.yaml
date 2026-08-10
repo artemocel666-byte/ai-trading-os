@@ -40,7 +40,9 @@ services:
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
       TELEGRAM_ALLOWED_USER_ID: ${TELEGRAM_ALLOWED_USER_ID:-}
       TELEGRAM_ALLOWED_CHAT_ID: ${TELEGRAM_ALLOWED_CHAT_ID:-}
-      OPENAI_ENABLED: ${OPENAI_ENABLED:-false}
+      EXPLANATION_PROVIDER: ${EXPLANATION_PROVIDER:-disabled}
+      LOCAL_LLM_BASE_URL: ${LOCAL_LLM_BASE_URL:-http://host.docker.internal:1234}
+      LOCAL_LLM_MODEL: ${LOCAL_LLM_MODEL:-local-model}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       MARKET_DATA_ENABLED: ${MARKET_DATA_ENABLED:-false}
       TWELVE_DATA_API_KEY: ${TWELVE_DATA_API_KEY:-}
@@ -101,7 +103,9 @@ services:
       DATABASE_URL: ${DATABASE_URL:-postgresql+asyncpg://ai_trading_os:ai_trading_os@postgres:5432/ai_trading_os}
       INTERNAL_API_KEY: ${INTERNAL_API_KEY:-development-internal-key-change-me}
       TELEGRAM_ENABLED: ${TELEGRAM_ENABLED:-false}
-      OPENAI_ENABLED: ${OPENAI_ENABLED:-false}
+      EXPLANATION_PROVIDER: ${EXPLANATION_PROVIDER:-disabled}
+      LOCAL_LLM_BASE_URL: ${LOCAL_LLM_BASE_URL:-http://host.docker.internal:1234}
+      LOCAL_LLM_MODEL: ${LOCAL_LLM_MODEL:-local-model}
       MARKET_DATA_ENABLED: ${MARKET_DATA_ENABLED:-false}
       TWELVE_DATA_BASE_URL: ${TWELVE_DATA_BASE_URL:-https://api.twelvedata.com}
       CALENDAR_ENABLED: ${CALENDAR_ENABLED:-false}
@@ -132,7 +136,9 @@ services:
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
       TELEGRAM_ALLOWED_USER_ID: ${TELEGRAM_ALLOWED_USER_ID:-}
       TELEGRAM_ALLOWED_CHAT_ID: ${TELEGRAM_ALLOWED_CHAT_ID:-}
-      OPENAI_ENABLED: ${OPENAI_ENABLED:-false}
+      EXPLANATION_PROVIDER: ${EXPLANATION_PROVIDER:-disabled}
+      LOCAL_LLM_BASE_URL: ${LOCAL_LLM_BASE_URL:-http://host.docker.internal:1234}
+      LOCAL_LLM_MODEL: ${LOCAL_LLM_MODEL:-local-model}
       MARKET_DATA_ENABLED: ${MARKET_DATA_ENABLED:-false}
       TWELVE_DATA_BASE_URL: ${TWELVE_DATA_BASE_URL:-https://api.twelvedata.com}
       CALENDAR_ENABLED: ${CALENDAR_ENABLED:-false}
@@ -164,7 +170,9 @@ services:
       DATABASE_URL: ${DATABASE_URL:-postgresql+asyncpg://ai_trading_os:ai_trading_os@postgres:5432/ai_trading_os}
       INTERNAL_API_KEY: ${INTERNAL_API_KEY:-development-internal-key-change-me}
       TELEGRAM_ENABLED: ${TELEGRAM_ENABLED:-false}
-      OPENAI_ENABLED: ${OPENAI_ENABLED:-false}
+      EXPLANATION_PROVIDER: ${EXPLANATION_PROVIDER:-disabled}
+      LOCAL_LLM_BASE_URL: ${LOCAL_LLM_BASE_URL:-http://host.docker.internal:1234}
+      LOCAL_LLM_MODEL: ${LOCAL_LLM_MODEL:-local-model}
       MARKET_DATA_ENABLED: ${MARKET_DATA_ENABLED:-false}
       TWELVE_DATA_BASE_URL: ${TWELVE_DATA_BASE_URL:-https://api.twelvedata.com}
       CALENDAR_ENABLED: ${CALENDAR_ENABLED:-false}

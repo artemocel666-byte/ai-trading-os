@@ -2,7 +2,20 @@
 
 AI Trading OS is a foundation for a future Forex analysis and paper-trading platform.
 
-Current project phase: phase_9c1_forward_outcome_ledger_foundation.
+Current project phase: phase_8d_local_explainer_foundation.
+Phase 8D let a model on this machine answer `/explain`, and made it measurable whether one can.
+**LM Studio, Ollama, llama.cpp and vLLM all serve the same `/v1/chat/completions` as OpenAI**, so
+the 8B adapter was *generalised* rather than copied: `ChatCompletionsExplanationAdapter` takes a
+provider name and an optional key, and a local endpoint is sent **no `Authorization` header at
+all**. One transport, one module that can reach a model — the 8B boundary is unchanged and the
+surface that has to stay honest did not double.
+`OPENAI_ENABLED` became `EXPLANATION_PROVIDER=disabled|openai|local`, and the old flag is
+**refused at startup rather than ignored**: it was set in both `.env` and `compose.yaml`, and a
+setting that quietly stops working is worse than one that fails loudly.
+**A model is not adopted because it answered; it is adopted because it passed.**
+`scripts/evaluate_explanations.py` reports the share of answers the Phase 8A validator accepted
+and a histogram of why it rejected the rest. `UNKNOWN_NUMBER` means the model invents figures —
+no amount of prompt work makes that acceptable. See `docs/phase8d-verification-report.md`.
 Phase 9C-1 built the forward outcome ledger, taken **before 9B** because delivery has nothing worth
 delivering. On every closed window the worker fixes the levels for **both directions** and stores
 them with the pipeline's verdict; a separate later tick settles the outcome from candles that

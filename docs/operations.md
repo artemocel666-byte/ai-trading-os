@@ -569,6 +569,58 @@ returns a Russian read-only manual review summary with one leading emoji and exp
 read-only review over a real Phase 4G pipeline decision, with the same no-signal/non-actionable
 markers and no price levels.
 
+## The Explainer: OpenAI or a Local Model (Phase 8D)
+
+One setting chooses, and `disabled` is the default:
+
+```env
+EXPLANATION_PROVIDER=local        # disabled | openai | local
+EXPLANATION_DELIVERY_ENABLED=true # second gate: a provider may exist and still not answer a user
+LOCAL_LLM_BASE_URL=http://host.docker.internal:1234
+LOCAL_LLM_MODEL=<the id LM Studio shows>
+```
+
+`OPENAI_ENABLED` was replaced and is now **refused at startup** rather than ignored. If the
+container exits complaining about it, remove it from `.env` — a flag that quietly stopped working
+would be worse than one that fails loudly.
+
+### Running LM Studio
+
+1. Load a model and start the server on port **1234**.
+2. Turn on **"Serve on Local Network"**. LM Studio binds `127.0.0.1` by default, and the bot runs in
+   a container, so without this `host.docker.internal:1234` is refused.
+3. From the host command line the same server is `http://127.0.0.1:1234` — the CLI below takes
+   `--base-url` for exactly this reason.
+
+Nothing about the request changes between providers except the address and the credential: a local
+endpoint is sent **no `Authorization` header at all**, and a contract test asserts it, so a paid key
+cannot reach a process on this machine by accident.
+
+### Latency, and what `/explain` does about it
+
+`EXPLANATION_BUDGET_SECONDS` defaults to **20**. A small model on a CPU can need longer, and past
+the budget `/explain` sends the deterministic report on its own with one line saying why there is no
+explanation. That is working as designed, not failing — but if most calls come back without an
+explanation, raise the budget rather than suspecting the model.
+
+### Measuring a model before trusting it
+
+```bash
+uv run python scripts/evaluate_explanations.py --provider local --sample-size 20 --base-url http://127.0.0.1:1234
+```
+
+Read-only. It asks the model about real windows and reports how often the Phase 8A validator
+accepted the answer, plus **why it rejected the rest** — which is the number that decides whether a
+model is usable here:
+
+- `UNKNOWN_NUMBER` dominating — the model invents figures. Disqualifying; nothing else matters.
+- `ACTIONABLE_TEXT` — it gives trading advice it was told not to. Also disqualifying.
+- `TOO_LONG` or `EMOJI_FOUND` — prompt problems, usually fixable without changing model.
+- `NOT_RUSSIAN` — the model ignored the language instruction.
+
+Rejected text is never printed: `explain_validated` drops it, so nothing unchecked reaches the
+terminal.
+
 ## The Forward Outcome Ledger (Phase 9C-1)
 
 Off by default. One flag turns on two jobs; with it off the worker registers neither:

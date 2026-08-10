@@ -90,7 +90,7 @@ def _service(
 
 
 def test_project_phase_is_current() -> None:
-    assert constants.PROJECT_PHASE == "phase_9c1_forward_outcome_ledger_foundation"
+    assert constants.PROJECT_PHASE == "phase_8d_local_explainer_foundation"
 
 
 # --- the entity's two lifetimes -------------------------------------------------------------

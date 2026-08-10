@@ -3,15 +3,20 @@ from datetime import timedelta
 
 import httpx
 
+from app.adapters.chat_completions_explanations import (
+    LOCAL_PROVIDER_NAME,
+    OPENAI_PROVIDER_NAME,
+    ChatCompletionsExplanationAdapter,
+    build_completion_timeout,
+)
 from app.adapters.disabled import (
     DisabledEconomicCalendarProvider,
     DisabledExplanationProvider,
     DisabledMarketDataProvider,
 )
 from app.adapters.fmp_calendar import FMPEconomicCalendarAdapter
-from app.adapters.openai_explanations import OpenAIExplanationAdapter, build_openai_timeout
 from app.adapters.twelve_data import TwelveDataMarketDataAdapter
-from app.core.config import Settings
+from app.core.config import ExplanationProviderKind, Settings
 from app.core.exceptions import ConfigurationInvalidError
 from app.domain.interfaces.providers import (
     EconomicCalendarProvider,
@@ -49,8 +54,8 @@ def create_provider_clients(settings: Settings) -> ProviderClients:
             httpx.AsyncClient(timeout=timeout) if settings.calendar_enabled else None
         ),
         explanation=(
-            httpx.AsyncClient(timeout=build_openai_timeout(settings.provider_read_timeout_seconds))
-            if settings.openai_enabled
+            httpx.AsyncClient(timeout=build_explanation_timeout(settings))
+            if settings.explanation_provider_configured()
             else None
         ),
     )
@@ -100,27 +105,58 @@ def create_economic_calendar_provider(
     )
 
 
+def build_explanation_timeout(settings: Settings) -> httpx.Timeout:
+    """The HTTP read timeout follows the explanation budget rather than the generic provider one.
+
+    `/explain` gives up at `explanation_budget_seconds` and sends the deterministic report alone, so
+    a read timeout shorter than the budget would fail the call before the budget it was given had
+    run out. A model on this machine can need most of that budget.
+    """
+    return build_completion_timeout(
+        max(settings.provider_read_timeout_seconds, settings.explanation_budget_seconds)
+    )
+
+
 def create_explanation_provider(
     settings: Settings,
     *,
     client: httpx.AsyncClient | None = None,
 ) -> ExplanationProvider:
-    """Phase 8B explainer. Off unless `OPENAI_ENABLED` is true; the disabled provider costs nothing.
+    """The configured explainer, or the disabled one, which costs nothing.
 
-    Not called from anywhere yet: 8C does the wiring, and a safety test keeps it that way.
+    Reachable only from `/explain`: no service, scheduler job, or API route may call this, and a
+    safety test keeps it that way.
     """
-    if not settings.openai_enabled:
+    kind = settings.explanation_provider
+    if kind is ExplanationProviderKind.DISABLED:
         return DisabledExplanationProvider()
+    if client is None:
+        raise ConfigurationInvalidError("Для включённого объяснителя требуется HTTP-клиент.")
+
+    timeout = build_explanation_timeout(settings)
+    if kind is ExplanationProviderKind.LOCAL:
+        # No API key, on purpose. The endpoint is a process on this machine, and handing it a paid
+        # credential would be worse than useless.
+        return ChatCompletionsExplanationAdapter(
+            client=client,
+            provider_name=LOCAL_PROVIDER_NAME,
+            api_key=None,
+            base_url=settings.local_llm_base_url,
+            model=settings.local_llm_model,
+            timeout=timeout,
+            retry_count=settings.provider_retry_count,
+            retry_backoff_seconds=settings.provider_retry_backoff_seconds,
+            max_output_tokens=settings.local_llm_max_output_tokens,
+        )
     if settings.openai_api_key is None:
         raise ConfigurationInvalidError("Для OpenAI требуется API-ключ.")
-    if client is None:
-        raise ConfigurationInvalidError("Для включённого OpenAI требуется HTTP-клиент.")
-    return OpenAIExplanationAdapter(
+    return ChatCompletionsExplanationAdapter(
         client=client,
+        provider_name=OPENAI_PROVIDER_NAME,
         api_key=settings.openai_api_key.get_secret_value(),
         base_url=settings.openai_base_url,
         model=settings.openai_model,
-        timeout=build_openai_timeout(settings.provider_read_timeout_seconds),
+        timeout=timeout,
         retry_count=settings.provider_retry_count,
         retry_backoff_seconds=settings.provider_retry_backoff_seconds,
         max_output_tokens=settings.openai_max_output_tokens,

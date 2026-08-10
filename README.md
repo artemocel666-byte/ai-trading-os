@@ -4,7 +4,12 @@ AI Trading OS is a safety-first foundation for a future modular Forex analysis a
 
 ## Current Status
 
-- Current project phase: phase_9c1_forward_outcome_ledger_foundation.
+- Current project phase: phase_8d_local_explainer_foundation.
+- Phase 8D added a local explainer: `/explain` can be answered by a model running on your own
+  machine instead of OpenAI, over the same chat-completions protocol and held to the same
+  Phase 8A contract. One switch chooses — `EXPLANATION_PROVIDER=disabled|openai|local` — and a
+  local endpoint is sent no API key at all. `scripts/evaluate_explanations.py` measures how
+  often a given model produces an answer the validator accepts, and why it rejects the rest.
 - Phase 9C-1 built the forward outcome ledger: on every closed window the worker writes down the
   levels for both directions **before** the outcome exists, and a separate tick settles them later
   from candles that arrived afterwards. No account, no position size, no profit and loss, no

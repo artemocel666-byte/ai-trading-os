@@ -243,7 +243,15 @@ non-actionable and without any signal, AI, or execution behavior.
     is appended only after passing 8A validation, and every failure — disabled, unreachable,
     rejected, timed out — becomes one honest line beneath it. Two flags, both off by default, and a
     latency budget so a slow provider cannot hang a command.
-  - Unlocks `OPENAI_ENABLED=true`.
+  - Unlocked the explainer. The flag was `OPENAI_ENABLED` until Phase 8D replaced it.
+  - 8D: a local explainer — **completed 2026-08-10**, see `docs/phase8d-verification-report.md`.
+    Phase 8 reopens deliberately: `/explain` can now be answered by a model on this machine.
+    LM Studio and friends serve the same `/v1/chat/completions` as OpenAI, so the 8B adapter was
+    generalised rather than copied — one transport, still exactly one module that can reach a model,
+    and a local endpoint is sent no API key at all. `OPENAI_ENABLED` became
+    `EXPLANATION_PROVIDER=disabled|openai|local` and is refused at startup rather than ignored.
+    `scripts/evaluate_explanations.py` measures the share of answers the Phase 8A validator accepts
+    and why it rejects the rest, so a model is adopted on evidence rather than on impression.
 - Phase 9: signals, delivery, and paper trading — the final phase; not started
   - 9A: price-level construction, deferred since Phase 4 — **completed 2026-08-05**, see
     `docs/phase9a-verification-report.md`. Scoped down during planning: the original wording said

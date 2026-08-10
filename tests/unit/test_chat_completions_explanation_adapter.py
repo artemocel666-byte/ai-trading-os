@@ -11,12 +11,14 @@ from decimal import Decimal
 import httpx
 import pytest
 
+from app.adapters.chat_completions_explanations import (
+    LOCAL_PROVIDER_NAME,
+    OPENAI_PROVIDER_NAME,
+    SYSTEM_PROMPT_RU,
+    ChatCompletionsExplanationAdapter,
+)
 from app.adapters.disabled import DisabledExplanationProvider
 from app.adapters.factories import create_explanation_provider
-from app.adapters.openai_explanations import (
-    SYSTEM_PROMPT_RU,
-    OpenAIExplanationAdapter,
-)
 from app.core.config import Settings
 from app.core.exceptions import (
     ConfigurationInvalidError,
@@ -90,10 +92,11 @@ def _adapter(
     handler: Callable[[httpx.Request], httpx.Response],
     *,
     retry_count: int = 1,
-) -> tuple[OpenAIExplanationAdapter, httpx.AsyncClient]:
+) -> tuple[ChatCompletionsExplanationAdapter, httpx.AsyncClient]:
     client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
-    adapter = OpenAIExplanationAdapter(
+    adapter = ChatCompletionsExplanationAdapter(
         client=client,
+        provider_name=OPENAI_PROVIDER_NAME,
         api_key=API_KEY,
         base_url="https://openai.test",
         model="test-model",
@@ -346,8 +349,43 @@ async def test_disabled_provider_refuses_before_any_network_call() -> None:
 
 def test_enabled_provider_requires_a_key_and_a_client() -> None:
     with pytest.raises(ValueError, match="OPENAI_API_KEY"):
-        Settings(_env_file=None, openai_enabled=True)
+        Settings(_env_file=None, explanation_provider="openai")
 
-    settings = Settings(_env_file=None, openai_enabled=True, openai_api_key="test-key")
+    settings = Settings(_env_file=None, explanation_provider="openai", openai_api_key="test-key")
     with pytest.raises(ConfigurationInvalidError):
         create_explanation_provider(settings)
+
+
+def test_the_replaced_flag_is_refused_rather_than_ignored() -> None:
+    """A setting that quietly stops working is worse than one that fails loudly.
+
+    `.env` and `compose.yaml` both carried `OPENAI_ENABLED`, and Phase 8D replaced it. Ignoring it
+    would have left an operator convinced the explainer was configured when it was not.
+    """
+    with pytest.raises(ValueError, match="EXPLANATION_PROVIDER"):
+        Settings(_env_file=None, openai_enabled=False)
+
+
+def test_a_local_endpoint_is_sent_no_credential() -> None:
+    """A key configured for somebody else's service must not reach a process on this machine."""
+    settings = Settings(
+        _env_file=None,
+        explanation_provider="local",
+        openai_api_key="sk-should-never-be-sent",
+        local_llm_model="test-local",
+    )
+    provider = create_explanation_provider(settings, client=httpx.AsyncClient())
+
+    headers = provider.build_request_headers()
+
+    assert "Authorization" not in headers
+    assert provider.provider_name == LOCAL_PROVIDER_NAME
+    assert provider.model_name == "test-local"
+
+
+def test_a_remote_endpoint_still_carries_its_key() -> None:
+    settings = Settings(_env_file=None, explanation_provider="openai", openai_api_key="sk-test")
+    provider = create_explanation_provider(settings, client=httpx.AsyncClient())
+
+    assert provider.build_request_headers()["Authorization"] == "Bearer sk-test"
+    assert provider.provider_name == OPENAI_PROVIDER_NAME

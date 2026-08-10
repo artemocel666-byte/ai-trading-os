@@ -1,4 +1,4 @@
-PROJECT_PHASE = "phase_9c1_forward_outcome_ledger_foundation"
+PROJECT_PHASE = "phase_8d_local_explainer_foundation"
 STRATEGY_IMPLEMENTED = False
 REAL_TRADING_ENABLED = False
 

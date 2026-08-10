@@ -1,4 +1,5 @@
 from decimal import Decimal
+from enum import StrEnum
 from functools import lru_cache
 from typing import Any
 
@@ -6,6 +7,19 @@ from pydantic import Field, SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 DEFAULT_DEVELOPMENT_INTERNAL_API_KEY = "development-internal-key-change-me"
+
+
+class ExplanationProviderKind(StrEnum):
+    """Which explainer answers, or none.
+
+    One setting rather than a flag per provider: an explainer is a single choice, and two booleans
+    can be set to a combination that means nothing. Replaced `OPENAI_ENABLED` in Phase 8D, which is
+    rejected rather than ignored — see `validate_conditional_settings`.
+    """
+
+    DISABLED = "disabled"
+    OPENAI = "openai"
+    LOCAL = "local"
 
 
 class Settings(BaseSettings):
@@ -28,18 +42,31 @@ class Settings(BaseSettings):
     telegram_allowed_user_id: int | None = None
     telegram_allowed_chat_id: int | None = None
 
-    openai_enabled: bool = False
+    explanation_provider: ExplanationProviderKind = ExplanationProviderKind.DISABLED
+
     openai_api_key: SecretStr | None = None
     openai_model: str = "gpt-4.1"
     openai_base_url: str = "https://api.openai.com"
     # Caps what one explanation can cost. Three or four Russian sentences fit comfortably.
     openai_max_output_tokens: int = Field(default=400, ge=50, le=4000)
 
+    # A model on this machine, reached over the same OpenAI-compatible chat-completions protocol.
+    # The default host is `host.docker.internal` because the bot runs in a container and LM Studio
+    # does not; from the host command line the same server is `http://127.0.0.1:1234`.
+    local_llm_base_url: str = "http://host.docker.internal:1234"
+    local_llm_model: str = "local-model"
+    local_llm_max_output_tokens: int = Field(default=400, ge=50, le=4000)
+
+    #: Read at startup only to refuse it. Phase 8D replaced this flag, and a setting that quietly
+    #: stops working is worse than one that fails loudly — both `.env` and `compose.yaml` set it.
+    openai_enabled: bool | None = None
+
     # Second gate for Phase 8C: the provider may exist and still not be allowed to answer a user.
     explanation_delivery_enabled: bool = False
     # A Telegram command must not wait on retried provider timeouts; past this the deterministic
-    # report is sent on its own.
-    explanation_budget_seconds: float = Field(default=20.0, gt=0, le=120)
+    # report is sent on its own. A local model on CPU can need far more than the default: see
+    # `docs/operations.md`, where the trade-off is spelled out rather than tuned here.
+    explanation_budget_seconds: float = Field(default=20.0, gt=0, le=600)
 
     market_data_enabled: bool = False
     twelve_data_api_key: SecretStr | None = None
@@ -141,8 +168,13 @@ class Settings(BaseSettings):
                 errors.append("TELEGRAM_ALLOWED_USER_ID is required when TELEGRAM_ENABLED=true")
             if self.telegram_allowed_chat_id is None:
                 errors.append("TELEGRAM_ALLOWED_CHAT_ID is required when TELEGRAM_ENABLED=true")
-        if self.openai_enabled and not self.openai_api_key:
-            errors.append("OPENAI_API_KEY is required when OPENAI_ENABLED=true")
+        if self.openai_enabled is not None:
+            errors.append(
+                "OPENAI_ENABLED was replaced in Phase 8D; "
+                "set EXPLANATION_PROVIDER=disabled|openai|local and remove it"
+            )
+        if self.explanation_provider is ExplanationProviderKind.OPENAI and not self.openai_api_key:
+            errors.append("OPENAI_API_KEY is required when EXPLANATION_PROVIDER=openai")
         if self.market_data_enabled and not self.twelve_data_api_key:
             errors.append("TWELVE_DATA_API_KEY is required when MARKET_DATA_ENABLED=true")
         if self.calendar_enabled and not self.fmp_api_key:
@@ -157,10 +189,21 @@ class Settings(BaseSettings):
     def test_database_dsn(self) -> str | None:
         return self.test_database_url.get_secret_value() if self.test_database_url else None
 
+    def explanation_provider_configured(self) -> bool:
+        """Whether an explainer exists at all. Says nothing about whether it may answer a user."""
+        return self.explanation_provider is not ExplanationProviderKind.DISABLED
+
     def enabled_integrations(self) -> dict[str, bool]:
+        """Kept keyed on `openai` so `/api/v1/system/status` stays comparable across the change.
+
+        The key now means "a remote model is configured", which is what it always reported: a local
+        model is not an integration in the sense this dictionary is asked about, because nothing
+        leaves the machine.
+        """
         return {
             "telegram": self.telegram_enabled,
-            "openai": self.openai_enabled,
+            "openai": self.explanation_provider is ExplanationProviderKind.OPENAI,
+            "local_llm": self.explanation_provider is ExplanationProviderKind.LOCAL,
             "market_data": self.market_data_enabled,
             "calendar": self.calendar_enabled,
         }

@@ -25,11 +25,11 @@ logger = logging.getLogger(__name__)
 def _build_explanation_clients(settings: Settings) -> ProviderClients | None:
     """HTTP clients for the explanation layer, or None when it is off.
 
-    Both gates must be open: the provider must exist (`OPENAI_ENABLED`) and delivery must be
-    permitted (`EXPLANATION_DELIVERY_ENABLED`). Off by default, so a bot started without either
-    opens no client and spends nothing.
+    Both gates must be open: a provider must be configured (`EXPLANATION_PROVIDER`) and delivery
+    must be permitted (`EXPLANATION_DELIVERY_ENABLED`). Off by default, so a bot started without
+    either opens no client and spends nothing.
     """
-    if not (settings.openai_enabled and settings.explanation_delivery_enabled):
+    if not (settings.explanation_provider_configured() and settings.explanation_delivery_enabled):
         return None
     return create_provider_clients(settings)
 

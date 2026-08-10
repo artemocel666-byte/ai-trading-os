@@ -41,17 +41,21 @@ class DisabledLLMProvider:
 
 
 class DisabledExplanationProvider:
-    """Phase 8B explainer, off. Refuses before any network call or token is spent."""
+    """The explainer, off. Refuses before any network call or token is spent.
+
+    Named `explanation` rather than `openai` since Phase 8D: which provider is absent is not the
+    point, and a local model would make the old name a lie.
+    """
 
     async def explain(self, explanation_input: ExplanationInput) -> str:
-        raise IntegrationDisabledError("openai")
+        raise IntegrationDisabledError("explanation")
 
     async def explain_validated(
         self,
         explanation_input: ExplanationInput,
         checked_at: datetime,
     ) -> ExplanationOutcome:
-        raise IntegrationDisabledError("openai")
+        raise IntegrationDisabledError("explanation")
 
 
 class DisabledChiefAIExplainer:

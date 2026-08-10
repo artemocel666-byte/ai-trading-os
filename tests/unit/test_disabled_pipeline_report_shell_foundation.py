@@ -62,7 +62,7 @@ def _snapshot_from_registry(
 
 
 def test_project_phase_is_phase4e_disabled_pipeline_report_shell_foundation() -> None:
-    assert constants.PROJECT_PHASE == "phase_9c1_forward_outcome_ledger_foundation"
+    assert constants.PROJECT_PHASE == "phase_8d_local_explainer_foundation"
 
 
 def test_blocker_and_report_models_are_immutable() -> None:

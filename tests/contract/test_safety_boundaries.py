@@ -4,6 +4,7 @@ from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
 
+import httpx
 import pytest
 from pydantic import ValidationError
 
@@ -21,7 +22,8 @@ from app.adapters.disabled import (
     DisabledLLMProvider,
     DisabledMarketDataProvider,
 )
-from app.core.config import Settings
+from app.adapters.factories import create_explanation_provider
+from app.core.config import ExplanationProviderKind, Settings
 from app.core.enums import Decision
 from app.core.exceptions import IntegrationDisabledError
 from app.domain.analysis_engine import AnalysisEngine
@@ -701,7 +703,7 @@ PHASE_8A_FORBIDDEN_IMPORTS = (
     "app.scheduler",
     "app.schemas.agents",
 )
-PHASE_8B_FILES = (Path("app/adapters/openai_explanations.py"),)
+PHASE_8B_FILES = (Path("app/adapters/chat_completions_explanations.py"),)
 PHASE_8B_FORBIDDEN_IMPORTS = (
     "app.persistence",
     "app.telegram",
@@ -2000,10 +2002,11 @@ def test_phase8a_validation_is_fail_closed() -> None:
         ExplanationValidationReport(checked_at=datetime(2026, 8, 1, tzinfo=UTC), accepted=False)
 
 
-def test_phase8b_openai_is_disabled_by_default() -> None:
+def test_phase8b_explanation_provider_is_disabled_by_default() -> None:
     settings = Settings(_env_file=None)
 
-    assert settings.openai_enabled is False
+    assert settings.explanation_provider is ExplanationProviderKind.DISABLED
+    assert settings.explanation_provider_configured() is False
 
 
 def test_phase8b_adapter_touches_no_other_layer() -> None:
@@ -2052,7 +2055,7 @@ def test_phase8b_only_the_adapter_can_reach_a_model() -> None:
         "from openai",
         "api.openai.com",
         "chat/completions",
-        "OpenAIExplanationAdapter",
+        "ChatCompletionsExplanationAdapter",
     )
     other_sources = tuple(
         file_path
@@ -2074,13 +2077,13 @@ def test_phase8b_explainer_is_reachable_only_from_a_typed_command() -> None:
         for file_path in Path(directory).rglob("*.py")
     )
 
-    assert "OpenAIExplanationAdapter" not in source
+    assert "ChatCompletionsExplanationAdapter" not in source
     assert "create_explanation_provider" not in source
     assert "explain_validated" not in source
 
     # Even inside Telegram, only the bot builds the provider and only /explain calls it.
     telegram_source = Path("app/telegram/commands.py").read_text(encoding="utf-8")
-    assert "OpenAIExplanationAdapter" not in telegram_source
+    assert "ChatCompletionsExplanationAdapter" not in telegram_source
     assert telegram_source.count("explain_validated") == 1
 
 
@@ -2123,7 +2126,7 @@ def test_phase8c_explanation_delivery_is_disabled_by_default() -> None:
     settings = Settings(_env_file=None)
 
     assert settings.explanation_delivery_enabled is False
-    assert settings.openai_enabled is False
+    assert settings.explanation_provider_configured() is False
 
 
 def test_phase8c_only_explain_carries_an_explanation() -> None:
@@ -2765,3 +2768,62 @@ def test_phase9c1_ledger_service_holds_no_provider_or_messaging_dependency() -> 
 
     for term in ("app.adapters", "app.telegram", "app.api", "httpx", "openai"):
         assert not any(term in line for line in import_lines), term
+
+
+PHASE_8D_EVALUATION_CLI = Path("scripts/evaluate_explanations.py")
+
+
+def test_phase8d_a_local_endpoint_receives_no_credential() -> None:
+    """A key configured for a paid service must never be sent to a process on this machine.
+
+    The header is built rather than assumed absent: `api_key=None` means the `Authorization` header
+    is not constructed at all, not that an empty one is sent — an empty credential is
+    indistinguishable in a server log from a broken one.
+    """
+    settings = Settings(
+        _env_file=None,
+        explanation_provider="local",
+        openai_api_key="sk-must-not-travel",
+    )
+
+    provider = create_explanation_provider(settings, client=httpx.AsyncClient())
+
+    assert "Authorization" not in provider.build_request_headers()
+
+
+def test_phase8d_the_replaced_flag_is_refused_rather_than_ignored() -> None:
+    with pytest.raises(ValueError, match="EXPLANATION_PROVIDER"):
+        Settings(_env_file=None, openai_enabled=True)
+
+
+def test_phase8d_the_evaluation_cli_writes_nothing() -> None:
+    """Measuring a model is a read. It may not touch storage, and it may not write a file."""
+    source = PHASE_8D_EVALUATION_CLI.read_text(encoding="utf-8")
+
+    for forbidden in (
+        "upsert",
+        "add_missing",
+        "apply_outcomes",
+        "commit()",
+        "open(",
+        "write_text",
+    ):
+        assert forbidden not in source, forbidden
+
+
+def test_phase8d_the_evaluation_cli_cannot_print_unchecked_text() -> None:
+    """It calls `explain_validated`, never `explain`.
+
+    `ExplanationOutcome` carries text only when the validator accepted it, so a rejected answer
+    cannot be printed by mistake — the text is not in the result at all. Calling `explain` directly
+    would hand back raw model output and lose that.
+    """
+    tree = ast.parse(PHASE_8D_EVALUATION_CLI.read_text(encoding="utf-8"))
+    called = {
+        node.func.attr
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute)
+    }
+
+    assert "explain_validated" in called
+    assert "explain" not in called
