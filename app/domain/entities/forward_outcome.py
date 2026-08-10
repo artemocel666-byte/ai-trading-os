@@ -171,6 +171,10 @@ class ForwardOutcomeRecordResult(BaseModel):
     `windows_without_a_plan` is counted rather than ignored: a flat or incomplete window genuinely
     has no scale to place levels on, and `build_price_plan` returns `None` instead of substituting
     one. A silent skip would make the ledger's coverage unknowable.
+
+    `windows_without_data` is kept apart from it. A market that moved too little to place levels on
+    and an ingestion that fetched nothing look identical in a single counter, and they call for
+    opposite responses.
     """
 
     project_phase: str = Field(default_factory=lambda: constants.PROJECT_PHASE, min_length=1)
@@ -182,6 +186,7 @@ class ForwardOutcomeRecordResult(BaseModel):
     recorded_count: int = Field(default=0, ge=0)
     already_present_count: int = Field(default=0, ge=0)
     windows_without_a_plan: int = Field(default=0, ge=0)
+    windows_without_data: int = Field(default=0, ge=0)
     failed_item_count: int = Field(default=0, ge=0)
 
     model_config = ConfigDict(frozen=True)

@@ -257,8 +257,68 @@ async def test_recording_ignores_rows_no_real_provider_supplied() -> None:
     result = await service.run_record_tick(as_of=FIRST_AS_OF)
 
     assert result.recorded_count == 0
-    assert result.windows_without_a_plan == 2
+    # Counted as "no data" rather than "no plan": after the provenance filter there is nothing to
+    # build a window from, which is a different thing from a market too flat to place levels on.
+    assert result.windows_without_data == 2
+    assert result.windows_without_a_plan == 0
     assert uow_factory.forward_outcomes == {}
+
+
+@pytest.mark.asyncio
+async def test_the_window_follows_the_stored_data_rather_than_the_clock() -> None:
+    """A tick that fires before ingestion has stored the candle just closed must not be short.
+
+    Both jobs run on the same interval and fire in the same second, so on 2026-08-10 every live
+    row came out one candle short and `market_data_complete` failed on all of them — the verdict
+    column, which is the reason the ledger stores a verdict at all, was recording a race rather
+    than a market. The window now ends at the newest stored candle.
+    """
+    service, uow_factory = _service(candles=_window_candles())
+
+    # One full interval past the window's own close: the clock says a newer window exists, and
+    # ingestion has not stored a single candle of it.
+    result = await service.run_record_tick(as_of=FIRST_AS_OF + STEP)
+
+    assert result.recorded_count == 2
+    stored = list(uow_factory.forward_outcomes.values())
+    assert {record.as_of for record in stored} == {FIRST_AS_OF}
+    assert all(
+        record.decision_status == PipelineDecisionStatus.READY_FOR_REVIEW for record in stored
+    )
+    assert all(record.failed_rule_ids == () for record in stored)
+
+
+@pytest.mark.asyncio
+async def test_a_series_with_nothing_stored_records_nothing() -> None:
+    service, uow_factory = _service(candles=[])
+
+    result = await service.run_record_tick(as_of=FIRST_AS_OF)
+
+    assert result.recorded_count == 0
+    assert result.windows_without_data == 2
+    assert uow_factory.forward_outcomes == {}
+
+
+@pytest.mark.asyncio
+async def test_a_window_skipped_this_tick_is_recorded_on_the_next_one() -> None:
+    """Lagging ingestion delays a window; it does not lose one.
+
+    The identity a row would be stored under does not depend on when the tick ran, so the later
+    tick writes exactly the row the earlier one could not.
+    """
+    candles = _window_candles()
+    service, uow_factory = _service(candles=candles)
+    await service.run_record_tick(as_of=FIRST_AS_OF)
+    assert {record.as_of for record in uow_factory.forward_outcomes.values()} == {FIRST_AS_OF}
+
+    candles.append(_candle(WINDOW_CANDLES, base=Decimal("1.10240")))
+    result = await service.run_record_tick(as_of=FIRST_AS_OF + (2 * STEP))
+
+    assert result.recorded_count == 2
+    assert {record.as_of for record in uow_factory.forward_outcomes.values()} == {
+        FIRST_AS_OF,
+        FIRST_AS_OF + STEP,
+    }
 
 
 @pytest.mark.asyncio

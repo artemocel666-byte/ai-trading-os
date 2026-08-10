@@ -88,15 +88,23 @@ class ForwardOutcomeService:
         recorded = 0
         already_present = 0
         without_a_plan = 0
+        without_data = 0
         failed_items = 0
 
         for item in self._config.items:
             try:
-                records = await self._records_for_item(item=item, as_of=as_of)
+                snapshot = await self._snapshot(item=item, as_of=as_of)
             except Exception as error:  # one bad series must not stop the rest
                 await self._record_failure(error, item=item)
                 failed_items += 1
                 continue
+            if snapshot is None:
+                # Nothing stored for this series at all. Counted apart from a flat window: one is
+                # a market that said nothing, the other is an ingestion that fetched nothing, and
+                # a single counter for both would make the ledger's own diagnostics lie.
+                without_data += len(SignalDirection)
+                continue
+            records = self._records_for_snapshot(item=item, snapshot=snapshot, recorded_at=as_of)
             if records is None:
                 without_a_plan += len(SignalDirection)
                 continue
@@ -116,6 +124,7 @@ class ForwardOutcomeService:
             recorded_count=recorded,
             already_present_count=already_present,
             windows_without_a_plan=without_a_plan,
+            windows_without_data=without_data,
             failed_item_count=failed_items,
         )
 
@@ -158,22 +167,14 @@ class ForwardOutcomeService:
             still_pending_count=len(pending) - applied,
         )
 
-    async def _records_for_item(
+    def _records_for_snapshot(
         self,
         *,
         item: SnapshotScheduleItem,
-        as_of: datetime,
+        snapshot: AnalysisSnapshot,
+        recorded_at: datetime,
     ) -> list[ForwardOutcomeRecord] | None:
-        window_end = latest_closed_boundary(timeframe=item.timeframe, as_of=as_of)
-        window_start = window_end - (
-            self._config.window_candles * TIMEFRAME_TO_DELTA[item.timeframe]
-        )
-        snapshot = await self._snapshot(
-            pair=item.pair,
-            timeframe=item.timeframe,
-            window_start=window_start,
-            window_end=window_end,
-        )
+        window_end = snapshot.window.as_of
         review = build_snapshot_backed_review(snapshot, window_end)
         decision = review.decision
 
@@ -193,7 +194,7 @@ class ForwardOutcomeService:
                     snapshot=snapshot,
                     decision=decision,
                     plan=plan,
-                    recorded_at=as_of,
+                    recorded_at=recorded_at,
                 )
             )
         return records
@@ -201,12 +202,20 @@ class ForwardOutcomeService:
     async def _snapshot(
         self,
         *,
-        pair: CurrencyPair,
-        timeframe: Timeframe,
-        window_start: datetime,
-        window_end: datetime,
-    ) -> AnalysisSnapshot:
-        """Build the window from stored rows a real provider supplied, and nothing else.
+        item: SnapshotScheduleItem,
+        as_of: datetime,
+    ) -> AnalysisSnapshot | None:
+        """The newest window the stored data can actually support, or `None` if there is none.
+
+        **The window ends at the newest stored candle, not at the newest closed boundary.** Both
+        this tick and market-data ingestion run on the same interval and fire in the same second,
+        so asking the clock produced a window whose last candle had not been fetched yet — one
+        short, every single time. Run live on 2026-08-10 that made `market_data_complete` fail on
+        every row, and the ledger's whole point is the verdict stored beside the outcome.
+
+        Reading the boundary off the data instead of the clock cannot race: it is behind by however
+        much ingestion is behind, and no more. A window skipped this tick is recorded on the next
+        one, because the identity it would be stored under has not changed.
 
         The candle query is filtered by provenance rather than trusted. On 2026-08-07 thirty
         fabricated rows were found sitting on the same timestamps as real ones and winning the
@@ -214,25 +223,45 @@ class ForwardOutcomeService:
         path, and this is the same guard on the live one. A ledger row built over an invented price
         would be worse than a missing one, because it would look pre-registered.
         """
+        pair = item.pair
+        timeframe = item.timeframe
+        step = TIMEFRAME_TO_DELTA[timeframe]
+        boundary = latest_closed_boundary(timeframe=timeframe, as_of=as_of)
+        # Twice the window, so ingestion can be a long way behind and the newest window it does
+        # support is still fully covered by one query.
+        search_start = boundary - (2 * self._config.window_candles * step)
+
         async with self._uow_factory() as uow:
-            candles = await uow.candles.list_range(
-                pair=pair,
-                timeframe=timeframe,
-                start_at=window_start,
-                end_at=window_end,
+            stored = _only_real(
+                await uow.candles.list_range(
+                    pair=pair,
+                    timeframe=timeframe,
+                    start_at=search_start,
+                    end_at=boundary,
+                )
             )
+            if not stored:
+                return None
+            window_end = max(candle.close_time for candle in stored)
+            window_start = window_end - (self._config.window_candles * step)
             events = await uow.economic_events.list_window(
                 start_at=window_start,
                 end_at=window_end,
                 currencies=[pair.base_currency, pair.quote_currency],
             )
+
+        candles = [
+            candle
+            for candle in stored
+            if candle.open_time >= window_start and candle.close_time <= window_end
+        ]
         return self._analysis_engine.build_snapshot(
             pair=pair,
             timeframe=timeframe,
             window_start=window_start,
             window_end=window_end,
             as_of=window_end,
-            candles=_only_real(candles),
+            candles=candles,
             economic_events=events,
             currencies=[pair.base_currency, pair.quote_currency],
         )

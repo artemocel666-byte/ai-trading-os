@@ -30,8 +30,8 @@ The fair objection is that a replay could compute the same numbers once the cand
 things a stored forward record has that a replay never can:
 
 1. **Pre-registration**, and it is checkable per row: `recorded_at` and `as_of` are both stored, so
-   a genuine row shows a gap of at most one interval. A row written after its own future is
-   self-identifying.
+   a genuine row shows a gap of a tick or two, never days. A row written long after its own future
+   is self-identifying.
 2. **What the live pipeline actually decided** — the verdict, the rules that failed, the ruleset
    versions, a fingerprint of the whole decision. A replay reconstructs that approximately at best:
    calendar rows arrive and get revised afterwards, and candles can be restated.
@@ -121,6 +121,46 @@ Recording every window with its verdict makes one comparison possible for the fi
 windows the rules accept resolve better than windows they block?** The eleven rules have been
 calibrated on how often they fire, never on whether firing helps. That question needs a sample this
 slice has only started to collect, and it is out of scope here.
+
+## Addendum, 2026-08-10: the first live run found a defect the tests could not
+
+The ledger ran against the real worker for five hours and wrote 54 rows. **Every one of them came
+out `NOT_READY`**, and not because of the market.
+
+`run_record_tick` asked `latest_closed_boundary` for its window — the newest boundary the *clock*
+says has closed. Market-data ingestion runs on the same 15-minute interval and fires in the same
+second, and it has a provider round-trip to make first. So the ledger asked for a window whose last
+candle had not been stored yet, and got eleven candles out of twelve:
+
+| `as_of` | recorded at | candles in the window at that moment |
+| --- | --- | ---: |
+| 14:15 | 14:15:48 | 11 of 12 |
+| 14:00 | 14:00:48 | 11 of 12 |
+| 13:45 | 13:45:48 | 11 of 12 |
+
+`data_quality.market_data_complete` failed on all of them, and with it `market_context.snapshot_ready`.
+The levels and the outcomes were fine; the **verdict column was recording a race rather than a
+market**, and the verdict is the whole reason the ledger stores one.
+
+**The fix: the window ends at the newest stored candle, not at the newest closed boundary.** Reading
+the boundary off the data cannot race — it is behind by however far ingestion is behind and no
+further, and a window skipped this tick is written by the next one, because the identity it would be
+stored under has not changed. No offset constant, nothing to tune.
+
+Two things worth keeping from this:
+
+- **Historical tests cannot catch a race, by construction.** Every test and the whole live check ran
+  over data that was already complete. Nothing was wrong with them; they were measuring a situation
+  where the failure cannot occur. It took twenty minutes of real running to find, which is an
+  argument for turning things on early rather than for testing harder.
+- `windows_without_data` was split out from `windows_without_a_plan` while fixing this. A market too
+  flat to place levels on and an ingestion that fetched nothing are opposite problems, and one
+  counter for both would have made the ledger's own diagnostics as misleading as the column it was
+  reporting on.
+
+Four new tests, including the race itself stated directly: a tick that fires a full interval after
+the window closed, with nothing newer stored, must record the complete older window rather than a
+short newer one.
 
 ## What it does not settle
 

@@ -102,6 +102,7 @@ async def forward_outcome_record_job(
             "recorded": result.recorded_count,
             "already_present": result.already_present_count,
             "without_a_plan": result.windows_without_a_plan,
+            "without_data": result.windows_without_data,
             "failed_items": result.failed_item_count,
         },
     )

@@ -618,8 +618,23 @@ produced it, so a change shows up as a break in the ledger rather than as a sile
 the urge to backfill: a row whose `recorded_at` sits long after its `as_of` is not pre-registered,
 and pre-registration is the only thing this ledger has that replaying history does not.
 
-That same pair of timestamps is how you check a row is genuine — a real one shows a gap of at most
-one interval.
+That same pair of timestamps is how you check a row is genuine — a real one shows a gap of a tick or
+two, never days.
+
+### Why the window can lag the clock
+
+The window ends at the **newest stored candle**, not at the newest closed boundary. Recording and
+ingestion run on the same interval and fire in the same second, and ingestion has a provider
+round-trip to make first, so asking the clock produced a window one candle short every single time —
+`data_quality.market_data_complete` failed on every row written on 2026-08-10 before this was fixed.
+
+So a fresh `as_of` normally trails the wall clock by one tick, and by more if ingestion is behind.
+That is the intended behaviour, not a fault. Nothing is lost: the skipped window is written by the
+next tick under the same identity.
+
+If `windows_without_data` is non-zero in the logs, ingestion has stored nothing at all for that
+series — check `MARKET_DATA_INGESTION_ENABLED` and `last_successful_market_fetch` rather than looking
+at the ledger.
 
 ## Common Failure Cases
 
