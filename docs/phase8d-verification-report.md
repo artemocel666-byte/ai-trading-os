@@ -83,7 +83,7 @@ with one line saying why there is no explanation. On a small CPU model that path
 | `uv run ruff format .` | Passed |
 | `uv run ruff check .` | Passed |
 | `uv run mypy app` | Passed; no issues in 117 source files |
-| `uv run pytest` | Passed; 739 passed, 9 skipped |
+| `uv run pytest` | Passed; 749 passed, 9 skipped |
 | `uv run python scripts/security_check.py` | Passed; exit code 0 |
 | `EXPLANATION_PROVIDER` unset | disabled provider, no HTTP client opened |
 | `OPENAI_ENABLED` present | startup refused, message names the replacement |
@@ -151,14 +151,48 @@ loading" rather than as a property of the model.
   default: a provider may exist and still not be allowed to answer a user.
 - **Nothing about direction, the ledger, or trading.** This is the explanation layer only.
 
-## The next slice this measurement earned
+## The repair, and the re-measurement that confirms the diagnosis
 
-**Round the readings when the explanation input is built.** Currently a `Decimal` reaches the model
-at twenty-eight significant digits, so the only answers that pass are the ones that copy them
-verbatim. Rounding at `build_explanation_input` would make the prose readable *and* make the
-validator's strictness meaningful, without relaxing a single check. Re-run
-`scripts/evaluate_explanations.py` over the same twenty windows afterwards: if the acceptance rate
-does not move sharply, the diagnosis was wrong and the model really does invent figures.
+`round_reading` in `explanation_contract.py` rounds every reading to **four significant digits**
+before it reaches the model. Significant digits rather than decimal places, because the readings
+span scales: a drawdown near 0.0003 and a ratio near 0.77 both have to survive. Counts stay whole,
+so `used_candle_count` arrives as 12 rather than 12.00.
+
+**The validator was not touched.** Accepting roundings there would have widened what counts as a
+permitted number; rounding here narrows what the model is ever asked to reproduce, and
+`allowed_number_set` derives itself from the same serialization, so the two stay consistent without
+a second change. Nothing about a decision moves either: the rules ran at full precision long before
+this value is shown to something describing a verdict already reached.
+
+Same model, same command, same fourteen-day range:
+
+| | before | after |
+| --- | ---: | ---: |
+| answered | 20 | 20 |
+| **accepted** | **4 (20.0%)** | **17 (85.0%)** |
+| `UNKNOWN_NUMBER` | 16 | 2 |
+| `ACTIONABLE_TEXT` | 0 | 1 |
+| seconds, median | 3.5 | 3.4 |
+
+**The windows are not byte-identical between the runs.** The sample is spread evenly across a range
+whose end is "now", and the worker ingested new candles in between, so the sampling shifted by about
+half an hour and the verdict mix moved with it (`READY_FOR_REVIEW` 9 → 11). A four-fold change in
+acceptance is far outside what that can explain, but the two runs are comparable rather than
+identical, and saying otherwise would overstate the evidence.
+
+An accepted answer now reads like something written for a person:
+
+> Данные для пары EURUSD на таймфрейме M15 полностью доступны: использовано 12 свечей, возраст
+> последней свечи 0 минут, коэффициент полноты 1. В контексте рынка максимальное падение закрытия
+> составило 0.0007021 (≈2.242 ATR)…
+
+### The one remaining failure that is the model's
+
+One answer in twenty was rejected as `ACTIONABLE_TEXT` — the model gave trading advice it had been
+told not to give. That is the check doing exactly its job: the answer was dropped, and `/explain`
+would have sent the deterministic report with one line saying there was no explanation. **A five
+percent rate of attempted advice is the real reason the validator exists**, and it is not something
+a prompt tweak should be trusted to remove.
 
 ## Noted while reading, not fixed here
 

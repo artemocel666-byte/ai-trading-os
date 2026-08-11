@@ -251,7 +251,11 @@ non-actionable and without any signal, AI, or execution behavior.
     and a local endpoint is sent no API key at all. `OPENAI_ENABLED` became
     `EXPLANATION_PROVIDER=disabled|openai|local` and is refused at startup rather than ignored.
     `scripts/evaluate_explanations.py` measures the share of answers the Phase 8A validator accepts
-    and why it rejects the rest, so a model is adopted on evidence rather than on impression.
+    and why it rejects the rest, so a model is adopted on evidence rather than on impression. It
+    earned itself immediately: `gpt-oss-20b` scored 20% with sixteen `UNKNOWN_NUMBER` rejections,
+    every one of which was a correct rounding of a value it had been handed. Readings now reach
+    the explainer at four significant digits and the same run scores 85%, with the validator
+    unchanged. Median latency 3.4s, well inside the 20s budget.
 - Phase 9: signals, delivery, and paper trading — the final phase; not started
   - 9A: price-level construction, deferred since Phase 4 — **completed 2026-08-05**, see
     `docs/phase9a-verification-report.md`. Scoped down during planning: the original wording said

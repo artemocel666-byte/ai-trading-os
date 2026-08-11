@@ -9,7 +9,10 @@ AI Trading OS is a safety-first foundation for a future modular Forex analysis a
   machine instead of OpenAI, over the same chat-completions protocol and held to the same
   Phase 8A contract. One switch chooses — `EXPLANATION_PROVIDER=disabled|openai|local` — and a
   local endpoint is sent no API key at all. `scripts/evaluate_explanations.py` measures how
-  often a given model produces an answer the validator accepts, and why it rejects the rest.
+  often a given model produces an answer the validator accepts, and why it rejects the rest —
+  which immediately found a defect in our own contract rather than in the model: readings were
+  reaching it at 28 digits, so every readable rounding was rejected as a fabrication. Rounding
+  the readings at the source took `gpt-oss-20b` from 20% accepted to 85%, validator untouched.
 - Phase 9C-1 built the forward outcome ledger: on every closed window the worker writes down the
   levels for both directions **before** the outcome exists, and a separate tick settles them later
   from candles that arrived afterwards. No account, no position size, no profit and loss, no

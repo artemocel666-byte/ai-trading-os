@@ -14,9 +14,11 @@ from app.domain.entities.explanation import (
     ExplanationValidationReport,
 )
 from app.domain.explanation_contract import (
+    READING_SIGNIFICANT_DIGITS,
     allowed_number_set,
     build_explanation_input,
     contains_actionable_russian_text,
+    round_reading,
     validate_explanation_text,
 )
 from app.domain.strategy_decision_composer import StrategyDecisionComposer
@@ -246,3 +248,64 @@ def test_validation_report_cannot_claim_acceptance_with_issues() -> None:
 
 def test_project_phase_is_phase8a_explanation_contract_foundation() -> None:
     assert constants.PROJECT_PHASE == "phase_8d_local_explainer_foundation"
+
+
+# --- readings reach the explainer at a precision a person would write ------------------------
+
+
+@pytest.mark.parametrize(
+    ("raw", "expected"),
+    [
+        # The three values that actually caused this, taken from the 2026-08-10 measurement.
+        ("0.5833333333333333333333333333", "0.5833"),
+        ("0.0003476567932137393964678069809", "0.0003477"),
+        ("0.7687338501291989664082687337", "0.7687"),
+        # Counts stay whole: `used_candle_count` must reach the model as 12, never as 12.00.
+        ("12", "12"),
+        ("0", "0"),
+        ("1.999999", "2"),
+        # Significant digits, not decimal places — otherwise a drawdown near 1e-4 rounds to nothing.
+        ("58.333333", "58.33"),
+    ],
+)
+def test_a_reading_is_rounded_to_significant_digits(raw: str, expected: str) -> None:
+    assert round_reading(Decimal(raw)) == Decimal(expected)
+
+
+def test_a_rounded_reading_survives_the_validator_the_model_would_face() -> None:
+    """The regression this exists for.
+
+    Measured on 2026-08-10: sixteen of twenty local-model answers were rejected as
+    `UNKNOWN_NUMBER`, and every one of those numbers was a correct rounding of a value the model
+    had been handed. The four that passed had copied twenty-eight digits verbatim. The contract was
+    rewarding unreadable output and calling readable output a fabrication.
+    """
+    explanation_input = _explanation_input()
+    readings = [
+        reading.value for reading in explanation_input.readings if reading.value is not None
+    ]
+
+    assert readings, "the fixture must produce at least one numeric reading"
+    for value in readings:
+        _, _, exponent = value.as_tuple()
+        assert isinstance(exponent, int)
+        assert -exponent <= 10, f"{value} reaches the model with more decimals than anyone reads"
+        report = _validate(f"Показание равно {value}.", explanation_input)
+        assert report.accepted, f"{value} was rejected: {[i.code for i in report.issues]}"
+
+
+def test_the_validator_is_no_looser_than_before() -> None:
+    """Rounding narrows what the model is asked to reproduce; it must not widen what is permitted.
+
+    A number that was never in the input is still a fabrication, whatever its precision.
+    """
+    explanation_input = _explanation_input()
+
+    report = _validate("Значение 4242.42 подтверждено.", explanation_input)
+
+    assert report.accepted is False
+    assert any(issue.code == ExplanationIssueCode.UNKNOWN_NUMBER for issue in report.issues)
+
+
+def test_significant_digits_is_stated_rather_than_hidden_in_a_literal() -> None:
+    assert READING_SIGNIFICANT_DIGITS == 4

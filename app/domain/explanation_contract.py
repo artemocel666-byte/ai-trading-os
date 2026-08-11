@@ -16,7 +16,7 @@ Two checks carry the weight:
 import re
 from collections.abc import Sequence
 from datetime import datetime
-from decimal import Decimal, InvalidOperation
+from decimal import ROUND_HALF_UP, Decimal, InvalidOperation
 
 from app.domain.entities.analysis import AnalysisSnapshot
 from app.domain.entities.explanation import (
@@ -35,6 +35,15 @@ from app.domain.strategy_field_resolver import resolve_field
 
 # Readings the explainer may describe. Every one is already computed and already shown by /review,
 # so the model sees the same numbers a person does — no new maths enters through this door.
+#: How precisely a reading reaches the explainer. Four digits keeps a drawdown near 0.0003477 and a
+#: ratio near 0.7687 both meaningful, and is the most a person would read aloud.
+#:
+#: Known limit: a reading below 1e-6 serialises in scientific notation, and the number pattern in
+#: `allowed_number_set` would then read the mantissa and the exponent as two separate values. That
+#: was already true of the unrounded values and none of the fields in `EXPLAINABLE_FIELD_REFS` gets
+#: near it — a drawdown is around 1e-4, the ratios are order one, the rest are counts.
+READING_SIGNIFICANT_DIGITS = 4
+
 EXPLAINABLE_FIELD_REFS: tuple[str, ...] = (
     "data_quality.completeness_ratio",
     "data_quality.latest_candle_age_minutes",
@@ -220,7 +229,37 @@ def _ruleset_facts(report: RuleSetEvaluationReport) -> ExplanationRulesetFacts:
 
 def _numeric_reading(field_ref: str, snapshot: AnalysisSnapshot) -> Decimal | None:
     resolved = resolve_field(field_ref, snapshot)
-    return resolved if isinstance(resolved, Decimal) else None
+    return round_reading(resolved) if isinstance(resolved, Decimal) else None
+
+
+def round_reading(value: Decimal) -> Decimal:
+    """A reading at a precision a person would write, not the twenty-eight digits it arrives with.
+
+    Measured on 2026-08-10: a local model was rejected on sixteen of twenty windows, every time for
+    an `UNKNOWN_NUMBER` that turned out to be a **correct rounding** of a value it had been handed —
+    `0.5833` where the input said `0.5833333333333333333333333333`. The four answers that passed
+    were the ones that copied all twenty-eight digits, which is prose nobody wants to read. The
+    contract was rewarding unreadable output and calling readable output a fabrication.
+
+    **The repair belongs here rather than in the validator.** Accepting roundings there would widen
+    what counts as a permitted number; rounding here narrows what the model is ever asked to
+    reproduce, and `allowed_number_set` derives itself from this same serialization, so the two stay
+    consistent for free. The validator remains exactly as strict as it was.
+
+    Nothing about a decision changes: the rules already ran at full precision, and this value is
+    shown to an explainer describing a verdict that has already been reached.
+
+    Significant digits rather than decimal places, because the readings span very different scales:
+    a drawdown near 0.0003 and a ratio near 0.76 both need to survive.
+    """
+    if value == 0:
+        return Decimal(0)
+    quantum = Decimal(1).scaleb(value.adjusted() - (READING_SIGNIFICANT_DIGITS - 1))
+    rounded = value.quantize(quantum, rounding=ROUND_HALF_UP)
+    # Counts read better whole: `used_candle_count` should reach the model as 12, never as 12.00.
+    if rounded == rounded.to_integral_value():
+        return rounded.to_integral_value()
+    return rounded
 
 
 def _decimal_or_none(token: str) -> Decimal | None:

@@ -14,8 +14,15 @@ surface that has to stay honest did not double.
 setting that quietly stops working is worse than one that fails loudly.
 **A model is not adopted because it answered; it is adopted because it passed.**
 `scripts/evaluate_explanations.py` reports the share of answers the Phase 8A validator accepted
-and a histogram of why it rejected the rest. `UNKNOWN_NUMBER` means the model invents figures —
-no amount of prompt work makes that acceptable. See `docs/phase8d-verification-report.md`.
+and a histogram of why it rejected the rest. The first run said 20% accepted, 16 of
+20 rejected as `UNKNOWN_NUMBER` — and **every one of those numbers was a correct rounding of a
+value the model had been given**. The contract was serialising `Decimal` at 28 digits, so the
+only answers that passed were the unreadable ones. Rounding the readings at the source took it
+to **85%**, with the validator untouched.
+**When a check fires on almost everything, suspect the check before the thing being checked.**
+And repair at the source rather than in the validator: rounding narrows what the model is asked
+to reproduce, whereas accepting roundings would have widened what counts as permitted.
+See `docs/phase8d-verification-report.md`.
 Phase 9C-1 built the forward outcome ledger, taken **before 9B** because delivery has nothing worth
 delivering. On every closed window the worker fixes the levels for **both directions** and stores
 them with the pipeline's verdict; a separate later tick settles the outcome from candles that
