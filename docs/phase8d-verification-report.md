@@ -90,10 +90,57 @@ with one line saying why there is no explanation. On a small CPU model that path
 | local provider with a key configured | no `Authorization` header |
 | openai provider | `Authorization: Bearer …` still sent |
 
-## Against a real model
+## Against a real model — and the measurement immediately indicted us, not it
 
-*Pending: LM Studio was not yet listening on port 1234 when the code landed. This section records
-the model, the acceptance rate, the rejection histogram and the latency spread once measured.*
+`openai/gpt-oss-20b` served by LM Studio on the local network. Twenty EURUSD M15 windows spread
+across fourteen days, traded candles only.
+
+| | |
+| --- | ---: |
+| windows asked | 20 |
+| answered | 20 |
+| **accepted** | **4 (20.0%)** |
+| rejected, all for the same reason | 16 × `UNKNOWN_NUMBER` |
+| seconds — median / p90 / max | 3.5 / 4.3 / 4.5 |
+
+Latency is a non-issue: this model answers in under five seconds, comfortably inside the 20 second
+budget. The 20% acceptance rate looks damning. **It is not a verdict on the model.**
+
+`UNKNOWN_NUMBER` was supposed to mean "the model invented a figure". Here it meant the opposite:
+
+| the model wrote | what it was given |
+| --- | --- |
+| `0.5833` | `0.5833333333333333333333333333` |
+| `0.0003477` | `0.0003476567932137393964678069809` |
+| `0.7687` | `0.7687338501291989664082687337` |
+
+**Every rejected number is a correct rounding of a number the model was handed.** It invented
+nothing. And the four answers that *were* accepted are the ones where it copied twenty-eight digits
+verbatim — text no human would want to read.
+
+So the contract as it stands **rewards unreadable output and punishes readable output**, and the
+headline number measures our serialization rather than the model's honesty. `ExplanationInput`
+serialises `Decimal` at full precision, `allowed_number_set` derives the permitted set from that
+serialization, and the validator compares exactly.
+
+The fix belongs at the source rather than in the validator: round the readings when the input is
+built, so the model is shown `0.5833` and can quote it exactly. **The validator stays exactly as
+strict** — loosening it to accept roundings would widen what counts as a permitted number, whereas
+rounding the input narrows what the model is ever asked to reproduce. Deliberately not done in this
+slice: it changes a Phase 8A contract that nothing else has needed to change, and it deserves its
+own before-and-after measurement on the same twenty windows.
+
+That is what the script was built for. Nobody would have found this by reading `/explain` output a
+few times and forming an impression.
+
+### One operational note
+
+The first run of twenty produced eighteen `ProviderUnsupportedRequestError`s and two answers. A
+single request sent immediately afterwards succeeded, and a re-run answered all twenty. LM Studio
+unloads an idle model and returns 4xx while reloading it; the evaluation script runs with retries
+off on purpose, so a reload shows up as a failed window rather than being hidden by a retry. Warm
+the model before measuring, and read a burst of 4xx at the start of a run as "the server was still
+loading" rather than as a property of the model.
 
 ## What this does not change
 
@@ -103,6 +150,15 @@ the model, the acceptance rate, the rejection histogram and the latency spread o
 - **Not the delivery gate.** `EXPLANATION_DELIVERY_ENABLED` is still separate and still off by
   default: a provider may exist and still not be allowed to answer a user.
 - **Nothing about direction, the ledger, or trading.** This is the explanation layer only.
+
+## The next slice this measurement earned
+
+**Round the readings when the explanation input is built.** Currently a `Decimal` reaches the model
+at twenty-eight significant digits, so the only answers that pass are the ones that copy them
+verbatim. Rounding at `build_explanation_input` would make the prose readable *and* make the
+validator's strictness meaningful, without relaxing a single check. Re-run
+`scripts/evaluate_explanations.py` over the same twenty windows afterwards: if the acceptance rate
+does not move sharply, the diagnosis was wrong and the model really does invent figures.
 
 ## Noted while reading, not fixed here
 
