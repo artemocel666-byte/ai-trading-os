@@ -320,8 +320,11 @@ non-actionable and without any signal, AI, or execution behavior.
     `docs/phase9c2-verification-report.md`. Asked retrospectively over six months rather than
     waiting weeks for the ledger, because a retrospective test is biased in favour of the rules
     and can therefore disconfirm cheaply. Only three of the eleven rules claim anything about
-    the market; the other eight are plumbing or dead. **The four measurement runs are still
-    outstanding** — the Docker engine stopped before they could be made.
+    the market; the other eight are plumbing or dead. **Verdict: all three failed.** Largest edge
+    across four series 2.78 points, negative; `session_name_allowed` flat at -1.01/+0.04/-0.16/
+    -0.48 with 1,000-4,700 windows on the rejected side. Two of the three fire on 2-5% of
+    windows by calibration and could not have partitioned anything: the 1-10% corridor optimises
+    rarity, which is now measured and unrelated to outcomes.
   - Beyond 9C-2: the ledger remains the unbiased confirmation of whatever survives, and
     presenting base rates to a person as context is the slice after that.
   - `REAL_TRADING_ENABLED` stays `False` permanently; no broker order API is ever added.
@@ -391,6 +394,13 @@ thing this history can no longer provide.
 `FORWARD_OUTCOME_RECORDING_ENABLED=true` and the worker runs. The next task is therefore not code —
 it is letting it run long enough to hold a sample worth reading. About 240 rows a day on the two
 EURUSD series the worker already ingests.
+
+**After 9C-2 the open list changed shape.** The eleven rules are a data-quality gate plus three
+measurements that do not predict anything, so there is currently no basis for telling a person
+what usually follows a window like theirs. The next tests, in order: sweep a field's threshold
+against outcomes rather than against firing rate; and check whether the volatility band selects
+windows that resolve *at all*, which the timeout figures hint at and which needs its own
+pre-registered criteria.
 
 Still open and unchanged: spread data, without which every outcome stays gross and no result can be
 shown to survive costs.

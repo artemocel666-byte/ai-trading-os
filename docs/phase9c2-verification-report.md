@@ -84,21 +84,88 @@ Two validators exist to stop a partitioning bug from reaching a report and looki
 pooled statistics must contain exactly twice the window count, and a report cannot claim more
 eligible windows than it measured.
 
-## The measurement itself — outstanding
+## The harness agrees with the published baseline
 
-**Not yet run.** The Docker engine stopped before the four series could be measured, and this
-section is left named rather than quietly absent. Required:
+Run first, before anything was read. `scripts/measure_outcomes.py` over the same 180 days of EURUSD
+M15 gives **LONG 38.67% / SHORT 44.24%** against the 38.50% / 44.38% published in 9A-7. The window
+has slid three days forward since that report, which is the size of difference three days of new
+data at one end and three dropped at the other should produce. Pooled 41.4% either way, and
+`evaluate_rule_value.py` reports 41.39% over its eligible subset. The two paths agree.
 
-```
-scripts/evaluate_rule_value.py --pair EURUSD --timeframe M15 --days 180 --exclude-closed-market
-scripts/evaluate_rule_value.py --pair EURUSD --timeframe H1  --days 180 --exclude-closed-market
-scripts/evaluate_rule_value.py --pair NOKSEK --timeframe M15 --days 180 --exclude-closed-market
-scripts/evaluate_rule_value.py --pair NOKSEK --timeframe H1  --days 180 --exclude-closed-market
-```
+## The result: all three rules fail, and it is not close
 
-Before reading any of it: the pooled figures over EURUSD M15 must reproduce the 9A-7 baseline
-(LONG 38.50% / SHORT 44.38%, pooled 41.4%). If they do not, the harness disagrees with the published
-baseline and that is the first thing to fix — not the rules.
+`target_first_edge` in percentage points — passed minus failed, both directions pooled:
+
+| rule | EURUSD M15 | EURUSD H1 | NOKSEK M15 | NOKSEK H1 |
+| --- | ---: | ---: | ---: | ---: |
+| `market_context.volatility_ratio` | +2.41 | +0.44 | **−0.92** | +0.37 |
+| `market_context.max_close_excursion_atr` | **−1.00** | **−1.67** | **−2.78** | +1.70 |
+| `time_filter.session_name_allowed` | **−1.01** | +0.04 | **−0.16** | **−0.48** |
+
+**Not one rule meets even the sign-consistency criterion, let alone the five-point bar.** The
+largest magnitude anywhere in the table is 2.78 points and it is *negative*: on NOKSEK M15, windows
+`max_close_excursion_atr` rejected reached a target **more** often than the ones it accepted.
+
+Eligible populations were 11,589 / 2,701 / 11,638 / 2,702 windows — 98.4–98.9% of all measured
+windows, so nothing here rests on a thin sample of the accepted side.
+
+### `session_name_allowed` is cleanly disproved
+
+It is the only one of the three with real statistical power: it splits the data roughly 60/40, so
+each comparison rests on 1,000–4,700 windows *on the rejected side*. Its edges are −1.01, +0.04,
+−0.16, −0.48. That is as close to nothing as data gets.
+
+**Which session a window falls in does not predict whether it resolves.** The rule fires on ~40% of
+windows, was flagged in the open questions as "the severity is the question, not the threshold", and
+now has no measured value at either severity.
+
+### The other two could barely have separated anything
+
+`volatility_ratio` and `max_close_excursion_atr` were calibrated to fire on **1–10% of windows** —
+that corridor is the acceptance criterion 7D-2 introduced and 9A-6 and 9A-8 upheld. A rule that
+rejects 2–5% of windows cannot partition a population, whatever the field underneath it is worth.
+
+So this is two findings, and the second is the larger:
+
+1. These rules, at these thresholds, do not separate outcomes.
+2. **They were never calibrated to.** The corridor optimises for *rarity*, and rarity was never
+   connected to usefulness by anything but assumption. Every threshold in this project was tuned to
+   a target that has now been measured and found unrelated to what happens next.
+
+That reframes 9A-8's headline result too. `max_close_excursion_atr` transferring untouched across
+instruments — 2.86%/2.19% against 3.43%/2.56% — was real, and it was a statement about **firing
+rate consistency**, not about value. A threshold can be perfectly portable and still describe
+nothing. Portability was worth establishing; it was never evidence of usefulness, and the report
+should not have been read as if it were.
+
+## One observation that is not a finding
+
+`timeout_edge` for `volatility_ratio` is positive on all four series: +3.96, +4.84, +12.21, +6.50.
+Windows the band accepted timed out less often than the ones it rejected, consistently, and on
+NOKSEK M15 by twelve points.
+
+**This was not the pre-registered metric and is not being claimed as a result.** Switching to the
+metric that happened to look good after seeing the data is exactly the failure this project has
+guarded against since 9A-3. It is recorded as a hypothesis for a future test with its own criteria
+fixed in advance: *does the volatility band select windows that resolve at all, even though it does
+not select windows that resolve to target?*
+
+## What this does and does not settle
+
+- **It settles that the three market-facing rules do not select windows that resolve to target
+  more often.** The test was biased in their favour — the thresholds were fitted on this history —
+  and they failed anyway. That is the disconfirming direction, and it is conclusive.
+- **It settles that "fires on 1–10% of windows" was the wrong calibration target**, or at least an
+  unexamined one.
+- **It does not condemn the data-quality rules.** They are excluded by design: they judge our
+  ingestion, not the market, and 98.7% of windows pass them.
+- **It does not say the underlying fields are worthless.** Volatility as a continuous quantity may
+  separate outcomes even though a binary cut that accepts 98% of windows does not. Sweeping the
+  threshold against outcomes rather than against firing rate is the obvious next test.
+- **It has a direct product consequence.** The "context rather than advice" reframe rests on being
+  able to tell a person what usually follows windows like this one. On this evidence the rules do
+  not define a "like this one" that predicts anything, so base rates conditioned on the pipeline's
+  verdict would be flat. There would be nothing to say.
 
 ## Explicitly not in this slice
 

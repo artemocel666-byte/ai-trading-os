@@ -15,6 +15,17 @@ directional claim can be read out of the comparison.
 this history, so separation proves self-consistency; failure to separate on the data a rule was
 tuned on leaves it no case. Criteria fixed before the run: >=5 п.п., same sign on all four
 series, and it must hold on NOKSEK where nothing was fitted.
+**All three failed, and not narrowly.** The largest edge anywhere across four series is 2.78
+points and it is *negative*. `session_name_allowed` — the only one with real power, splitting
+the data 60/40 — came in at -1.01, +0.04, -0.16, -0.48: which session a window falls in does
+not predict whether it resolves.
+**The deeper finding is why they could not have separated anything.** `volatility_ratio` and
+`max_close_excursion_atr` were calibrated to the 1-10% firing corridor, so they reject 2-5% of
+windows and cannot partition a population. **Every threshold in this project was tuned to
+rarity, and rarity has now been measured and found unrelated to what happens next.** That also
+reframes 9A-8: a threshold transferring across instruments was a statement about firing-rate
+consistency, never about value.
+**Calibrate a threshold against the outcome you care about, not against how often it fires.**
 See `docs/phase9c2-verification-report.md`.
 Phase 8D let a model on this machine answer `/explain`, and made it measurable whether one can.
 **LM Studio, Ollama, llama.cpp and vLLM all serve the same `/v1/chat/completions` as OpenAI**, so
