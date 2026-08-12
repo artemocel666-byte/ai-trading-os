@@ -2,7 +2,21 @@
 
 AI Trading OS is a foundation for a future Forex analysis and paper-trading platform.
 
-Current project phase: phase_9c2_rule_value_foundation.
+Current project phase: phase_9c3_field_outcome_profile_foundation.
+Phase 9C-3 asked whether the *fields* carry what the rules' cuts throw away. **They do not.**
+Four fields x four series, bucketed by decile — no threshold chosen, so nothing could be fitted —
+and all thirty-two readings come in under four points with signs flipping between series. This
+null has no in-sample caveat, so it closes more than 9C-2 did: these summary statistics of a
+twelve-candle window do not order what the next twenty-four candles do. `move_efficiency`, built
+in 9A-3 and never measured until now, is the flattest of the four.
+**What moved was timeouts.** `volatility_ratio` predicts whether a window resolves at all —
+23% to 6% across deciles, same shape on both instruments. It is volatility clustering, correctly
+reproduced. **And it does not pay:** target share is flat in those same deciles, so a lively
+window settles the same coin flip sooner, paying a spread each time.
+**Fixing the metric first is what made that legible.** Chosen after the data, the sixteen-point
+spread would have been the headline and the flat target share a footnote. Pre-registration did
+not just prevent a false claim — it identified which of two real numbers matters.
+See `docs/phase9c3-verification-report.md`.
 Phase 9C-2 crosses the two halves that had never been crossed: `replay_rules.py` knew how often
 each rule fires, `measure_outcomes.py` knew what happened after a window, and neither knew the
 other. **Of the eleven rules, only three make a claim about the market** —

@@ -325,8 +325,13 @@ non-actionable and without any signal, AI, or execution behavior.
     -0.48 with 1,000-4,700 windows on the rejected side. Two of the three fire on 2-5% of
     windows by calibration and could not have partitioned anything: the 1-10% corridor optimises
     rarity, which is now measured and unrelated to outcomes.
-  - Beyond 9C-2: the ledger remains the unbiased confirmation of whatever survives, and
-    presenting base rates to a person as context is the slice after that.
+  - 9C-3: the field against the outcome — **completed 2026-08-11**, see
+    `docs/phase9c3-verification-report.md`. Deciles rather than a swept cut, so no parameter
+    could be fitted. All four fields flat on target share across four series; `move_efficiency`
+    measured for the first time and flattest of all. `volatility_ratio` predicts timeouts
+    strongly (23% to 6%) and target share not at all — motion is not profit.
+  - Beyond 9C-3: the ledger remains the unbiased confirmation of anything that survives. Nothing
+    has survived yet, so there is currently no base rate worth presenting to a person.
   - `REAL_TRADING_ENABLED` stays `False` permanently; no broker order API is ever added.
 
 ## Explicit Non-Goals

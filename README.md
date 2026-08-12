@@ -4,7 +4,13 @@ AI Trading OS is a safety-first foundation for a future modular Forex analysis a
 
 ## Current Status
 
-- Current project phase: phase_9c2_rule_value_foundation.
+- Current project phase: phase_9c3_field_outcome_profile_foundation.
+- Phase 9C-3 profiled four descriptive fields against outcomes by decile — no threshold chosen,
+  so nothing could be fitted. **All four are flat**: thirty-two readings under four points with
+  signs flipping between series. `volatility_ratio` does strongly predict whether a window
+  resolves at all (23% to 6% timeouts across deciles), but target share is flat in those same
+  deciles — motion, not direction, and motion is not profit.
+  Read-only, `scripts/profile_field_outcomes.py`.
 - Phase 9C-2 asks whether the rules earn their place: for each rule that claims something about
   the market, what happened after the windows it passed against the windows it failed. Only
   three of the eleven rules make such a claim; the other eight are data-quality checks or are
