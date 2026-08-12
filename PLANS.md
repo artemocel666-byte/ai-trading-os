@@ -316,8 +316,14 @@ non-actionable and without any signal, AI, or execution behavior.
     `measure_outcome`.
   - 9B: Telegram signal delivery — the first user-visible LONG/SHORT output in the project. Still
     blocked by the absence of anything worth delivering, not by a task.
-  - 9C-2 and beyond: reading the ledger once it holds a sample — including the question the eleven
-    rules have never been asked, whether windows they accept resolve better than windows they block.
+  - 9C-2: do the rules earn their place — **machinery completed 2026-08-11**, see
+    `docs/phase9c2-verification-report.md`. Asked retrospectively over six months rather than
+    waiting weeks for the ledger, because a retrospective test is biased in favour of the rules
+    and can therefore disconfirm cheaply. Only three of the eleven rules claim anything about
+    the market; the other eight are plumbing or dead. **The four measurement runs are still
+    outstanding** — the Docker engine stopped before they could be made.
+  - Beyond 9C-2: the ledger remains the unbiased confirmation of whatever survives, and
+    presenting base rates to a person as context is the slice after that.
   - `REAL_TRADING_ENABLED` stays `False` permanently; no broker order API is ever added.
 
 ## Explicit Non-Goals

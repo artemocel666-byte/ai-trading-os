@@ -2,7 +2,20 @@
 
 AI Trading OS is a foundation for a future Forex analysis and paper-trading platform.
 
-Current project phase: phase_8d_local_explainer_foundation.
+Current project phase: phase_9c2_rule_value_foundation.
+Phase 9C-2 crosses the two halves that had never been crossed: `replay_rules.py` knew how often
+each rule fires, `measure_outcomes.py` knew what happened after a window, and neither knew the
+other. **Of the eleven rules, only three make a claim about the market** —
+`volatility_ratio`, `max_close_excursion_atr`, `session_name_allowed` — and all three are
+WARNING, so the pipeline's headline verdict is almost entirely a verdict about our own data
+quality. Windows are eligible only when every plumbing rule passed, so the two groups a market
+rule is judged on differ in one thing: that rule's verdict. Both directions are pooled, so no
+directional claim can be read out of the comparison.
+**The test is biased in favour of the rules and can only disconfirm.** Thresholds were fitted on
+this history, so separation proves self-consistency; failure to separate on the data a rule was
+tuned on leaves it no case. Criteria fixed before the run: >=5 п.п., same sign on all four
+series, and it must hold on NOKSEK where nothing was fitted.
+See `docs/phase9c2-verification-report.md`.
 Phase 8D let a model on this machine answer `/explain`, and made it measurable whether one can.
 **LM Studio, Ollama, llama.cpp and vLLM all serve the same `/v1/chat/completions` as OpenAI**, so
 the 8B adapter was *generalised* rather than copied: `ChatCompletionsExplanationAdapter` takes a

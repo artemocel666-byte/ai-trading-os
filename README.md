@@ -4,7 +4,11 @@ AI Trading OS is a safety-first foundation for a future modular Forex analysis a
 
 ## Current Status
 
-- Current project phase: phase_8d_local_explainer_foundation.
+- Current project phase: phase_9c2_rule_value_foundation.
+- Phase 9C-2 asks whether the rules earn their place: for each rule that claims something about
+  the market, what happened after the windows it passed against the windows it failed. Only
+  three of the eleven rules make such a claim; the other eight are data-quality checks or are
+  dead. Read-only, `scripts/evaluate_rule_value.py`. The four measurement runs are outstanding.
 - Phase 8D added a local explainer: `/explain` can be answered by a model running on your own
   machine instead of OpenAI, over the same chat-completions protocol and held to the same
   Phase 8A contract. One switch chooses — `EXPLANATION_PROVIDER=disabled|openai|local` — and a

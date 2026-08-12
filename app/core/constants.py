@@ -1,4 +1,4 @@
-PROJECT_PHASE = "phase_8d_local_explainer_foundation"
+PROJECT_PHASE = "phase_9c2_rule_value_foundation"
 STRATEGY_IMPLEMENTED = False
 REAL_TRADING_ENABLED = False
 

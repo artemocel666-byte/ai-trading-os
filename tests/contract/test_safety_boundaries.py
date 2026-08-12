@@ -2827,3 +2827,40 @@ def test_phase8d_the_evaluation_cli_cannot_print_unchecked_text() -> None:
 
     assert "explain_validated" in called
     assert "explain" not in called
+
+
+PHASE_9C2_RULE_VALUE_MODULE = Path("app/domain/rule_value.py")
+PHASE_9C2_RULE_VALUE_CLI = Path("scripts/evaluate_rule_value.py")
+
+
+def test_phase9c2_rule_value_module_touches_no_other_layer() -> None:
+    import_lines = tuple(
+        line
+        for line in PHASE_9C2_RULE_VALUE_MODULE.read_text(encoding="utf-8").lower().splitlines()
+        if line.startswith("import ") or line.startswith("from ")
+    )
+
+    for term in ("app.persistence", "app.adapters", "app.telegram", "app.api", "app.scheduler"):
+        assert not any(term in line for line in import_lines), term
+
+
+def test_phase9c2_rule_value_cli_writes_nothing() -> None:
+    """Crossing verdicts with outcomes is a read. It may not touch storage or write a file."""
+    source = PHASE_9C2_RULE_VALUE_CLI.read_text(encoding="utf-8")
+
+    for forbidden in ("upsert", "add_missing", "apply_outcomes", "commit()", "write_text"):
+        assert forbidden not in source, forbidden
+
+
+def test_phase9c2_rule_value_reads_no_direction_out_of_the_comparison() -> None:
+    """Both directions are pooled, so no directional claim can be read out of this measurement.
+
+    The question is whether a window *moved cleanly*, not which way. A per-direction breakdown here
+    would be a direction arrived at by accident, which is what Phase 9A forbade.
+    """
+    source = PHASE_9C2_RULE_VALUE_MODULE.read_text(encoding="utf-8")
+
+    assert "direction_candidate" not in source
+    assert "propose_direction" not in source
+    # The pooling itself: outcomes go in as a group per window, never split into named sides.
+    assert "outcome for observation in" in source
