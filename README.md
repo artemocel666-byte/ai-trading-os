@@ -4,7 +4,17 @@ AI Trading OS is a safety-first foundation for a future modular Forex analysis a
 
 ## Current Status
 
-- Current project phase: phase_9c3_field_outcome_profile_foundation.
+- Current project phase: phase_9c4_execution_cost_foundation.
+- Phase 9C-4 put a cost axis under every outcome figure. The cost is **assumed, not observed** —
+  nothing was ingested, and a safety test keeps an assumed cost out of the services and persistence
+  layers so the forward ledger keeps recording gross outcomes. A round-trip cost moves both levels
+  with the trade and leaves the distance between them alone, so only the odds change and every
+  figure stays comparable to the gross ones. **No cost is small enough:** all four series are below
+  the 42.86% break-even before anything is charged. **The project's own bar for a finding — five
+  points of target share — is worth about 0.15 average candle ranges of cost**, consistently across
+  four series, which means a candidate would have to clear roughly 6.5 points above the base rate
+  on EURUSD M15 merely to be level. Two pre-registered claims were refuted, one of them correcting
+  the reasoning published in 9C-3. Read-only, `scripts/profile_execution_cost.py`.
 - Phase 9C-3 profiled four descriptive fields against outcomes by decile — no threshold chosen,
   so nothing could be fitted. **All four are flat**: thirty-two readings under four points with
   signs flipping between series. `volatility_ratio` does strongly predict whether a window
@@ -607,8 +617,10 @@ prices and not their order; that window is `AMBIGUOUS` and counts against the pl
 resolved the flattering way. On six months of EURUSD it is 2–4% of the sample, which is why the rest
 of the numbers are usable.
 
-**Every figure is gross of costs** — the project stores no spread — and the script says so under every
-table.
+**Every figure is gross of costs by default** — the project stores no spread — and the script says so
+under every table. Since Phase 9C-4 a cost can be *assumed* with `--cost-price`, and
+`scripts/profile_execution_cost.py` sweeps a pre-registered grid of them rather than picking one. An
+assumed cost is a parameter of a report and is never stored; a safety test enforces that.
 
 The baseline, EURUSD over 180 days at the Phase 9A defaults: 38.4% of resolved M15 windows reached the
 target first going LONG, 43.1% going SHORT. The gap is drift in the sample, not skill, which is

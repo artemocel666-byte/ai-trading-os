@@ -16,8 +16,10 @@ Three honesties are built into the shape of the result rather than left to a rep
   `WindowOutcome.conservative_kind`. Resolving it the flattering way is how a backtest lies.
 - **Not resolving is a kind too.** A window where neither level was touched inside the horizon is
   `TIMEOUT`, never quietly dropped and never counted as a loss.
-- **Outcomes are gross.** The project stores OHLC and no spread, so nothing here can subtract a
-  cost. Real results are worse on both sides, and the report says so instead of implying an edge.
+- **Outcomes are gross by default.** The project stores OHLC and no spread, so no cost can be
+  *observed* here. Phase 9C-4 added `cost` so one can be *assumed*, and the difference is the whole
+  point: a cost passed in is a parameter of a report, never a measurement, and it is never stored
+  beside an observed candle. A safety test keeps it out of the services and persistence layers.
 
 Entry is assumed filled at the entry-band midpoint on the first forward candle — a market entry at
 the anchor. Waiting for a pullback into the band is a strategy decision, and this module has no
@@ -42,19 +44,39 @@ def measure_outcome(
     forward_candles: Sequence[Candle],
     *,
     horizon_candles: int = DEFAULT_HORIZON_CANDLES,
+    cost: Decimal = Decimal("0"),
 ) -> WindowOutcome:
     """Which of the plan's levels the price reached first, over the candles after `as_of`.
 
     `forward_candles` must be ordered oldest first and must contain only candles strictly after the
     moment the plan was built — this module cannot check that, and the caller that slices history
     is the one place where the future/past boundary is visible.
+
+    `cost` is a round-trip execution cost in price units, paid once: a long fills at the ask and
+    exits at the bid, a short the reverse. Its effect is derived rather than fudged. In mid-price
+    terms a long nets the intended gain only once the mid reaches `target + cost`, and has already
+    lost the intended amount once the mid reaches `stop + cost`, so **both levels move by `+cost`**;
+    for a short both move by `-cost`. Note what that does *not* change: the distance between stop
+    and target, and therefore the payoff of a win or a loss. The entire effect of a spread lands on
+    the probability of reaching the target, which is the quantity `target_first_share` reports — so
+    a cost-adjusted figure stays directly comparable to every gross figure the project has
+    published, break-even included.
     """
     if horizon_candles < 1:
         raise ValueError("horizon_candles must be at least one candle")
+    if cost < 0:
+        # A negative cost is a rebate. Nothing here models one, and allowing it would let a caller
+        # improve a result by describing a market that pays for the privilege of filling an order.
+        raise ValueError("cost must not be negative")
 
     entry_price = (plan.entry_min + plan.entry_max) / Decimal(2)
-    target = plan.take_profit_1
-    stop = plan.stop_loss
+    shift = cost if direction == SignalDirection.LONG else -cost
+    target = plan.take_profit_1 + shift
+    stop = plan.stop_loss + shift
+    if target <= 0 or stop <= 0:
+        # Only reachable with a cost of the same order as the price itself. Refused rather than
+        # clamped: a level at zero is not a cheaper version of the plan, it is a different one.
+        raise ValueError("cost must not drive a level to zero or below")
 
     kind = OutcomeKind.NO_DATA
     bars_to_resolution: int | None = None

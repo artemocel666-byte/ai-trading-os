@@ -57,6 +57,15 @@ def _parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--stop-multiplier", type=Decimal, default=None)
     parser.add_argument("--target-multiplier", type=Decimal, default=None)
+    parser.add_argument(
+        "--cost-price",
+        type=Decimal,
+        default=Decimal("0"),
+        help=(
+            "assumed round-trip execution cost in price units; zero by default, and assumed rather "
+            "than observed — scripts/profile_execution_cost.py sweeps it properly"
+        ),
+    )
     parser.add_argument("--format", choices=("text", "json"), default="text")
     parser.add_argument(
         "--exclude-closed-market",
@@ -168,7 +177,13 @@ async def _main() -> int:
                     skipped[direction] += 1
                     continue
                 outcomes[direction].append(
-                    measure_outcome(direction, plan, forward, horizon_candles=args.horizon_candles)
+                    measure_outcome(
+                        direction,
+                        plan,
+                        forward,
+                        horizon_candles=args.horizon_candles,
+                        cost=args.cost_price,
+                    )
                 )
     except ValueError as error:
         print(f"Measurement could not run: {error}")
@@ -192,7 +207,8 @@ async def _main() -> int:
                     "windows_without_a_plan": {
                         direction.value: count for direction, count in skipped.items()
                     },
-                    "gross_of_costs": True,
+                    "assumed_cost": str(args.cost_price),
+                    "gross_of_costs": args.cost_price == 0,
                     "statistics": {
                         direction.value: _statistics_payload(item)
                         for direction, item in statistics.items()
@@ -220,10 +236,16 @@ async def _main() -> int:
     if any(skipped.values()):
         detail = ", ".join(f"{key.value}={count}" for key, count in skipped.items())
         print(f"\nWindows with no plan (flat or incomplete): {detail}")
-    print(
-        "\nGross of costs: the project stores OHLC and no spread, so every figure above ignores "
-        "the spread paid on entry and exit. Real results are worse."
-    )
+    if args.cost_price == 0:
+        print(
+            "\nGross of costs: the project stores OHLC and no spread, so every figure above "
+            "ignores the spread paid on entry and exit. Real results are worse."
+        )
+    else:
+        print(
+            f"\nAt an assumed round-trip cost of {args.cost_price} in price units. The cost is "
+            "assumed, not observed, and is a parameter of this report rather than data."
+        )
     print(
         "'target%' is the share of resolved windows that reached the target first, with every "
         "ambiguous window counted against the plan."

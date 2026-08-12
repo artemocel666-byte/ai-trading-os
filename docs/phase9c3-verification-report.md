@@ -84,9 +84,20 @@ facts about price series. Our data reproduces it, which is a good sign about the
 | NOKSEK H1 | 41.59% | 41.23% |
 
 Break-even is 42.86%. A high-volatility window resolves *sooner*, and resolves to the protective
-level just as readily as to the target. **Resolving faster at a coin-flip hit rate is not an
-advantage — it is the same wager settled more often, and every settlement pays a spread.** Gross of
-costs it is neutral; net of costs it is worse.
+level just as readily as to the target. Gross of costs it is neutral.
+
+> **Correction, 2026-08-12 (Phase 9C-4).** This paragraph originally continued: *"Resolving faster
+> at a coin-flip hit rate is not an advantage — it is the same wager settled more often, and every
+> settlement pays a spread."* The reasoning is wrong. Per window the cost is paid once whichever
+> decile the window lands in, and 9C-4 measured the handicap across these deciles at −6.72 against
+> −6.22 points on EURUSD M15, with the four series' differences all under two points and their signs
+> flipping. **The cost handicap is uniform here**, because `volatility_ratio` is a ratio and is
+> therefore nearly scale-free, while how much a fixed cost hurts depends on a window's ATR. The
+> frequency argument would need a strategy that re-enters, and this project has none.
+>
+> The conclusion below stands and is now better supported than the argument that was offered for it:
+> target share is flat in these deciles gross *and* under cost. See
+> `docs/phase9c4-verification-report.md`.
 
 ### The discipline is what made this legible
 

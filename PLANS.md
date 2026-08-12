@@ -330,8 +330,18 @@ non-actionable and without any signal, AI, or execution behavior.
     could be fitted. All four fields flat on target share across four series; `move_efficiency`
     measured for the first time and flattest of all. `volatility_ratio` predicts timeouts
     strongly (23% to 6%) and target share not at all — motion is not profit.
-  - Beyond 9C-3: the ledger remains the unbiased confirmation of anything that survives. Nothing
-    has survived yet, so there is currently no base rate worth presenting to a person.
+  - 9C-4: execution cost against outcomes — **completed 2026-08-12**, see
+    `docs/phase9c4-verification-report.md`. A cost is now an axis on every outcome measurement,
+    assumed rather than observed and swept over a pre-registered grid; a safety test keeps an
+    assumed cost out of `app/services` and `app/persistence` so the 9C-1 ledger stays gross.
+    **No cost is small enough** — all four series are below the 42.86% break-even at zero cost.
+    The five-point bar for a finding is worth **0.15 average candle ranges** (0.153/0.163/0.134/
+    0.147), so a candidate needs about 6.5 points over the base rate on EURUSD M15 to be level.
+    Two pre-registered claims refuted; one of them corrects the reasoning published in 9C-3.
+  - Beyond 9C-4: the ledger remains the unbiased confirmation of anything that survives. Nothing
+    has survived yet, so there is currently no base rate worth presenting to a person. The one
+    measurement 9C-4 names as earned: bucket windows by `cost / ATR`, the only quantity shown to
+    order cost sensitivity and comparable across instruments even though ATR alone is not.
   - `REAL_TRADING_ENABLED` stays `False` permanently; no broker order API is ever added.
 
 ## Explicit Non-Goals
@@ -407,8 +417,15 @@ against outcomes rather than against firing rate; and check whether the volatili
 windows that resolve *at all*, which the timeout figures hint at and which needs its own
 pre-registered criteria.
 
-Still open and unchanged: spread data, without which every outcome stays gross and no result can be
-shown to survive costs.
+~~Still open and unchanged: spread data, without which every outcome stays gross and no result can be
+shown to survive costs.~~ — **retired in that form on 2026-08-12 by 9C-4.** Costs are now an axis on
+every outcome measurement, assumed rather than observed and swept over a pre-registered grid, and
+the answer is that **no cost is small enough**: all four series sit below break-even before anything
+is charged. The five-point bar this project uses to call a field informative is worth about **0.15
+average candle ranges** of execution cost, so a candidate must clear roughly 6.5 points above the
+base rate on EURUSD M15 merely to be level. What replaces the open item is narrower: observing a
+real spread is worth doing when a candidate exists whose margin is close enough to 0.15 ATR for the
+precision to matter. None is. See `docs/phase9c4-verification-report.md`.
 
 Superseded planning note: **Phase 9A (`SignalContract` assembly and price levels) was the next task.** It is the first
 slice that computes an entry, a protective level, and a target — work deferred since Phase 4 — and

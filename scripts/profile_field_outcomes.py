@@ -78,6 +78,15 @@ def _parse_args() -> argparse.Namespace:
         action="store_true",
         help="measure only windows built entirely from traded candles",
     )
+    parser.add_argument(
+        "--cost-price",
+        type=Decimal,
+        default=Decimal("0"),
+        help=(
+            "assumed round-trip execution cost in price units, applied to every window; zero by "
+            "default, and assumed rather than observed — see scripts/profile_execution_cost.py"
+        ),
+    )
     parser.add_argument("--format", choices=("text", "json"), default="text")
     parser.add_argument("--database-url", default=None)
     return parser.parse_args()
@@ -139,9 +148,10 @@ def _print_profile(profile: FieldOutcomeProfile) -> None:
             f"{_share(decile.statistics.timeout_share):>9} "
             f"{_share(decile.statistics.ambiguous_share):>8}"
         )
+    # ASCII only: a Windows console defaults to cp1252 and raises on anything outside it.
     print(
-        f"  gradient (top decile - bottom): {_points(profile.gradient_edge)} п.п.   "
-        f"band (middle eight - extremes): {_points(profile.band_edge)} п.п."
+        f"  gradient (top decile - bottom): {_points(profile.gradient_edge)} points   "
+        f"band (middle eight - extremes): {_points(profile.band_edge)} points"
     )
 
 
@@ -195,7 +205,11 @@ async def _main() -> int:
                 if plan is None:
                     break
                 outcomes[direction] = measure_outcome(
-                    direction, plan, forward, horizon_candles=args.horizon_candles
+                    direction,
+                    plan,
+                    forward,
+                    horizon_candles=args.horizon_candles,
+                    cost=args.cost_price,
                 )
             if len(outcomes) != len(SignalDirection):
                 # Both directions or neither, so a bucket cannot be tilted toward whichever
@@ -230,7 +244,8 @@ async def _main() -> int:
                     "timeframe": timeframe.value,
                     "days": args.days,
                     "horizon_candles": args.horizon_candles,
-                    "gross_of_costs": True,
+                    "assumed_cost": str(args.cost_price),
+                    "gross_of_costs": args.cost_price == 0,
                     "profiles": [_profile_payload(profile) for profile in profiles],
                 },
                 indent=2,
@@ -238,7 +253,12 @@ async def _main() -> int:
         )
         return 0
 
-    print(f"Field profiles: {pair.value} {timeframe.value} over {args.days} days")
+    cost_note = (
+        "gross of costs"
+        if args.cost_price == 0
+        else f"at an assumed round-trip cost of {args.cost_price}"
+    )
+    print(f"Field profiles: {pair.value} {timeframe.value} over {args.days} days, {cost_note}")
     for profile in profiles:
         _print_profile(profile)
     print(

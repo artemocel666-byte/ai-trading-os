@@ -2,7 +2,30 @@
 
 AI Trading OS is a foundation for a future Forex analysis and paper-trading platform.
 
-Current project phase: phase_9c3_field_outcome_profile_foundation.
+Current project phase: phase_9c4_execution_cost_foundation.
+Phase 9C-4 puts a cost axis under every figure the project reports. Cost is **assumed, not
+observed** — no provider was added, and a safety test keeps an assumed cost out of `app/services`
+and `app/persistence`, so the 9C-1 ledger goes on holding gross outcomes. The formulation is
+derived rather than fudged: a round-trip cost moves both levels *with* the trade and leaves the
+distance between them alone, so a win still pays what it paid and the whole effect lands on
+`target_first_share` — which keeps every cost-adjusted number comparable to every gross one.
+**No cost is small enough.** All four series sit below the 42.86% break-even before anything is
+charged, so the tooling reports `ALREADY_BELOW_AT_ZERO` rather than interpolating a negative cost.
+To the precision six months affords, this is a driftless random walk and cost is what turns level
+into losing.
+**The bar is worth about 0.15 ATR.** The cost that eats the five-point edge 9C-2 and 9C-3 required
+before calling a field informative: 0.153, 0.163, 0.134, 0.147 of median ATR across four series —
+30 to 37 points of target share per average candle range of cost. **A candidate must now clear
+roughly 6.5 points above the base rate on EURUSD M15 just to be level.** Nothing measured in 9C-2
+or 9C-3 came within a third of that.
+**Two pre-registered claims were refuted, and both refutations were worth having.** One was written
+in price units and failed on H1 by the factor the timeframes' ATRs differ by — a breach of this
+guide's own standing rule about raw magnitudes, caught by running it as written. The other predicted
+that a fixed cost hurts quiet windows more; the handicap is uniform across `volatility_ratio`
+deciles, because a ratio is scale-free and cost sensitivity is a matter of scale. That takes the
+*reasoning* in 9C-3 with it — see the correction there — while leaving its conclusion better
+supported than the argument once offered for it.
+See `docs/phase9c4-verification-report.md`.
 Phase 9C-3 asked whether the *fields* carry what the rules' cuts throw away. **They do not.**
 Four fields x four series, bucketed by decile — no threshold chosen, so nothing could be fitted —
 and all thirty-two readings come in under four points with signs flipping between series. This
@@ -12,7 +35,9 @@ in 9A-3 and never measured until now, is the flattest of the four.
 **What moved was timeouts.** `volatility_ratio` predicts whether a window resolves at all —
 23% to 6% across deciles, same shape on both instruments. It is volatility clustering, correctly
 reproduced. **And it does not pay:** target share is flat in those same deciles, so a lively
-window settles the same coin flip sooner, paying a spread each time.
+window settles the same coin flip sooner. (**The reason given there was wrong** — 9C-4 measured the
+cost handicap as uniform across those deciles. The conclusion holds; see the correction in the 9C-3
+report.)
 **Fixing the metric first is what made that legible.** Chosen after the data, the sixteen-point
 spread would have been the headline and the flat target share a footnote. Pre-registration did
 not just prevent a false claim — it identified which of two real numbers matters.
@@ -398,8 +423,11 @@ real trading.
   Three reporting rules, each enforced by the shape of the result rather than by memory: a candle
   spanning both levels is `AMBIGUOUS` and counted in the denominator, never silently resolved the
   flattering way; an unresolved window is `TIMEOUT`, never dropped and never scored as a loss; shares
-  are `None` when nothing resolved, never a substituted zero. Every outcome is gross of costs — there
-  is no spread data — and any table quoting one must say so on the same page.
+  are `None` when nothing resolved, never a substituted zero. Every outcome is gross of costs by
+  default — there is no spread data — and any table quoting one must say so on the same page. Since
+  9C-4 a cost may be *assumed* via `measure_outcome(..., cost=...)`, in reporting scripts only: an
+  assumed cost is a parameter of a report, never data, and a safety test keeps it out of the
+  services and persistence layers so it can never be stored beside an observed candle.
   When comparing directions, compare against the baseline **for that direction**: the six-month
   EURUSD sample carries a drift of its own (SHORT ahead by 4.6 п.п. on M15 and 10.9 on H1 with no
   strategy at all), so a rule that always says SHORT would look clever for reasons that are not the

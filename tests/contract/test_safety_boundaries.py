@@ -56,6 +56,7 @@ from app.domain.entities.signal_contract import (
     SignalLifecycleStatus,
     SignalPricePlan,
 )
+from app.domain.execution_cost import break_even_share, build_cost_sensitivity_profile
 from app.domain.field_outcome_profile import build_field_outcome_profile
 from app.domain.manual_review_report_builder import ManualReviewReportBuilder
 from app.domain.outcome_measurement import measure_outcome
@@ -2910,3 +2911,83 @@ def test_phase9c3_both_directions_stay_pooled() -> None:
     assert "direction_candidate" not in source
     assert "propose_direction" not in source
     assert "outcome for observation in" in source
+
+
+PHASE_9C4_COST_MODULE = Path("app/domain/execution_cost.py")
+PHASE_9C4_COST_CLI = Path("scripts/profile_execution_cost.py")
+
+#: Every script allowed to assume a cost. All four are read-only reporting tools; nothing that runs
+#: on a timer or answers a user is on this list, and the test below is what keeps it that way.
+PHASE_9C4_COST_AWARE_SCRIPTS = (
+    PHASE_9C4_COST_CLI,
+    Path("scripts/profile_field_outcomes.py"),
+    Path("scripts/measure_outcomes.py"),
+)
+
+
+def test_phase9c4_cost_module_touches_no_other_layer() -> None:
+    import_lines = tuple(
+        line
+        for line in PHASE_9C4_COST_MODULE.read_text(encoding="utf-8").lower().splitlines()
+        if line.startswith("import ") or line.startswith("from ")
+    )
+
+    for term in ("app.persistence", "app.adapters", "app.telegram", "app.api", "app.scheduler"):
+        assert not any(term in line for line in import_lines), term
+
+
+def test_phase9c4_cost_cli_writes_nothing() -> None:
+    source = PHASE_9C4_COST_CLI.read_text(encoding="utf-8")
+
+    for forbidden in ("upsert", "add_missing", "apply_outcomes", "commit()", "write_text"):
+        assert forbidden not in source, forbidden
+
+
+def test_phase9c4_an_assumed_cost_never_reaches_storage() -> None:
+    """The line this phase must not cross, and the reason it is a test rather than a note.
+
+    The project stores OHLC and no spread, so a cost here is *assumed*. Phase 9A-5 drew the line
+    between observation and invention with the `provider` column and paid for drawing it late: 30
+    seed candles had been replacing real ones. An assumed cost written beside an observed candle
+    would be the same mistake in a new place, so no service and no persistence file may pass one —
+    which keeps the Phase 9C-1 forward ledger on gross outcomes, the only kind it can honestly hold.
+    """
+    offenders = [
+        str(file_path)
+        for directory in ("app/services", "app/persistence", "app/telegram", "app/api")
+        for file_path in Path(directory).rglob("*.py")
+        if "cost=" in file_path.read_text(encoding="utf-8")
+        or "execution_cost" in file_path.read_text(encoding="utf-8")
+    ]
+
+    assert offenders == []
+
+
+def test_phase9c4_only_reporting_scripts_may_assume_a_cost() -> None:
+    offenders = [
+        str(file_path)
+        for file_path in Path("scripts").glob("*.py")
+        if file_path not in PHASE_9C4_COST_AWARE_SCRIPTS and "cost=" in file_path.read_text("utf-8")
+    ]
+
+    assert offenders == []
+
+
+def test_phase9c4_the_curve_takes_no_cost_to_fit() -> None:
+    """A sweep that kept its best point would be the 9A-3 mistake in a new variable.
+
+    Asserted on the signature: the builder is handed the whole grid and returns the whole curve, so
+    there is no argument through which a flattering cost could be selected and then reported.
+    """
+    parameters = set(inspect.signature(build_cost_sensitivity_profile).parameters)
+
+    assert parameters == {"outcomes_by_cost", "pair", "timeframe", "stop", "target"}
+
+
+def test_phase9c4_break_even_follows_from_the_geometry_rather_than_the_sample() -> None:
+    """3/7 is arithmetic on the multipliers. A break-even fitted to the data would be circular."""
+    assert break_even_share(Decimal("1.5"), Decimal("2.0")) == Decimal(3) / Decimal(7)
+
+    source = PHASE_9C4_COST_MODULE.read_text(encoding="utf-8")
+    assert "direction_candidate" not in source
+    assert "propose_direction" not in source

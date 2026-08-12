@@ -688,6 +688,43 @@ If `windows_without_data` is non-zero in the logs, ingestion has stored nothing 
 series — check `MARKET_DATA_INGESTION_ENABLED` and `last_successful_market_fetch` rather than looking
 at the ledger.
 
+## Execution Cost Sweeps (Phase 9C-4)
+
+Every outcome figure this project prints is gross by default: the database holds OHLC and no spread.
+Since 9C-4 a cost can be **assumed** and swept, which is a different thing from observing one and is
+labelled as such everywhere it appears.
+
+```bash
+uv run python -m scripts.profile_execution_cost --pair EURUSD --timeframe M15 --days 180 --exclude-closed-market
+```
+
+Read-only. It re-measures the same windows once per cost on a grid fixed in the source
+(`DEFAULT_COST_GRID`, from zero to 0.00050 in price units) and prints the whole curve, never a
+chosen point. `--cost` is repeatable if you want a different grid; it must include zero, because
+without a free measurement every other point is relative to an already-handicapped sample.
+
+`scripts/measure_outcomes.py` and `scripts/profile_field_outcomes.py` take a single `--cost-price`
+for the same purpose. Those three scripts are the only files in the repository allowed to pass a
+cost, and a safety test enforces it — an assumed number must never be stored beside an observed
+candle, which is the line Phase 9A-5 drew with the `provider` column.
+
+### Reading the output
+
+Two figures are derived from the curve, both defined before any run:
+
+- **break-even cost** — where target-first share crosses `stop / (stop + target)`, 42.86% for the
+  Phase 9A multipliers. On all four stored series this reads *"no cost is small enough"*, because the
+  gross figure is already below break-even. That is reported as a statement rather than as an
+  interpolated negative number.
+- **cost worth 5.00 points of target share** — the five-point bar 9C-2 and 9C-3 used to call a field
+  informative, expressed as a cost. Measured at 0.153, 0.163, 0.134 and 0.147 of median ATR across
+  the four series.
+
+Divide by the printed median ATR before comparing anything across timeframes. A cost in price units
+is a raw magnitude, and the standing rule about raw magnitudes applies: the 9C-4 pre-registration
+stated a claim in price units, and it failed on H1 by roughly the ratio of the two timeframes' candle
+ranges.
+
 ## Common Failure Cases
 
 - Missing Telegram token while Telegram is enabled: configuration validation fails.
