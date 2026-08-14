@@ -101,7 +101,12 @@ class Settings(BaseSettings):
     provider_pool_timeout_seconds: float = Field(default=5.0, gt=0, le=30)
     provider_retry_count: int = Field(default=2, ge=0, le=5)
     provider_retry_backoff_seconds: float = Field(default=0.1, ge=0, le=5)
-    provider_max_request_range_days: int = Field(default=31, ge=1, le=370)
+    #: A second, coarser guard against silent truncation, expressed in days and therefore blind to
+    #: the timeframe: 370 days is 35,000 M15 bars and 260 daily ones. The guard that actually counts
+    #: is `chunk_candles` in the backfill service, which caps a request in *bars*. The ceiling was
+    #: raised from 370 in Phase 9D-1 so a nineteen-year daily fill takes seven requests per pair
+    #: rather than nineteen; the default is untouched, so nothing changes unless asked.
+    provider_max_request_range_days: int = Field(default=31, ge=1, le=1100)
     require_integration_tests: bool = False
 
     scan_enabled: bool = False

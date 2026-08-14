@@ -1,4 +1,4 @@
-PROJECT_PHASE = "phase_9c5_window_width_measurement"
+PROJECT_PHASE = "phase_9d1_daily_bars_and_universe"
 STRATEGY_IMPLEMENTED = False
 REAL_TRADING_ENABLED = False
 

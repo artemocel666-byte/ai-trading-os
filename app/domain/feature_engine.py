@@ -4,8 +4,11 @@ from datetime import datetime
 from decimal import Decimal
 
 from app.core import constants
-from app.core.time import normalize_to_utc
-from app.domain.entities.data_quality import TIMEFRAME_TO_DELTA, build_feature_snapshot
+from app.domain.entities.data_quality import (
+    build_feature_snapshot,
+    expected_open_times,
+    is_window_aligned,
+)
 from app.domain.entities.features import (
     CandleFeatureSummary,
     CurrencyEventCount,
@@ -46,7 +49,7 @@ class MarketFeatureEngine:
         start_utc = window.window_start
         end_utc = window.window_end
         as_of_utc = window.as_of
-        expected_open_times = _expected_open_times(
+        expected_times = expected_open_times(
             timeframe=timeframe,
             window_start=start_utc,
             window_end=end_utc,
@@ -122,7 +125,7 @@ class MarketFeatureEngine:
 
         usable_candles = _dedupe_candles_by_open_time(usable_candidates)
         observed_open_times = {candle.open_time for candle in usable_candles}
-        for expected_open_time in expected_open_times:
+        for expected_open_time in expected_times:
             if expected_open_time not in observed_open_times:
                 issues.append(
                     FeatureIssue(
@@ -188,7 +191,7 @@ class MarketFeatureEngine:
             schema_version=constants.FEATURE_SNAPSHOT_SCHEMA_VERSION,
             window=window,
             candle_summary=_build_candle_summary(
-                expected_candle_count=len(expected_open_times),
+                expected_candle_count=len(expected_times),
                 input_candle_count=len(candles),
                 candles=usable_candles,
                 rolling_window_size=rolling_window_size,
@@ -199,7 +202,7 @@ class MarketFeatureEngine:
                 events=usable_events,
             ),
             data_completeness_ratio=_completeness_ratio(
-                expected=len(expected_open_times), used=len(usable_candles)
+                expected=len(expected_times), used=len(usable_candles)
             ),
             quality_issues=tuple(issues),
             data_quality_issues=data_quality_snapshot.quality_issues,
@@ -207,28 +210,7 @@ class MarketFeatureEngine:
 
 
 def _is_unaligned_window(*, timeframe: Timeframe, start_at: datetime, end_at: datetime) -> bool:
-    delta = TIMEFRAME_TO_DELTA[timeframe]
-    expected_count = len(
-        _expected_open_times(timeframe=timeframe, window_start=start_at, window_end=end_at)
-    )
-    return start_at + (expected_count * delta) != end_at
-
-
-def _expected_open_times(
-    *,
-    timeframe: Timeframe,
-    window_start: datetime,
-    window_end: datetime,
-) -> tuple[datetime, ...]:
-    start_utc = normalize_to_utc(window_start)
-    end_utc = normalize_to_utc(window_end)
-    delta = TIMEFRAME_TO_DELTA[timeframe]
-    expected: list[datetime] = []
-    cursor = start_utc
-    while cursor + delta <= end_utc:
-        expected.append(cursor)
-        cursor += delta
-    return tuple(expected)
+    return not is_window_aligned(timeframe=timeframe, window_start=start_at, window_end=end_at)
 
 
 def _duplicate_open_times(candles: Sequence[Candle]) -> tuple[datetime, ...]:

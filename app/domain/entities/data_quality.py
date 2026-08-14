@@ -8,9 +8,27 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator, model_valida
 
 from app.core.time import normalize_to_utc
 from app.domain.entities.market_data import Candle, EconomicEvent, EconomicImpact, Timeframe
+from app.domain.market_calendar import is_market_open
 from app.domain.value_objects import CurrencyPair
 
-TIMEFRAME_TO_DELTA = {Timeframe.M15: timedelta(minutes=15), Timeframe.H1: timedelta(hours=1)}
+TIMEFRAME_TO_DELTA = {
+    Timeframe.M15: timedelta(minutes=15),
+    Timeframe.H1: timedelta(hours=1),
+    Timeframe.D1: timedelta(days=1),
+}
+
+#: Timeframes whose bars exist only while the market actually trades.
+#:
+#: Intraday, the provider returns a continuous 24/7 series and about 28.5% of it is carried forward
+#: over weekends — filler, but *present*, so expecting a candle in every slot is correct there and
+#: the weekend is excluded later by `is_market_open` at analysis time.
+#:
+#: A daily bar is different. Saturday is never a trading day in this market, and the provider's
+#: weekend dailies arrive erratically: measured against the live provider on 2026-08-14 over the
+#: same 142 weeks, EURUSD had 58 Saturdays and 31 Sundays while USDJPY had 84 and 31. Expecting them
+#: would report a gap in most weeks, and would report a *different* gap per instrument — which is
+#: the one thing a cross-sectional comparison cannot tolerate.
+TRADED_DAYS_ONLY_TIMEFRAMES = frozenset({Timeframe.D1})
 
 
 class DataQualityIssueCode(StrEnum):
@@ -113,19 +131,45 @@ class FeatureSnapshot(BaseModel):
         )
 
 
-def _expected_open_times(
+def expected_open_times(
     *,
     timeframe: Timeframe,
     window_start: datetime,
     window_end: datetime,
 ) -> tuple[datetime, ...]:
+    """Which candle open times ought to be inside this window.
+
+    The single definition in the project since Phase 9D-1. It lived here and in `feature_engine.py`
+    as two identical copies until adding a daily timeframe required changing it — the exact way two
+    definitions of one rule go wrong.
+    """
     delta = TIMEFRAME_TO_DELTA[timeframe]
+    traded_days_only = timeframe in TRADED_DAYS_ONLY_TIMEFRAMES
     expected: list[datetime] = []
-    cursor = window_start
-    while cursor + delta <= window_end:
-        expected.append(cursor)
+    cursor = normalize_to_utc(window_start)
+    end_utc = normalize_to_utc(window_end)
+    while cursor + delta <= end_utc:
+        if not traded_days_only or is_market_open(cursor):
+            expected.append(cursor)
         cursor += delta
     return tuple(expected)
+
+
+def is_window_aligned(
+    *,
+    timeframe: Timeframe,
+    window_start: datetime,
+    window_end: datetime,
+) -> bool:
+    """Whether the requested span is a whole number of bars.
+
+    A question about the *window*, not about the candles inside it — which is what lets a daily
+    window skip a weekend without being called ragged. Until Phase 9D-1 alignment was inferred from
+    the count of expected times, an identity that holds only while every slot produces a bar.
+    """
+    delta = TIMEFRAME_TO_DELTA[timeframe]
+    span = normalize_to_utc(window_end) - normalize_to_utc(window_start)
+    return span % delta == timedelta(0)
 
 
 def build_feature_snapshot(
@@ -142,14 +186,13 @@ def build_feature_snapshot(
     if end_utc <= start_utc:
         raise ValueError("snapshot window_end must be later than window_start")
 
-    expected_times = _expected_open_times(
+    expected_times = expected_open_times(
         timeframe=timeframe,
         window_start=start_utc,
         window_end=end_utc,
     )
     issues: list[DataQualityIssue] = []
-    delta = TIMEFRAME_TO_DELTA[timeframe]
-    if start_utc + (len(expected_times) * delta) != end_utc:
+    if not is_window_aligned(timeframe=timeframe, window_start=start_utc, window_end=end_utc):
         issues.append(
             DataQualityIssue(
                 code=DataQualityIssueCode.WINDOW_NOT_ALIGNED,

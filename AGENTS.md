@@ -2,7 +2,47 @@
 
 AI Trading OS is a foundation for a future Forex analysis and paper-trading platform.
 
-Current project phase: phase_9c5_window_width_measurement.
+Current project phase: phase_9d1_daily_bars_and_universe.
+Phase 9D-1 changes the **question**, not the method. Five phases asked what follows a window on one
+series and answered nothing; 9D compares **many instruments at one moment** over a horizon of
+**months**. The horizon is the substantive part and it rests on our own measurement, not on hope:
+9C-4 found a 1-pip round trip is ~10% of what an M15 plan reaches for (~10 pips) and ~1% of a
+typical monthly move (~103 pips, measured). **Cost is the one lever shown to matter, and lengthening
+the horizon pulls it.**
+**Nothing is replaced.** M15/H1 keep their data, their pipeline, their `/review` and their ledger.
+`D1` is extra rows under a different timeframe. The failed intraday measurements are **not** re-run
+on daily bars.
+**The weekend rule was measured, not assumed, and the measurement contradicted both guesses.**
+The provider does send weekend dailies — but erratically and *differently per instrument*: over the
+same 142 weeks EURUSD got 58 Saturdays and 31 Sundays, USDJPY 84 and 31. So `D1` expects **weekdays
+only** (`TRADED_DAYS_ONLY_TIMEFRAMES`), while M15/H1 keep expecting every slot because their filler
+is at least *present*. A weekend daily that does arrive is stored and simply surplus.
+**Alignment became a separate question from expectation.** It asks whether the span is a whole
+number of bars, not whether every slot produced one — the old check inferred one from the other, an
+identity that breaks the moment a window skips a day.
+**`_expected_open_times` had existed in two identical copies** (`feature_engine.py` and
+`entities/data_quality.py`) since Phase 3, and the first change that needed them to differ would
+have silently split them. One definition now, asserted by a safety test.
+Pre-registered for 9D-2 and fixed before any data was seen: **formation 3 months, holding 1 month**,
+**terciles not deciles** (45 pairs from 10 currencies are only ~9 independent dimensions), and the
+honest limit — 19 years is ~228 monthly periods, enough to see a strong effect and **not** enough to
+confirm a faint one, so a null there will mean *we could not see it*, not *it is not there*.
+**A ranking is a direction, and that line must move deliberately.** Agreed shape: a ranking may
+exist in the measurement layer, may never be delivered to a user, and `REAL_TRADING_ENABLED` stays
+permanently `False`. The safety test moves from "no direction exists" to "no direction is delivered".
+**9D-1 is NOT finished. Code is complete and green; the data is not.** Of 45 pairs, 44 are quoted,
+35 hold some daily history and **only 3 hold all twenty years** — fourteen are short by exactly two
+chunks and nine by three, with gaps landing on chunk boundaries, so these are failed requests and
+not provider history. Suspected cause: 8s pacing sits on the provider's 8-per-minute limit while the
+worker's own ingestion called the same provider. The worker is stopped; **resume with a repair
+pass**, and add the check that was missing — *equal year coverage across the whole universe* —
+before any measurement. **9D-2 must not start until it passes:** a cross-section with instruments
+silently absent in some years is exactly the bias that manufactures a finding.
+**Three defects in this slice, all one disease: one concept written in two places.** The Docker
+image against the working tree; `TIMEFRAME_TO_DELTA` in the domain against a private copy in the
+adapter; the request-range limit as the service's chunk size against the adapter's guard. The third
+was the dangerous one — it made the run report "the provider does not quote these pairs", a wrong
+answer that looked like a real one.
 Phase 9C-5 tested the one structural assumption every previous null shared: that a **twelve-candle
 window** is enough to see. Widened to **one calendar day** — 96 candles on M15, 24 on H1, chosen as
 a span of time so both timeframes see the same stretch — with the horizon held fixed, so only what

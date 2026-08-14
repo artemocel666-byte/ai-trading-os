@@ -21,11 +21,20 @@ from app.core.exceptions import (
 from app.core.security import redact_text
 from app.core.time import normalize_to_utc, utc_now
 from app.domain.entities import Candle, Timeframe
+from app.domain.entities.data_quality import TIMEFRAME_TO_DELTA as DOMAIN_TIMEFRAME_TO_DELTA
 from app.domain.value_objects import CurrencyPair
 
 PROVIDER_NAME = "twelve_data"
-TIMEFRAME_TO_INTERVAL = {Timeframe.M15: "15min", Timeframe.H1: "1h"}
-TIMEFRAME_TO_DELTA = {Timeframe.M15: timedelta(minutes=15), Timeframe.H1: timedelta(hours=1)}
+
+#: This provider's own name for each timeframe. Genuinely adapter-specific — another provider would
+#: spell them differently — so it stays here and is the one mapping this module defines.
+TIMEFRAME_TO_INTERVAL = {Timeframe.M15: "15min", Timeframe.H1: "1h", Timeframe.D1: "1day"}
+
+#: How long a bar lasts is a fact about the timeframe, not about the provider. This module kept a
+#: third copy of it until Phase 9D-1, when adding `D1` in two of the three places left the adapter
+#: quietly refusing every daily request — before any network call, so the failure looked like the
+#: provider not quoting the pair. Imported now, so a new timeframe can only be half-added once.
+TIMEFRAME_TO_DELTA = DOMAIN_TIMEFRAME_TO_DELTA
 
 
 def _parse_provider_datetime(value: object) -> datetime:

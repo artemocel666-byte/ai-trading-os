@@ -688,6 +688,46 @@ If `windows_without_data` is non-zero in the logs, ingestion has stored nothing 
 series — check `MARKET_DATA_INGESTION_ENABLED` and `last_successful_market_fetch` rather than looking
 at the ledger.
 
+## Daily Bars and the Currency Universe (Phase 9D-1)
+
+Five phases of measurement asked about one series through time and answered nothing. Phase 9D
+changes the question to a comparison *across* instruments over a horizon of months, which needs a
+daily timeframe and more than two instruments. This section is the plumbing; it measures nothing.
+
+```bash
+uv run python -m scripts.backfill_market_data --universe --timeframe D1 --days 7000 --max-request-range-days 1000
+```
+
+Run it inside the worker container, which already holds the provider key and the right database
+host. **Rebuild the image first** — the sources are baked in at build time, so a container started
+before a code change will reject `--timeframe D1` with an argparse error.
+
+`--universe` walks every pair the Phase 9D-1 currency set implies rather than a single `--pair`.
+Each pair is probed with one small request before any history is asked for, so a pair the provider
+does not quote costs one call instead of a whole backfill, and appears in the output as `refused`
+rather than vanishing.
+
+`--max-request-range-days` exists because the 31-day default protects *intraday* requests from
+silent truncation. A daily series returns years in one call, and leaving the default in place would
+turn a nineteen-year fill into hundreds of requests. Keep the chunk under the provider's per-call
+bar cap: 1000 calendar days is about 700 daily bars, comfortably inside it.
+
+### Why a daily window skips the weekend and an intraday one does not
+
+Intraday the provider returns a continuous 24/7 series — about 28.5% of it carried forward while the
+market is shut. The filler is *present*, so every slot is expected and the weekend is excluded later
+by `is_market_open` at analysis time.
+
+Daily bars behave differently, and the difference was measured rather than assumed. Over the same
+142 weeks the provider sent EURUSD **58** Saturdays and **31** Sundays, against USDJPY's **84** and
+**31**. Weekend dailies arrive erratically and *differently per instrument* — the one thing a
+cross-sectional comparison cannot tolerate. So `TRADED_DAYS_ONLY_TIMEFRAMES` marks `D1` as expecting
+weekdays only; a weekend bar that does arrive is stored and simply surplus.
+
+Alignment is now a separate question from expectation. It asks whether the requested span is a whole
+number of bars, not whether every slot produced one — the old check inferred it from the expected
+count, an identity that breaks the moment a window skips a day.
+
 ## Execution Cost Sweeps (Phase 9C-4)
 
 Every outcome figure this project prints is gross by default: the database holds OHLC and no spread.

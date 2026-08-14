@@ -2991,3 +2991,52 @@ def test_phase9c4_break_even_follows_from_the_geometry_rather_than_the_sample() 
     source = PHASE_9C4_COST_MODULE.read_text(encoding="utf-8")
     assert "direction_candidate" not in source
     assert "propose_direction" not in source
+
+
+PHASE_9D1_UNIVERSE_MODULE = Path("app/domain/currency_universe.py")
+PHASE_9D1_SCHEDULE_MODULE = Path("app/domain/entities/data_quality.py")
+
+
+def test_phase9d1_universe_module_touches_no_other_layer() -> None:
+    import_lines = tuple(
+        line
+        for line in PHASE_9D1_UNIVERSE_MODULE.read_text(encoding="utf-8").lower().splitlines()
+        if line.startswith("import ") or line.startswith("from ")
+    )
+
+    for term in ("app.persistence", "app.adapters", "app.telegram", "app.api", "app.scheduler"):
+        assert not any(term in line for line in import_lines), term
+
+
+def test_phase9d1_the_universe_is_a_list_of_instruments_and_nothing_more() -> None:
+    """Widening what the project looks at must not smuggle in what it concludes.
+
+    The universe decides which markets are observed. A threshold or a direction living here would
+    be a strategy wearing a data structure, and would arrive without any of the pre-registration
+    the project applies to claims.
+    """
+    source = PHASE_9D1_UNIVERSE_MODULE.read_text(encoding="utf-8")
+
+    for forbidden in ("direction_candidate", "propose_direction", "SignalDirection", "threshold"):
+        assert forbidden not in source, forbidden
+
+
+def test_phase9d1_which_candles_should_exist_is_defined_exactly_once() -> None:
+    """Two copies of this rule survived until a daily timeframe needed it changed.
+
+    `feature_engine.py` and `entities/data_quality.py` each held an identical private walker, and
+    the weekend behaviour differs by timeframe — so the first change to one of them would have
+    silently disagreed with the other. The import is the assertion.
+    """
+    engine_source = Path("app/domain/feature_engine.py").read_text(encoding="utf-8")
+
+    assert "def _expected_open_times" not in engine_source
+    assert "expected_open_times," in engine_source
+    assert "def expected_open_times" in PHASE_9D1_SCHEDULE_MODULE.read_text(encoding="utf-8")
+
+
+def test_phase9d1_a_wider_universe_does_not_unlock_trading() -> None:
+    """More instruments is more to look at, never more to do."""
+    from app.core import constants as core_constants
+
+    assert core_constants.REAL_TRADING_ENABLED is False

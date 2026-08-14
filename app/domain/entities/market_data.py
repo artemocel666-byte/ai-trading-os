@@ -15,6 +15,11 @@ MAX_CALENDAR_ABS_VALUE = Decimal("1000000000000000")
 class Timeframe(StrEnum):
     M15 = "M15"
     H1 = "H1"
+    #: Added in Phase 9D-1. A daily bar is not just a bigger hourly one: the provider emits a
+    #: continuous 24/7 series intraday, but its weekend *dailies* arrive erratically and differently
+    #: per instrument, so which candles should exist is a question with two answers. See
+    #: `TRADED_DAYS_ONLY_TIMEFRAMES` in `entities/data_quality.py`.
+    D1 = "D1"
 
 
 class EconomicImpact(StrEnum):

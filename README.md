@@ -4,7 +4,23 @@ AI Trading OS is a safety-first foundation for a future modular Forex analysis a
 
 ## Current Status
 
-- Current project phase: phase_9c5_window_width_measurement.
+- Current project phase: phase_9d1_daily_bars_and_universe.
+- Phase 9D-1 changes the question rather than the method: instead of "what follows this window on
+  EURUSD", the project will compare **many currencies against each other** over a horizon of
+  **months**. The horizon is the substantive part, and it rests on a measurement — a 1-pip round
+  trip is about 10% of what an M15 plan reaches for and about 1% of a typical monthly move, so
+  lengthening the horizon pulls the one lever 9C-4 showed to matter. This slice is plumbing only and
+  **measures nothing**: a `D1` timeframe, a derived currency universe, and a backfill that walks it.
+  **M15 and H1 are untouched** — `/review`, the rules and the forward ledger all keep working, and
+  the failed intraday measurements are not re-run on daily bars. The weekend rule was *measured*
+  rather than assumed, and the data refuted both guesses: the provider does send weekend dailies,
+  but erratically and differently per instrument, so `D1` expects weekdays only. Along the way a
+  duplicate definition of "which candles should exist" — two identical copies since Phase 3 — was
+  collapsed into one, which is exactly the change that would have split them.
+  **Not finished: the code is complete and green, the data is not.** 44 of 45 pairs are quoted but
+  only 3 of 35 filled pairs hold all twenty years — the gaps land on request boundaries, so they are
+  failed calls rather than missing history. Next step is a repair pass with the worker stopped and
+  slower pacing, then a coverage check across the whole universe before anything is measured.
 - Phase 9C-5 asked whether twelve candles is simply too short a view — the one assumption every
   previous null shared. Widened to one calendar day (96 candles on M15, 24 on H1) with the horizon
   held fixed. **Null on all four fields again**: nothing clears five points with a consistent sign
