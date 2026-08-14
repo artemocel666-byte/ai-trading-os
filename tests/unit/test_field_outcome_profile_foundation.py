@@ -12,7 +12,7 @@ from app.domain.outcome_measurement import aggregate_outcomes
 
 
 def test_project_phase_is_current() -> None:
-    assert constants.PROJECT_PHASE == "phase_9c4_execution_cost_foundation"
+    assert constants.PROJECT_PHASE == "phase_9c5_window_width_measurement"
 
 
 def _outcome(kind: OutcomeKind, direction: SignalDirection) -> WindowOutcome:

@@ -18,6 +18,7 @@ from app.domain.entities.signal_contract import SignalDirection, SignalPricePlan
 from app.domain.execution_cost import break_even_share, build_cost_sensitivity_profile
 from app.domain.outcome_measurement import measure_outcome
 from app.domain.value_objects import CurrencyPair
+from scripts.profile_execution_cost import _atr_spread
 
 PAIR = CurrencyPair(value="EURUSD")
 BASE_TIME = datetime(2026, 7, 20, 8, 0, tzinfo=UTC)
@@ -41,7 +42,7 @@ SHORT_PLAN = SignalPricePlan(
 
 
 def test_project_phase_is_current() -> None:
-    assert constants.PROJECT_PHASE == "phase_9c4_execution_cost_foundation"
+    assert constants.PROJECT_PHASE == "phase_9c5_window_width_measurement"
 
 
 def _candle(index: int, *, low: str, high: str) -> Candle:
@@ -286,6 +287,25 @@ def test_every_point_must_cover_the_same_windows() -> None:
                 CostPoint(cost=ONE_PIP, statistics=_statistics(target=400, stop=500)),
             ),
         )
+
+
+def test_the_atr_spread_reports_values_the_sample_actually_held() -> None:
+    """Nearest-rank, shared with `rule_calibration`: an interpolated quartile was never observed."""
+    spread = _atr_spread([Decimal(value) for value in (4, 1, 3, 2)])
+
+    assert spread is not None
+    assert (spread.lower, spread.median, spread.upper) == (Decimal(1), Decimal(2), Decimal(3))
+
+
+def test_the_relative_spread_is_what_makes_two_window_widths_comparable() -> None:
+    """The Phase 9C-5 plumbing check: a wider window must visibly steady the ATR estimate."""
+    jumpy = _atr_spread([Decimal(value) for value in (1, 2, 4, 8)])
+    steady = _atr_spread([Decimal(value) for value in (3, 4, 4, 5)])
+
+    assert jumpy is not None
+    assert steady is not None
+    assert jumpy.relative_spread > steady.relative_spread
+    assert _atr_spread([]) is None
 
 
 def test_the_builder_orders_the_curve_and_takes_break_even_from_the_geometry() -> None:

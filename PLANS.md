@@ -338,10 +338,23 @@ non-actionable and without any signal, AI, or execution behavior.
     The five-point bar for a finding is worth **0.15 average candle ranges** (0.153/0.163/0.134/
     0.147), so a candidate needs about 6.5 points over the base rate on EURUSD M15 to be level.
     Two pre-registered claims refuted; one of them corrects the reasoning published in 9C-3.
-  - Beyond 9C-4: the ledger remains the unbiased confirmation of anything that survives. Nothing
-    has survived yet, so there is currently no base rate worth presenting to a person. The one
-    measurement 9C-4 names as earned: bucket windows by `cost / ATR`, the only quantity shown to
-    order cost sensitivity and comparable across instruments even though ATR alone is not.
+  - 9C-5: is twelve candles too short a view — **completed 2026-08-14**, see
+    `docs/phase9c5-verification-report.md`. The window was widened once, to one calendar day (96
+    candles on M15, 24 on H1), horizon held. ATR dispersion halved on M15, confirming the window
+    really was wider before anything else was read. **Null on all four fields.** Two readings
+    cleared five points (−5.67, −7.55) and both were rejected: same series, correlated fields,
+    isolated in sign, and inside 2.3 standard errors on the thinnest cell in the study.
+    **Pre-committed: no other window width will be tried**, and the commitment was honoured with
+    those two readings on the table.
+  - Beyond 9C-5: **the question is no longer how to slice this data.** Four pre-registered attempts
+    have found nothing in OHLC over one instrument's recent past that clears a bar set at a sixth of
+    a spread. The live choice is between **adding information** — the economic calendar is the
+    nearest candidate and stays blocked behind a paid FMP plan, verified 2026-08-01 — and **stopping
+    the search for prediction** and treating the measurement bench as the deliverable. Neither is a
+    coding decision. The ledger keeps accumulating either way; it remains the only unbiased
+    confirmation channel, and nothing has yet survived to need it.
+    Still named but not chosen: bucket windows by `cost / ATR`, the one quantity 9C-4 showed orders
+    cost sensitivity and stays comparable across instruments even though ATR alone does not.
   - `REAL_TRADING_ENABLED` stays `False` permanently; no broker order API is ever added.
 
 ## Explicit Non-Goals

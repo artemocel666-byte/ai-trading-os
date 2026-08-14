@@ -4,7 +4,15 @@ AI Trading OS is a safety-first foundation for a future modular Forex analysis a
 
 ## Current Status
 
-- Current project phase: phase_9c4_execution_cost_foundation.
+- Current project phase: phase_9c5_window_width_measurement.
+- Phase 9C-5 asked whether twelve candles is simply too short a view — the one assumption every
+  previous null shared. Widened to one calendar day (96 candles on M15, 24 on H1) with the horizon
+  held fixed. **Null on all four fields again**: nothing clears five points with a consistent sign
+  across four series. Two readings did clear five points in magnitude (−5.67 and −7.55), both on the
+  thinnest cell in the study and both isolated in sign — the same shape as the retracted 9A-3
+  candidate, rejected here by criteria fixed in advance. **No other window width will be tried**;
+  that clause was pre-committed. The open question is no longer how to slice this data but what data
+  to add. Read-only, existing scripts with `--window-candles`.
 - Phase 9C-4 put a cost axis under every outcome figure. The cost is **assumed, not observed** —
   nothing was ingested, and a safety test keeps an assumed cost out of the services and persistence
   layers so the forward ledger keeps recording gross outcomes. A round-trip cost moves both levels

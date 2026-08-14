@@ -31,11 +31,16 @@ _PERCENTILES: tuple[tuple[str, int], ...] = (
 )
 
 
-def _nearest_rank(sorted_values: Sequence[Decimal], percent: int) -> Decimal:
+def nearest_rank(sorted_values: Sequence[Decimal], percent: int) -> Decimal:
     """Nearest-rank percentile: returns a value the sample actually contained.
 
     Interpolating would invent a number that was never observed, and doing it in binary floating
     point would also lose exactness on prices. Integer arithmetic on the rank avoids both.
+
+    Public since Phase 9C-5, when a second caller appeared that genuinely needed it — the ATR
+    dispersion check in `scripts/profile_execution_cost.py`. It was briefly made public in 9C-3 and
+    reverted the same day, because that slice's design changed to positional buckets and the
+    justification evaporated. One definition of a percentile in this project, or none.
     """
     count = len(sorted_values)
     rank = (percent * count + 99) // 100
@@ -55,7 +60,7 @@ def summarize_field(
             unavailable_count=unavailable_count,
         )
     ordered = sorted(values)
-    percentiles = {name: _nearest_rank(ordered, percent) for name, percent in _PERCENTILES}
+    percentiles = {name: nearest_rank(ordered, percent) for name, percent in _PERCENTILES}
     return FieldDistribution(
         field_ref=field_ref,
         observed_count=len(ordered),

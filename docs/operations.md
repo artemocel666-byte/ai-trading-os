@@ -725,6 +725,12 @@ is a raw magnitude, and the standing rule about raw magnitudes applies: the 9C-4
 stated a claim in price units, and it failed on H1 by roughly the ratio of the two timeframes' candle
 ranges.
 
+The ATR line also prints quartiles and the interquartile range as a fraction of the median. That
+last number is the check to run whenever `--window-candles` changes: a wider window estimates the
+same ATR far more steadily, so the fraction must visibly fall. It went 0.608 to 0.316 on EURUSD M15
+between a twelve-candle and a one-day window while the median moved less than a percent. **If the
+median moves and the spread does not, the window did not widen and nothing downstream is readable.**
+
 ## Common Failure Cases
 
 - Missing Telegram token while Telegram is enabled: configuration validation fails.

@@ -2,7 +2,31 @@
 
 AI Trading OS is a foundation for a future Forex analysis and paper-trading platform.
 
-Current project phase: phase_9c4_execution_cost_foundation.
+Current project phase: phase_9c5_window_width_measurement.
+Phase 9C-5 tested the one structural assumption every previous null shared: that a **twelve-candle
+window** is enough to see. Widened to **one calendar day** — 96 candles on M15, 24 on H1, chosen as
+a span of time so both timeframes see the same stretch — with the horizon held fixed, so only what
+we predict *from* changed. Almost no code: `--window-candles` already existed and
+`iter_replay_windows` selects by time.
+**Plumbing was read before any field.** ATR dispersion had to fall or the window was not really
+wider: interquartile range over the median went 0.608 to 0.316 (EU M15) and 0.425 to 0.342 (NOK H1),
+with the median itself unchanged to within a percent. It is the same quantity, estimated more
+steadily.
+**Null on all four fields.** Nothing clears >=5 points with one sign on four series. A wider view
+does not carry what a narrower one lacked.
+**The two largest readings this programme has produced were rejected by the criteria, correctly.**
+-5.67 and -7.55 both cleared five points, both on EURUSD H1, both on excursion measures of the same
+window, both the only negative on their row. That cell is the thinnest in the study — 248 windows
+per decile, so a gradient carries a standard error of ~3.3 points, making -7.55 a 2.3-sigma
+excursion among sixteen readings. **This is the 9A-3 shape, and the four-series criterion is what
+stopped it becoming a headline.** The first phase where pre-registration had something big to reject.
+**No other window width will be tried.** The clause was fixed before the numbers existed and is
+honoured with two five-point readings on the table. The question is no longer how to slice this
+data; it is what data to add.
+`volatility_ratio`'s gradient turned consistent in sign for the first time (+1.26/+0.36/+2.19/+1.93)
+and stayed ~1.4 points — under a quarter of a spread, and confirming it would need ~195,000 windows
+per series against a ledger writing 50 a day.
+See `docs/phase9c5-verification-report.md`.
 Phase 9C-4 puts a cost axis under every figure the project reports. Cost is **assumed, not
 observed** — no provider was added, and a safety test keeps an assumed cost out of `app/services`
 and `app/persistence`, so the 9C-1 ledger goes on holding gross outcomes. The formulation is

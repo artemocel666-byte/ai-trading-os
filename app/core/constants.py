@@ -1,4 +1,4 @@
-PROJECT_PHASE = "phase_9c4_execution_cost_foundation"
+PROJECT_PHASE = "phase_9c5_window_width_measurement"
 STRATEGY_IMPLEMENTED = False
 REAL_TRADING_ENABLED = False
 

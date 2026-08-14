@@ -23,6 +23,7 @@ import asyncio
 import json
 import sys
 from collections.abc import Sequence
+from dataclasses import dataclass
 from datetime import timedelta
 from decimal import Decimal
 
@@ -38,6 +39,7 @@ from app.domain.entities.outcome import WindowOutcome
 from app.domain.entities.signal_contract import SignalDirection
 from app.domain.execution_cost import build_cost_sensitivity_profile
 from app.domain.outcome_measurement import DEFAULT_HORIZON_CANDLES, measure_outcome
+from app.domain.rule_calibration import nearest_rank
 from app.domain.rule_replay import (
     DEFAULT_STEP_CANDLES,
     DEFAULT_WINDOW_CANDLES,
@@ -102,12 +104,38 @@ def _share(value: Decimal | None) -> str:
     return "-" if value is None else f"{value * 100:.2f}%"
 
 
-def _median(values: Sequence[Decimal]) -> Decimal | None:
-    """The middle value, or the lower of the two middles. Enough to convert a cost into ATR."""
+@dataclass(frozen=True)
+class AtrSpread:
+    """The sample's ATR quartiles: the divisor for every cost, and a check on the window itself.
+
+    The median converts a cost into average candle ranges. The quartiles say how firmly: ATR
+    estimated over a wide window is the same underlying quantity as ATR over a narrow one, but a
+    far steadier estimate of it, so widening the window must visibly tighten this spread. If it does
+    not, the window is not actually wider and nothing downstream should be read.
+    """
+
+    lower: Decimal
+    median: Decimal
+    upper: Decimal
+
+    @property
+    def relative_spread(self) -> Decimal:
+        """Interquartile range over the median. One number, comparable between window widths."""
+        return (self.upper - self.lower) / self.median
+
+
+def _atr_spread(values: Sequence[Decimal]) -> AtrSpread | None:
+    """Nearest-rank quartiles, so every printed figure is one the sample actually contained."""
     if not values:
         return None
     ordered = sorted(values)
-    return ordered[(len(ordered) - 1) // 2]
+    if ordered[len(ordered) // 2] <= 0:  # pragma: no cover - guarded upstream by the plan builder
+        return None
+    return AtrSpread(
+        lower=nearest_rank(ordered, 25),
+        median=nearest_rank(ordered, 50),
+        upper=nearest_rank(ordered, 75),
+    )
 
 
 def _reading(label: str, reading: CostReading, gross: Decimal | None, benchmark: str) -> str:
@@ -126,12 +154,23 @@ def _reading(label: str, reading: CostReading, gross: Decimal | None, benchmark:
             return f"  {label}: unavailable, because some point on the curve resolved nothing"
 
 
-def _profile_payload(profile: CostSensitivityProfile, atr: Decimal | None) -> dict[str, object]:
+def _profile_payload(
+    profile: CostSensitivityProfile, spread: AtrSpread | None
+) -> dict[str, object]:
     return {
         "pair": profile.pair,
         "timeframe": profile.timeframe,
         "break_even_share": str(profile.break_even_share),
-        "median_average_true_range": None if atr is None else str(atr),
+        "average_true_range": (
+            None
+            if spread is None
+            else {
+                "lower_quartile": str(spread.lower),
+                "median": str(spread.median),
+                "upper_quartile": str(spread.upper),
+                "relative_spread": str(spread.relative_spread),
+            }
+        ),
         "cost_is_assumed_not_observed": True,
         "break_even_cost": json.loads(profile.break_even_cost.model_dump_json()),
         "finding_equivalent_cost": json.loads(profile.finding_equivalent_cost.model_dump_json()),
@@ -161,17 +200,26 @@ def _profile_payload(profile: CostSensitivityProfile, atr: Decimal | None) -> di
     }
 
 
-def _print_profile(profile: CostSensitivityProfile, atr: Decimal | None, days: int) -> None:
-    print(f"Execution cost sweep: {profile.pair} {profile.timeframe} over {days} days")
+def _print_profile(
+    profile: CostSensitivityProfile, spread: AtrSpread | None, days: int, window_candles: int
+) -> None:
+    print(
+        f"Execution cost sweep: {profile.pair} {profile.timeframe} over {days} days "
+        f"(window={window_candles} candles)"
+    )
     print(f"Break-even target share for this geometry: {_share(profile.break_even_share)}")
-    if atr is not None:
-        print(f"Median average true range over the sample: {atr}")
+    if spread is not None:
+        print(
+            f"Average true range over the sample: {spread.median} "
+            f"(quartiles {spread.lower} to {spread.upper}, "
+            f"interquartile range {spread.relative_spread:.3f} of the median)"
+        )
     print(
         f"  {'cost':>10} {'cost/ATR':>9} {'measured':>9} {'resolved':>9} "
         f"{'target%':>9} {'timeout%':>9} {'ambig%':>8} {'vs b/e':>9}"
     )
     for point in profile.points:
-        relative = "-" if atr is None or atr == 0 else f"{point.cost / atr:.3f}"
+        relative = "-" if spread is None else f"{point.cost / spread.median:.3f}"
         share = point.statistics.target_first_share
         against = "-" if share is None else f"{(share - profile.break_even_share) * 100:+.2f}"
         print(
@@ -295,12 +343,12 @@ async def _main() -> int:
     finally:
         await engine.dispose()
 
-    median_atr = _median(average_true_ranges)
+    spread = _atr_spread(average_true_ranges)
     if args.format == "json":
-        print(json.dumps(_profile_payload(profile, median_atr), indent=2))
+        print(json.dumps(_profile_payload(profile, spread), indent=2))
         return 0
 
-    _print_profile(profile, median_atr, args.days)
+    _print_profile(profile, spread, args.days, args.window_candles)
     return 0
 
 
