@@ -42,7 +42,7 @@ SHORT_PLAN = SignalPricePlan(
 
 
 def test_project_phase_is_current() -> None:
-    assert constants.PROJECT_PHASE == "phase_9d1_daily_bars_and_universe"
+    assert constants.PROJECT_PHASE == "phase_9d2_cross_section_measurement"
 
 
 def _candle(index: int, *, low: str, high: str) -> Candle:

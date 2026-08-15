@@ -27,6 +27,7 @@ from app.core.config import ExplanationProviderKind, Settings
 from app.core.enums import Decision
 from app.core.exceptions import IntegrationDisabledError
 from app.domain.analysis_engine import AnalysisEngine
+from app.domain.cross_section import build_cross_section_profile
 from app.domain.direction_candidate import propose_direction
 from app.domain.disabled_pipeline_report_shell import DisabledPipelineReportShell
 from app.domain.entities import (
@@ -3040,3 +3041,60 @@ def test_phase9d1_a_wider_universe_does_not_unlock_trading() -> None:
     from app.core import constants as core_constants
 
     assert core_constants.REAL_TRADING_ENABLED is False
+
+
+PHASE_9D2_CROSS_SECTION_MODULE = Path("app/domain/cross_section.py")
+PHASE_9D2_CROSS_SECTION_CLI = Path("scripts/profile_cross_section.py")
+
+
+def test_phase9d2_cross_section_module_touches_no_other_layer() -> None:
+    import_lines = tuple(
+        line
+        for line in PHASE_9D2_CROSS_SECTION_MODULE.read_text(encoding="utf-8").lower().splitlines()
+        if line.startswith("import ") or line.startswith("from ")
+    )
+
+    for term in ("app.persistence", "app.adapters", "app.telegram", "app.api", "app.scheduler"):
+        assert not any(term in line for line in import_lines), term
+
+
+def test_phase9d2_a_ranking_may_exist_but_may_never_be_delivered() -> None:
+    """The line this phase moved, written down as the thing that replaced it.
+
+    Until now nothing in the project could produce a direction, because there was no measured basis
+    for one. A cross-sectional ranking is structurally a direction — the headline number is what the
+    top did minus what the bottom did — so the ban moved from *existence* to *delivery*. What the
+    old rule actually protected is untouched: this cannot quietly become a trading bot, and a person
+    is still told only what was measured.
+    """
+    offenders = [
+        str(file_path)
+        for directory in ("app/services", "app/telegram", "app/api", "app/scheduler")
+        for file_path in Path(directory).rglob("*.py")
+        if "cross_section" in file_path.read_text(encoding="utf-8")
+    ]
+
+    assert offenders == []
+
+
+def test_phase9d2_the_ranking_still_cannot_reach_a_broker() -> None:
+    from app.core import constants as core_constants
+
+    assert core_constants.REAL_TRADING_ENABLED is False
+
+
+def test_phase9d2_cross_section_cli_writes_nothing() -> None:
+    source = PHASE_9D2_CROSS_SECTION_CLI.read_text(encoding="utf-8")
+
+    for forbidden in ("upsert", "add_missing", "apply_outcomes", "commit()", "write_text"):
+        assert forbidden not in source, forbidden
+
+
+def test_phase9d2_the_cross_section_takes_no_parameter_to_fit() -> None:
+    """Formation and holding were fixed in the 9D-1 plan; buckets are cut at ranks, not values."""
+    parameters = set(inspect.signature(build_cross_section_profile).parameters)
+
+    assert parameters == {"observations_by_date", "field_ref", "bucket_count", "cost_per_leg"}
+    source = PHASE_9D2_CROSS_SECTION_MODULE.read_text(encoding="utf-8")
+    # The guard that makes this a cross-section rather than a pool.
+    assert "a cross-section ranks one moment" in source

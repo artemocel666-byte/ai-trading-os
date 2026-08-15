@@ -37,7 +37,7 @@ TUESDAY = datetime(2026, 8, 11, tzinfo=UTC)
 
 
 def test_project_phase_is_current() -> None:
-    assert constants.PROJECT_PHASE == "phase_9d1_daily_bars_and_universe"
+    assert constants.PROJECT_PHASE == "phase_9d2_cross_section_measurement"
 
 
 def _daily_candle(open_time: datetime) -> Candle:

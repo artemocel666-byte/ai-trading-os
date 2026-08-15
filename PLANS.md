@@ -364,15 +364,14 @@ non-actionable and without any signal, AI, or execution behavior.
     against the provider rather than assumed, and the measurement refuted both prior guesses.
     The coverage check that was missing now exists (`coverage_shortfalls`) and the final run
     reports every pair within 10% of the median. **9D-2 is unblocked on data.**
-  - 9D-2: the first cross-sectional measurement. **Pre-registered in the 9D-1 plan, before any data
-    was seen:** formation 3 months, holding 1 month, terciles rather than deciles, and the honest
-    limit that ~228 monthly periods can reveal a strong effect but cannot confirm a faint one.
-    Blocked on one decision recorded but not implemented: **a ranking is a direction**, so the
-    safety line moves from "no direction exists" to "no direction is delivered", with
-    `REAL_TRADING_ENABLED` permanently `False`.
-    Known consequence to settle there: for `D1`, a stored weekend bar must be *excluded from* a
-    window rather than disqualify it, or `--exclude-closed-market` would drop nearly every long
-    daily window. Different semantics from the intraday filter, and cheaper to notice now.
+  - 9D-2: the first cross-sectional measurement — **completed 2026-08-15**, see
+    `docs/phase9d2-verification-report.md`. 226 non-overlapping monthly periods, 44 of 44
+    instruments present on every date, nothing selected anywhere. **Null on all four criteria:**
+    spread -0.153% a month, t = -0.74, annualised Sharpe about -0.17 against a bar of +0.45, and
+    the point estimate is the wrong sign. The second half's t = -2.11 is left alone for reasons
+    fixed before it was seen. The direction line moved from "no direction exists" to "no direction
+    is delivered". **Momentum was the one cross-sectional field computable from prices alone** —
+    carry and value need interest rates and price levels the project does not have.
   - Beyond 9C-5: **the question is no longer how to slice this data.** Four pre-registered attempts
     have found nothing in OHLC over one instrument's recent past that clears a bar set at a sixth of
     a spread. The live choice is between **adding information** — the economic calendar is the

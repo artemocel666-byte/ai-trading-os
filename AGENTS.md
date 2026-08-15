@@ -2,7 +2,29 @@
 
 AI Trading OS is a foundation for a future Forex analysis and paper-trading platform.
 
-Current project phase: phase_9d1_daily_bars_and_universe.
+Current project phase: phase_9d2_cross_section_measurement.
+Phase 9D-2 asked the cross-sectional question and got the sixth null. **Do the currencies that rose
+most over three months behave differently over the next month than those that rose least?** No.
+Plumbing first and it was the cleanest in the programme: 226 rebalance dates, **44 of 44 instruments
+present on every single one**, zero dropped. Then the result: gross spread **-0.153% a month, t =
+-0.74**, annualised Sharpe about **-0.17** against a bar of +0.45. All four pre-registered criteria
+fail, and the point estimate is the *wrong sign* - reversal-shaped, and far inside noise.
+**The tempting number was left alone again.** The second half reads -0.483% with t = -2.11. It is
+the wrong sign for the registered hypothesis, the halves are a stability check on a headline that
+already failed, and one excursion past two sigma among ten correlated readings is what chance makes.
+Third phase running where the largest number in the table was rejected by criteria fixed first.
+**The decile machinery does not transfer to a cross-section, and saying it would was wrong.**
+`build_field_outcome_profile` sorts everything together, which would rank a 2008 return against a
+2015 one. Ranking happens **inside a date**; `rank_into_buckets` refuses a group spanning several,
+because that mistake would be invisible in the output.
+**The line moved: from "no direction exists" to "no direction is delivered".** A ranking is
+structurally a direction, so it may exist in the measurement layer, may never reach a user - a
+safety test bans `cross_section` from every service, Telegram, API and scheduler file - and
+`REAL_TRADING_ENABLED` stays permanently `False`.
+**The boundary this draws:** momentum is the one cross-sectional field computable from prices alone.
+Carry and value need interest rates and price levels, which the project does not have. What daily
+prices alone can say about the cross-section has now been asked and answered.
+See `docs/phase9d2-verification-report.md`.
 Phase 9D-1 changes the **question**, not the method. Five phases asked what follows a window on one
 series and answered nothing; 9D compares **many instruments at one moment** over a horizon of
 **months**. The horizon is the substantive part and it rests on our own measurement, not on hope:

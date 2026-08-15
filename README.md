@@ -4,7 +4,17 @@ AI Trading OS is a safety-first foundation for a future modular Forex analysis a
 
 ## Current Status
 
-- Current project phase: phase_9d1_daily_bars_and_universe.
+- Current project phase: phase_9d2_cross_section_measurement.
+- Phase 9D-2 asked the cross-sectional question and got the sixth null. Ranking 44 currencies each
+  month by trailing three-month return and holding one month, over 226 non-overlapping periods with
+  **every instrument present on every date**: the top-minus-bottom spread is **-0.153% a month at
+  t = -0.74**, an annualised Sharpe near -0.17 against a bar of +0.45. All four pre-registered
+  criteria fail and the point estimate is the wrong sign. The second half shows t = -2.11 and is
+  deliberately left alone: wrong sign for the registered hypothesis, and one excursion past two
+  sigma among ten correlated readings. Along the way the project's oldest rule moved from "no
+  direction exists" to "no direction is delivered" - a ranking is structurally a direction, so it
+  lives in the measurement layer and a safety test keeps it out of everything user-facing.
+  Read-only, `scripts/profile_cross_section.py`.
 - Phase 9D-1 changes the question rather than the method: instead of "what follows this window on
   EURUSD", the project will compare **many currencies against each other** over a horizon of
   **months**. The horizon is the substantive part, and it rests on a measurement — a 1-pip round

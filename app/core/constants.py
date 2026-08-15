@@ -1,4 +1,4 @@
-PROJECT_PHASE = "phase_9d1_daily_bars_and_universe"
+PROJECT_PHASE = "phase_9d2_cross_section_measurement"
 STRATEGY_IMPLEMENTED = False
 REAL_TRADING_ENABLED = False
 
