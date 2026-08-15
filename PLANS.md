@@ -346,25 +346,24 @@ non-actionable and without any signal, AI, or execution behavior.
     isolated in sign, and inside 2.3 standard errors on the thinnest cell in the study.
     **Pre-committed: no other window width will be tried**, and the commitment was honoured with
     those two readings on the table.
-  - 9D-1: daily bars and a currency universe — **IN PROGRESS, opened 2026-08-14. Code complete and
-    green; the data is not, so the phase is not.** Decisions taken the same day: **currencies** (not
+  - 9D-1: daily bars and a currency universe — **completed 2026-08-15**, see
+    `docs/phase9d1-verification-report.md`. **44 of 45 pairs filled cleanly, zero failed chunks,
+    224,587 daily bars, and every pair present in every year 2007–2026** (5,055–5,135 bars each,
+    median 5,106). The holes were neither rate limits nor provider history: one impossible row —
+    a close sitting a few pips outside its own bar — made the parser refuse all 714 rows of a
+    response. Rows are now skipped and counted, never repaired, with a 25% ceiling above which a
+    response is still refused. Data quality differs between pairs by a factor of four (1.3% of
+    EURGBP days against 5.5% of EURSEK), which 9D-2 should know. Four defects surfaced, all one
+    disease: a concept written in two places. M15/H1 untouched and verified unchanged; a retro-check
+    confirms the intraday history five phases rest on has no comparable holes.
+    Decisions taken 2026-08-14: **currencies** (not
     stocks), **compared across instruments** (not one series through time), horizon of **months**,
     bar of evidence kept, project stays descriptive. Built: a `D1` timeframe,
     `app/domain/currency_universe.py`, `--universe` on the backfill script, 16 new tests, a
     `phase9d1` safety block. M15/H1 untouched and verified unchanged. The weekend rule was measured
     against the provider rather than assumed, and the measurement refuted both prior guesses.
-    **Resume here — the repair pass comes first.** State of the stored daily data as of the stop:
-    44 of 45 pairs are quoted (only `NZDSEK` refused); 35 hold some data, 9 none; and **only 3 of
-    the 35 hold all twenty years**. Fourteen pairs are missing exactly two chunks' worth and nine
-    are missing three, so the gaps are failed requests rather than provider history — `AUDCAD` has
-    data through 2018-05 and from 2023-11, the two dates being chunk boundaries.
-    Suspected cause: the 8s pacing sits right on the provider's 8-per-minute limit, and the
-    worker's own ingestion job was calling the same provider concurrently. The worker is stopped.
-    The repair pass must: run with the worker down, pace more slowly, refill the nine untouched
-    pairs and every gap, and then **assert equal year coverage across the whole universe** before
-    anything is measured. That last check did not exist and should have.
-    **9D-2 must not start until it passes.** A cross-section with instruments silently absent in
-    some years is precisely the bias that manufactures a finding.
+    The coverage check that was missing now exists (`coverage_shortfalls`) and the final run
+    reports every pair within 10% of the median. **9D-2 is unblocked on data.**
   - 9D-2: the first cross-sectional measurement. **Pre-registered in the 9D-1 plan, before any data
     was seen:** formation 3 months, holding 1 month, terciles rather than deciles, and the honest
     limit that ~228 monthly periods can reveal a strong effect but cannot confirm a faint one.

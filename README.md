@@ -17,10 +17,11 @@ AI Trading OS is a safety-first foundation for a future modular Forex analysis a
   but erratically and differently per instrument, so `D1` expects weekdays only. Along the way a
   duplicate definition of "which candles should exist" — two identical copies since Phase 3 — was
   collapsed into one, which is exactly the change that would have split them.
-  **Not finished: the code is complete and green, the data is not.** 44 of 45 pairs are quoted but
-  only 3 of 35 filled pairs hold all twenty years — the gaps land on request boundaries, so they are
-  failed calls rather than missing history. Next step is a repair pass with the worker stopped and
-  slower pacing, then a coverage check across the whole universe before anything is measured.
+  **Complete: 44 of 45 pairs, zero failed chunks, 224,587 daily bars, every pair in every year
+  2007-2026.** The multi-year holes turned out to be our own parser refusing a whole 714-row
+  response because a few rows were impossible — days whose close sits a few pips outside the bar's
+  own range. Such rows are now skipped and counted, never repaired, with a ceiling above which a
+  response is still refused.
 - Phase 9C-5 asked whether twelve candles is simply too short a view — the one assumption every
   previous null shared. Widened to one calendar day (96 candles on M15, 24 on H1) with the horizon
   held fixed. **Null on all four fields again**: nothing clears five points with a consistent sign

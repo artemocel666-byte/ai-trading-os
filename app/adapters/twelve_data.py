@@ -1,4 +1,5 @@
 import asyncio
+import logging
 from collections.abc import Sequence
 from datetime import datetime, timedelta
 from decimal import Decimal, InvalidOperation
@@ -24,7 +25,23 @@ from app.domain.entities import Candle, Timeframe
 from app.domain.entities.data_quality import TIMEFRAME_TO_DELTA as DOMAIN_TIMEFRAME_TO_DELTA
 from app.domain.value_objects import CurrencyPair
 
+logger = logging.getLogger(__name__)
+
 PROVIDER_NAME = "twelve_data"
+
+#: How much of one response may be impossible before the whole response is refused.
+#:
+#: The rows in question are days whose close sits a few pips *outside* the bar's own high-low range
+#: — not a rounding artefact, which is what this was first mistaken for, but a real inconsistency of
+#: a few pips against a daily range of tens. Measured on the live provider over the same 1000-day
+#: window: 1.3% of EURGBP days, 5.5% of EURSEK days. Data quality differs by pair by a factor of
+#: four, which is itself worth knowing before a cross-section is built on it.
+#:
+#: The ceiling is deliberately set far above that, where *broken* lives rather than merely lossy: a
+#: quarter of a response being impossible is a feed to refuse, five percent is a series to note.
+#: Setting it just above the worst sample would be fitting a threshold to the data it must judge,
+#: which is the habit this project spent five phases avoiding.
+MALFORMED_ROW_TOLERANCE_PERCENT = 25
 
 #: This provider's own name for each timeframe. Genuinely adapter-specific — another provider would
 #: spell them differently — so it stays here and is the one mapping this module defines.
@@ -259,6 +276,7 @@ class TwelveDataMarketDataAdapter:
         if not isinstance(values, list):
             raise ProviderInvalidPayloadError(PROVIDER_NAME, details={"reason": "values_not_list"})
         candles: list[Candle] = []
+        malformed: list[str] = []
         for row in values:
             if not isinstance(row, dict):
                 raise ProviderInvalidPayloadError(
@@ -295,8 +313,38 @@ class TwelveDataMarketDataAdapter:
                     is_closed=True,
                 )
             except (KeyError, ValueError, ValidationError) as exc:
-                raise ProviderInvalidPayloadError(
-                    PROVIDER_NAME, details={"reason": "invalid_candle"}
-                ) from exc
+                # One impossible row must not destroy the rest of the response. Phase 9D-1 found
+                # this the expensive way: the provider emits occasional daily bars whose low sits
+                # a few units of the eighth decimal *above* the close — a rounding artefact, and
+                # physically impossible, so `Candle` is right to refuse it. Refusing the whole
+                # payload for it left multi-year holes in most of the currency universe.
+                #
+                # The row is skipped and counted, never repaired: widening the low to admit the
+                # close would be editing an observation, which is the one thing this project does
+                # not do. What is lost is named rather than silently absent.
+                malformed.append(str(row.get("datetime", "?")))
+                logger.warning(
+                    "twelve_data returned an impossible candle; skipping it",
+                    extra={
+                        "provider": PROVIDER_NAME,
+                        "pair": pair.value,
+                        "timeframe": timeframe.value,
+                        "candle_datetime": str(row.get("datetime", "?")),
+                        "reason": type(exc).__name__,
+                    },
+                )
+                continue
             candles.append(candle)
+
+        # A handful of artefacts is the provider being imprecise; a payload that is mostly
+        # impossible is a broken feed, and tolerating it would turn this guard into decoration.
+        if malformed and len(malformed) * 100 > len(values) * MALFORMED_ROW_TOLERANCE_PERCENT:
+            raise ProviderInvalidPayloadError(
+                PROVIDER_NAME,
+                details={
+                    "reason": "too_many_invalid_candles",
+                    "malformed_count": len(malformed),
+                    "row_count": len(values),
+                },
+            )
         return candles

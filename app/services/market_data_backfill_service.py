@@ -140,11 +140,16 @@ class MarketDataBackfillService:
                 chunk_end,
             )
             inserted, updated = await self._store_candles(candles)
-        except Exception:
+        except Exception as error:
+            # The type name, not the message: a provider message can quote the request URL, and the
+            # request URL carries the API key. The name is enough to separate a rate limit from a
+            # timeout from a restricted plan, which is the whole question when a fill comes back
+            # holed.
             return BackfillChunkResult(
                 chunk_start=chunk_start,
                 chunk_end=chunk_end,
                 failed=True,
+                failure_reason=type(error).__name__,
             )
 
         open_times = sorted(candle.open_time for candle in candles)

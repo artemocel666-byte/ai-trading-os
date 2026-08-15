@@ -26,9 +26,21 @@ class BackfillChunkResult(BaseModel):
     first_candle_open_time: datetime | None = None
     last_candle_open_time: datetime | None = None
     failed: bool = False
+    #: Why the chunk failed, as the exception's type name. Added in Phase 9D-1, where a universe
+    #: fill left five-year holes in most pairs and the result recorded only `failed=True` — so the
+    #: run could say *that* something went wrong and never *what*, and the cause had to be guessed
+    #: from the shape of the gaps. Deliberately the type name and not the message: a message can
+    #: carry a request URL, and a request URL carries the API key.
+    failure_reason: str | None = None
     possibly_truncated: bool = False
 
     model_config = ConfigDict(frozen=True)
+
+    @model_validator(mode="after")
+    def only_a_failure_explains_itself(self) -> Self:
+        if self.failure_reason is not None and not self.failed:
+            raise ValueError("a chunk that did not fail cannot carry a failure reason")
+        return self
 
     @field_validator(
         "chunk_start",

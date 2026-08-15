@@ -30,19 +30,27 @@ confirm a faint one, so a null there will mean *we could not see it*, not *it is
 **A ranking is a direction, and that line must move deliberately.** Agreed shape: a ranking may
 exist in the measurement layer, may never be delivered to a user, and `REAL_TRADING_ENABLED` stays
 permanently `False`. The safety test moves from "no direction exists" to "no direction is delivered".
-**9D-1 is NOT finished. Code is complete and green; the data is not.** Of 45 pairs, 44 are quoted,
-35 hold some daily history and **only 3 hold all twenty years** — fourteen are short by exactly two
-chunks and nine by three, with gaps landing on chunk boundaries, so these are failed requests and
-not provider history. Suspected cause: 8s pacing sits on the provider's 8-per-minute limit while the
-worker's own ingestion called the same provider. The worker is stopped; **resume with a repair
-pass**, and add the check that was missing — *equal year coverage across the whole universe* —
-before any measurement. **9D-2 must not start until it passes:** a cross-section with instruments
-silently absent in some years is exactly the bias that manufactures a finding.
-**Three defects in this slice, all one disease: one concept written in two places.** The Docker
-image against the working tree; `TIMEFRAME_TO_DELTA` in the domain against a private copy in the
-adapter; the request-range limit as the service's chunk size against the adapter's guard. The third
-was the dangerous one — it made the run report "the provider does not quote these pairs", a wrong
-answer that looked like a real one.
+**9D-1 is complete: 44 of 45 pairs, zero failed chunks, 224,587 daily bars, every pair present in
+every year 2007-2026.**
+**The holes were our parser, not the provider and not rate limits.** A "failed" chunk's response was
+200, valid JSON, 714 rows — refused entirely because a few were impossible: days whose close sits a
+few pips outside the bar's own range (EURGBP 2021-01-01 closed three pips below its own low, against
+a 56-pip range). `Candle` is right to refuse such a row; destroying 714 for it was the bug. Rows are
+now **skipped and counted, never repaired** — widening a low to admit a close would edit an
+observation — with a 25% ceiling above which a response is still refused. The ceiling is
+deliberately far above the worst observed 5.5%: setting it just above would be fitting a threshold
+to the data it must judge.
+**Data quality differs between pairs by a factor of four:** 1.3% of EURGBP days are impossible
+against 5.5% of EURSEK. Know this before building a cross-section on them.
+**Record the failure reason or the cause must be guessed.** The service stored `failed=True` and
+swallowed the exception, so two different causes looked like one mystery and the first two guesses
+were wrong. With the type name recorded, the final runs separated `ProviderInvalidPayloadError` from
+a genuine `ProviderRateLimitError`.
+**Four defects, one disease: a concept written in two places.** The Docker image against the working
+tree; `TIMEFRAME_TO_DELTA` in the domain against a copy in the adapter; the request-range limit as
+the service's chunk size against the adapter's guard; `_expected_open_times` in two modules since
+Phase 3. The third made the run report "the provider does not quote these 45 pairs" — a wrong answer
+wearing the shape of a real one.
 Phase 9C-5 tested the one structural assumption every previous null shared: that a **twelve-candle
 window** is enough to see. Widened to **one calendar day** — 96 candles on M15, 24 on H1, chosen as
 a span of time so both timeframes see the same stretch — with the horizon held fixed, so only what

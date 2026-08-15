@@ -1,16 +1,20 @@
 from datetime import UTC, datetime, timedelta
 
+import httpx
 import pytest
+from pydantic import ValidationError
 
 from app.adapters.twelve_data import TIMEFRAME_TO_DELTA as ADAPTER_TIMEFRAME_TO_DELTA
-from app.adapters.twelve_data import TIMEFRAME_TO_INTERVAL
+from app.adapters.twelve_data import TIMEFRAME_TO_INTERVAL, TwelveDataMarketDataAdapter
 from app.core import constants
+from app.core.exceptions import ProviderInvalidPayloadError
 from app.domain.currency_universe import (
     QUOTE_PRECEDENCE,
     UNIVERSE_CURRENCIES,
     universe_pairs,
 )
 from app.domain.entities import Candle, Timeframe
+from app.domain.entities.backfill import BackfillChunkResult
 from app.domain.entities.data_quality import (
     TIMEFRAME_TO_DELTA,
     TRADED_DAYS_ONLY_TIMEFRAMES,
@@ -20,6 +24,7 @@ from app.domain.entities.data_quality import (
     is_window_aligned,
 )
 from app.domain.value_objects import CurrencyPair
+from scripts.backfill_market_data import coverage_shortfalls
 
 PAIR = CurrencyPair(value="EURUSD")
 
@@ -145,6 +150,139 @@ def test_a_timeframe_cannot_be_half_added() -> None:
         assert timeframe in TIMEFRAME_TO_DELTA, timeframe
         assert timeframe in TIMEFRAME_TO_INTERVAL, timeframe
     assert TIMEFRAME_TO_DELTA is ADAPTER_TIMEFRAME_TO_DELTA
+
+
+def _adapter() -> TwelveDataMarketDataAdapter:
+    """`_parse_candles` is pure — no request is made, so the client is never touched."""
+    return TwelveDataMarketDataAdapter(
+        client=httpx.AsyncClient(),
+        api_key="unused",
+        base_url="https://example.invalid",
+        timeout=httpx.Timeout(1.0),
+        retry_count=0,
+        retry_backoff_seconds=0.0,
+        max_request_range=timedelta(days=90),
+    )
+
+
+def _rows(count: int, *, impossible: int = 0) -> list[dict[str, str]]:
+    """Daily rows, some with a close sitting outside the bar's own range — as seen in the wild."""
+    rows: list[dict[str, str]] = []
+    for index in range(count):
+        day = (datetime(2020, 1, 1, tzinfo=UTC) + timedelta(days=index)).strftime("%Y-%m-%d")
+        if index < impossible:
+            rows.append(
+                {"datetime": day, "open": "0.9", "high": "0.91", "low": "0.89", "close": "0.88"}
+            )
+        else:
+            rows.append(
+                {"datetime": day, "open": "0.9", "high": "0.91", "low": "0.88", "close": "0.89"}
+            )
+    return rows
+
+
+def _parse(rows: list[dict[str, str]]) -> list[Candle]:
+    return _adapter()._parse_candles(
+        {"values": rows},
+        PAIR,
+        Timeframe.D1,
+        datetime(2019, 12, 31, tzinfo=UTC),
+        datetime(2020, 6, 1, tzinfo=UTC),
+    )
+
+
+def test_one_impossible_row_does_not_destroy_the_response() -> None:
+    """The defect that cost Phase 9D-1 a day and left multi-year holes in most of the universe.
+
+    The provider emits occasional daily bars whose low sits a few units of the eighth decimal above
+    the close. `Candle` is right to refuse them — a close outside its own day's range is not a
+    price. Refusing the *whole* payload for it threw away seven hundred good bars at a time.
+    """
+    candles = _parse(_rows(20, impossible=1))
+
+    assert len(candles) == 19
+    # Skipped, never repaired: widening the low to admit the close would edit an observation.
+    assert all(candle.low <= candle.close for candle in candles)
+    assert datetime(2020, 1, 1, tzinfo=UTC) not in {candle.open_time for candle in candles}
+
+
+def test_the_worst_quality_pair_observed_is_still_accepted() -> None:
+    """EURSEK loses 5.5% of its days this way against EURGBP's 1.3%, both measured live.
+
+    A series that lossy is worth noting — and it is a series, not a broken feed. Refusing it would
+    delete nineteen years of a currency from the universe over an eighteenth of its rows.
+    """
+    assert len(_parse(_rows(100, impossible=6))) == 94
+
+
+def test_a_mostly_impossible_payload_is_still_refused() -> None:
+    """Tolerating row by row without a ceiling would turn the guard into decoration."""
+    with pytest.raises(ProviderInvalidPayloadError):
+        _parse(_rows(20, impossible=6))
+
+
+def test_a_clean_payload_keeps_every_row() -> None:
+    assert len(_parse(_rows(20))) == 20
+
+
+def test_a_failed_chunk_says_why_it_failed() -> None:
+    """A whole day was spent guessing this from the shape of the holes.
+
+    The service caught every exception and recorded `failed=True` and nothing else, so a fill that
+    came back with five-year gaps could report *that* something broke and never *what*.
+    """
+    chunk = BackfillChunkResult(
+        chunk_start=FRIDAY,
+        chunk_end=TUESDAY,
+        failed=True,
+        failure_reason="ProviderRateLimitError",
+    )
+
+    assert chunk.failure_reason == "ProviderRateLimitError"
+
+
+def test_a_chunk_that_worked_cannot_carry_a_failure_reason() -> None:
+    with pytest.raises(ValidationError):
+        BackfillChunkResult(
+            chunk_start=FRIDAY, chunk_end=TUESDAY, fetched_count=5, failure_reason="whatever"
+        )
+
+
+def test_coverage_is_judged_against_the_sample_rather_than_an_absolute() -> None:
+    """The check 9D-1 lacked, and the reason it is relative.
+
+    The right number of bars depends on an instrument's real history, which the fill cannot know.
+    What it can know is whether one member of the universe came back with far less than the rest —
+    and a cross-section over instruments silently absent in some years is the bias that
+    manufactures a finding.
+    """
+    median, short = coverage_shortfalls(
+        [("EURUSD", 5000), ("GBPUSD", 4950), ("AUDCAD", 3700), ("USDJPY", 5010)]
+    )
+
+    # Four values, so the median is the lower of the two middles — the same nearest-rank habit the
+    # rest of the project keeps, and a value the sample actually contained.
+    assert median == 4950
+    assert short == [("AUDCAD", 3700)]
+
+
+def test_a_universe_that_agrees_with_itself_reports_no_shortfall() -> None:
+    median, short = coverage_shortfalls([("EURUSD", 5000), ("GBPUSD", 4800), ("USDJPY", 4900)])
+
+    assert median == 4900
+    assert short == []
+
+
+def test_one_missing_chunk_of_seven_is_caught() -> None:
+    """Why the tolerance is a tenth: a single lost chunk costs about a seventh."""
+    _, short = coverage_shortfalls([("A", 700), ("B", 700), ("C", 700), ("D", 600)])
+
+    assert short == [("D", 600)]
+
+
+def test_coverage_says_nothing_when_nothing_was_fetched() -> None:
+    assert coverage_shortfalls([]) == (0, [])
+    assert coverage_shortfalls([("EURUSD", 0), ("GBPUSD", 0)]) == (0, [])
 
 
 def test_pairs_are_written_the_way_the_market_quotes_them() -> None:

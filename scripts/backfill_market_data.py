@@ -260,12 +260,25 @@ async def _run_universe(
             result = await service.backfill(
                 pair=item, timeframe=timeframe, start_at=start_at, end_at=end_at
             )
-            filled.append((item.value, result.total_inserted, result.succeeded))
+            filled.append((item.value, result.total_fetched, result.succeeded))
             flag = "" if result.succeeded else "  <- INCOMPLETE"
             print(
                 f"  {item.value:<8} fetched={result.total_fetched:>6} "
                 f"inserted={result.total_inserted:>6} updated={result.total_updated:>6}{flag}"
             )
+            # Every failed chunk, named. A run that reports only *that* something broke leaves the
+            # cause to be guessed from the shape of the holes, which is how a whole day was spent.
+            for chunk in result.chunk_results:
+                if chunk.failed:
+                    print(
+                        f"           FAILED {chunk.chunk_start.date()}..{chunk.chunk_end.date()} "
+                        f"{chunk.failure_reason or 'unknown'}"
+                    )
+                elif chunk.possibly_truncated:
+                    print(
+                        f"           TRUNCATED? {chunk.chunk_start.date()}.."
+                        f"{chunk.chunk_end.date()} first={chunk.first_candle_open_time}"
+                    )
     finally:
         await clients.aclose()
         await engine.dispose()
@@ -275,6 +288,7 @@ async def _run_universe(
         f"\nFilled {clean} of {len(filled)} pair(s) cleanly; "
         f"{len(pairs) - len(filled)} pair(s) the provider does not quote."
     )
+    _report_coverage(filled)
     if clean != len(filled):
         print(
             "At least one pair did not complete. Treat its history as incomplete: a truncated "
@@ -282,6 +296,54 @@ async def _run_universe(
         )
         return 1
     return 0
+
+
+#: How far below the sample's own median a pair may sit and still be called comparable. A tenth is
+#: loose enough for instruments whose real histories differ by a little and tight enough to catch a
+#: pair that lost a chunk: one missing chunk of seven is fourteen percent.
+COVERAGE_TOLERANCE_PERCENT = 10
+
+
+def coverage_shortfalls(counts: Sequence[tuple[str, int]]) -> tuple[int, list[tuple[str, int]]]:
+    """The sample's median bar count, and the pairs that fall more than a tenth below it.
+
+    The check Phase 9D-1 lacked. A fill can report success per pair and still leave a universe whose
+    members cover different spans — and a cross-section over instruments silently absent in some
+    years is the bias that manufactures a finding.
+
+    Deliberately *relative*, against the sample's own median: the right absolute count depends on an
+    instrument's real history, which this script has no way to know. It is a comparability test, not
+    a completeness one.
+    """
+    if not counts:
+        return (0, [])
+    ordered = sorted(count for _, count in counts)
+    median = ordered[(len(ordered) - 1) // 2]
+    if median == 0:
+        return (0, [])
+    floor = median * (100 - COVERAGE_TOLERANCE_PERCENT)
+    short = [(symbol, count) for symbol, count in counts if count * 100 < floor]
+    return (median, sorted(short, key=lambda item: item[1]))
+
+
+def _report_coverage(filled: Sequence[tuple[str, int, bool]]) -> None:
+    counts = [(symbol, count) for symbol, count, _ in filled]
+    median, short = coverage_shortfalls(counts)
+    if median == 0:
+        print("Coverage: nothing was fetched, so there is nothing to compare.")
+        return
+    fetched = sorted(count for _, count in counts)
+    print(f"Coverage: median {median} bars per pair, range {fetched[0]}..{fetched[-1]}")
+    if not short:
+        print(
+            f"  every pair is within {COVERAGE_TOLERANCE_PERCENT}% of the median "
+            "— the universe is comparable"
+        )
+        return
+    print(f"  {len(short)} pair(s) more than {COVERAGE_TOLERANCE_PERCENT}% short of it:")
+    for symbol, count in short:
+        print(f"    {symbol:<8} {count:>6} bars ({count * 100 // median}% of median)")
+    print("  A cross-section is not comparable until these are equal. Do not measure on this.")
 
 
 def main() -> None:
