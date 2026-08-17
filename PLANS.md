@@ -364,6 +364,20 @@ non-actionable and without any signal, AI, or execution behavior.
     against the provider rather than assumed, and the measurement refuted both prior guesses.
     The coverage check that was missing now exists (`coverage_shortfalls`) and the final run
     reports every pair within 10% of the median. **9D-2 is unblocked on data.**
+  - 9D-3: interest rates, the first data that is not a price — **completed 2026-08-15**, see
+    `docs/phase9d3-verification-report.md`. FRED three-month interbank rates for all ten universe
+    currencies, free and keyless. **10 of 10 fetched, 5,855 rows, one gap (USD April 2020), 221 of
+    222 anchors complete** at the pre-registered two-month lag. Percent becomes a fraction in the
+    adapter; a blank month is absent rather than zero; **no positivity constraint anywhere**, since
+    JPY, CHF and EUR all went below zero. Migration 0005 adds one table and drops nothing. Rates may
+    not reach any user-facing layer. Measures nothing.
+  - 9D-4: does the interest rate differential order the cross-section? **Criteria fixed in the 9D-3
+    plan before any rate was seen:** carry = rate(base) − rate(quote), lagged two full months;
+    terciles, monthly rebalance, one-month holding; primary metric **total return** (spot plus
+    accrued carry) with the spot-only and carry-only spreads always reported beside it; all four of
+    positive mean, t ≥ 2.0, same sign in both halves, and survival of 2 bp per leg. Plus **the worst
+    month and the worst twelve-month stretch**, because carry's signature failure is a positive mean
+    with a catastrophic tail and a t-statistic cannot see it.
   - 9D-2: the first cross-sectional measurement — **completed 2026-08-15**, see
     `docs/phase9d2-verification-report.md`. 226 non-overlapping monthly periods, 44 of 44
     instruments present on every date, nothing selected anywhere. **Null on all four criteria:**

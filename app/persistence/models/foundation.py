@@ -356,3 +356,32 @@ class PaperPositionModel(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=utc_now, nullable=False
     )
+
+
+class InterestRateModel(Base):
+    """One currency's short-term rate for one month.
+
+    Phase 9D-3, and the first stored data in this project that is not a price. The unique key is
+    the currency and the month, so a revision corrects one observation rather than creating a
+    second one.
+
+    **No positivity check, unlike every price column above.** JPY, CHF and EUR all spent years
+    below zero, and a constraint here would reject real observations at the database boundary
+    where the failure would be hardest to read.
+    """
+
+    __tablename__ = "interest_rates"
+    __table_args__ = (
+        UniqueConstraint("currency", "as_of", name="uq_interest_rate_identity"),
+        Index("ix_interest_rates_currency_as_of", "currency", "as_of"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID_PK, primary_key=True, default=uuid.uuid4)
+    provider: Mapped[str] = mapped_column(String(80), nullable=False)
+    source_series: Mapped[str] = mapped_column(String(120), nullable=False)
+    currency: Mapped[str] = mapped_column(String(3), nullable=False, index=True)
+    as_of: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, index=True)
+    annual_rate: Mapped[Decimal] = mapped_column(Numeric(12, 8), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utc_now, nullable=False
+    )

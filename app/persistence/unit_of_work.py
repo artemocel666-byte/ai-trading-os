@@ -10,6 +10,7 @@ from app.domain.interfaces.repositories import (
     EconomicEventRepository,
     ErrorEventRepository,
     ForwardOutcomeRepository,
+    InterestRateRepository,
     SystemStateRepository,
 )
 from app.persistence.repositories import (
@@ -18,6 +19,7 @@ from app.persistence.repositories import (
     SqlAlchemyEconomicEventRepository,
     SqlAlchemyErrorEventRepository,
     SqlAlchemyForwardOutcomeRepository,
+    SqlAlchemyInterestRateRepository,
     SqlAlchemyScheduledDigestDeliveryStore,
     SqlAlchemySystemStateRepository,
 )
@@ -35,6 +37,7 @@ class SqlAlchemyUnitOfWork:
         self._economic_events: EconomicEventRepository | None = None
         self._scheduled_digest_deliveries: ScheduledDigestDeliveryStore | None = None
         self._forward_outcomes: ForwardOutcomeRepository | None = None
+        self._interest_rates: InterestRateRepository | None = None
 
     async def __aenter__(self) -> Self:
         if self._session is not None:
@@ -48,6 +51,7 @@ class SqlAlchemyUnitOfWork:
         self._economic_events = SqlAlchemyEconomicEventRepository(self._session)
         self._scheduled_digest_deliveries = SqlAlchemyScheduledDigestDeliveryStore(self._session)
         self._forward_outcomes = SqlAlchemyForwardOutcomeRepository(self._session)
+        self._interest_rates = SqlAlchemyInterestRateRepository(self._session)
         return self
 
     async def __aexit__(
@@ -72,6 +76,7 @@ class SqlAlchemyUnitOfWork:
             self._economic_events = None
             self._scheduled_digest_deliveries = None
             self._forward_outcomes = None
+            self._interest_rates = None
             self._committed = False
 
     @property
@@ -115,6 +120,12 @@ class SqlAlchemyUnitOfWork:
         if self._session is None or self._forward_outcomes is None:
             raise RuntimeError("unit of work has not been entered")
         return self._forward_outcomes
+
+    @property
+    def interest_rates(self) -> InterestRateRepository:
+        if self._session is None or self._interest_rates is None:
+            raise RuntimeError("unit of work has not been entered")
+        return self._interest_rates
 
     async def commit(self) -> None:
         if self._session is None:

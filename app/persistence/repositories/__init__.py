@@ -4,6 +4,7 @@ from app.persistence.repositories.foundation import (
     SqlAlchemyEconomicEventRepository,
     SqlAlchemyErrorEventRepository,
     SqlAlchemyForwardOutcomeRepository,
+    SqlAlchemyInterestRateRepository,
     SqlAlchemyScheduledDigestDeliveryStore,
     SqlAlchemySystemStateRepository,
 )
@@ -14,6 +15,7 @@ __all__ = [
     "SqlAlchemyEconomicEventRepository",
     "SqlAlchemyErrorEventRepository",
     "SqlAlchemyForwardOutcomeRepository",
+    "SqlAlchemyInterestRateRepository",
     "SqlAlchemyScheduledDigestDeliveryStore",
     "SqlAlchemySystemStateRepository",
 ]

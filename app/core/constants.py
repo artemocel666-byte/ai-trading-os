@@ -1,4 +1,4 @@
-PROJECT_PHASE = "phase_9d2_cross_section_measurement"
+PROJECT_PHASE = "phase_9d3_interest_rate_ingestion"
 STRATEGY_IMPLEMENTED = False
 REAL_TRADING_ENABLED = False
 

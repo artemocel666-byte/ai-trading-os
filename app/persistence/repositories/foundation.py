@@ -11,6 +11,7 @@ from app.core.time import normalize_to_utc, utc_now
 from app.domain.entities import Candle, EconomicEvent, EconomicImpact, Timeframe
 from app.domain.entities.data_quality import UpsertResult
 from app.domain.entities.forward_outcome import ForwardOutcomeRecord
+from app.domain.entities.interest_rate import InterestRate
 from app.domain.entities.outcome import OutcomeKind
 from app.domain.entities.pipeline_decision import PipelineDecisionStatus
 from app.domain.entities.readiness import SnapshotDigestStatus, SnapshotNotificationDedupKey
@@ -23,6 +24,7 @@ from app.persistence.models import (
     EconomicEventModel,
     ErrorEventModel,
     ForwardOutcomeRecordModel,
+    InterestRateModel,
     ScheduledDigestDeliveryModel,
     SystemStateModel,
 )
@@ -506,3 +508,70 @@ class SqlAlchemyScheduledDigestDeliveryStore:
         )
         row = result.scalar_one_or_none()
         return None if row is None else _delivery_from_model(row)
+
+
+class SqlAlchemyInterestRateRepository:
+    """Phase 9D-3. Duplicate-safe by currency and month, like every other store here.
+
+    A month arriving twice is the source revising one observation, not publishing a second one, so
+    it updates rather than inserts.
+    """
+
+    def __init__(self, session: AsyncSession) -> None:
+        self._session = session
+
+    async def upsert_many(self, rates: list[InterestRate]) -> UpsertResult:
+        inserted = 0
+        updated = 0
+        for rate in rates:
+            result = await self._session.execute(
+                select(InterestRateModel).where(
+                    InterestRateModel.currency == rate.currency,
+                    InterestRateModel.as_of == rate.as_of,
+                )
+            )
+            row = result.scalar_one_or_none()
+            if row is None:
+                self._session.add(
+                    InterestRateModel(
+                        provider=rate.provider,
+                        source_series=rate.source_series,
+                        currency=rate.currency,
+                        as_of=rate.as_of,
+                        annual_rate=rate.annual_rate,
+                    )
+                )
+                inserted += 1
+                continue
+            row.provider = rate.provider
+            row.source_series = rate.source_series
+            row.annual_rate = rate.annual_rate
+            updated += 1
+        return UpsertResult(inserted=inserted, updated=updated)
+
+    async def list_range(
+        self,
+        *,
+        currency: str | None = None,
+        start_at: datetime | None = None,
+        end_at: datetime | None = None,
+    ) -> list[InterestRate]:
+        statement = select(InterestRateModel)
+        if currency is not None:
+            statement = statement.where(InterestRateModel.currency == currency.strip().upper())
+        if start_at is not None:
+            statement = statement.where(InterestRateModel.as_of >= normalize_to_utc(start_at))
+        if end_at is not None:
+            statement = statement.where(InterestRateModel.as_of <= normalize_to_utc(end_at))
+        statement = statement.order_by(InterestRateModel.as_of, InterestRateModel.currency)
+        result = await self._session.execute(statement)
+        return [
+            InterestRate(
+                provider=row.provider,
+                source_series=row.source_series,
+                currency=row.currency,
+                as_of=normalize_to_utc(row.as_of),
+                annual_rate=row.annual_rate,
+            )
+            for row in result.scalars().all()
+        ]

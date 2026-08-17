@@ -4,7 +4,16 @@ AI Trading OS is a safety-first foundation for a future modular Forex analysis a
 
 ## Current Status
 
-- Current project phase: phase_9d2_cross_section_measurement.
+- Current project phase: phase_9d3_interest_rate_ingestion.
+- Phase 9D-3 ingested the first data in this project that is **not a price**: three-month interbank
+  rates for all ten universe currencies, from FRED, free and without an API key. **10 of 10
+  currencies, 5,855 rows, one gap in the whole set (USD April 2020), and 221 of 222 monthly anchors
+  complete** at the pre-registered two-month lag. Two properties of the source decided two rules
+  before any code: percent becomes a fraction in the adapter, and a blank month is absent rather
+  than zero. There is deliberately **no positivity constraint** — JPY, CHF and EUR all spent years
+  below zero. Measures nothing; the carry question is 9D-4, whose criteria were fixed before a
+  single rate was looked at. Read-only apart from the rates table,
+  `scripts/backfill_interest_rates.py`.
 - Phase 9D-2 asked the cross-sectional question and got the sixth null. Ranking 44 currencies each
   month by trailing three-month return and holding one month, over 226 non-overlapping periods with
   **every instrument present on every date**: the top-minus-bottom spread is **-0.153% a month at

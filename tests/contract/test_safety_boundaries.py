@@ -3098,3 +3098,59 @@ def test_phase9d2_the_cross_section_takes_no_parameter_to_fit() -> None:
     source = PHASE_9D2_CROSS_SECTION_MODULE.read_text(encoding="utf-8")
     # The guard that makes this a cross-section rather than a pool.
     assert "a cross-section ranks one moment" in source
+
+
+PHASE_9D3_RATES_ADAPTER = Path("app/adapters/fred_rates.py")
+PHASE_9D3_RATES_CLI = Path("scripts/backfill_interest_rates.py")
+
+
+def test_phase9d3_rates_reach_no_user_facing_layer() -> None:
+    """Rates are an input to measurement, never an output to a person.
+
+    They arrive in the project only so a cross-section can be ranked by something that is not a
+    price. Nothing about that belongs in a Telegram message or an HTTP response, and putting it
+    there would make an unmeasured number look like a finding.
+    """
+    offenders = [
+        str(file_path)
+        for directory in ("app/telegram", "app/api", "app/scheduler", "app/services")
+        for file_path in Path(directory).rglob("*.py")
+        if "interest_rate" in file_path.read_text(encoding="utf-8")
+        or "fred_rates" in file_path.read_text(encoding="utf-8")
+    ]
+
+    assert offenders == []
+
+
+def test_phase9d3_rates_adapter_touches_no_other_layer() -> None:
+    import_lines = tuple(
+        line
+        for line in PHASE_9D3_RATES_ADAPTER.read_text(encoding="utf-8").lower().splitlines()
+        if line.startswith("import ") or line.startswith("from ")
+    )
+
+    for term in ("app.persistence", "app.telegram", "app.api", "app.scheduler", "app.services"):
+        assert not any(term in line for line in import_lines), term
+
+
+def test_phase9d3_a_missing_month_is_never_written_as_zero() -> None:
+    """The source leaves months blank, and a zero would state a rate that was never published."""
+    source = PHASE_9D3_RATES_ADAPTER.read_text(encoding="utf-8")
+
+    assert 'if not raw or raw == ".":' in source
+    assert "skipped += 1" in source
+
+
+def test_phase9d3_the_rate_entity_carries_no_sign_constraint() -> None:
+    """JPY, CHF and EUR went below zero. A positivity rule would refuse real observations."""
+    from app.domain.entities.interest_rate import InterestRate as RateEntity
+
+    field = RateEntity.model_fields["annual_rate"]
+    assert field.metadata == []
+
+
+def test_phase9d3_the_rates_cli_writes_only_rates() -> None:
+    source = PHASE_9D3_RATES_CLI.read_text(encoding="utf-8")
+
+    for forbidden in ("candles.upsert_many", "apply_outcomes", "write_text"):
+        assert forbidden not in source, forbidden

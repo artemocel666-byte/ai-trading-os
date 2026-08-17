@@ -62,7 +62,7 @@ def _snapshot_from_registry(
 
 
 def test_project_phase_is_phase4e_disabled_pipeline_report_shell_foundation() -> None:
-    assert constants.PROJECT_PHASE == "phase_9d2_cross_section_measurement"
+    assert constants.PROJECT_PHASE == "phase_9d3_interest_rate_ingestion"
 
 
 def test_blocker_and_report_models_are_immutable() -> None:

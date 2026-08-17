@@ -27,7 +27,7 @@ MARCH = datetime(2020, 3, 1, tzinfo=UTC)
 
 
 def test_project_phase_is_current() -> None:
-    assert constants.PROJECT_PHASE == "phase_9d2_cross_section_measurement"
+    assert constants.PROJECT_PHASE == "phase_9d3_interest_rate_ingestion"
 
 
 def _observation(

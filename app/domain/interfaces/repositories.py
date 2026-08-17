@@ -5,6 +5,7 @@ from typing import Any, Protocol
 from app.domain.entities import Candle, EconomicEvent, Timeframe
 from app.domain.entities.data_quality import UpsertResult
 from app.domain.entities.forward_outcome import ForwardOutcomeRecord
+from app.domain.entities.interest_rate import InterestRate
 from app.domain.value_objects import CurrencyPair
 
 
@@ -111,3 +112,24 @@ class ForwardOutcomeRepository(Protocol):
         end_at: datetime | None = None,
     ) -> list[ForwardOutcomeRecord]:
         """Return stored records in the requested window, oldest `as_of` first."""
+
+
+class InterestRateRepository(Protocol):
+    """Short-term interest rates, one row per currency per month.
+
+    Phase 9D-3. The same duplicate-safe shape as `CandleRepository`: a month that arrives twice
+    updates rather than duplicates, because the source revises and a revision is a correction to
+    one observation rather than a second one.
+    """
+
+    async def upsert_many(self, rates: list[InterestRate]) -> UpsertResult:
+        """Insert or update rates without creating duplicates for one currency-month."""
+
+    async def list_range(
+        self,
+        *,
+        currency: str | None = None,
+        start_at: datetime | None = None,
+        end_at: datetime | None = None,
+    ) -> list[InterestRate]:
+        """Return stored rates in the requested window, oldest `as_of` first."""

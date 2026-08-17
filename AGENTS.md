@@ -2,7 +2,27 @@
 
 AI Trading OS is a foundation for a future Forex analysis and paper-trading platform.
 
-Current project phase: phase_9d2_cross_section_measurement.
+Current project phase: phase_9d3_interest_rate_ingestion.
+Phase 9D-3 brought in the first data in this project that is **not a price**. Six nulls, and every
+one read past prices of the instrument itself; 9D-2 drew that boundary explicitly. Carry - the
+interest rate differential - is outside it, and FRED serves three-month interbank rates for all ten
+universe currencies **free and without an API key**, which is why it was worth probing before
+writing a plan around it.
+**Two properties of the source decided two rules before any code.** `3.84` means 3.84% per annum, so
+percent becomes a fraction in the adapter, once, where the source's convention is known. USD April
+2020 is blank and JPY April 2020 is -0.039, so **a missing month is absent rather than zero** and
+there is **no positivity constraint** in the entity or the schema. Every price column here carries a
+`> 0` check; a rate column with one would have refused real observations at the boundary where the
+failure is hardest to read.
+**Result: 10 of 10 currencies, 5,855 rows, one gap in the whole set, and 221 of 222 anchors complete
+at the two-month lag.** 9D-2 measured 226 periods, so carry will run over substantially the same
+history and the two verdicts will be directly comparable.
+**Storage is faithful; the lag is a measurement choice.** The row records the month the value
+describes. How stale a rate must be before ranking on it belongs to 9D-4's pre-registration, not to
+the table - baking it in would make it impossible to question.
+**Rates may not reach Telegram, the API, the scheduler or any service.** They are an input to
+measurement, never an output to a person.
+See `docs/phase9d3-verification-report.md`.
 Phase 9D-2 asked the cross-sectional question and got the sixth null. **Do the currencies that rose
 most over three months behave differently over the next month than those that rose least?** No.
 Plumbing first and it was the cleanest in the programme: 226 rebalance dates, **44 of 44 instruments
