@@ -27,6 +27,7 @@ from app.core.config import ExplanationProviderKind, Settings
 from app.core.enums import Decision
 from app.core.exceptions import IntegrationDisabledError
 from app.domain.analysis_engine import AnalysisEngine
+from app.domain.carry import lagged_rates_for_anchor
 from app.domain.cross_section import build_cross_section_profile
 from app.domain.direction_candidate import propose_direction
 from app.domain.disabled_pipeline_report_shell import DisabledPipelineReportShell
@@ -3154,3 +3155,76 @@ def test_phase9d3_the_rates_cli_writes_only_rates() -> None:
 
     for forbidden in ("candles.upsert_many", "apply_outcomes", "write_text"):
         assert forbidden not in source, forbidden
+
+
+PHASE_9D4_CARRY_MODULE = Path("app/domain/carry.py")
+PHASE_9D4_CARRY_CLI = Path("scripts/profile_carry.py")
+
+
+def test_phase9d4_carry_reaches_no_user_facing_layer() -> None:
+    """A ranking by interest rate differential is a measurement, never an output to a person.
+
+    The Phase 9D-2 line holds unchanged: this module produces a direction, because a ranking is
+    structurally a direction. It stays on the bench.
+
+    Matched on import paths and public names rather than the bare word: "carry" is ordinary English
+    and appears inside "carrying" in a comment three layers away, which would make this fail for a
+    reason that has nothing to do with what it protects.
+    """
+    markers = ("domain.carry", "entities.carry", "CarryReading", "CarryComponent")
+    offenders = [
+        str(file_path)
+        for directory in ("app/services", "app/telegram", "app/api", "app/scheduler")
+        for file_path in Path(directory).rglob("*.py")
+        if any(marker in file_path.read_text(encoding="utf-8") for marker in markers)
+    ]
+
+    assert offenders == []
+
+
+def test_phase9d4_the_carry_cli_writes_nothing() -> None:
+    source = PHASE_9D4_CARRY_CLI.read_text(encoding="utf-8")
+
+    for forbidden in ("upsert", "add_missing", "apply_outcomes", "commit()", "write_text"):
+        assert forbidden not in source, forbidden
+
+
+def test_phase9d4_the_carry_module_touches_no_other_layer() -> None:
+    import_lines = tuple(
+        line
+        for line in PHASE_9D4_CARRY_MODULE.read_text(encoding="utf-8").lower().splitlines()
+        if line.startswith("import ") or line.startswith("from ")
+    )
+
+    for term in ("app.persistence", "app.adapters", "app.telegram", "app.api", "app.services"):
+        assert not any(term in line for line in import_lines), term
+
+
+def test_phase9d4_the_lag_and_the_month_arithmetic_exist_in_exactly_one_place() -> None:
+    """The executable form of this project's most expensive recurring lesson.
+
+    `TIMEFRAME_TO_DELTA` was half-added once and every daily request was refused before the network
+    call, producing a wrong answer shaped like a real one. The request-range limit lived in two
+    places and a CLI override reached only one of them. `RATE_LAG_MONTHS` and the month arithmetic
+    are now read by three scripts; a private copy in any of them would let a measurement and the
+    coverage report that justifies it disagree silently about what point-in-time means.
+    """
+    searched = tuple(Path("app").rglob("*.py")) + tuple(Path("scripts").rglob("*.py"))
+
+    for definition, home in (
+        ("RATE_LAG_MONTHS = ", PHASE_9D4_CARRY_MODULE),
+        ("def shift_months(", Path("app/domain/market_calendar.py")),
+        ("def month_start(", Path("app/domain/market_calendar.py")),
+    ):
+        homes = [str(path) for path in searched if definition in path.read_text(encoding="utf-8")]
+        assert homes == [str(home)], definition
+
+
+def test_phase9d4_the_carry_measurement_takes_no_parameter_to_fit() -> None:
+    """The lag, the components and the accrual were fixed before any rate was looked at."""
+    parameters = set(inspect.signature(lagged_rates_for_anchor).parameters)
+
+    assert parameters == {"anchor", "rates_by_currency", "currencies", "lag_months"}
+    source = PHASE_9D4_CARRY_MODULE.read_text(encoding="utf-8")
+    # The all-or-nothing rule, in the words the plan used.
+    assert "An anchor missing one currency is dropped whole" in source

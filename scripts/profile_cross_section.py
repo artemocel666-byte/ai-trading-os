@@ -40,6 +40,7 @@ from app.domain.entities.cross_section import (
     CrossSectionProfile,
 )
 from app.domain.entities.market_data import Candle
+from app.domain.market_calendar import shift_months
 from app.persistence.database import create_engine, create_session_factory
 from app.persistence.session import build_uow_factory
 
@@ -68,34 +69,20 @@ def _parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def _month_boundary(moment: datetime) -> datetime:
-    """The instant this calendar month ends and the next begins, in UTC."""
-    if moment.month == 12:
-        first_of_next = datetime(moment.year + 1, 1, 1, tzinfo=UTC)
-    else:
-        first_of_next = datetime(moment.year, moment.month + 1, 1, tzinfo=UTC)
-    return first_of_next
-
-
-def _shift_months(moment: datetime, months: int) -> datetime:
-    total = (moment.year * 12 + moment.month - 1) + months
-    return datetime(total // 12, total % 12 + 1, 1, tzinfo=UTC)
-
-
 def _anchors(
     earliest: datetime, latest: datetime, *, formation: int, holding: int
 ) -> list[datetime]:
     """Month boundaries that have a full formation window behind and a full holding window ahead."""
     anchors: list[datetime] = []
-    cursor = _month_boundary(earliest)
+    cursor = shift_months(earliest, 1)
     while True:
-        if _shift_months(cursor, -formation) < earliest:
-            cursor = _shift_months(cursor, 1)
+        if shift_months(cursor, -formation) < earliest:
+            cursor = shift_months(cursor, 1)
             continue
-        if _shift_months(cursor, holding) > latest:
+        if shift_months(cursor, holding) > latest:
             break
         anchors.append(cursor)
-        cursor = _shift_months(cursor, 1)
+        cursor = shift_months(cursor, 1)
     return anchors
 
 
@@ -157,8 +144,8 @@ async def _main() -> int:
     observations: dict[datetime, list[CrossSectionObservation]] = defaultdict(list)
     absent = 0
     for anchor in anchors:
-        formed_at = _shift_months(anchor, -args.formation_months)
-        settled_at = _shift_months(anchor, args.holding_months)
+        formed_at = shift_months(anchor, -args.formation_months)
+        settled_at = shift_months(anchor, args.holding_months)
         for symbol, candles in by_pair.items():
             start = latest_close_at(candles, formed_at)
             here = latest_close_at(candles, anchor)
@@ -185,18 +172,29 @@ async def _main() -> int:
 
     # Plumbing first, before any result: a cross-section that is not actually wide on most dates
     # invalidates everything after it, and reading the verdict first would make that easy to miss.
-    print(f"Universe: {len(pairs)} pairs derived, {len(by_pair)} with stored daily history")
-    print(
-        f"History: {earliest.date()} .. {latest.date()}   "
-        f"formation {args.formation_months}m, holding {args.holding_months}m, "
-        f"{args.bucket_count} buckets"
-    )
-    if widths:
+    plumbing: dict[str, object] = {
+        "pairs_derived": len(pairs),
+        "pairs_with_daily_history": len(by_pair),
+        "history_from": str(earliest.date()),
+        "history_to": str(latest.date()),
+        "rebalance_dates": len(grouped),
+        "instruments_per_date_min": widths[0] if widths else 0,
+        "instruments_per_date_max": widths[-1] if widths else 0,
+        "instrument_dates_dropped_for_missing_prices": absent,
+    }
+    if args.format == "text":
+        print(f"Universe: {len(pairs)} pairs derived, {len(by_pair)} with stored daily history")
         print(
-            f"Rebalance dates: {len(grouped)}   instruments per date: "
-            f"min {widths[0]}, median {widths[len(widths) // 2]}, max {widths[-1]}   "
-            f"instrument-dates dropped for missing prices: {absent}"
+            f"History: {earliest.date()} .. {latest.date()}   "
+            f"formation {args.formation_months}m, holding {args.holding_months}m, "
+            f"{args.bucket_count} buckets"
         )
+        if widths:
+            print(
+                f"Rebalance dates: {len(grouped)}   instruments per date: "
+                f"min {widths[0]}, median {widths[len(widths) // 2]}, max {widths[-1]}   "
+                f"instrument-dates dropped for missing prices: {absent}"
+            )
 
     profiles = {
         bps: build_cross_section_profile(
@@ -213,7 +211,7 @@ async def _main() -> int:
         return 1
 
     if args.format == "json":
-        print(json.dumps(_payload(profiles, args), indent=2))
+        print(json.dumps(_payload(profiles, args, plumbing), indent=2))
         return 0
 
     print("\nTop-minus-bottom spread, per month, both legs charged:")
@@ -253,9 +251,12 @@ async def _main() -> int:
 
 
 def _payload(
-    profiles: dict[int, CrossSectionProfile | None], args: argparse.Namespace
+    profiles: dict[int, CrossSectionProfile | None],
+    args: argparse.Namespace,
+    plumbing: dict[str, object],
 ) -> dict[str, object]:
     return {
+        "plumbing": plumbing,
         "formation_months": args.formation_months,
         "holding_months": args.holding_months,
         "bucket_count": args.bucket_count,

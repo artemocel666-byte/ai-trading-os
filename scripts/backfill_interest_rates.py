@@ -23,15 +23,12 @@ import httpx
 
 from app.adapters.fred_rates import CURRENCY_TO_SERIES, FredInterestRateAdapter
 from app.core.config import Settings
+from app.domain.carry import RATE_LAG_MONTHS
 from app.domain.currency_universe import UNIVERSE_CURRENCIES
 from app.domain.entities.interest_rate import InterestRate
+from app.domain.market_calendar import shift_months
 from app.persistence.database import create_engine, create_session_factory
 from app.persistence.session import build_uow_factory
-
-#: Fixed in the Phase 9D-3 plan: at the anchor beginning month M, the value dated M-2 is used. A
-#: monthly average for M-1 is only complete once M-1 ends and is published later still, so two
-#: months errs toward *not knowing* — cheap in a series that moves a few times a year.
-RATE_LAG_MONTHS = 2
 
 #: The window Phase 9D-2 measured over, so the anchor count here is comparable to the 226 it used.
 DEFAULT_FIRST_ANCHOR = datetime(2007, 10, 1, tzinfo=UTC)
@@ -53,11 +50,6 @@ def _parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def _shift_months(moment: datetime, months: int) -> datetime:
-    total = (moment.year * 12 + moment.month - 1) + months
-    return datetime(total // 12, total % 12 + 1, 1, tzinfo=UTC)
-
-
 def _missing_months(months: set[datetime], first: datetime, last: datetime) -> list[datetime]:
     """Months the source skipped inside its own range — absences, not the edges of the series."""
     gaps: list[datetime] = []
@@ -65,7 +57,7 @@ def _missing_months(months: set[datetime], first: datetime, last: datetime) -> l
     while cursor <= last:
         if cursor not in months:
             gaps.append(cursor)
-        cursor = _shift_months(cursor, 1)
+        cursor = shift_months(cursor, 1)
     return gaps
 
 
@@ -83,10 +75,10 @@ def _usable_anchors(
     cursor = first_anchor
     while cursor <= last_anchor:
         total += 1
-        needed = _shift_months(cursor, -RATE_LAG_MONTHS)
+        needed = shift_months(cursor, -RATE_LAG_MONTHS)
         if all(needed in months for months in months_by_currency.values()):
             complete += 1
-        cursor = _shift_months(cursor, 1)
+        cursor = shift_months(cursor, 1)
     return complete, total
 
 
@@ -111,7 +103,7 @@ def _report(fetched: dict[str, list[InterestRate]]) -> None:
     if not months_by_currency:
         return
     last_common = min(max(months) for months in months_by_currency.values())
-    last_anchor = _shift_months(last_common, RATE_LAG_MONTHS)
+    last_anchor = shift_months(last_common, RATE_LAG_MONTHS)
     complete, total = _usable_anchors(
         months_by_currency, first_anchor=DEFAULT_FIRST_ANCHOR, last_anchor=last_anchor
     )

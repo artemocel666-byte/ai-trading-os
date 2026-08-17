@@ -5,6 +5,16 @@ AI Trading OS is a safety-first foundation for a future modular Forex analysis a
 ## Current Status
 
 - Current project phase: phase_9d3_interest_rate_ingestion.
+- Phase 9D-4 measured carry — **the seventh null, and the first that explains itself**. 224
+  rebalance dates, **44 instruments on every single one**, 5 anchors excluded and named. Total
+  spread **+0.110%/month at t = +0.53**: three of four pre-registered criteria passed, t ≥ 2.0 did
+  not, so it does not clear. The decomposition is the content — carry accrued **+71.2%**, spot gave
+  back **−46.5%**, leaving **+24.7%** over eighteen years, which is smaller than the noise around
+  it. The honest statement is *we cannot reject uncovered interest parity*. The carry component's
+  t of +42.76 is a **tautology** (the ranking variable as its own outcome) and is labelled as one.
+  The pre-registered tail reading decided it regardless: worst twelve months **−41.62%**, so the
+  whole history's gain does not cover one bad year. Read-only,
+  `scripts/profile_carry.py`.
 - Phase 9D-3 ingested the first data in this project that is **not a price**: three-month interbank
   rates for all ten universe currencies, from FRED, free and without an API key. **10 of 10
   currencies, 5,855 rows, one gap in the whole set (USD April 2020), and 221 of 222 monthly anchors

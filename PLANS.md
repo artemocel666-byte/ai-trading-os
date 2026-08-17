@@ -364,6 +364,17 @@ non-actionable and without any signal, AI, or execution behavior.
     against the provider rather than assumed, and the measurement refuted both prior guesses.
     The coverage check that was missing now exists (`coverage_shortfalls`) and the final run
     reports every pair within 10% of the median. **9D-2 is unblocked on data.**
+  - 9D-4: does the interest rate differential order the cross-section? **Completed 2026-08-17**,
+    see `docs/phase9d4-verification-report.md`. **224 rebalance dates, 44 instruments on every one**,
+    5 anchors excluded and named (2020-06 for the USD gap 9D-3 predicted, 2026-04..07 where the
+    EUR/GBP series end). Total spread **+0.110%/month, t = +0.53**; mean positive, both halves
+    positive and 2 bp survived, but **t >= 2.0 failed**, so it does not clear. Decomposition: carry
+    **+71.2%**, spot **-46.5%**, total **+24.7%** over 224 months — the high-rate currencies did
+    depreciate and returned about two-thirds of what they paid, so **uncovered interest parity
+    cannot be rejected**. The carry component's t of +42.76 is a tautology and is labelled as one.
+    Tail, pre-registered before any rate was seen: worst month **-16.85%**, worst twelve months
+    **-41.62%** — the whole history's gain does not cover one bad year, so **the t passing would not
+    have made it a finding**. Read-only; nothing new is stored.
   - 9D-3: interest rates, the first data that is not a price — **completed 2026-08-15**, see
     `docs/phase9d3-verification-report.md`. FRED three-month interbank rates for all ten universe
     currencies, free and keyless. **10 of 10 fetched, 5,855 rows, one gap (USD April 2020), 221 of

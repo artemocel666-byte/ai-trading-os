@@ -94,6 +94,23 @@ class CrossSectionPeriod(BaseModel):
         return self.buckets[-1].mean_forward_return - self.buckets[0].mean_forward_return
 
 
+class SpreadRun(BaseModel):
+    """A stretch of consecutive rebalance periods and what the spread did across it."""
+
+    started_at: datetime
+    ended_at: datetime
+    period_count: int = Field(ge=1)
+    cumulative_spread: Decimal
+
+    model_config = ConfigDict(frozen=True)
+
+    @model_validator(mode="after")
+    def a_run_cannot_end_before_it_starts(self) -> Self:
+        if self.ended_at < self.started_at:
+            raise ValueError("a run cannot end before it starts")
+        return self
+
+
 class CrossSectionProfile(BaseModel):
     """The series of per-date spreads, and what it adds up to.
 
@@ -153,6 +170,34 @@ class CrossSectionProfile(BaseModel):
         if error is None or error == 0:
             return None
         return self.mean_spread / error
+
+    def worst_run(self, *, length: int) -> SpreadRun | None:
+        """The worst stretch of `length` consecutive periods, or `None` if the series is shorter.
+
+        Added in Phase 9D-4 and applicable to any spread series. A mean and a t-statistic describe
+        the middle of a distribution and say nothing about its edge, and carry's signature failure
+        is exactly *positive mean, catastrophic tail* — it broke violently in 2008 and on the franc
+        in 2015. A spread whose mean passes while its worst year is ruinous has to be reported as
+        that, not as a finding, and a number nobody computed cannot be reported at all.
+
+        `length=1` gives the single worst period, which is the same question at the shortest window.
+
+        **Summed, not compounded.** These are differences between two returns, and a difference does
+        not compound like a return; summing is the arithmetic that matches what the number is.
+        """
+        if length < 1:
+            raise ValueError("a run covers at least one period")
+        spreads = self.net_spreads
+        if len(spreads) < length:
+            return None
+        starts = range(len(spreads) - length + 1)
+        worst = min(starts, key=lambda index: sum(spreads[index : index + length], Decimal("0")))
+        return SpreadRun(
+            started_at=self.periods[worst].as_of,
+            ended_at=self.periods[worst + length - 1].as_of,
+            period_count=length,
+            cumulative_spread=sum(spreads[worst : worst + length], Decimal("0")),
+        )
 
     def half(self, *, first: bool) -> "CrossSectionProfile":
         """The same profile over one half of its periods, for the stability criterion.

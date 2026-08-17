@@ -785,3 +785,28 @@ median moves and the spread does not, the window did not widen and nothing downs
 3. Confirm PostgreSQL is healthy.
 4. Run `uv run alembic upgrade head`.
 5. Recheck `/ready` and `/api/v1/system/status`.
+
+
+## Carry cross-section (Phase 9D-4)
+
+Ranks the currency universe by lagged interest rate differential each month and reports the
+top-minus-bottom spread with its decomposition. Read-only — it evaluates and prints, and writes
+nothing. Needs the Phase 9D-1 daily backfill and the Phase 9D-3 rate backfill to have run.
+
+```bash
+docker compose run --rm -T worker python -u -m scripts.profile_carry
+```
+
+`--format json` emits the same run as a machine-readable payload, **including the plumbing summary**
+— the coverage figures travel inside the JSON rather than ahead of it, so the output parses.
+
+Read the plumbing block before the verdict. `instruments per date: min/median/max` is the line that
+matters: if the minimum falls well below the maximum, some cross-sections ranked a thinned universe
+and every number after it means less than it appears to. Anchors excluded for an incomplete rate
+cross-section are listed by date rather than merely counted, because a date dropped for a missing
+rate is a fact about the data and not a rounding detail.
+
+The tail block is not optional reading. A mean and a t-statistic describe the middle of a
+distribution and are blind to its edge; carry's documented failure mode is a positive mean with a
+ruinous tail. A spread whose mean passes while its worst twelve months exceed its lifetime gain is
+reported as exactly that.

@@ -12,7 +12,7 @@ from app.domain.outcome_measurement import aggregate_outcomes
 
 
 def test_project_phase_is_current() -> None:
-    assert constants.PROJECT_PHASE == "phase_9d3_interest_rate_ingestion"
+    assert constants.PROJECT_PHASE == "phase_9d4_carry_measurement"
 
 
 def _outcome(kind: OutcomeKind, direction: SignalDirection) -> WindowOutcome:

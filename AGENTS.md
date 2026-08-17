@@ -3,6 +3,26 @@
 AI Trading OS is a foundation for a future Forex analysis and paper-trading platform.
 
 Current project phase: phase_9d3_interest_rate_ingestion.
+Phase 9D-4 asked the carry question and got **the seventh null - the first that explains itself**.
+Ranked by lagged interest rate differential into terciles, monthly, one-month holding: **224
+rebalance dates, 44 instruments on every one of them** (min, median and max alike), 5 anchors
+excluded and named. Total spread **+0.110%/month at t = +0.53**; three of four criteria passed and
+**t >= 2.0 did not**, so it does not clear. A near miss is not a result when the criteria were
+pre-registered as all four required.
+**The decomposition is the content.** Carry accrued **+71.2%** over 224 months, spot gave back
+**-46.5%**, total **+24.7%**. The high-rate currencies did depreciate and returned about two-thirds
+of what they paid, so the honest statement is *we cannot reject uncovered interest parity*.
+**The carry component's t of +42.76 is a tautology and is labelled as one** - it measures the
+ranking variable as its own outcome and would be near-infinite for any field.
+**The tail was pre-registered for exactly this and it decided the phase.** Worst month **-16.85%**
+(Oct 2008), worst twelve months **-41.62%** (Feb 2008 - Jan 2009). The strategy made +24.7% across
+eighteen years and lost 41% in one of them; **had the t passed, this would still not have been a
+finding.**
+**One concept, one place - now executable.** A safety test asserts `RATE_LAG_MONTHS`, `shift_months`
+and `month_start` each exist in exactly one file. Three scripts read the lag, and a private copy
+would let a measurement and the coverage report that justifies it disagree silently about
+point-in-time.
+See `docs/phase9d4-verification-report.md`.
 Phase 9D-3 brought in the first data in this project that is **not a price**. Six nulls, and every
 one read past prices of the instrument itself; 9D-2 drew that boundary explicitly. Carry - the
 interest rate differential - is outside it, and FRED serves three-month interbank rates for all ten

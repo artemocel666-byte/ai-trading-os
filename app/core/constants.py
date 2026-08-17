@@ -1,4 +1,4 @@
-PROJECT_PHASE = "phase_9d3_interest_rate_ingestion"
+PROJECT_PHASE = "phase_9d4_carry_measurement"
 STRATEGY_IMPLEMENTED = False
 REAL_TRADING_ENABLED = False
 

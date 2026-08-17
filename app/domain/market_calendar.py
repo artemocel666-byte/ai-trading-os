@@ -19,10 +19,32 @@ reopen, a few hours a week, against a rule that cannot be wrong about the other 
 If an instrument specification with real trading hours ever arrives, it should replace this.
 """
 
-from datetime import datetime
+from datetime import UTC, datetime
 from enum import IntEnum
 
 from app.core.time import normalize_to_utc
+
+#: Months in a year. Named because an annual rate divided by twelve appears in the carry
+#: measurement, and a bare `12` there could be read as a window length.
+MONTHS_PER_YEAR = 12
+
+
+def month_start(moment: datetime) -> datetime:
+    """The first instant of the calendar month containing `moment`, in UTC."""
+    normalized = normalize_to_utc(moment)
+    return datetime(normalized.year, normalized.month, 1, tzinfo=UTC)
+
+
+def shift_months(moment: datetime, months: int) -> datetime:
+    """The first instant of the month `months` away from the one containing `moment`.
+
+    Lands on a month start in both directions, which is what every monthly rebalance in this
+    project anchors on. Defined here once: it was privately copied into two scripts, and a third
+    needed it — the shape of every duplication this project has had to repair.
+    """
+    normalized = normalize_to_utc(moment)
+    total = (normalized.year * MONTHS_PER_YEAR + normalized.month - 1) + months
+    return datetime(total // MONTHS_PER_YEAR, total % MONTHS_PER_YEAR + 1, 1, tzinfo=UTC)
 
 
 class _IsoWeekday(IntEnum):
