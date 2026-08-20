@@ -53,7 +53,7 @@ def _quiet(index: int) -> Candle:
 
 
 def test_project_phase_is_current() -> None:
-    assert constants.PROJECT_PHASE == "phase_9d4_carry_measurement"
+    assert constants.PROJECT_PHASE == "phase_10_1_live_universe"
 
 
 def test_target_reached_cleanly_is_target_first() -> None:

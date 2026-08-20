@@ -810,3 +810,44 @@ The tail block is not optional reading. A mean and a t-statistic describe the mi
 distribution and are blind to its edge; carry's documented failure mode is a positive mean with a
 ruinous tail. A spread whose mean passes while its worst twelve months exceed its lifetime gain is
 reported as exactly that.
+
+
+## Keeping the universe current (Phase 10-1)
+
+The worker fills daily bars for all 45 universe pairs once a day on a **cron** trigger at
+`DAILY_UNIVERSE_INGESTION_HOUR_UTC` (default 02:00), and refreshes interest rates weekly. Both are
+off by default; set `DAILY_UNIVERSE_INGESTION_ENABLED` and `INTEREST_RATE_INGESTION_ENABLED`.
+
+Cron rather than an interval on purpose: the ingestion service has no wall-clock gate, so a
+1440-minute interval on a worker restarted daily by a deploy or a closing laptop could go its whole
+life without firing — and that failure looks exactly like nothing happening.
+
+To run either path by hand, on exactly the code the scheduler runs:
+
+```bash
+docker compose run --rm -T worker python -u -m scripts.run_universe_sweep
+```
+
+```bash
+docker compose run --rm -T worker python -u -m scripts.run_rate_refresh
+```
+
+The sweep takes about nine minutes: 45 requests held at least
+`PROVIDER_MIN_REQUEST_INTERVAL_SECONDS` apart (default 12). It prints the elapsed time against the
+pacing floor, so a setting that stopped being applied would be visible rather than assumed.
+
+To read freshness without fetching anything:
+
+```bash
+docker compose run --rm -T worker python -u -m scripts.report_data_freshness
+```
+
+It exits non-zero when anything is behind, so it can gate a script.
+
+**Read `absent` separately from `stale`.** `NZDSEK` has never been stored because the provider does
+not quote it; that is a standing fact, not a problem that appeared today. An alarm that includes it
+would fire every day and stop being read — which is the failure this whole check exists to prevent.
+
+**A weekend is not staleness.** A Friday daily bar closes at Saturday 00:00 UTC, so from Saturday
+morning until Monday night the newest bar we should hold is Friday's. The check derives that from
+`expected_open_times`, the same definition the data-quality machinery uses.

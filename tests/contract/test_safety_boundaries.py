@@ -3105,22 +3105,53 @@ PHASE_9D3_RATES_ADAPTER = Path("app/adapters/fred_rates.py")
 PHASE_9D3_RATES_CLI = Path("scripts/backfill_interest_rates.py")
 
 
+#: The only files in a service or scheduler layer allowed to know rates exist. Phase 10-1 put rate
+#: fetching on a schedule, so the ingestion path must name itself here; anything else that starts
+#: reading rates has to be added deliberately, in a diff somebody reviews.
+PHASE_9D3_RATE_INGESTION_PATH = frozenset(
+    {
+        Path("app/services/interest_rate_ingestion_service.py"),
+        Path("app/scheduler/jobs.py"),
+        Path("app/scheduler/worker.py"),
+    }
+)
+
+
 def test_phase9d3_rates_reach_no_user_facing_layer() -> None:
     """Rates are an input to measurement, never an output to a person.
 
-    They arrive in the project only so a cross-section can be ranked by something that is not a
-    price. Nothing about that belongs in a Telegram message or an HTTP response, and putting it
-    there would make an unmeasured number look like a finding.
+    **Narrowed in Phase 10-1 from existence to delivery**, the same move Phase 9D-2 made when a
+    cross-section legitimately needed to produce a direction. The original rule banned the word
+    from four layers because only a script fetched rates, so nothing legitimate needed them
+    anywhere else. Putting the refresh on a schedule made ingestion a real requirement in a service
+    and in the scheduler.
+
+    What the rule actually protects is untouched: **Telegram and the API stay absolutely closed**,
+    and inside the service and scheduler layers only the named ingestion path may mention rates. A
+    formatter, an analysis service or a digest that started reading them would still fail, which is
+    the case that mattered — an unmeasured number in front of a person is how it starts looking
+    like a finding.
     """
-    offenders = [
+    absolutely_closed = [
         str(file_path)
-        for directory in ("app/telegram", "app/api", "app/scheduler", "app/services")
+        for directory in ("app/telegram", "app/api")
         for file_path in Path(directory).rglob("*.py")
         if "interest_rate" in file_path.read_text(encoding="utf-8")
         or "fred_rates" in file_path.read_text(encoding="utf-8")
     ]
+    assert absolutely_closed == []
 
-    assert offenders == []
+    beyond_ingestion = [
+        str(file_path)
+        for directory in ("app/scheduler", "app/services")
+        for file_path in Path(directory).rglob("*.py")
+        if file_path not in PHASE_9D3_RATE_INGESTION_PATH
+        and (
+            "interest_rate" in file_path.read_text(encoding="utf-8")
+            or "fred_rates" in file_path.read_text(encoding="utf-8")
+        )
+    ]
+    assert beyond_ingestion == []
 
 
 def test_phase9d3_rates_adapter_touches_no_other_layer() -> None:
@@ -3215,6 +3246,13 @@ def test_phase9d4_the_lag_and_the_month_arithmetic_exist_in_exactly_one_place() 
         ("RATE_LAG_MONTHS = ", PHASE_9D4_CARRY_MODULE),
         ("def shift_months(", Path("app/domain/market_calendar.py")),
         ("def month_start(", Path("app/domain/market_calendar.py")),
+        # Phase 10-1. The pacing floor is read by the worker, both backfill scripts and every future
+        # caller; a second copy would let one of them quietly send faster than the rest.
+        ("provider_min_request_interval_seconds: float = ", Path("app/core/config.py")),
+        # Found written out identically in eight service modules while building this phase. Benign
+        # only for as long as all eight agreed, which is what was true of every duplication this
+        # project has had to repair.
+        ("UnitOfWorkFactory = Callable", Path("app/domain/interfaces/unit_of_work.py")),
     ):
         homes = [str(path) for path in searched if definition in path.read_text(encoding="utf-8")]
         assert homes == [str(home)], definition

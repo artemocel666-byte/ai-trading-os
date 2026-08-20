@@ -1,4 +1,4 @@
-from collections.abc import Callable, Sequence
+from collections.abc import Sequence
 from datetime import datetime, timedelta
 
 from app.core.exceptions import ApplicationError, ErrorCode, ProviderError
@@ -12,10 +12,8 @@ from app.domain.entities.calendar_ingestion import (
 )
 from app.domain.entities.market_data import EconomicEvent
 from app.domain.interfaces.providers import EconomicCalendarProvider
-from app.domain.interfaces.unit_of_work import UnitOfWork
+from app.domain.interfaces.unit_of_work import UnitOfWorkFactory
 from app.services.system_state_service import SystemStateService
-
-UnitOfWorkFactory = Callable[[], UnitOfWork]
 
 CALENDAR_INGESTION_COMPONENT = "economic_calendar_ingestion"
 

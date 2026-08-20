@@ -64,6 +64,21 @@ class CandleRepository(Protocol):
     ) -> list[Candle]:
         """Return closed candles fully contained in the requested UTC window."""
 
+    async def newest_close_times(
+        self,
+        *,
+        timeframe: Timeframe,
+        provider: str | None = None,
+    ) -> dict[str, datetime]:
+        """Return the newest stored close time per pair, for pairs that have one.
+
+        Phase 10-1. A freshness check needs one number per pair and nothing else; loading every
+        candle to take a maximum would read hundreds of thousands of rows to answer a question the
+        database can answer by itself. A pair with no stored candle is simply absent from the
+        mapping — the caller distinguishes "never had data" from "behind", and those must not
+        arrive already merged.
+        """
+
 
 class EconomicEventRepository(Protocol):
     async def upsert_many(self, events: list[EconomicEvent]) -> UpsertResult:

@@ -1,14 +1,12 @@
-from collections.abc import Callable, Sequence
+from collections.abc import Sequence
 from datetime import datetime
 
 from app.core.exceptions import NotImplementedFeatureError
 from app.domain.analysis_engine import AnalysisEngine
 from app.domain.entities import Timeframe
 from app.domain.entities.analysis import AnalysisReport, AnalysisSnapshot
-from app.domain.interfaces.unit_of_work import UnitOfWork
+from app.domain.interfaces.unit_of_work import UnitOfWorkFactory
 from app.domain.value_objects import CurrencyPair
-
-UnitOfWorkFactory = Callable[[], UnitOfWork]
 
 
 class AnalysisService:

@@ -11,8 +11,11 @@ from app.adapters.factories import (
     create_market_data_provider,
     create_provider_clients,
 )
+from app.adapters.fred_rates import FredInterestRateAdapter
 from app.core.config import Settings, get_settings
+from app.core.exceptions import ConfigurationInvalidError
 from app.core.logging import configure_logging
+from app.domain.currency_universe import universe_pairs
 from app.domain.entities import (
     CalendarIngestionConfig,
     ForwardOutcomeConfig,
@@ -25,9 +28,11 @@ from app.persistence.database import create_engine, create_session_factory
 from app.persistence.database_health import SqlAlchemyDatabaseHealth
 from app.persistence.session import build_uow_factory
 from app.scheduler.jobs import register_jobs, update_worker_heartbeat_job
+from app.services.data_freshness_service import DataFreshnessService
 from app.services.economic_calendar_ingestion_service import EconomicCalendarIngestionService
 from app.services.forward_outcome_service import ForwardOutcomeService
 from app.services.health_service import HealthService
+from app.services.interest_rate_ingestion_service import InterestRateIngestionService
 from app.services.market_data_ingestion_service import MarketDataIngestionService
 from app.services.system_state_service import SystemStateService
 
@@ -80,6 +85,49 @@ async def run_worker() -> None:
         )
         logger.info("calendar_ingestion_enabled")
 
+    universe_ingestion_service: MarketDataIngestionService | None = None
+    freshness_service: DataFreshnessService | None = None
+    universe_instruments: tuple[str, ...] = ()
+    if (
+        settings.market_data_enabled
+        and settings.daily_universe_ingestion_enabled
+        and provider_clients is not None
+    ):
+        universe_instruments = tuple(pair.value for pair in universe_pairs())
+        universe_ingestion_service = MarketDataIngestionService(
+            config=_build_universe_ingestion_config(settings),
+            provider=create_market_data_provider(
+                settings,
+                client=provider_clients.market_data,
+            ),
+            uow_factory=uow_factory,
+            system_state_service=system_state_service,
+        )
+        freshness_service = DataFreshnessService(
+            uow_factory=uow_factory,
+            system_state_service=system_state_service,
+            tolerance_bars=settings.data_freshness_tolerance_bars,
+        )
+        logger.info(
+            "daily_universe_ingestion_enabled",
+            extra={"pairs": len(universe_instruments)},
+        )
+
+    interest_rate_service: InterestRateIngestionService | None = None
+    if settings.interest_rate_ingestion_enabled:
+        # Rates stand on their own rather than behind `market_data_enabled`: FRED needs no key and
+        # is a different kind of observation with its own source, which is why
+        # `REAL_MARKET_DATA_PROVIDERS` never learned about them.
+        if provider_clients is None:
+            provider_clients = create_provider_clients(settings)
+        if provider_clients.interest_rates is None:
+            raise ConfigurationInvalidError("Для загрузки ставок требуется HTTP-клиент.")
+        interest_rate_service = InterestRateIngestionService(
+            adapter=FredInterestRateAdapter(client=provider_clients.interest_rates),
+            uow_factory=uow_factory,
+        )
+        logger.info("interest_rate_ingestion_enabled")
+
     forward_outcome_service: ForwardOutcomeService | None = None
     if settings.forward_outcome_recording_enabled:
         # No provider client: the ledger reads stored candles only, and never fetches. If ingestion
@@ -98,6 +146,12 @@ async def run_worker() -> None:
         health_service=health_service,
         market_data_ingestion_service=ingestion_service,
         market_data_ingestion_interval_minutes=settings.market_data_ingestion_interval_minutes,
+        daily_universe_ingestion_service=universe_ingestion_service,
+        data_freshness_service=freshness_service,
+        daily_universe_instruments=universe_instruments,
+        daily_universe_hour_utc=settings.daily_universe_ingestion_hour_utc,
+        interest_rate_ingestion_service=interest_rate_service,
+        interest_rate_hour_utc=settings.interest_rate_ingestion_hour_utc,
         calendar_ingestion_service=calendar_ingestion_service,
         calendar_ingestion_interval_minutes=settings.calendar_ingestion_interval_minutes,
         forward_outcome_service=forward_outcome_service,
@@ -145,6 +199,31 @@ def _build_ingestion_config(settings: Settings) -> MarketDataIngestionConfig:
                 timeframe=Timeframe.H1,
                 lookback_candle_count=lookback,
             ),
+        ),
+    )
+
+
+def _build_universe_ingestion_config(settings: Settings) -> MarketDataIngestionConfig:
+    """Daily bars for every pair the universe implies, on one item each.
+
+    **All forty-five are asked for, not the forty-four that worked once.** Whether a provider quotes
+    a given pair is an observation rather than something we know, and freezing the list to what was
+    seen in August 2026 would bake one afternoon's result into a permanent assumption — the thing
+    deriving the universe from a currency set exists to prevent. A pair the provider still refuses
+    costs one failed item, and `run_tick` isolates it so the other forty-four finish.
+    """
+    lookback = settings.daily_universe_lookback_candles
+    return MarketDataIngestionConfig(
+        enabled=True,
+        interval_minutes=settings.market_data_ingestion_interval_minutes,
+        lookback_candles=lookback,
+        items=tuple(
+            SnapshotScheduleItem(
+                pair=pair,
+                timeframe=Timeframe.D1,
+                lookback_candle_count=lookback,
+            )
+            for pair in universe_pairs()
         ),
     )
 

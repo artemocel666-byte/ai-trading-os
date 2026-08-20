@@ -1,4 +1,4 @@
-from collections.abc import Callable, Sequence
+from collections.abc import Sequence
 from datetime import datetime
 
 from app.core.exceptions import ApplicationError, ErrorCode, ProviderError
@@ -14,11 +14,9 @@ from app.domain.entities.ingestion import (
 from app.domain.entities.market_data import Candle, Timeframe
 from app.domain.entities.readiness import SnapshotScheduleItem
 from app.domain.interfaces.providers import MarketDataProvider
-from app.domain.interfaces.unit_of_work import UnitOfWork
+from app.domain.interfaces.unit_of_work import UnitOfWorkFactory
 from app.domain.readiness_engine import latest_closed_boundary
 from app.services.system_state_service import SystemStateService
-
-UnitOfWorkFactory = Callable[[], UnitOfWork]
 
 INGESTION_COMPONENT = "market_data_ingestion"
 
@@ -104,6 +102,7 @@ class MarketDataIngestionService:
                 window_start=window_start,
                 window_end=window_end,
                 failed=True,
+                failure_reason=type(error).__name__,
             )
 
         # An empty provider response is a normal outcome, not a failure: the forex market is

@@ -59,6 +59,8 @@ async def _market_adapter(
         retry_count=1,
         retry_backoff_seconds=0,
         max_request_range=timedelta(days=10),
+        # Pacing off in tests: these exercise the request path, not the clock.
+        min_request_interval_seconds=0.0,
     )
     return adapter, client
 

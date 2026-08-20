@@ -39,9 +39,18 @@ class ProviderClients:
     market_data: httpx.AsyncClient | None = None
     economic_calendar: httpx.AsyncClient | None = None
     explanation: httpx.AsyncClient | None = None
+    #: Phase 10-1. Its own client rather than borrowing the market-data one: FRED is a different
+    #: host, needs no key, and is not governed by `market_data_enabled` — sharing a client built for
+    #: a keyed provider would tie rates to a switch that has nothing to do with them.
+    interest_rates: httpx.AsyncClient | None = None
 
     async def aclose(self) -> None:
-        for client in (self.market_data, self.economic_calendar, self.explanation):
+        for client in (
+            self.market_data,
+            self.economic_calendar,
+            self.explanation,
+            self.interest_rates,
+        ):
             if client is not None and not client.is_closed:
                 await client.aclose()
 
@@ -57,6 +66,9 @@ def create_provider_clients(settings: Settings) -> ProviderClients:
             httpx.AsyncClient(timeout=build_explanation_timeout(settings))
             if settings.explanation_provider_configured()
             else None
+        ),
+        interest_rates=(
+            httpx.AsyncClient(timeout=timeout) if settings.interest_rate_ingestion_enabled else None
         ),
     )
 
@@ -80,6 +92,7 @@ def create_market_data_provider(
         retry_count=settings.provider_retry_count,
         retry_backoff_seconds=settings.provider_retry_backoff_seconds,
         max_request_range=timedelta(days=settings.provider_max_request_range_days),
+        min_request_interval_seconds=settings.provider_min_request_interval_seconds,
     )
 
 

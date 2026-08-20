@@ -1,13 +1,10 @@
-from collections.abc import Callable
 from typing import Any
 
 from app.core import constants
 from app.core.exceptions import ApplicationError
 from app.core.security import redact_text
 from app.core.time import utc_now
-from app.domain.interfaces.unit_of_work import UnitOfWork
-
-UnitOfWorkFactory = Callable[[], UnitOfWork]
+from app.domain.interfaces.unit_of_work import UnitOfWorkFactory
 
 
 class SystemStateService:

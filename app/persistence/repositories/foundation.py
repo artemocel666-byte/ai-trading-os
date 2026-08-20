@@ -2,7 +2,7 @@ from collections.abc import Mapping
 from datetime import datetime
 from typing import Any
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.dialects.postgresql import insert as postgresql_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -257,6 +257,25 @@ class SqlAlchemyCandleRepository:
             query.order_by(CandleModel.open_time.asc(), CandleModel.provider.asc())
         )
         return [_candle_from_model(row) for row in result.scalars().all()]
+
+    async def newest_close_times(
+        self,
+        *,
+        timeframe: Timeframe,
+        provider: str | None = None,
+    ) -> dict[str, datetime]:
+        query = (
+            select(CandleModel.pair, func.max(CandleModel.close_time))
+            .where(
+                CandleModel.timeframe == timeframe.value,
+                CandleModel.is_closed.is_(True),
+            )
+            .group_by(CandleModel.pair)
+        )
+        if provider is not None:
+            query = query.where(CandleModel.provider == provider)
+        result = await self._session.execute(query)
+        return {pair: normalize_to_utc(newest) for pair, newest in result.all()}
 
 
 class SqlAlchemyEconomicEventRepository:

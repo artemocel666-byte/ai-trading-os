@@ -364,6 +364,21 @@ non-actionable and without any signal, AI, or execution behavior.
     against the provider rather than assumed, and the measurement refuted both prior guesses.
     The coverage check that was missing now exists (`coverage_shortfalls`) and the final run
     reports every pair within 10% of the median. **9D-2 is unblocked on data.**
+  - 10-1: keep the universe alive — **completed 2026-08-20**, see
+    `docs/phase10-1-verification-report.md` and the pre-registration committed before it in
+    `docs/phase10-1-preregistration.md`. Daily bars for 45 pairs on a **cron** trigger (not an
+    interval: the ingestion service has no wall-clock gate, so a worker restarting daily might never
+    fire one), rates weekly, and a freshness check that records a system error. **All eight
+    pre-registered criteria met**, including the one that decided the slice: the alarm was seen to
+    fire, on live data — 44 pairs five days behind before the fill, 44 fresh after. `latest_closed_
+    boundary` raised for D1 and now derives from the delta map. Pacing 8 s -> 12 s after a live
+    sweep still drew two rate-limit refusals. Repaired in passing: nine copies of
+    `UnitOfWorkFactory`, a `UnitOfWork` protocol missing `interest_rates`, and ingestion results
+    with no `failure_reason`. No schema change.
+  - 10-2: the descriptive report — opens by making the honesty policy executable (types that cannot
+    render a median without its dispersion, a banned-vocabulary test on user-facing layers) and by
+    reconciling `/review`, which still shows a person a verdict from rules 9C-2 measured to separate
+    nothing. Then: is it the pair or the currency, own-history percentiles, carry ranked.
   - 9D-4: does the interest rate differential order the cross-section? **Completed 2026-08-17**,
     see `docs/phase9d4-verification-report.md`. **224 rebalance dates, 44 instruments on every one**,
     5 anchors excluded and named (2020-06 for the USD gap 9D-3 predicted, 2026-04..07 where the

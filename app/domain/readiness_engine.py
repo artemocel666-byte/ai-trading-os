@@ -1,7 +1,7 @@
 import hashlib
 import json
 from collections.abc import Sequence
-from datetime import datetime
+from datetime import UTC, datetime
 
 from app.core import constants
 from app.core.time import normalize_to_utc
@@ -94,14 +94,32 @@ class SnapshotDigestBuilder:
         )
 
 
+#: Every timeframe grid in this project is anchored here: 15 minutes, an hour and a day all divide
+#: a day evenly, so flooring to a multiple of the timeframe's own delta lands on a real boundary.
+_GRID_ORIGIN = datetime(1970, 1, 1, tzinfo=UTC)
+
+
 def latest_closed_boundary(*, timeframe: Timeframe, as_of: datetime) -> datetime:
-    as_of_utc = normalize_to_utc(as_of)
-    if timeframe == Timeframe.M15:
-        minute = (as_of_utc.minute // 15) * 15
-        return as_of_utc.replace(minute=minute, second=0, microsecond=0)
-    if timeframe == Timeframe.H1:
-        return as_of_utc.replace(minute=0, second=0, microsecond=0)
-    raise ValueError(f"unsupported timeframe: {timeframe.value}")
+    """The instant the most recent complete candle of this timeframe ended.
+
+    **Derived from `TIMEFRAME_TO_DELTA` rather than branching per timeframe**, and that is the whole
+    point. This previously handled M15 and H1 with two hand-written branches and raised for anything
+    else, so when Phase 9D-1 taught the project about daily bars it added D1 to the delta map and
+    left this sibling behind: every daily item would have failed here, before any request went out,
+    the same shape of fault as the half-added delta map that once refused every daily request and
+    reported it as a provider that does not quote those pairs.
+
+    A branch per timeframe is a place to forget one. Reading the delta map means a timeframe added
+    there is answered here for free.
+
+    The market calendar is deliberately not consulted. This answers *what to ask the provider for*,
+    and a window end one day past the last real bar is harmless: the request is a range, storage
+    keeps what comes back, and lookbacks overlap. Whether we actually **hold** the bar we should is
+    a different question, asked by `app/domain/data_freshness.py`.
+    """
+    delta = TIMEFRAME_TO_DELTA[timeframe]
+    elapsed = normalize_to_utc(as_of) - _GRID_ORIGIN
+    return _GRID_ORIGIN + (elapsed // delta) * delta
 
 
 def _window_for_item(*, item: SnapshotScheduleItem, as_of: datetime) -> SnapshotWindow:

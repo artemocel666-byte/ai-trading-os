@@ -9,11 +9,14 @@ from app.domain.entities import (
     ForwardOutcomeResolveResult,
     MarketDataIngestionResult,
     ScheduledDigestDeliveryResult,
+    Timeframe,
 )
 from app.observability.health_checks import run_application_health_check
+from app.services.data_freshness_service import DataFreshnessService
 from app.services.economic_calendar_ingestion_service import EconomicCalendarIngestionService
 from app.services.forward_outcome_service import ForwardOutcomeService
 from app.services.health_service import HealthService
+from app.services.interest_rate_ingestion_service import InterestRateIngestionService
 from app.services.market_data_ingestion_service import MarketDataIngestionService
 from app.services.scheduled_digest_delivery_service import ScheduledDigestDeliveryService
 from app.services.system_state_service import SystemStateService
@@ -128,6 +131,38 @@ async def forward_outcome_resolve_job(
     return result
 
 
+async def daily_universe_ingestion_job(
+    ingestion_service: MarketDataIngestionService,
+    freshness_service: DataFreshnessService,
+    instruments: tuple[str, ...],
+) -> MarketDataIngestionResult:
+    """Fill the daily universe, then check that it actually got filled.
+
+    The two halves are deliberately one job. A fill that reports success on holed data is precisely
+    what Phase 9D-1 found by hand after the fact, so the check runs on the same tick and against the
+    same clock — a separate schedule could drift until the check was reading a different day's
+    state from the fill that produced it.
+    """
+    result = await ingestion_service.run_tick(as_of=utc_now())
+    logger.info(
+        "daily_universe_ingestion_checked",
+        extra={
+            "executed": result.executed,
+            "items": len(result.item_results),
+            "failed_items": result.failed_item_count,
+            "inserted": result.total_inserted,
+            "updated": result.total_updated,
+        },
+    )
+    await freshness_service.check(timeframe=Timeframe.D1, instruments=instruments)
+    return result
+
+
+async def interest_rate_ingestion_job(service: InterestRateIngestionService) -> None:
+    stored = await service.refresh()
+    logger.info("interest_rate_ingestion_checked", extra={"currencies": stored})
+
+
 def register_jobs(
     scheduler: Any,
     *,
@@ -135,6 +170,13 @@ def register_jobs(
     health_service: HealthService,
     market_data_ingestion_service: MarketDataIngestionService | None = None,
     market_data_ingestion_interval_minutes: int = 15,
+    daily_universe_ingestion_service: MarketDataIngestionService | None = None,
+    data_freshness_service: DataFreshnessService | None = None,
+    daily_universe_instruments: tuple[str, ...] = (),
+    daily_universe_hour_utc: int = 2,
+    interest_rate_ingestion_service: InterestRateIngestionService | None = None,
+    interest_rate_day_of_week: str = "sun",
+    interest_rate_hour_utc: int = 3,
     calendar_ingestion_service: EconomicCalendarIngestionService | None = None,
     calendar_ingestion_interval_minutes: int = 60,
     forward_outcome_service: ForwardOutcomeService | None = None,
@@ -168,6 +210,44 @@ def register_jobs(
             minutes=market_data_ingestion_interval_minutes,
             args=[market_data_ingestion_service],
             id="market_data_ingestion",
+            max_instances=1,
+            coalesce=True,
+            replace_existing=True,
+        )
+    if daily_universe_ingestion_service is not None and data_freshness_service is not None:
+        # A cron trigger, not an interval, and this is the one job where that matters. There is no
+        # wall-clock gate inside the ingestion service - cadence is owned entirely by the trigger -
+        # so a 1440-minute interval on a worker that restarts every day (a deploy, a crash, a
+        # laptop closing) could go its whole life without firing once, and the failure would look
+        # exactly like nothing happening. Cron fires on the clock regardless of when the process
+        # started.
+        scheduler.add_job(
+            daily_universe_ingestion_job,
+            "cron",
+            hour=daily_universe_hour_utc,
+            minute=0,
+            timezone="UTC",
+            args=[
+                daily_universe_ingestion_service,
+                data_freshness_service,
+                daily_universe_instruments,
+            ],
+            id="daily_universe_ingestion",
+            max_instances=1,
+            coalesce=True,
+            replace_existing=True,
+        )
+    if interest_rate_ingestion_service is not None:
+        # Rates move a few times a year, so weekly is generous and costs ten requests.
+        scheduler.add_job(
+            interest_rate_ingestion_job,
+            "cron",
+            day_of_week=interest_rate_day_of_week,
+            hour=interest_rate_hour_utc,
+            minute=0,
+            timezone="UTC",
+            args=[interest_rate_ingestion_service],
+            id="interest_rate_ingestion",
             max_instances=1,
             coalesce=True,
             replace_existing=True,

@@ -75,6 +75,25 @@ class Settings(BaseSettings):
     market_data_ingestion_enabled: bool = False
     market_data_ingestion_interval_minutes: int = Field(default=15, ge=1, le=1440)
     market_data_ingestion_lookback_candles: int = Field(default=48, ge=1, le=500)
+    #: Phase 10-1. Daily bars for the whole currency universe, on their own schedule. Forty-five
+    #: pairs once a day is 45 requests against the 192 the single-pair job already spends; the same
+    #: universe on M15 would be 4,224 and is wanted by nothing that has been built.
+    daily_universe_ingestion_enabled: bool = False
+    #: The UTC hour the daily sweep runs. A cron hour rather than an interval, because the ingestion
+    #: service has no wall-clock gate and an interval on a worker restarting daily may never fire at
+    #: all. Two in the morning UTC leaves the provider hours to publish the previous day's bar.
+    daily_universe_ingestion_hour_utc: int = Field(default=2, ge=0, le=23)
+    #: Deliberately small and deliberately overlapping: each sweep re-asks for the last few days so
+    #: a short provider gap heals on the next run without a backfill being needed.
+    daily_universe_lookback_candles: int = Field(default=5, ge=1, le=100)
+    #: How many bars behind the calendar's expectation a series may sit before it is called stale.
+    #: One, because the provider publishes on its clock and we look on ours; two consecutive misses
+    #: are no longer a scheduling coincidence.
+    data_freshness_tolerance_bars: int = Field(default=1, ge=0, le=10)
+    #: Phase 10-1. FRED is free and keyless and the series are monthly, so a weekly refresh costs
+    #: ten requests and removes the dependency on somebody remembering to run a script.
+    interest_rate_ingestion_enabled: bool = False
+    interest_rate_ingestion_hour_utc: int = Field(default=3, ge=0, le=23)
 
     calendar_enabled: bool = False
     fmp_api_key: SecretStr | None = None
@@ -101,6 +120,20 @@ class Settings(BaseSettings):
     provider_pool_timeout_seconds: float = Field(default=5.0, gt=0, le=30)
     provider_retry_count: int = Field(default=2, ge=0, le=5)
     provider_retry_backoff_seconds: float = Field(default=0.1, ge=0, le=5)
+    #: The floor on how close together two provider requests may be sent. Phase 10-1: the daily
+    #: universe job asks for forty-five pairs in one tick, and fired back-to-back they trip a
+    #: per-minute limit whose refusals arrive looking like provider faults rather than like our own
+    #: pacing.
+    #:
+    #: **Raised from 8.0 to 12.0 after a live sweep at 8.0 still drew two rate-limit refusals.**
+    #: Eight seconds is 7.5 requests a minute against a limit of eight — no margin at all, and the
+    #: retry path makes it worse, since a retried request takes a second turn and briefly doubles
+    #: the local rate. Twelve seconds is five a minute, chosen for real headroom rather than nudged
+    #: just past the observed failure: fitting a threshold to the data it must judge is the mistake
+    #: Phase 9D-1 named when a tolerance was set barely above the worst sample it had seen. The cost
+    #: is a sweep of about nine minutes instead of six, on a job that runs at two in the morning.
+    #: Read in exactly one place, so the worker, the scripts and any future caller cannot disagree.
+    provider_min_request_interval_seconds: float = Field(default=12.0, ge=0, le=60)
     #: A second, coarser guard against silent truncation, expressed in days and therefore blind to
     #: the timeframe: 370 days is 35,000 M15 bars and 260 daily ones. The guard that actually counts
     #: is `chunk_candles` in the backfill service, which caps a request in *bars*. The ceiling was

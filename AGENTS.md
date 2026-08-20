@@ -3,6 +3,31 @@
 AI Trading OS is a foundation for a future Forex analysis and paper-trading platform.
 
 Current project phase: phase_9d3_interest_rate_ingestion.
+Phase 10-1 made the universe live, and it is the first phase in this project whose
+**pre-registration was committed before the code** (`8297a95`) rather than living in a throwaway
+plan file. Eight criteria fixed in advance, all eight met.
+**The plumbing check found a blocker before the design was built around it**: `latest_closed_boundary`
+raised `ValueError` for D1, so every daily item would have crashed before its first request - the
+9D-1 fault recurring in a sibling function. Fixed at the root: the boundary is now **derived from
+`TIMEFRAME_TO_DELTA`** instead of branching per timeframe, so a timeframe added there is answered
+here for free, and the test asserts it for every member of the enum.
+**Cron, not interval.** There is no wall-clock gate in the ingestion service - cadence belongs
+entirely to the trigger - so a 1440-minute interval on a worker restarted daily could go its whole
+life without firing, and the failure would look exactly like nothing happening.
+**The alarm was seen to fire.** Before: 44 pairs five days behind, nothing noticing. After: 44 fresh,
+0 stale, 1 absent. **`NZDSEK` is absent, never stale** - a pair the provider does not quote must not
+make the report complain daily about a permanent fact, or its reader stops believing it.
+**8 seconds of pacing was not enough** - a live sweep still drew two rate-limit refusals. Raised to
+12, deliberately **not** to just above the observed failure: nudging a threshold past the worst
+sample is fitting it to the data it must judge, the mistake 9D-1 named.
+**Three unplanned repairs:** `UnitOfWorkFactory` existed identically in nine places; the `UnitOfWork`
+protocol never declared `interest_rates` (9D-3 gave only the implementation the slot, and `mypy`
+checks `app` alone); and ingestion item results gained `failure_reason` - the exception **type name**
+only, never its message.
+**The rate safety rule moved from existence to delivery**, as 9D-2 did for the cross-section.
+Telegram and the API stay absolutely closed; inside services and the scheduler only the named
+ingestion path may mention rates.
+See `docs/phase10-1-verification-report.md`.
 Phase 9D-4 asked the carry question and got **the seventh null - the first that explains itself**.
 Ranked by lagged interest rate differential into terciles, monthly, one-month holding: **224
 rebalance dates, 44 instruments on every one of them** (min, median and max alike), 5 anchors

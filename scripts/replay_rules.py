@@ -1,7 +1,7 @@
 import argparse
 import asyncio
 import sys
-from collections.abc import Callable, Sequence
+from collections.abc import Sequence
 from datetime import datetime, timedelta
 from decimal import Decimal
 
@@ -11,7 +11,7 @@ from app.core.time import normalize_to_utc, utc_now
 from app.domain.entities import Candle, EconomicEvent, Timeframe
 from app.domain.entities.calibration import RuleCalibrationReport
 from app.domain.entities.data_quality import TIMEFRAME_TO_DELTA
-from app.domain.interfaces.unit_of_work import UnitOfWork
+from app.domain.interfaces.unit_of_work import UnitOfWorkFactory
 from app.domain.market_calendar import is_market_open
 from app.domain.rule_replay import (
     DEFAULT_STEP_CANDLES,
@@ -21,8 +21,6 @@ from app.domain.rule_replay import (
 from app.domain.value_objects import CurrencyPair
 from app.persistence.database import create_engine, create_session_factory
 from app.persistence.session import build_uow_factory
-
-UnitOfWorkFactory = Callable[[], UnitOfWork]
 
 
 def touches_closed_market(candles: Sequence[Candle]) -> bool:

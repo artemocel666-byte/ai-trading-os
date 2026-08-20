@@ -1,13 +1,11 @@
-from collections.abc import Callable, Sequence
+from collections.abc import Sequence
 from datetime import datetime
 
 from app.domain.context_engine import MarketContextEngine
 from app.domain.entities import Timeframe
 from app.domain.entities.context import MarketContextSnapshot
-from app.domain.interfaces.unit_of_work import UnitOfWork
+from app.domain.interfaces.unit_of_work import UnitOfWorkFactory
 from app.domain.value_objects import CurrencyPair
-
-UnitOfWorkFactory = Callable[[], UnitOfWork]
 
 
 class ContextService:

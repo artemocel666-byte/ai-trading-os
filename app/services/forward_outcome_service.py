@@ -14,7 +14,7 @@ tests name it. It chooses no direction: both are recorded for every window, exac
 `scripts/measure_outcomes.py` measures both. It computes no account, no size, and no cost.
 """
 
-from collections.abc import Callable, Sequence
+from collections.abc import Sequence
 from datetime import datetime
 
 from app.core.constants import REAL_MARKET_DATA_PROVIDERS
@@ -36,15 +36,13 @@ from app.domain.entities.pipeline_decision import PipelineDecisionReport
 from app.domain.entities.readiness import SnapshotScheduleItem
 from app.domain.entities.rule_evaluation import RuleEvaluationStatus
 from app.domain.entities.signal_contract import SignalDirection, SignalPricePlan
-from app.domain.interfaces.unit_of_work import UnitOfWork
+from app.domain.interfaces.unit_of_work import UnitOfWorkFactory
 from app.domain.outcome_measurement import measure_outcome
 from app.domain.readiness_engine import latest_closed_boundary
 from app.domain.signal_price_plan import LevelMultipliers, build_price_plan
 from app.domain.snapshot_review import build_snapshot_backed_review
 from app.domain.value_objects import CurrencyPair
 from app.services.system_state_service import SystemStateService
-
-UnitOfWorkFactory = Callable[[], UnitOfWork]
 
 FORWARD_OUTCOME_COMPONENT = "forward_outcome_ledger"
 

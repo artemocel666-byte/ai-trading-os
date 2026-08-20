@@ -5,6 +5,15 @@ AI Trading OS is a safety-first foundation for a future modular Forex analysis a
 ## Current Status
 
 - Current project phase: phase_9d3_interest_rate_ingestion.
+- Phase 10-1 made the currency universe **live**: daily bars for all 45 pairs on a cron trigger,
+  interest rates weekly, and a freshness check that **complains**. Its pre-registration was
+  committed before the code — a first for this project. The plumbing check found a blocker first:
+  `latest_closed_boundary` raised for D1, so every daily item would have crashed before its first
+  request; it now derives from the delta map rather than branching per timeframe. Before the fill,
+  44 pairs were **five days behind and nothing was watching**; after, 44 fresh and 0 stale, with
+  `NZDSEK` named **absent** rather than stale. Pacing raised from 8 s to 12 s after a live sweep
+  still drew two rate-limit refusals. `scripts/run_universe_sweep.py`,
+  `scripts/report_data_freshness.py`, `scripts/run_rate_refresh.py`.
 - Phase 9D-4 measured carry — **the seventh null, and the first that explains itself**. 224
   rebalance dates, **44 instruments on every single one**, 5 anchors excluded and named. Total
   spread **+0.110%/month at t = +0.53**: three of four pre-registered criteria passed, t ≥ 2.0 did

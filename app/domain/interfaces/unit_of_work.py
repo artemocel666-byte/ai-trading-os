@@ -1,3 +1,4 @@
+from collections.abc import Callable
 from types import TracebackType
 from typing import Protocol, Self
 
@@ -8,6 +9,7 @@ from app.domain.interfaces.repositories import (
     EconomicEventRepository,
     ErrorEventRepository,
     ForwardOutcomeRepository,
+    InterestRateRepository,
     SystemStateRepository,
 )
 
@@ -48,6 +50,16 @@ class UnitOfWork(Protocol):
         """Repository for pre-registered plans and the outcomes settled onto them."""
         ...
 
+    @property
+    def interest_rates(self) -> InterestRateRepository:
+        """Repository for short-term interest rates, one row per currency per month.
+
+        Added to the protocol in Phase 10-1. Phase 9D-3 gave the implementation this slot and left
+        the interface without it: the only caller was a script, and `mypy` checks `app` alone, so
+        nothing said the two had drifted. The first service to need rates found it immediately.
+        """
+        ...
+
     async def __aenter__(self) -> Self:
         """Open one asynchronous persistence boundary."""
 
@@ -64,3 +76,12 @@ class UnitOfWork(Protocol):
 
     async def rollback(self) -> None:
         """Rollback the current unit of work."""
+
+
+#: How a caller obtains a unit of work. Defined here, beside the thing it produces.
+#:
+#: Phase 10-1 found this alias written out identically in eight service modules. Harmless while all
+#: eight agreed, and precisely the shape of every fault this project has had to repair: the delta
+#: map that was half-added, the request-range limit that lived in two places, the month arithmetic
+#: copied into two scripts before a third needed it. Adding a ninth copy was the alternative.
+UnitOfWorkFactory = Callable[[], UnitOfWork]

@@ -79,6 +79,10 @@ class MarketDataIngestionItemResult(BaseModel):
     inserted_count: int = Field(default=0, ge=0)
     updated_count: int = Field(default=0, ge=0)
     failed: bool = False
+    #: The exception's **type name** when this item failed, never its message. Phase 9D-1 gave the
+    #: backfill result the same field and it separated two causes that had looked identical; a
+    #: provider message can quote a URL carrying the API key, so only the type travels.
+    failure_reason: str | None = None
 
     model_config = ConfigDict(frozen=True)
 
@@ -93,6 +97,8 @@ class MarketDataIngestionItemResult(BaseModel):
             raise ValueError("ingestion window_end must be later than window_start")
         if self.failed and (self.fetched_count or self.inserted_count or self.updated_count):
             raise ValueError("a failed ingestion item must not report stored candle counts")
+        if not self.failed and self.failure_reason is not None:
+            raise ValueError("an item that did not fail cannot carry a failure reason")
         if self.inserted_count + self.updated_count > self.fetched_count:
             raise ValueError("stored candle counts must not exceed the fetched candle count")
         return self

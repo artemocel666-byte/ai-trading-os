@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import time
 from collections.abc import Sequence
 from datetime import datetime, timedelta
 from decimal import Decimal, InvalidOperation
@@ -108,6 +109,7 @@ class TwelveDataMarketDataAdapter:
         retry_count: int,
         retry_backoff_seconds: float,
         max_request_range: timedelta,
+        min_request_interval_seconds: float,
     ) -> None:
         self._client = client
         self._api_key = api_key
@@ -116,6 +118,11 @@ class TwelveDataMarketDataAdapter:
         self._retry_count = retry_count
         self._retry_backoff_seconds = retry_backoff_seconds
         self._max_request_range = max_request_range
+        self._min_request_interval_seconds = min_request_interval_seconds
+        # Held across the wait as well as the stamp, so two callers cannot both read the same
+        # "last request" and then fire together — which is the failure this exists to prevent.
+        self._request_gate = asyncio.Lock()
+        self._last_request_at: float | None = None
 
     async def get_closed_candles(
         self,
@@ -190,6 +197,7 @@ class TwelveDataMarketDataAdapter:
         last_transport_error: httpx.TransportError | None = None
         last_5xx_status: int | None = None
         for attempt in range(attempts):
+            await self._wait_for_turn()
             try:
                 response = await self._client.get(
                     url,
@@ -239,6 +247,26 @@ class TwelveDataMarketDataAdapter:
         if last_transport_error is not None:
             raise ProviderUnavailableError(PROVIDER_NAME) from last_transport_error
         raise ProviderUnavailableError(PROVIDER_NAME, details={"status_code": last_5xx_status})
+
+    async def _wait_for_turn(self) -> None:
+        """Hold every request at least `min_request_interval_seconds` apart.
+
+        Phase 10-1. The daily universe job asks for forty-five pairs in one tick; fired
+        back-to-back they trip a per-minute limit, and the resulting refusals arrive looking like
+        provider faults rather than like our own pacing. Phase 9D-1 spent a run on that confusion
+        once, when diagnostics running alongside a fill produced a real `ProviderRateLimitError`
+        that took a `failure_reason` to tell apart from a malformed payload.
+
+        A retry counts as a request, so this sits inside the retry loop rather than around it.
+        """
+        if self._min_request_interval_seconds <= 0:
+            return
+        async with self._request_gate:
+            if self._last_request_at is not None:
+                elapsed = time.monotonic() - self._last_request_at
+                if elapsed < self._min_request_interval_seconds:
+                    await asyncio.sleep(self._min_request_interval_seconds - elapsed)
+            self._last_request_at = time.monotonic()
 
     async def _sleep_before_retry(self) -> None:
         if self._retry_backoff_seconds > 0:

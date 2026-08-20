@@ -23,6 +23,7 @@ class ErrorCode(StrEnum):
     PROVIDER_INVALID_PAYLOAD = "PROVIDER_INVALID_PAYLOAD"
     PROVIDER_UNSUPPORTED_REQUEST = "PROVIDER_UNSUPPORTED_REQUEST"
     PROVIDER_PLAN_RESTRICTED = "PROVIDER_PLAN_RESTRICTED"
+    MARKET_DATA_STALE = "MARKET_DATA_STALE"
 
 
 class ApplicationError(Exception):
@@ -47,6 +48,24 @@ class ConfigurationInvalidError(ApplicationError):
     def __init__(self, message_ru: str, *, details: Mapping[str, Any] | None = None) -> None:
         super().__init__(
             ErrorCode.CONFIGURATION_INVALID,
+            message_ru,
+            status_code=500,
+            details=details,
+        )
+
+
+class MarketDataStaleError(ApplicationError):
+    """Stored history has fallen behind what the calendar says should be there.
+
+    Phase 10-1. Not a provider fault and not a crash — the fill may have reported success while
+    quietly missing bars, which is exactly what Phase 9D-1 found by hand after the fact. Raising it
+    through the existing error path is what makes the condition visible on a surface somebody
+    already looks at, instead of living in a report nobody runs.
+    """
+
+    def __init__(self, message_ru: str, *, details: Mapping[str, Any] | None = None) -> None:
+        super().__init__(
+            ErrorCode.MARKET_DATA_STALE,
             message_ru,
             status_code=500,
             details=details,

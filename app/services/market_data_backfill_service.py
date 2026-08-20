@@ -7,10 +7,9 @@ from app.domain.entities.backfill import BackfillChunkResult, BackfillResult
 from app.domain.entities.data_quality import TIMEFRAME_TO_DELTA
 from app.domain.entities.market_data import Candle, Timeframe
 from app.domain.interfaces.providers import MarketDataProvider
-from app.domain.interfaces.unit_of_work import UnitOfWork
+from app.domain.interfaces.unit_of_work import UnitOfWorkFactory
 from app.domain.value_objects import CurrencyPair
 
-UnitOfWorkFactory = Callable[[], UnitOfWork]
 SleepCallable = Callable[[float], Awaitable[None]]
 
 DEFAULT_CHUNK_CANDLES = 1000
