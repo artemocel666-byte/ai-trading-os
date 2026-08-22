@@ -24,7 +24,7 @@ SUNDAY = datetime(2026, 8, 23, 10, 0, tzinfo=UTC)
 
 
 def test_project_phase_is_current() -> None:
-    assert constants.PROJECT_PHASE == "phase_10_1_live_universe"
+    assert constants.PROJECT_PHASE == "phase_10_2_market_state"
 
 
 def test_a_timeframe_cannot_be_half_added_to_the_boundary_either() -> None:

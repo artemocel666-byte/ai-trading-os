@@ -175,7 +175,7 @@ async def test_snapshot_command_returns_readiness_report(monkeypatch: pytest.Mon
     reply = update.effective_message.replies[0]
     assert reply.startswith("📊 ")
     assert "Отчёт готовности EURUSD M15" in reply
-    assert "Статус: готово" in reply
+    assert "готово" in reply
     assert "Свечей использовано: 12 из 12" in reply
     forbidden_terms = (
         "LONG",
@@ -428,7 +428,11 @@ def _assert_deterministic_report_intact(reply: str) -> None:
     assert reply.startswith("📊 ")
     assert "READ-ONLY проверка по снапшоту." in reply
     assert "EURUSD M15" in reply
-    assert "Правила: пройдено" in reply
+    # Phase 10-2: the aggregate score is gone; what proves the real review ran is a per-ruleset
+    # line plus the 9C-2 null that must accompany it.
+    assert "Правила: пройдено" not in reply
+    assert "качество данных" in reply
+    assert "9C-2" in reply
     assert "NO TRADING SIGNAL." in reply
     assert "NON-ACTIONABLE." in reply
 

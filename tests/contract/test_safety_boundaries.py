@@ -1,5 +1,6 @@
 import ast
 import inspect
+import re
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
@@ -3253,6 +3254,13 @@ def test_phase9d4_the_lag_and_the_month_arithmetic_exist_in_exactly_one_place() 
         # only for as long as all eight agreed, which is what was true of every duplication this
         # project has had to repair.
         ("UnitOfWorkFactory = Callable", Path("app/domain/interfaces/unit_of_work.py")),
+        # Phase 10-2. `nearest_rank` maps a percent to a value and `percentile_rank` maps a value to
+        # a percent — inverses, not copies. Each still needs exactly one home, or a report and the
+        # measurement that justifies it could disagree about where the middle of a sample is.
+        ("def nearest_rank(", Path("app/domain/rule_calibration.py")),
+        ("def percentile_rank(", Path("app/domain/market_state.py")),
+        # The single renderer criterion 1 rests on.
+        ("def format_distribution(", Path("app/presentation/readings.py")),
     ):
         homes = [str(path) for path in searched if definition in path.read_text(encoding="utf-8")]
         assert homes == [str(home)], definition
@@ -3266,3 +3274,88 @@ def test_phase9d4_the_carry_measurement_takes_no_parameter_to_fit() -> None:
     source = PHASE_9D4_CARRY_MODULE.read_text(encoding="utf-8")
     # The all-or-nothing rule, in the words the plan used.
     assert "An anchor missing one currency is dropped whole" in source
+
+
+PHASE_10_2_RENDERER = Path("app/presentation/readings.py")
+
+#: What a person reads as product output. Measurement instruments — `profile_*`, `replay_*`,
+#: `evaluate_*` — are deliberately out of scope: they print whole grids for whoever is running the
+#: measurement, and holding them to a product rule would be enforcing it where it does not apply.
+PHASE_10_2_PERSON_FACING = (
+    tuple(Path("app/presentation").rglob("*.py"))
+    + tuple(Path("app/telegram").rglob("*.py"))
+    + tuple(Path("app/api").rglob("*.py"))
+    + tuple(Path("scripts").glob("report_*.py"))
+)
+
+
+def test_phase10_2_only_one_place_may_render_a_central_tendency() -> None:
+    """Criterion 1 of the Phase 10-2 pre-registration, and the criterion that decided the slice.
+
+    `FieldDistribution` has refused to *hold* a lonely median since Phase 4 — its validator says an
+    observed field must report every percentile. Nothing stopped a formatter from holding a complete
+    distribution and printing only its middle, so the data obeyed the rule and the rendering did
+    not. One renderer now emits the sample size, the spread and the middle together, and this is the
+    search that keeps a second one from appearing.
+
+    Seven pre-registered measurements are the reason: in this data the dispersion swamps the middle,
+    so a lone central tendency is a forecast whether or not that was the intent.
+    """
+    offenders = [
+        str(path)
+        for path in PHASE_10_2_PERSON_FACING
+        if path != PHASE_10_2_RENDERER
+        and any(
+            term in path.read_text(encoding="utf-8")
+            for term in (".median", "statistics.mean", ".p50")
+        )
+    ]
+
+    assert offenders == []
+
+
+#: Words that smuggle a forecast into a description. `перекуплен` does it inside a single word:
+#: "overbought" is not an observation, it is a claim about what should happen next.
+PHASE_10_2_FORECAST_WORDS = (
+    "обычно",
+    "ожидается",
+    "вероятно",
+    "перекуплен",
+    "перепродан",
+    "рекомендуем",
+)
+
+
+def test_phase10_2_no_vocabulary_of_expectation_reaches_a_person() -> None:
+    """Criterion 3. Matched as whole words, which is the 10-1 lesson made permanent.
+
+    A substring ban caught "long" inside "belongs" in 10-1 and "carry" inside "carrying" in 9D-4.
+    Both were false alarms on ordinary English, and both cost a debugging round. Russian stems
+    inflect, so each term is matched with a word boundary in front and any ending allowed after.
+    """
+    pattern = re.compile(r"\b(" + "|".join(PHASE_10_2_FORECAST_WORDS) + r")", re.IGNORECASE)
+    offenders = [
+        f"{path}: {match.group(0)}"
+        for path in PHASE_10_2_PERSON_FACING
+        for match in pattern.finditer(path.read_text(encoding="utf-8"))
+        # The renderer names the banned list in its own docstring in order to explain the rule.
+        if path != PHASE_10_2_RENDERER
+    ]
+
+    assert offenders == []
+
+
+def test_phase10_2_review_no_longer_shows_an_aggregate_rule_score() -> None:
+    """Criterion 4. An aggregate is the shape that reads as a verdict.
+
+    "Правила: пройдено 7 из 9" invites "mostly favourable", which Phase 9C-2 measured to be empty:
+    those rules separate nothing, and two of them barely separate anything at all. The per-ruleset
+    lines survive because they are facts about which conditions held — but only in a message that
+    also states what the count was measured to be worth.
+    """
+    source = Path("app/telegram/snapshot_review_formatter.py").read_text(encoding="utf-8")
+
+    assert "Правила: пройдено" not in source
+    assert "Итог правил" not in source
+    assert "9C-2" in source
+    assert "не разделяют исходы" in source

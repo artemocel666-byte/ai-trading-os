@@ -61,13 +61,6 @@ def format_snapshot_review_body(
     decision = result.decision
     snapshot = result.snapshot
 
-    total_rules = sum(len(report.results) for report in decision.ruleset_reports)
-    passed_rules = sum(
-        1
-        for report in decision.ruleset_reports
-        for rule_result in report.results
-        if rule_result.status == RuleEvaluationStatus.PASSED
-    )
     used_candles = snapshot.input_audit.used_candle_count
     expected_candles = (
         snapshot.feature_snapshot.candle_summary.expected_candle_count
@@ -75,17 +68,30 @@ def format_snapshot_review_body(
         else 0
     )
 
+    # Phase 10-2 removed two lines a person read as a verdict: the aggregate count of rules passed,
+    # and the overall ruleset status. Phase 9C-2 measured these rules and found they separate
+    # nothing, and two of them barely separate anything at all. An aggregate is the exact shape that
+    # invites "mostly favourable" — a reading the project has measured to be empty. What remains is
+    # per-ruleset and carries the null in the same message, so the count cannot be read apart from
+    # what it was measured to be worth.
+    #
+    # The removed wording is deliberately not quoted here: a safety test scans this file for it, and
+    # a comment reproducing the strings would keep them alive in exactly the place they were cut.
     lines = [
         "READ-ONLY проверка по снапшоту.",
         f"Пара/таймфрейм: {pair.value} {timeframe.value}.",
-        f"Статус: {review.status.value}. Итог правил: {decision.status.value}.",
+        f"Готовность данных: {review.status.value}.",
         "",
         f"Данные: свечей {used_candles} из {expected_candles}, "
         f"полнота {_percent(resolve_field('data_quality.completeness_ratio', snapshot))}, "
         f"возраст {_minutes(resolve_field('data_quality.latest_candle_age_minutes', snapshot))}.",
-        f"Правила: пройдено {passed_rules} из {total_rules}.",
+        "Условия правил, справочно:",
     ]
     lines.extend(_ruleset_line(report) for report in decision.ruleset_reports)
+    lines.append(
+        "Эти правила измерены в фазе 9C-2: они не разделяют исходы. "
+        "Число выполненных условий ничего не предсказывает."
+    )
     lines.extend(
         [
             f"Замеры: волатильность "

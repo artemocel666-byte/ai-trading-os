@@ -110,8 +110,16 @@ def test_formatter_reports_the_actual_rule_outcomes() -> None:
     body = format_snapshot_review_body(result, PAIR, Timeframe.M15)
 
     # This window holds no scheduled event, so "time since the latest event" has nothing to
-    # measure and is reported UNAVAILABLE rather than passed: 10 of 11, not 11 of 11.
-    assert "Правила: пройдено 10 из 11" in body
+    # measure and is reported UNAVAILABLE rather than passed: 1 of 2 in the event ruleset.
+    #
+    # Phase 10-2 removed the aggregate "пройдено N из M" and the overall rule status. An aggregate
+    # is the shape that reads as a verdict, and 9C-2 measured these rules to separate nothing. The
+    # per-ruleset lines survive because they are facts about which conditions held, and they now
+    # travel with the null in the same message.
+    assert "Правила: пройдено" not in body
+    assert "Итог правил" not in body
+    assert "9C-2" in body
+    assert "не разделяют исходы" in body
     assert "качество данных: 5 из 5" in body
     assert "рыночный контекст: 3 из 3" in body
     assert "события: 1 из 2" in body
@@ -142,7 +150,8 @@ def test_formatter_makes_a_degraded_window_visibly_different() -> None:
     )
 
     assert healthy != degraded
-    assert "Правила: пройдено 10 из 11" in healthy
-    assert "Правила: пройдено 10 из 11" not in degraded
+    # The difference must still be visible without an aggregate score to carry it.
+    assert "качество данных: 5 из 5" in healthy
+    assert "качество данных: 5 из 5" not in degraded
     assert "не пройдено: " in degraded
     assert "data_quality.used_candle_count" in degraded

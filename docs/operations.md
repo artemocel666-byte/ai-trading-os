@@ -851,3 +851,29 @@ would fire every day and stop being read — which is the failure this whole che
 **A weekend is not staleness.** A Friday daily bar closes at Saturday 00:00 UTC, so from Saturday
 morning until Monday night the newest bar we should hold is Friday's. The check derives that from
 `expected_open_times`, the same definition the data-quality machinery uses.
+
+
+## Market state (Phase 10-2)
+
+Describes where the currency universe stands against its own history. Read-only, and it contains no
+forecast — no ranking by expected return, and nothing phrased as an expectation.
+
+```bash
+docker compose run --rm -T worker python -u -m scripts.report_market_state
+```
+
+Read the plumbing block first: how many pairs have daily history, how many have enough history for a
+percentile, and which were too thin. A description built on a thinned universe is not the same
+description.
+
+**Three sections.** The currency decomposition answers whether a pair moved because of its base or
+its quote — one chart cannot separate those, and forty-four pairs can. Each line carries the range
+it was averaged over, because a mean near zero over a wide range is a different fact from a mean
+near zero over a narrow one. The percentile section gives each pair's latest daily span a scale
+against its own history. The carry section refuses to print at all unless every universe currency
+has a rate for the required month, and names the missing ones when it refuses.
+
+**One rule governs every number here.** A central tendency is never rendered without its spread and
+its sample size; `app/presentation/readings.py` is the only place allowed to format a distribution,
+and a safety test enforces that. A current observation — today's rate differential, say — is not a
+collapsed distribution and needs no spread.

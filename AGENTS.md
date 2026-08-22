@@ -3,6 +3,26 @@
 AI Trading OS is a foundation for a future Forex analysis and paper-trading platform.
 
 Current project phase: phase_9d3_interest_rate_ingestion.
+Phase 10-2 made the honesty policy executable, and the plumbing check narrowed the slice before it
+was built. **`FieldDistribution` has refused to hold a lonely central tendency since Phase 4** - its
+validator says an observed field must report every percentile - but nothing stopped a formatter from
+holding a complete distribution and printing only its middle. The data obeyed the rule; the
+rendering did not. **One renderer now emits the sample size, the spread and the middle together**,
+and a source scan over every layer a person reads keeps a second one from appearing.
+`nearest_rank` was likewise already the single percentile definition; `percentile_rank` is its
+**inverse**, not a copy, and the one-concept test pins both plus the renderer.
+**`/review` lost its aggregate.** "Пройдено N из M" and the overall ruleset status are gone: an
+aggregate is the shape that reads as a verdict, and 9C-2 measured those rules to separate nothing.
+Per-ruleset lines survive only in a message that states the null. Ten tests asserted the old text
+and were updated to assert the new contract rather than deleted.
+**The decomposition works and the range earns its keep.** Live: CHF up against all nine, USD down
+against all nine - a person watching `USDCHF` cannot tell which side moved, and the universe can.
+The euro's mean was +0.14% with a range of -0.90% to +0.96%: a lone mean would have said "flat".
+`SEK` and `NZD` report *against 8* rather than 9 because `NZDSEK` is unquoted - a smaller sample
+surfaces as a smaller sample, with no special case.
+**Absences are named, not merely reported.** The carry section first printed "нет данных"; it now
+names EUR, GBP and JPY and the month.
+See `docs/phase10-2-verification-report.md`.
 Phase 10-1 made the universe live, and it is the first phase in this project whose
 **pre-registration was committed before the code** (`8297a95`) rather than living in a throwaway
 plan file. Eight criteria fixed in advance, all eight met.

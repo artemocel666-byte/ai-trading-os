@@ -5,6 +5,15 @@ AI Trading OS is a safety-first foundation for a future modular Forex analysis a
 ## Current Status
 
 - Current project phase: phase_9d3_interest_rate_ingestion.
+- Phase 10-2 turned the honesty policy into code and produced the first output written for a
+  person. **A central tendency can no longer be rendered alone**: one function emits the sample
+  size, the spread and the middle together, and a source scan over every layer a person reads
+  enforces it. `/review` lost its aggregate rule score — an aggregate reads as a verdict, and 9C-2
+  measured those rules to separate nothing — and now carries that null in the same message. The
+  report answers what one chart cannot: **is it the pair or the currency** (live: CHF up against
+  all nine, USD down against all nine), and **is this move large** (USDCHF at the 99th percentile
+  of its own 631 observations). No forecast anywhere. Read-only,
+  `scripts/report_market_state.py`.
 - Phase 10-1 made the currency universe **live**: daily bars for all 45 pairs on a cron trigger,
   interest rates weekly, and a freshness check that **complains**. Its pre-registration was
   committed before the code — a first for this project. The plumbing check found a blocker first:

@@ -58,7 +58,7 @@ def test_cli_json_format_is_deterministic(
     payload = json.loads(first)
     assert payload["enabled_for_runtime"] is False
     assert payload["is_actionable"] is False
-    assert payload["project_phase"] == "phase_10_1_live_universe"
+    assert payload["project_phase"] == "phase_10_2_market_state"
 
 
 def test_cli_has_no_file_writing_option_or_runtime_file_write() -> None:

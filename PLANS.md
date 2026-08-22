@@ -375,10 +375,17 @@ non-actionable and without any signal, AI, or execution behavior.
     sweep still drew two rate-limit refusals. Repaired in passing: nine copies of
     `UnitOfWorkFactory`, a `UnitOfWork` protocol missing `interest_rates`, and ingestion results
     with no `failure_reason`. No schema change.
-  - 10-2: the descriptive report — opens by making the honesty policy executable (types that cannot
-    render a median without its dispersion, a banned-vocabulary test on user-facing layers) and by
-    reconciling `/review`, which still shows a person a verdict from rules 9C-2 measured to separate
-    nothing. Then: is it the pair or the currency, own-history percentiles, carry ranked.
+  - 10-2: the honesty policy made executable — **completed 2026-08-22**, see
+    `docs/phase10-2-verification-report.md` and the pre-registration committed before it. All eight
+    criteria met. The plumbing check narrowed the slice: `FieldDistribution` already refused to hold
+    a lonely central tendency, so the work was closing the gap between the type and the text — one
+    renderer, enforced by a source scan. `/review` lost its aggregate score and gained the 9C-2
+    null. Live: the currency decomposition separated a bid franc from an offered dollar, and the
+    euro's +0.14% mean over a -0.90%..+0.96% range showed why the spread travels with the middle.
+    `percentile_rank` is the inverse of `nearest_rank`, not a copy. No schema change.
+  - 10-3: hidden concentration — the correlation state and the effective number of bets, so someone
+    holding three positions can see whether they hold one at triple size. No forecast; possibly the
+    most useful thing the project can offer.
   - 9D-4: does the interest rate differential order the cross-section? **Completed 2026-08-17**,
     see `docs/phase9d4-verification-report.md`. **224 rebalance dates, 44 instruments on every one**,
     5 anchors excluded and named (2020-06 for the USD gap 9D-3 predicted, 2026-04..07 where the

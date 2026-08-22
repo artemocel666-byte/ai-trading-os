@@ -1,4 +1,4 @@
-PROJECT_PHASE = "phase_10_1_live_universe"
+PROJECT_PHASE = "phase_10_2_market_state"
 STRATEGY_IMPLEMENTED = False
 REAL_TRADING_ENABLED = False
 
