@@ -10,8 +10,18 @@ means the universe can only change by changing that set, which is a visible deci
 
 **Pairs are not independent observations, and this module cannot fix that.** Ten currencies give
 forty-five pairs, but every pair is a ratio of two members of the same small set, so the number of
-genuinely independent dimensions is closer to nine. Anything bucketing these pairs is bucketing
+genuinely independent *directions* is at most nine. Anything bucketing these pairs is bucketing
 correlated things, and the report that does it has to say so.
+
+**Phase 10-3 checked this, and the check is worth reading before quoting either number.** The
+concentration report measures the whole universe at **about 16.6 effective bets**, which does not
+contradict the nine above: they answer different questions. Nine is the **rank** of the return
+space — how many independent factors drive the pairs, fixed by the construction. The other is the
+**diversification of an equally weighted set**, `N² / ΣΣρ`, which rises whenever correlations are
+negative and can exceed the rank outright: two perfectly opposed positions are driven by one factor
+and hedge to nothing at all. Measuring the rank itself would need an eigendecomposition, which
+10-3 deliberately avoided so that no new dependency and no inexact arithmetic entered the project
+to answer a question about diversification.
 
 **Order within a pair is a market convention, not a preference.** `EURUSD` is quoted and `USDEUR`
 is not, and a provider asked for the wrong direction returns nothing. The convention is a precedence

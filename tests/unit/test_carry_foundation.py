@@ -29,7 +29,7 @@ UNIVERSE = frozenset({"EUR", "USD", "JPY"})
 
 
 def test_project_phase_is_current() -> None:
-    assert constants.PROJECT_PHASE == "phase_10_2_market_state"
+    assert constants.PROJECT_PHASE == "phase_10_3_hidden_concentration"
 
 
 def test_a_long_position_earns_the_base_rate_and_pays_the_quote_rate() -> None:

@@ -19,7 +19,7 @@ APRIL = datetime(2020, 4, 1, tzinfo=UTC)
 
 
 def test_project_phase_is_current() -> None:
-    assert constants.PROJECT_PHASE == "phase_10_2_market_state"
+    assert constants.PROJECT_PHASE == "phase_10_3_hidden_concentration"
 
 
 def _rate(as_of: datetime, value: str, currency: str = "USD") -> InterestRate:

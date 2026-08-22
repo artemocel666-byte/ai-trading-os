@@ -383,9 +383,19 @@ non-actionable and without any signal, AI, or execution behavior.
     null. Live: the currency decomposition separated a bid franc from an offered dollar, and the
     euro's +0.14% mean over a -0.90%..+0.96% range showed why the spread travels with the middle.
     `percentile_rank` is the inverse of `nearest_rank`, not a copy. No schema change.
-  - 10-3: hidden concentration — the correlation state and the effective number of bets, so someone
-    holding three positions can see whether they hold one at triple size. No forecast; possibly the
-    most useful thing the project can offer.
+  - 10-3: hidden concentration — **completed 2026-08-22**, see
+    `docs/phase10-3-verification-report.md`. All eight criteria met. Live: three positions come to
+    **1.2 independent bets**. `N squared / sum of the correlation matrix`, no eigendecomposition and
+    no new dependency. Every correlation carries both halves; `AUDUSD/EURJPY` reads +0.05 overall
+    and +0.61 then -0.29 across them. The universe measures **16.6 effective bets** against the
+    "closer to nine" docstring — **not a contradiction**: nine is the rank of the return space,
+    16.6 is the diversification of an equally weighted set, and the docstring was corrected by
+    making the distinction explicit rather than by swapping the number. `read_concentration` was
+    changed mid-build to take returns keyed by moment, because flat sequences of equal length could
+    have described different days. No schema change.
+  - 10-4: COT positioning — the one remaining source that lets the report say what participants
+    hold rather than what the price did. Descriptive value only; as a predictor it would almost
+    certainly be the eighth null.
   - 9D-4: does the interest rate differential order the cross-section? **Completed 2026-08-17**,
     see `docs/phase9d4-verification-report.md`. **224 rebalance dates, 44 instruments on every one**,
     5 anchors excluded and named (2020-06 for the USD gap 9D-3 predicted, 2026-04..07 where the

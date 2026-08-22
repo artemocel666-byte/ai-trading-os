@@ -26,6 +26,11 @@ be cargo-culting the rule rather than applying it.
 from decimal import Decimal
 
 from app.domain.entities.calibration import FieldDistribution
+from app.domain.entities.concentration import (
+    ConcentrationReading,
+    ConcentrationStatus,
+    CorrelationReading,
+)
 from app.domain.entities.market_state import CurrencyStrengthReading, HistoricalReading
 
 #: Rendered when a value is genuinely not there. Named, never substituted with a zero.
@@ -83,3 +88,36 @@ def format_currency_strength(reading: CurrencyStrengthReading) -> str:
         f"против {reading.observation_count} валют, "
         f"от {_share(reading.lowest_move)} до {_share(reading.highest_move)} — {breadth}"
     )
+
+
+def format_correlation(reading: CorrelationReading) -> str:
+    """Two instruments, with the halves that say whether the middle is worth anything.
+
+    A correlation on a quarter carries a standard error near 0.12, so two decimal places would be
+    false precision. One is honest, and the halves carry what the single figure cannot.
+    """
+    return (
+        f"{reading.left}/{reading.right}: {reading.coefficient:+.2f} "
+        f"(половины {reading.first_half:+.2f} и {reading.second_half:+.2f}, "
+        f"общих дней {reading.overlap_count})"
+    )
+
+
+def format_concentration(reading: ConcentrationReading) -> str:
+    """How many independent bets a set is — or why that has no answer."""
+    held = ", ".join(reading.instruments)
+    if reading.status is ConcentrationStatus.NOT_ENOUGH_OVERLAP:
+        return (
+            f"{held}: посчитать нельзя, не хватает общей истории по парам "
+            f"{', '.join(reading.missing_pairs)}. Это не ноль и не независимость — "
+            f"это отсутствие ответа."
+        )
+    if reading.status is ConcentrationStatus.FULLY_HEDGED:
+        return (
+            f"{held}: корреляции взаимно гасятся, делить не на что. "
+            f"Числа независимых ставок здесь нет."
+        )
+    bets = reading.effective_bets
+    if bets is None:  # pragma: no cover - forbidden by the entity's own validator
+        raise ValueError("a measured reading must carry its effective count")
+    return f"{held}: позиций {reading.instrument_count}, независимых ставок примерно {bets:.1f}"

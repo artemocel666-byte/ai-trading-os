@@ -877,3 +877,33 @@ has a rate for the required month, and names the missing ones when it refuses.
 its sample size; `app/presentation/readings.py` is the only place allowed to format a distribution,
 and a safety test enforces that. A current observation — today's rate differential, say — is not a
 collapsed distribution and needs no spread.
+
+
+## Hidden concentration (Phase 10-3)
+
+Says how many independent bets a set of instruments actually is. Read-only, no forecast.
+
+```bash
+docker compose run --rm -T worker python -u -m scripts.report_concentration --instruments EURUSD,GBPUSD,AUDUSD
+```
+
+Omit `--instruments` to measure the whole stored universe; 946 pairs take about four seconds.
+
+**Read `1.2` as "one bet at triple size".** The measure is `N² / ΣΣρ`: perfectly correlated
+instruments come to exactly 1, uncorrelated ones to exactly N.
+
+**Read the halves, not just the coefficient.** Every correlation is reported over the window and
+over each half of it. A quarter is about sixty-four trading days, so the standard error is near
+0.12 and 0.3 is not reliably distinguishable from 0.5 — the halves are where that uncertainty
+becomes visible. A live example worth remembering: `AUDUSD/EURJPY` at +0.05 overall, +0.61 and
+−0.29 across the halves.
+
+**A missing correlation is never a zero.** If any pair in the set lacks forty overlapping days the
+whole answer is withheld and the missing pairs are named. Zero would read as independence, and
+telling somebody their positions are unrelated when nothing is known is the worst thing this
+feature could do.
+
+**The universe figure is not the factor count.** It measures about 16.6 effective bets, while
+`currency_universe` says ten currencies give at most nine independent directions. Both are right:
+rank counts the factors, this counts diversification, and the second exceeds the first whenever
+correlations are negative.

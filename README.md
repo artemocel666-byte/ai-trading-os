@@ -5,6 +5,13 @@ AI Trading OS is a safety-first foundation for a future modular Forex analysis a
 ## Current Status
 
 - Current project phase: phase_9d3_interest_rate_ingestion.
+- Phase 10-3 measures **hidden concentration** — how many bets a set of positions actually is.
+  Live: `EURUSD, GBPUSD, AUDUSD` come to **1.2 independent bets**, so holding all three is one bet
+  at triple size. `N² / ΣΣρ`, chosen because both extremes are hand-checkable and it needs no
+  eigendecomposition. Every correlation carries both halves of its window: `AUDUSD/EURJPY` reads
+  +0.05 overall and +0.61 then −0.29 across the halves. **Too little overlap yields an absence,
+  never a zero** — telling someone their positions are independent when nothing is known would be
+  the worst failure this feature could have. Read-only, `scripts/report_concentration.py`.
 - Phase 10-2 turned the honesty policy into code and produced the first output written for a
   person. **A central tendency can no longer be rendered alone**: one function emits the sample
   size, the spread and the middle together, and a source scan over every layer a person reads

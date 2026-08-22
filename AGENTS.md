@@ -3,6 +3,24 @@
 AI Trading OS is a foundation for a future Forex analysis and paper-trading platform.
 
 Current project phase: phase_9d3_interest_rate_ingestion.
+Phase 10-3 answers how many bets a set of positions actually is. **Live: three positions
+(EURUSD, GBPUSD, AUDUSD) are 1.2 independent bets** - somebody holding all three is making one bet
+at triple size, and saying so needs no forecast.
+**`effective_bets = N squared / sum of the correlation matrix`**, chosen because both extremes are
+hand-checkable (perfectly correlated -> exactly 1, uncorrelated -> exactly N) and because it needs
+no eigendecomposition, so no new dependency entered.
+**A single correlation is a lonely central tendency in another costume**, so the entity cannot hold
+one without both halves. Live proof: `AUDUSD/EURJPY` reads **+0.05** overall and **+0.61 then
+-0.29** across the halves - the single number says "unrelated" and the halves say the opposite.
+**Criterion 6 needed care and I nearly got it wrong.** The universe measures **16.6 effective bets**
+against a docstring saying "closer to nine" since 9D-1. Declaring the docstring wrong would have
+been the mistake: **nine is the rank of the return space; 16.6 is the diversification of an equally
+weighted set**, and the second exceeds the first whenever correlations are negative. The docstring
+was corrected by making the distinction explicit, and a test pins it.
+**One structural fault closed mid-build:** `read_concentration` took flat sequences, so equal-length
+lists describing different days would have produced real arithmetic over mismatched dates.
+Returns are now keyed by moment and each pair aligns internally.
+See `docs/phase10-3-verification-report.md`.
 Phase 10-2 made the honesty policy executable, and the plumbing check narrowed the slice before it
 was built. **`FieldDistribution` has refused to hold a lonely central tendency since Phase 4** - its
 validator says an observed field must report every percentile - but nothing stopped a formatter from

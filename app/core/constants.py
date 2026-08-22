@@ -1,4 +1,4 @@
-PROJECT_PHASE = "phase_10_2_market_state"
+PROJECT_PHASE = "phase_10_3_hidden_concentration"
 STRATEGY_IMPLEMENTED = False
 REAL_TRADING_ENABLED = False
 
