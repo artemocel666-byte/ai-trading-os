@@ -942,3 +942,31 @@ euro against the dollar" and "net long a dollar basket" are different observatio
 **`NOK` and `SEK` have no contract, and that is an absence rather than a flat position.** There is no
 Norwegian krone contract at all, and the only Swedish krona one died in 1998 on an exchange that no
 longer exists.
+
+
+## The market page (Phase 11-1)
+
+Renders the same readings the text report prints, drawn instead of typed.
+
+```bash
+docker compose run --rm -T worker python -u -m scripts.render_market_page --output market_state.html
+```
+
+The file is **self-contained**: inline SVG, inline CSS, no JavaScript, and no external request of
+any kind. It opens offline and shows exactly what was measured when it was written.
+
+**Four shapes exist and no others.** A distribution strip where the sample is the chart, ranked bars
+each carrying the range they were averaged over, a labelled correlation grid, and the plumbing rows.
+Adding a fifth fails a test until it is named in `PRIMITIVES`.
+
+**There is no price line over time, and that is the point.** A line ending at the right edge is read
+as a beginning; the eye completes it. Seven pre-registered measurements say we cannot complete it,
+so the page does not draw the invitation. If a future change adds one, the test scanning for
+`<polyline` and `<path` fails.
+
+**Colour means sign, never quality.** Blue above zero, amber below. Green and red are avoided
+deliberately: in this domain they already mean good and bad, and a palette carrying approval is a
+recommendation hidden in a stylesheet.
+
+**Every chart states its `n` and its window inside the image**, because a crop or a screenshot keeps
+the picture and loses a caption.

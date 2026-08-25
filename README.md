@@ -5,6 +5,14 @@ AI Trading OS is a safety-first foundation for a future modular Forex analysis a
 ## Current Status
 
 - Current project phase: phase_9d3_interest_rate_ingestion.
+- Phase 11-1 added the **visual layer** — one self-contained HTML page, no JavaScript and no
+  external request of any kind. This is where the honesty policy is hardest: a vocabulary ban cannot
+  reach a shape, so the criteria are about **permitted forms**. Four primitives, the set closed and
+  pinned. **There is no price line over time**, and the rendered file proves it rather than the
+  module claiming it — a line ending at the right edge is read as a beginning, and seven
+  pre-registered measurements say we cannot complete it. Colour is blue and amber rather than green
+  and red, because those already mean good and bad here. Read-only,
+  `scripts/render_market_page.py`.
 - Phase 10-4 added **positioning** — what participants hold, from the CFTC, free and keyless.
   **13,775 rows across eight currencies**; NOK has no contract and the only SEK one died in 1998,
   both named rather than zeroed. The phase turned on a trap the source probe found: `NZ DOLLAR` and

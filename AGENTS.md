@@ -3,6 +3,26 @@
 AI Trading OS is a foundation for a future Forex analysis and paper-trading platform.
 
 Current project phase: phase_9d3_interest_rate_ingestion.
+Phase 11-1 built the visual layer, and it is where the honesty policy is **hardest** to hold. 10-2
+made the rule executable in text - one renderer, a banned vocabulary, no middle without its spread -
+and **none of that reaches a picture**. A line rising to the right edge implies continuation without
+a single word, and the eye completes it whether or not the caption says not to.
+**So the rule here is about form.** Four primitives, the set closed and pinned against the module's
+own public names: a distribution strip where the sample *is* the chart, ranked bars each carrying
+the range they were averaged over, a labelled grid whose colour is redundant, and plain rows.
+**The criterion that decided the slice: there is no price line, and the rendered file proves it** -
+`<polyline` and `<path` absent from the live output, not merely from the module.
+**Colour carries no verdict.** Blue and amber, never green and red, because in this domain those
+already mean good and bad and would smuggle approval into a stylesheet.
+**Two faults, both of one kind.** A docstring explaining the vocabulary ban tripped it by quoting a
+forbidden word; and a CSS class named `.median` tripped the lone-median scan - the third substring
+collision after "long" in "belongs" and "carry" in "carrying". The class was renamed rather than the
+rule widened.
+**The amendment was made as pre-registered:** a drawn distribution must read `.median`, so
+`charts.py` joined `readings.py` - and pays with a stricter test, that any function reading the
+middle reads `.p05` and `.p95` in the same function.
+Output is one self-contained HTML file: no JavaScript, no external request of any kind.
+See `docs/phase11-1-verification-report.md`.
 Phase 10-4 brought in positioning - what participants hold, beside what the price did - and closes
 the descriptive shortlist drawn up after 9D-4.
 **Probing before planning found the trap the phase turned on:** both `NZ DOLLAR` and `USD INDEX`

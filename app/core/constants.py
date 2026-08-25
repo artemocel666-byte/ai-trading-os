@@ -1,4 +1,4 @@
-PROJECT_PHASE = "phase_10_4_positioning"
+PROJECT_PHASE = "phase_11_1_visual_layer"
 STRATEGY_IMPLEMENTED = False
 REAL_TRADING_ENABLED = False
 

@@ -3276,7 +3276,15 @@ def test_phase9d4_the_carry_measurement_takes_no_parameter_to_fit() -> None:
     assert "An anchor missing one currency is dropped whole" in source
 
 
-PHASE_10_2_RENDERER = Path("app/presentation/readings.py")
+PHASE_10_2_RENDERER = Path("app/presentation/charts.py").parent / "readings.py"
+
+#: Phase 11-1 amendment, named in that slice's pre-registration before any code was written. A
+#: distribution that is *drawn* must read `.median` to place a tick, and drawing the whole spread is
+#: the most honest form available rather than a violation. So the charts module joins the renderer
+#: here — and pays for it with a stricter test below, which requires any function reading the middle
+#: to read the edges in the same function.
+PHASE_11_1_CHARTS = Path("app/presentation/charts.py")
+PHASE_10_2_ALLOWED_TO_RENDER_A_MIDDLE = frozenset({PHASE_10_2_RENDERER, PHASE_11_1_CHARTS})
 
 #: What a person reads as product output. Measurement instruments — `profile_*`, `replay_*`,
 #: `evaluate_*` — are deliberately out of scope: they print whole grids for whoever is running the
@@ -3304,7 +3312,7 @@ def test_phase10_2_only_one_place_may_render_a_central_tendency() -> None:
     offenders = [
         str(path)
         for path in PHASE_10_2_PERSON_FACING
-        if path != PHASE_10_2_RENDERER
+        if path not in PHASE_10_2_ALLOWED_TO_RENDER_A_MIDDLE
         and any(
             term in path.read_text(encoding="utf-8")
             for term in (".median", "statistics.mean", ".p50")

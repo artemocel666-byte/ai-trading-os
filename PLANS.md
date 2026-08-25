@@ -400,10 +400,19 @@ non-actionable and without any signal, AI, or execution behavior.
     1999 and USD to 1992. Normalised by open interest; a zero denominator is refused at the entity
     and again in the database. Every reading carries its Tuesday and its age. `экстремальн` joined
     the banned vocabulary. Migration 0006, verified up-down-up.
-  - **The descriptive shortlist is now closed**, and the content has stopped adding new *kinds* of
-    reading — the signal agreed in the 10-3 discussion for when the visual layer becomes the right
-    next step. That phase needs its own pre-registration with criteria about permitted **forms**: a
-    chart can imply a trend without a single word, and a vocabulary ban cannot reach it.
+  - **The descriptive shortlist closed with 10-4**, which is what made the visual layer the right
+    next step rather than a distraction from unstable content.
+  - 11-1: the visual layer — **completed 2026-08-25**, see
+    `docs/phase11-1-verification-report.md`. All eight criteria met. One self-contained HTML page,
+    no JavaScript, no external request. Four primitives, closed and pinned. **No price line over
+    time**, verified in the rendered output and not only in the module: a line ending at the right
+    edge is read as a beginning. Colour keyed to sign in blue and amber, never green and red. The
+    pre-registered amendment landed as written — `charts.py` may read `.median` only in a function
+    that also reads `.p05` and `.p95`. Two substring collisions repaired by renaming rather than by
+    widening a rule. No schema change, no new dependency.
+  - Open, and product decisions rather than measurements: whether the page is ever **served**
+    instead of written to a file, and whether the **two-level rendering** discussed in 10-2 is worth
+    building now that the content has been stable across two phases.
   - 9D-4: does the interest rate differential order the cross-section? **Completed 2026-08-17**,
     see `docs/phase9d4-verification-report.md`. **224 rebalance dates, 44 instruments on every one**,
     5 anchors excluded and named (2020-06 for the USD gap 9D-3 predicted, 2026-04..07 where the

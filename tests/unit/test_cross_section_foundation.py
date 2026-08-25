@@ -27,7 +27,7 @@ MARCH = datetime(2020, 3, 1, tzinfo=UTC)
 
 
 def test_project_phase_is_current() -> None:
-    assert constants.PROJECT_PHASE == "phase_10_4_positioning"
+    assert constants.PROJECT_PHASE == "phase_11_1_visual_layer"
 
 
 def _observation(
