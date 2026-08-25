@@ -14,6 +14,7 @@ from app.domain.entities.forward_outcome import ForwardOutcomeRecord
 from app.domain.entities.interest_rate import InterestRate
 from app.domain.entities.outcome import OutcomeKind
 from app.domain.entities.pipeline_decision import PipelineDecisionStatus
+from app.domain.entities.positioning import PositioningReading
 from app.domain.entities.readiness import SnapshotDigestStatus, SnapshotNotificationDedupKey
 from app.domain.entities.scheduled_digest import ScheduledDigestDeliveryRecord
 from app.domain.entities.signal_contract import SignalDirection
@@ -25,6 +26,7 @@ from app.persistence.models import (
     ErrorEventModel,
     ForwardOutcomeRecordModel,
     InterestRateModel,
+    PositioningReadingModel,
     ScheduledDigestDeliveryModel,
     SystemStateModel,
 )
@@ -591,6 +593,89 @@ class SqlAlchemyInterestRateRepository:
                 currency=row.currency,
                 as_of=normalize_to_utc(row.as_of),
                 annual_rate=row.annual_rate,
+            )
+            for row in result.scalars().all()
+        ]
+
+
+class SqlAlchemyPositioningRepository:
+    """Phase 10-4. Duplicate-safe by currency and report date, like every other store here.
+
+    A report date arriving twice is the CFTC revising one observation, not publishing a second one.
+    """
+
+    def __init__(self, session: AsyncSession) -> None:
+        self._session = session
+
+    async def upsert_many(self, readings: list[PositioningReading]) -> UpsertResult:
+        inserted = 0
+        updated = 0
+        for reading in readings:
+            result = await self._session.execute(
+                select(PositioningReadingModel).where(
+                    PositioningReadingModel.currency == reading.currency,
+                    PositioningReadingModel.report_date == reading.report_date,
+                )
+            )
+            row = result.scalar_one_or_none()
+            if row is None:
+                self._session.add(
+                    PositioningReadingModel(
+                        provider=reading.provider,
+                        contract_code=reading.contract_code,
+                        currency=reading.currency,
+                        report_date=reading.report_date,
+                        noncommercial_long=reading.noncommercial_long,
+                        noncommercial_short=reading.noncommercial_short,
+                        open_interest=reading.open_interest,
+                        is_basket=reading.is_basket,
+                    )
+                )
+                inserted += 1
+                continue
+            row.provider = reading.provider
+            row.contract_code = reading.contract_code
+            row.noncommercial_long = reading.noncommercial_long
+            row.noncommercial_short = reading.noncommercial_short
+            row.open_interest = reading.open_interest
+            row.is_basket = reading.is_basket
+            updated += 1
+        return UpsertResult(inserted=inserted, updated=updated)
+
+    async def list_range(
+        self,
+        *,
+        currency: str | None = None,
+        start_at: datetime | None = None,
+        end_at: datetime | None = None,
+    ) -> list[PositioningReading]:
+        statement = select(PositioningReadingModel)
+        if currency is not None:
+            statement = statement.where(
+                PositioningReadingModel.currency == currency.strip().upper()
+            )
+        if start_at is not None:
+            statement = statement.where(
+                PositioningReadingModel.report_date >= normalize_to_utc(start_at)
+            )
+        if end_at is not None:
+            statement = statement.where(
+                PositioningReadingModel.report_date <= normalize_to_utc(end_at)
+            )
+        statement = statement.order_by(
+            PositioningReadingModel.report_date, PositioningReadingModel.currency
+        )
+        result = await self._session.execute(statement)
+        return [
+            PositioningReading(
+                provider=row.provider,
+                contract_code=row.contract_code,
+                currency=row.currency,
+                report_date=normalize_to_utc(row.report_date),
+                noncommercial_long=row.noncommercial_long,
+                noncommercial_short=row.noncommercial_short,
+                open_interest=row.open_interest,
+                is_basket=row.is_basket,
             )
             for row in result.scalars().all()
         ]

@@ -11,6 +11,7 @@ from app.domain.interfaces.repositories import (
     ErrorEventRepository,
     ForwardOutcomeRepository,
     InterestRateRepository,
+    PositioningRepository,
     SystemStateRepository,
 )
 from app.persistence.repositories import (
@@ -20,6 +21,7 @@ from app.persistence.repositories import (
     SqlAlchemyErrorEventRepository,
     SqlAlchemyForwardOutcomeRepository,
     SqlAlchemyInterestRateRepository,
+    SqlAlchemyPositioningRepository,
     SqlAlchemyScheduledDigestDeliveryStore,
     SqlAlchemySystemStateRepository,
 )
@@ -38,6 +40,7 @@ class SqlAlchemyUnitOfWork:
         self._scheduled_digest_deliveries: ScheduledDigestDeliveryStore | None = None
         self._forward_outcomes: ForwardOutcomeRepository | None = None
         self._interest_rates: InterestRateRepository | None = None
+        self._positioning: PositioningRepository | None = None
 
     async def __aenter__(self) -> Self:
         if self._session is not None:
@@ -52,6 +55,7 @@ class SqlAlchemyUnitOfWork:
         self._scheduled_digest_deliveries = SqlAlchemyScheduledDigestDeliveryStore(self._session)
         self._forward_outcomes = SqlAlchemyForwardOutcomeRepository(self._session)
         self._interest_rates = SqlAlchemyInterestRateRepository(self._session)
+        self._positioning = SqlAlchemyPositioningRepository(self._session)
         return self
 
     async def __aexit__(
@@ -77,6 +81,7 @@ class SqlAlchemyUnitOfWork:
             self._scheduled_digest_deliveries = None
             self._forward_outcomes = None
             self._interest_rates = None
+            self._positioning = None
             self._committed = False
 
     @property
@@ -120,6 +125,12 @@ class SqlAlchemyUnitOfWork:
         if self._session is None or self._forward_outcomes is None:
             raise RuntimeError("unit of work has not been entered")
         return self._forward_outcomes
+
+    @property
+    def positioning(self) -> PositioningRepository:
+        if self._session is None or self._positioning is None:
+            raise RuntimeError("unit of work is not active")
+        return self._positioning
 
     @property
     def interest_rates(self) -> InterestRateRepository:

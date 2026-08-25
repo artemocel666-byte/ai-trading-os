@@ -23,6 +23,7 @@ be cargo-culting the rule rather than applying it.
 `перекуплен` does it inside a single word. A test enforces the list.
 """
 
+from datetime import datetime
 from decimal import Decimal
 
 from app.domain.entities.calibration import FieldDistribution
@@ -32,6 +33,7 @@ from app.domain.entities.concentration import (
     CorrelationReading,
 )
 from app.domain.entities.market_state import CurrencyStrengthReading, HistoricalReading
+from app.domain.entities.positioning import PositioningReading
 
 #: Rendered when a value is genuinely not there. Named, never substituted with a zero.
 UNAVAILABLE_RU = "нет данных"
@@ -121,3 +123,21 @@ def format_concentration(reading: ConcentrationReading) -> str:
     if bets is None:  # pragma: no cover - forbidden by the entity's own validator
         raise ValueError("a measured reading must carry its effective count")
     return f"{held}: позиций {reading.instrument_count}, независимых ставок примерно {bets:.1f}"
+
+
+def format_positioning(reading: PositioningReading, *, as_of: datetime) -> str:
+    """One currency's speculative positioning, with the age of the observation attached.
+
+    The CFTC report describes a Tuesday and is published on Friday, so this is never "now". Saying
+    `участники держат` without the date would be the present tense applied to a fact that is at
+    best three days old.
+
+    **No "extreme" anywhere.** Calling a level extreme is a claim about what should happen next
+    dressed as a description — the same move `перекуплен` makes, and refused for the same reason.
+    """
+    basket = " (индекс против корзины, не двусторонний курс)" if reading.is_basket else ""
+    return (
+        f"{reading.currency}: чистая спекулятивная позиция "
+        f"{reading.net_share * 100:+.1f}% открытого интереса{basket}; "
+        f"данные за {reading.report_date.date()}, им {reading.age_in_days(as_of)} дн."
+    )

@@ -31,11 +31,16 @@ from app.domain.cross_section import forward_return, latest_close_at
 from app.domain.currency_universe import UNIVERSE_CURRENCIES, universe_pairs
 from app.domain.entities.market_data import Candle, Timeframe
 from app.domain.entities.market_state import CarryReadingToday, MarketStateReport
+from app.domain.entities.positioning import PositioningReading
 from app.domain.market_calendar import month_start, shift_months
 from app.domain.market_state import currency_strength, read_against_history
 from app.persistence.database import create_engine, create_session_factory
 from app.persistence.session import build_uow_factory
-from app.presentation.readings import format_currency_strength, format_historical_reading
+from app.presentation.readings import (
+    format_currency_strength,
+    format_historical_reading,
+    format_positioning,
+)
 
 #: How far back "recently" reaches for the currency decomposition. Five sessions is a week of
 #: trading — long enough that one quiet day does not dominate, short enough to still be "now".
@@ -91,6 +96,26 @@ async def _load(
     finally:
         await engine.dispose()
     return by_pair, by_currency
+
+
+async def _load_positioning(database_url: str) -> dict[str, list[PositioningReading]]:
+    """Every stored positioning reading per currency, oldest first.
+
+    Loaded here rather than in the domain, as everywhere else: the module that reads storage is the
+    only one that knows about a session.
+    """
+    engine = create_engine(database_url)
+    by_currency: dict[str, list[PositioningReading]] = {}
+    try:
+        uow_factory = build_uow_factory(create_session_factory(engine))
+        async with uow_factory() as uow:
+            for currency in sorted(UNIVERSE_CURRENCIES):
+                rows = await uow.positioning.list_range(currency=currency)
+                if rows:
+                    by_currency[currency] = rows
+    finally:
+        await engine.dispose()
+    return by_currency
 
 
 async def _main() -> int:
@@ -191,6 +216,36 @@ async def _main() -> int:
             f"{', '.join(missing)}, а неполный набор дал бы таблицу без этих валют "  # noqa: RUF001
             f"и без предупреждения об этом."  # noqa: RUF001
         )
+
+    positioning = await _load_positioning(args.database_url or settings.database_dsn())
+    if positioning:
+        absent = sorted(UNIVERSE_CURRENCIES - set(positioning))
+        print("\nПозиции спекулянтов по данным CFTC:")  # noqa: RUF001
+        for currency in sorted(positioning):
+            rows = positioning[currency]
+            latest = rows[-1]
+            standing = read_against_history(
+                instrument=currency,
+                field_ref="net_positioning_share",
+                current=latest.net_share,
+                history=[row.net_share for row in rows[:-1]],
+            )
+            line = format_positioning(latest, as_of=as_of)
+            if standing is not None:
+                # Noun before number, as `format_distribution` already does: Russian numeral
+                # agreement changes with the last digit, and "1451 недель" is simply wrong.
+                line += (
+                    f"; {standing.percentile}-й перцентиль, "
+                    f"недельных наблюдений {standing.observation_count}"
+                )
+            print(f"  {line}")
+        if absent:
+            # A currency with no contract has no position to report. Naming it keeps the table from
+            # reading as though those two were flat.
+            print(
+                f"  Контракта нет вовсе, поэтому нет и данных: {', '.join(absent)}. "
+                f"Это отсутствие, а не нулевая позиция."  # noqa: RUF001
+            )
 
     print(
         "\nЭто описание состояния, а не прогноз. Здесь нет утверждений о том, что будет дальше, "  # noqa: RUF001

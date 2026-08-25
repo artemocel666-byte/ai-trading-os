@@ -6,6 +6,7 @@ from app.domain.entities import Candle, EconomicEvent, Timeframe
 from app.domain.entities.data_quality import UpsertResult
 from app.domain.entities.forward_outcome import ForwardOutcomeRecord
 from app.domain.entities.interest_rate import InterestRate
+from app.domain.entities.positioning import PositioningReading
 from app.domain.value_objects import CurrencyPair
 
 
@@ -148,3 +149,23 @@ class InterestRateRepository(Protocol):
         end_at: datetime | None = None,
     ) -> list[InterestRate]:
         """Return stored rates in the requested window, oldest `as_of` first."""
+
+
+class PositioningRepository(Protocol):
+    """Speculative positioning, one row per currency per weekly report.
+
+    Phase 10-4. The same duplicate-safe shape as `InterestRateRepository`: a report date arriving
+    twice is the CFTC revising one observation rather than publishing a second one.
+    """
+
+    async def upsert_many(self, readings: list[PositioningReading]) -> UpsertResult:
+        """Insert or update readings without creating duplicates for one currency-week."""
+
+    async def list_range(
+        self,
+        *,
+        currency: str | None = None,
+        start_at: datetime | None = None,
+        end_at: datetime | None = None,
+    ) -> list[PositioningReading]:
+        """Return stored readings in the requested window, oldest `report_date` first."""

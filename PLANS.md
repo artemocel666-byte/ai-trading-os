@@ -393,9 +393,17 @@ non-actionable and without any signal, AI, or execution behavior.
     making the distinction explicit rather than by swapping the number. `read_concentration` was
     changed mid-build to take returns keyed by moment, because flat sequences of equal length could
     have described different days. No schema change.
-  - 10-4: COT positioning — the one remaining source that lets the report say what participants
-    hold rather than what the price did. Descriptive value only; as a predictor it would almost
-    certainly be the eighth null.
+  - 10-4: positioning — **completed 2026-08-25**, see `docs/phase10-4-verification-report.md`. All
+    eight criteria met. **13,775 rows, eight currencies**; NOK and SEK have no live contract and are
+    named. The phase turned on the source probe finding that `NZ DOLLAR` and `USD INDEX` were
+    renamed in early 2022: mapping by **contract code** rather than name is what keeps NZD back to
+    1999 and USD to 1992. Normalised by open interest; a zero denominator is refused at the entity
+    and again in the database. Every reading carries its Tuesday and its age. `экстремальн` joined
+    the banned vocabulary. Migration 0006, verified up-down-up.
+  - **The descriptive shortlist is now closed**, and the content has stopped adding new *kinds* of
+    reading — the signal agreed in the 10-3 discussion for when the visual layer becomes the right
+    next step. That phase needs its own pre-registration with criteria about permitted **forms**: a
+    chart can imply a trend without a single word, and a vocabulary ban cannot reach it.
   - 9D-4: does the interest rate differential order the cross-section? **Completed 2026-08-17**,
     see `docs/phase9d4-verification-report.md`. **224 rebalance dates, 44 instruments on every one**,
     5 anchors excluded and named (2020-06 for the USD gap 9D-3 predicted, 2026-04..07 where the

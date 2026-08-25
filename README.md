@@ -5,6 +5,15 @@ AI Trading OS is a safety-first foundation for a future modular Forex analysis a
 ## Current Status
 
 - Current project phase: phase_9d3_interest_rate_ingestion.
+- Phase 10-4 added **positioning** — what participants hold, from the CFTC, free and keyless.
+  **13,775 rows across eight currencies**; NOK has no contract and the only SEK one died in 1998,
+  both named rather than zeroed. The phase turned on a trap the source probe found: `NZ DOLLAR` and
+  `USD INDEX` were renamed in early 2022, so a name-keyed mapping would have truncated two series to
+  2022 and made every percentile a percentile of the wrong history — **the contract code survives
+  the rename**, and the backfill reprints that proof every run. Every line carries the Tuesday it
+  describes and its age, the dollar is labelled a basket, and `экстремальн` joined the banned
+  vocabulary: a percentile states the fact without the claim. Read-only,
+  `scripts/backfill_positioning.py`.
 - Phase 10-3 measures **hidden concentration** — how many bets a set of positions actually is.
   Live: `EURUSD, GBPUSD, AUDUSD` come to **1.2 independent bets**, so holding all three is one bet
   at triple size. `N² / ΣΣρ`, chosen because both extremes are hand-checkable and it needs no

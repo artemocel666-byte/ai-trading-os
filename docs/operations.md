@@ -907,3 +907,38 @@ feature could do.
 `currency_universe` says ten currencies give at most nine independent directions. Both are right:
 rank counts the factors, this counts diversification, and the second exceeds the first whenever
 correlations are negative.
+
+
+## Positioning (Phase 10-4)
+
+Speculative positioning from the CFTC Commitments of Traders report — free, no key, weekly.
+
+```bash
+docker compose run --rm -T worker python -u -m scripts.backfill_positioning
+```
+
+Coverage is printed before anything is stored: contract code, row count, and the earliest and latest
+report date per currency. **Read the earliest dates.** `NZ DOLLAR` and `USD INDEX` were renamed in
+early 2022, so a series starting on 2022-02-01 means the mapping fell back to names and every
+percentile taken against it is a percentile of the wrong history. The script says which of the two
+outcomes it got, in words, every run.
+
+Positioning then appears in the market state report:
+
+```bash
+docker compose run --rm -T worker python -u -m scripts.report_market_state
+```
+
+**Every line is a share of open interest, not a contract count** — the euro contract dwarfs the New
+Zealand one and every contract has grown for forty years.
+
+**Every line carries the Tuesday it describes and how old that is.** The CFTC publishes on Friday
+for the preceding Tuesday, so nothing here is "now"; a present-tense reading of it would be wrong by
+default.
+
+**The dollar is an index against a basket** and says so wherever it appears, because "net long the
+euro against the dollar" and "net long a dollar basket" are different observations.
+
+**`NOK` and `SEK` have no contract, and that is an absence rather than a flat position.** There is no
+Norwegian krone contract at all, and the only Swedish krona one died in 1998 on an exchange that no
+longer exists.

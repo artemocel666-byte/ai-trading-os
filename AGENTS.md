@@ -3,6 +3,25 @@
 AI Trading OS is a foundation for a future Forex analysis and paper-trading platform.
 
 Current project phase: phase_9d3_interest_rate_ingestion.
+Phase 10-4 brought in positioning - what participants hold, beside what the price did - and closes
+the descriptive shortlist drawn up after 9D-4.
+**Probing before planning found the trap the phase turned on:** both `NZ DOLLAR` and `USD INDEX`
+were renamed in early 2022, and their previous names stop dead on 2022-02-01. A name-keyed mapping
+would have given two series starting in 2022 beside six running for decades, and **every percentile
+against them would have been a percentile of the wrong history**. The contract code survives the
+rename, so the project maps by code and the backfill reprints the proof every run.
+**13,775 rows, eight currencies.** NOK has no contract at all; the only SEK one died in 1998 on a
+defunct exchange. Both are named, never zeroed.
+**`экстремальн` joined the banned vocabulary.** Live, CAD sits at the **3rd percentile of 1,930
+weekly observations** - in the usual language that reads "extreme short positioning", which is a
+claim about what happens next dressed as a description. A percentile states the fact without it.
+**Nothing says "now".** The CFTC describes Tuesday and publishes Friday, so every line carries the
+date it describes and how old it is; live, seven days.
+**The all-or-nothing rule was refined, not excepted.** A *ranking* missing members answers a
+different question, so 9D-4 and 10-3 withhold. A *per-currency fact* does not - the euro's
+percentile is unaffected by NOK having no contract - so those stand alone with absences named, and
+any future ranking must say which two are missing.
+See `docs/phase10-4-verification-report.md`.
 Phase 10-3 answers how many bets a set of positions actually is. **Live: three positions
 (EURUSD, GBPUSD, AUDUSD) are 1.2 independent bets** - somebody holding all three is making one bet
 at triple size, and saying so needs no forecast.

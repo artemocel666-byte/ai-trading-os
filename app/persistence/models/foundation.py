@@ -385,3 +385,44 @@ class InterestRateModel(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=utc_now, nullable=False
     )
+
+
+class PositioningReadingModel(Base):
+    """One currency's speculative positioning for one weekly report.
+
+    Phase 10-4. The unique key is the currency and the report date, so a CFTC revision corrects one
+    observation rather than creating a second one.
+
+    **`open_interest` is checked positive and the position columns are not.** A speculative long or
+    short can legitimately be zero; open interest cannot, because the share this project reports is
+    a position divided by it. A row that would become a division by zero is refused here, where the
+    refusal is readable, rather than arriving downstream as a position of zero.
+
+    **`contract_code` is stored beside the currency deliberately.** Both `NZ DOLLAR` and
+    `USD INDEX` were renamed in early 2022 while their codes stayed put, so the code is the stable
+    identity and this column records which series a row actually came from.
+    """
+
+    __tablename__ = "positioning_readings"
+    __table_args__ = (
+        UniqueConstraint("currency", "report_date", name="uq_positioning_identity"),
+        CheckConstraint("open_interest > 0", name="ck_positioning_open_interest_positive"),
+        CheckConstraint("noncommercial_long >= 0", name="ck_positioning_long_not_negative"),
+        CheckConstraint("noncommercial_short >= 0", name="ck_positioning_short_not_negative"),
+        Index("ix_positioning_currency_report_date", "currency", "report_date"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID_PK, primary_key=True, default=uuid.uuid4)
+    provider: Mapped[str] = mapped_column(String(80), nullable=False)
+    contract_code: Mapped[str] = mapped_column(String(32), nullable=False)
+    currency: Mapped[str] = mapped_column(String(3), nullable=False, index=True)
+    report_date: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, index=True
+    )
+    noncommercial_long: Mapped[int] = mapped_column(Integer, nullable=False)
+    noncommercial_short: Mapped[int] = mapped_column(Integer, nullable=False)
+    open_interest: Mapped[int] = mapped_column(Integer, nullable=False)
+    is_basket: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utc_now, nullable=False
+    )

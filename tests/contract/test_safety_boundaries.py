@@ -3323,6 +3323,10 @@ PHASE_10_2_FORECAST_WORDS = (
     "перекуплен",
     "перепродан",
     "рекомендуем",
+    # Added in Phase 10-4. "Extreme positioning" is the phrase the whole COT literature is written
+    # in, and calling a level extreme is a claim about what should happen next dressed as a
+    # description - exactly the move `перекуплен` makes. A percentile is the honest form.
+    "экстремальн",
 )
 
 
@@ -3359,3 +3363,68 @@ def test_phase10_2_review_no_longer_shows_an_aggregate_rule_score() -> None:
     assert "Итог правил" not in source
     assert "9C-2" in source
     assert "не разделяют исходы" in source
+
+
+PHASE_10_4_ADAPTER = Path("app/adapters/cftc_positioning.py")
+PHASE_10_4_BACKFILL = Path("scripts/backfill_positioning.py")
+
+
+def test_phase10_4_positioning_reaches_no_user_facing_layer() -> None:
+    """Positioning is an input to a description, never an output on its own.
+
+    The same line Phase 9D-3 drew for rates and 10-1 narrowed from existence to delivery: Telegram
+    and the API stay closed, and no service or scheduler file may read positioning at all, because
+    nothing in this slice schedules or serves it.
+    """
+    markers = ("cftc_positioning", "PositioningReading", "entities.positioning")
+    offenders = [
+        str(file_path)
+        for directory in ("app/telegram", "app/api", "app/services", "app/scheduler")
+        for file_path in Path(directory).rglob("*.py")
+        if any(marker in file_path.read_text(encoding="utf-8") for marker in markers)
+    ]
+
+    assert offenders == []
+
+
+def test_phase10_4_the_backfill_writes_only_positioning() -> None:
+    source = PHASE_10_4_BACKFILL.read_text(encoding="utf-8")
+
+    for forbidden in ("candles.upsert_many", "interest_rates.upsert", "apply_outcomes"):
+        assert forbidden not in source, forbidden
+
+
+def test_phase10_4_the_adapter_touches_no_other_layer() -> None:
+    import_lines = tuple(
+        line
+        for line in PHASE_10_4_ADAPTER.read_text(encoding="utf-8").lower().splitlines()
+        if line.startswith("import ") or line.startswith("from ")
+    )
+
+    for term in ("app.persistence", "app.telegram", "app.api", "app.scheduler", "app.services"):
+        assert not any(term in line for line in import_lines), term
+
+
+def test_phase10_4_the_contract_codes_are_pinned_not_derived_from_names() -> None:
+    """The finding this phase turned on, kept from being undone.
+
+    `NZ DOLLAR` and `USD INDEX` were renamed in early 2022. Mapping by the current name returns
+    history starting 2022-02-01 for those two while the other six run for decades, and every
+    percentile computed against them would be a percentile of the wrong history — a wrong answer
+    wearing the shape of a real one, exactly as a half-added timeframe did in Phase 9D-1.
+    """
+    source = PHASE_10_4_ADAPTER.read_text(encoding="utf-8")
+
+    assert "CURRENCY_TO_CONTRACT" in source
+    assert "112741" in source
+    assert "098662" in source
+    # Querying by market name is what the codes exist to avoid.
+    assert "market_and_exchange_names" not in source
+
+
+def test_phase10_4_no_claim_that_positioning_predicts_anything() -> None:
+    """Criterion 8. The slice measures nothing about prediction and may not imply it does."""
+    for path in (PHASE_10_4_ADAPTER, Path("app/domain/entities/positioning.py")):
+        source = path.read_text(encoding="utf-8").lower()
+        for forbidden in ("predicts", "signal", "forecast the", "leading indicator"):
+            assert forbidden not in source, f"{path}: {forbidden}"

@@ -20,7 +20,7 @@ from app.presentation.readings import format_concentration, format_correlation
 
 
 def test_project_phase_is_current() -> None:
-    assert constants.PROJECT_PHASE == "phase_10_3_hidden_concentration"
+    assert constants.PROJECT_PHASE == "phase_10_4_positioning"
 
 
 def _series(count: int, *, step: Decimal = Decimal("0.001")) -> list[Decimal]:

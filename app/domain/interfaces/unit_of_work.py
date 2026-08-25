@@ -10,6 +10,7 @@ from app.domain.interfaces.repositories import (
     ErrorEventRepository,
     ForwardOutcomeRepository,
     InterestRateRepository,
+    PositioningRepository,
     SystemStateRepository,
 )
 
@@ -48,6 +49,11 @@ class UnitOfWork(Protocol):
     @property
     def forward_outcomes(self) -> ForwardOutcomeRepository:
         """Repository for pre-registered plans and the outcomes settled onto them."""
+        ...
+
+    @property
+    def positioning(self) -> PositioningRepository:
+        """Repository for speculative positioning, one row per currency per weekly report."""
         ...
 
     @property
