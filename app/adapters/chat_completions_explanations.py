@@ -57,8 +57,14 @@ SYSTEM_PROMPT_RU = (
     "2. Не давай торговых указаний и оценок направления. Никаких покупок, продаж, "  # noqa: RUF001
     "уровней входа, целей и защитных уровней.\n"
     "3. Не меняй статус решения и не спорь с ним.\n"  # noqa: RUF001
-    "4. Не добавляй эмодзи.\n"  # noqa: RUF001
-    "5. Пиши коротко: три-четыре предложения обычным русским языком.\n"
+    # Phase 11-2: the prompt asks for exactly what the validator now enforces. Enforcing a rule the
+    # prompt never mentions is how a validator ends up rejecting most of what it sees, and 8D
+    # measured that asking properly is what took the same model from 20% to 85% accepted.
+    "4. Не пиши о будущем: ни «обычно», ни «ожидается», ни «вероятно», ни «прогноз», "  # noqa: RUF001
+    "и никаких утверждений, что цена вырастет, упадёт или продолжит движение. "
+    "Описывай только то, что уже измерено.\n"
+    "5. Не добавляй эмодзи.\n"  # noqa: RUF001
+    "6. Пиши коротко: три-четыре предложения простым русским языком.\n"
     "Если данных мало, так и скажи — это нормальный ответ."
 )
 

@@ -3,6 +3,30 @@
 AI Trading OS is a foundation for a future Forex analysis and paper-trading platform.
 
 Current project phase: phase_9d3_interest_rate_ingestion.
+Phase 11-2 closed a gap the validator had carried since 8A: **it blocked advice but not
+forecasting**. Every number had to come from the input and a long actionable list was refused, yet
+"волатильность в 94-м перцентиле, обычно после такого движение замедляется" passed - no actionable
+word, every number valid, a forecast in the middle. The 10-2 vocabulary ban ran only over our own
+source and had never touched a word a model wrote.
+**Criterion 3 landed differently from how it was written, and that is the finding.** One list was
+expected; building it showed two strictnesses that must differ - a stem is right over our own prose,
+where a false catch costs a rewrite, and wrong over a model's answer, where 8D measured that
+over-rejection takes acceptance from 85% back toward 20%. The resolution is better than either: one
+judgement in the domain, read through one function, `forecast_claims`, called by both the validator
+and the safety test. An intermediate vocabulary tuple was written and then deleted once the shared
+function made it a constant nobody read.
+**A negated mention is not a claim.** The rule as first written failed on the most honest sentence
+in the project - the 11-1 page footer refuses a forecast by naming what it refuses - so
+`forecast_claims` skips a match preceded by a negation. That is the rule stated correctly, not a
+loophole.
+**Criterion 6 could not be run and the report says so.** No local model is reachable, so the
+before-and-after acceptance rate is unmeasured and **this rule is unpriced** until one is running.
+What could be checked was: the answer 8D published as accepted, and five lines taken verbatim from
+current product surfaces, all found zero forecast claims. A sample of one is a sample of one.
+**One defect worth remembering: a literal backspace byte reached a source file**, so a word boundary
+compiled as 0x08 and the negation silently never matched. Repaired, and a sweep of every `.py` in
+`app`, `scripts` and `tests` found exactly that one and no others.
+See `docs/phase11-2-verification-report.md`.
 Phase 11-1 built the visual layer, and it is where the honesty policy is **hardest** to hold. 10-2
 made the rule executable in text - one renderer, a banned vocabulary, no middle without its spread -
 and **none of that reaches a picture**. A line rising to the right edge implies continuation without

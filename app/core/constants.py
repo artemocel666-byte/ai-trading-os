@@ -1,4 +1,4 @@
-PROJECT_PHASE = "phase_11_1_visual_layer"
+PROJECT_PHASE = "phase_11_2_forecast_guard"
 STRATEGY_IMPLEMENTED = False
 REAL_TRADING_ENABLED = False
 

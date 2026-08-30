@@ -75,8 +75,94 @@ _ACTIONABLE_RUSSIAN_PATTERNS = (
 )
 
 
+#: Phase 11-2. The vocabulary that turns a description into a forecast.
+#:
+#: Phase 10-2 banned these words in everything **this project writes**, and that ban lived in a test
+#: over our own source files — it never touched a word a model produced. So the validator accepted
+#: "волатильность в 94-м перцентиле, обычно после такого движение замедляется": every number from
+#: the input, no actionable word, and a forecast in the middle of it.
+#:
+#: **Written precisely rather than by stem, and that is the design decision of this slice.**
+#: `обычно` is an adverb and a forecast word; `обычная` is an adjective and usually describes the
+#: present. A ban on the stem would reject both, and Phase 8D measured what that costs: the same
+#: model went from 20% to 85% accepted, and that difference is the whole reason the feature is
+#: usable. A rule that quietly returns it to 20% has broken the feature while looking like a
+#: strengthening of it.
+#:
+#: `экстремальн` is the one entry with a legitimate descriptive use — "экстремальные значения
+#: выборки" is ordinary statistics. It is kept because the phrase this project actually meets is
+#: "экстремальное позиционирование", which is a claim about what happens next, and a regular
+#: expression cannot see the difference. The over-rejection is small, named here, and preferred to
+#: letting the claim through.
+#: The plain stems below are the judgement itself, and the authority both readers derive from.
+#:
+#: **Two strictnesses, one judgement, and the difference is deliberate.** Over our own prose a stem
+#: is right: we control the text and can reword, so catching `обычная` alongside `обычно` costs a
+#: rewrite. Over a model's answer a stem is wrong: it would reject honest description and, by 8D's
+#: measurement, take acceptance back toward 20%. Merging the two into a single list would have made
+#: one of them worse — which is what the Phase 11-2 pre-registration expected to do until the
+#: difference became visible in the code.
+FORECAST_VOCABULARY: tuple[str, ...] = (
+    "обычно",
+    "ожида",
+    "вероятн",
+    "перекуплен",
+    "перепродан",
+    "экстремальн",
+    "прогноз",
+    "предсказ",
+)
+
+_FORECAST_RUSSIAN_PATTERNS = (
+    re.compile(r"\bобычно\b", re.IGNORECASE),  # noqa: RUF001
+    re.compile(r"\bожида(?:ется|ются|ем|ешь|ть|лось|лся)\b", re.IGNORECASE),  # noqa: RUF001
+    re.compile(r"\bвероятно\b|\bвероятнее\b|\bскорее всего\b", re.IGNORECASE),  # noqa: RUF001
+    re.compile(r"\bперекуплен\w*|\bперепродан\w*", re.IGNORECASE),  # noqa: RUF001
+    re.compile(r"\bэкстремальн\w*", re.IGNORECASE),  # noqa: RUF001
+    re.compile(r"\bпрогноз\w*|\bпредсказ\w*", re.IGNORECASE),  # noqa: RUF001
+    re.compile(
+        r"\b(?:пойд[её]т|вырастет|упад[её]т|снизится|повысится|"
+        r"продолжит\w*|разверн[её]т\w*|отскоч\w*)\b",
+        re.IGNORECASE,
+    ),
+)
+
+
 def contains_actionable_russian_text(value: str) -> bool:
     return any(pattern.search(value) for pattern in _ACTIONABLE_RUSSIAN_PATTERNS)
+
+
+#: A negated mention is not a claim, and this is not a loophole — it is the rule stated correctly.
+#: A sentence refusing a forecast makes none, however plainly it names
+#: the thing it refuses.
+#: says exactly that in its footer, and a ban unable to tell the two apart would have forced the
+#: most honest sentence on the page to be reworded around its own guard.
+_NEGATION_BEFORE = re.compile(r"\b(?:не|нет|никаких|без|кроме)\s+$", re.IGNORECASE)
+
+
+def forecast_claims(value: str) -> list[str]:
+    """Every forecasting phrase in the text that is actually being asserted.
+
+    Shared by the validator, which reads a model's answer, and by the safety test, which reads our
+    own source. One judgement, two readers — the difference between them is only how strict the
+    surrounding patterns are, and that difference is named where each list lives.
+    """
+    found: list[str] = []
+    for pattern in _FORECAST_RUSSIAN_PATTERNS:
+        for match in pattern.finditer(value):
+            if _NEGATION_BEFORE.search(value[: match.start()]):
+                continue
+            found.append(match.group(0))
+    return found
+
+
+def contains_forecast_russian_text(value: str) -> bool:
+    """Whether the text claims something about what happens next rather than what is.
+
+    The distinction the actionable check cannot make: "покупайте" is advice and is already refused,
+    while "обычно после такого движение замедляется" advises nothing and forecasts everything.
+    """
+    return bool(forecast_claims(value))
 
 
 def build_explanation_input(
@@ -157,6 +243,14 @@ def validate_explanation_text(
             ExplanationIssue(
                 code=ExplanationIssueCode.ACTIONABLE_TEXT,
                 detail="Текст содержит торговые указания.",
+            )
+        )
+
+    if contains_forecast_russian_text(body):
+        issues.append(
+            ExplanationIssue(
+                code=ExplanationIssueCode.FORECAST_TEXT,
+                detail="Текст содержит утверждение о будущем.",  # noqa: RUF001
             )
         )
 

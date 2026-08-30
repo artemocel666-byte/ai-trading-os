@@ -410,6 +410,21 @@ non-actionable and without any signal, AI, or execution behavior.
     pre-registered amendment landed as written — `charts.py` may read `.median` only in a function
     that also reads `.p05` and `.p95`. Two substring collisions repaired by renaming rather than by
     widening a rule. No schema change, no new dependency.
+  - 11-2: the forecast guard — **completed 2026-08-25**, see
+    `docs/phase11-2-verification-report.md`. Six of eight criteria met; the seventh was not
+    applicable and **the sixth could not be run**. The validator blocked advice but not forecasting,
+    and now refuses both, with `FORECAST_TEXT` kept apart from `ACTIONABLE_TEXT` because they are
+    different faults. One judgement in the domain read by two callers through `forecast_claims`,
+    which skips a **negated** mention — the 11-1 page footer refuses a forecast by naming it. **The
+    cost to acceptance is unmeasured**: no local model was reachable, so the rule is unpriced until
+    one is. A literal backspace byte in a source file made the negation silently never match; a
+    sweep found that one and no others.
+  - Still owed from 11-2: run `scripts/evaluate_explanations.py` against a live model and publish
+    the acceptance rate. A drop below 50% is a problem, not a success.
+  - 11-3: lift the per-script loaders into a service, so more than one surface can read the same
+    readings without a fifth copy of `_load`.
+  - 11-4: the route, plus the decision between a private network and real authentication — the
+    current `X-Internal-API-Key` is a header, and a browser opening a URL cannot send one.
   - Open, and product decisions rather than measurements: whether the page is ever **served**
     instead of written to a file, and whether the **two-level rendering** discussed in 10-2 is worth
     building now that the content has been stable across two phases.

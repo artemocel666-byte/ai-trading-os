@@ -1,6 +1,5 @@
 import ast
 import inspect
-import re
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
@@ -60,6 +59,7 @@ from app.domain.entities.signal_contract import (
     SignalPricePlan,
 )
 from app.domain.execution_cost import break_even_share, build_cost_sensitivity_profile
+from app.domain.explanation_contract import forecast_claims
 from app.domain.field_outcome_profile import build_field_outcome_profile
 from app.domain.manual_review_report_builder import ManualReviewReportBuilder
 from app.domain.outcome_measurement import measure_outcome
@@ -3324,34 +3324,29 @@ def test_phase10_2_only_one_place_may_render_a_central_tendency() -> None:
 
 #: Words that smuggle a forecast into a description. `перекуплен` does it inside a single word:
 #: "overbought" is not an observation, it is a claim about what should happen next.
-PHASE_10_2_FORECAST_WORDS = (
-    "обычно",
-    "ожидается",
-    "вероятно",
-    "перекуплен",
-    "перепродан",
-    "рекомендуем",
-    # Added in Phase 10-4. "Extreme positioning" is the phrase the whole COT literature is written
-    # in, and calling a level extreme is a claim about what should happen next dressed as a
-    # description - exactly the move `перекуплен` makes. A percentile is the honest form.
-    "экстремальн",
-)
+#: Phase 11-2 moved this judgement into the domain entirely. `forecast_claims` is the one reader,
+#: shared with the validator that checks model output, and it knows that a negated mention is not a
+#: claim: a sentence refusing a forecast makes none, which is what the Phase 11-1 page footer does.
 
 
 def test_phase10_2_no_vocabulary_of_expectation_reaches_a_person() -> None:
     """Criterion 3. Matched as whole words, which is the 10-1 lesson made permanent.
 
     A substring ban caught "long" inside "belongs" in 10-1 and "carry" inside "carrying" in 9D-4.
-    Both were false alarms on ordinary English, and both cost a debugging round. Russian stems
-    inflect, so each term is matched with a word boundary in front and any ending allowed after.
+    Both were false alarms on ordinary English, and both cost a debugging round.
+
+    **Phase 11-2 moved the judgement into the domain**, so this test and the validator that reads a
+    model's answer now call the same function. It also taught the rule that a **negated** mention is
+    not a claim. The Phase 11-1 page footer refuses a forecast by naming the thing it refuses, and
+    a ban unable to tell those apart would have forced the most honest sentence on the page to be
+    reworded around its own guard.
     """
-    pattern = re.compile(r"\b(" + "|".join(PHASE_10_2_FORECAST_WORDS) + r")", re.IGNORECASE)
     offenders = [
-        f"{path}: {match.group(0)}"
+        f"{path}: {claim}"
         for path in PHASE_10_2_PERSON_FACING
-        for match in pattern.finditer(path.read_text(encoding="utf-8"))
-        # The renderer names the banned list in its own docstring in order to explain the rule.
+        # The renderer names the banned words in its own docstring in order to explain the rule.
         if path != PHASE_10_2_RENDERER
+        for claim in forecast_claims(path.read_text(encoding="utf-8"))
     ]
 
     assert offenders == []

@@ -34,6 +34,10 @@ class ExplanationIssueCode(StrEnum):
     EMPTY_TEXT = "EMPTY_TEXT"
     NOT_RUSSIAN = "NOT_RUSSIAN"
     ACTIONABLE_TEXT = "ACTIONABLE_TEXT"
+    #: Phase 11-2. Kept apart from ACTIONABLE_TEXT because they are different faults: one tells a
+    #: person what to do, the other tells them what will happen. A report that conflates them
+    #: teaches nobody which rule was broken.
+    FORECAST_TEXT = "FORECAST_TEXT"
     EMOJI_FOUND = "EMOJI_FOUND"
     UNKNOWN_NUMBER = "UNKNOWN_NUMBER"
     TOO_LONG = "TOO_LONG"

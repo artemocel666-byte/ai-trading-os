@@ -970,3 +970,31 @@ recommendation hidden in a stylesheet.
 
 **Every chart states its `n` and its window inside the image**, because a crop or a screenshot keeps
 the picture and loses a caption.
+
+## The forecast guard (Phase 11-2)
+
+The explanation validator refuses two different things, and the distinction matters when a
+rejection is being read:
+
+- `ACTIONABLE_TEXT` — the answer told a person what to do.
+- `FORECAST_TEXT` — the answer told a person what will happen. Added in 11-2, because the validator
+  blocked the first and passed the second for three phases.
+
+Both are checked through `forecast_claims` in `app/domain/explanation_contract.py`, which is also
+what the safety test over our own source calls. One judgement, two readers.
+
+**A negated mention is not a claim.** "Это описание состояния, а не прогноз" refuses a forecast
+rather than making one, and the guard knows the difference. Without that, the most honest sentence
+on the Phase 11-1 page would have had to be reworded around its own guard.
+
+**The rule is unpriced.** Phase 8D measured that the same model went from 20% to 85% accepted once
+the prompt was rewritten, so acceptance is the number that decides whether `/explain` is usable at
+all. The forecast rule's effect on it has not been measured, because no local model was reachable
+when 11-2 was built. To measure it:
+
+```bash
+uv run python scripts/evaluate_explanations.py --base-url http://localhost:11434 --model <name>
+```
+
+**A drop below 50% is a problem, not a success.** A validator that rejects most of what it sees has
+removed the feature rather than secured it, and the response is to loosen a pattern and say which.
