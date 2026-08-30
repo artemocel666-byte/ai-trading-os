@@ -987,13 +987,13 @@ what the safety test over our own source calls. One judgement, two readers.
 rather than making one, and the guard knows the difference. Without that, the most honest sentence
 on the Phase 11-1 page would have had to be reworded around its own guard.
 
-**The rule is unpriced.** Phase 8D measured that the same model went from 20% to 85% accepted once
-the prompt was rewritten, so acceptance is the number that decides whether `/explain` is usable at
-all. The forecast rule's effect on it has not been measured, because no local model was reachable
-when 11-2 was built. To measure it:
+**The rule was measured, and it cost nothing.** Acceptance is the number that decides whether
+`/explain` is usable at all — 8D measured the same model going from 20% to 85% once the prompt was
+rewritten. With the forecast rule in place the same model accepted **20 of 20**, with no rejection
+of any kind. Re-measure after any change to the patterns or the prompt:
 
 ```bash
-uv run python scripts/evaluate_explanations.py --base-url http://localhost:11434 --model <name>
+docker compose run --rm -T worker python -u -m scripts.evaluate_explanations --base-url http://host.docker.internal:1234 --model openai/gpt-oss-20b
 ```
 
 **A drop below 50% is a problem, not a success.** A validator that rejects most of what it sees has

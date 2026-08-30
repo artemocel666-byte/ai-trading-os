@@ -416,11 +416,10 @@ non-actionable and without any signal, AI, or execution behavior.
     and now refuses both, with `FORECAST_TEXT` kept apart from `ACTIONABLE_TEXT` because they are
     different faults. One judgement in the domain read by two callers through `forecast_claims`,
     which skips a **negated** mention — the 11-1 page footer refuses a forecast by naming it. **The
-    cost to acceptance is unmeasured**: no local model was reachable, so the rule is unpriced until
-    one is. A literal backspace byte in a source file made the negation silently never match; a
-    sweep found that one and no others.
-  - Still owed from 11-2: run `scripts/evaluate_explanations.py` against a live model and publish
-    the acceptance rate. A drop below 50% is a problem, not a success.
+    cost to acceptance was owed and then paid**: measured against `gpt-oss-20b`, the same model 8D
+    used, at **20 of 20 accepted with zero `FORECAST_TEXT` rejections** against 8D's 85%. A literal
+    backspace byte in a source file made the negation silently never match; a sweep found that one
+    and no others.
   - 11-3: lift the per-script loaders into a service, so more than one surface can read the same
     readings without a fifth copy of `_load`.
   - 11-4: the route, plus the decision between a private network and real authentication — the

@@ -9,9 +9,9 @@ AI Trading OS is a safety-first foundation for a future modular Forex analysis a
   A model could write "обычно после такого движение замедляется" with every number valid and no
   actionable word, and be accepted. One judgement now lives in the domain and is read by both the
   validator and the safety test through `forecast_claims`, which also knows that a **negated**
-  mention is not a claim — the page footer refuses a forecast by naming what it refuses. The cost
-  to acceptance is **unmeasured**: no local model was reachable, and the report says so rather than
-  claiming the rule is free.
+  mention is not a claim — the page footer refuses a forecast by naming what it refuses. **Measured
+  against the same model 8D used: 20 of 20 accepted, zero forecast rejections**, where 8D's run was
+  85%.
 - Phase 11-1 added the **visual layer** — one self-contained HTML page, no JavaScript and no
   external request of any kind. This is where the honesty policy is hardest: a vocabulary ban cannot
   reach a shape, so the criteria are about **permitted forms**. Four primitives, the set closed and

@@ -19,10 +19,12 @@ function made it a constant nobody read.
 in the project - the 11-1 page footer refuses a forecast by naming what it refuses - so
 `forecast_claims` skips a match preceded by a negation. That is the rule stated correctly, not a
 loophole.
-**Criterion 6 could not be run and the report says so.** No local model is reachable, so the
-before-and-after acceptance rate is unmeasured and **this rule is unpriced** until one is running.
-What could be checked was: the answer 8D published as accepted, and five lines taken verbatim from
-current product surfaces, all found zero forecast claims. A sample of one is a sample of one.
+**Criterion 6 was owed, then paid.** The slice was written with no model reachable and said so
+rather than claiming the rule was free; the model was then started and the measurement run before
+moving on. Against `gpt-oss-20b`, the same model 8D used: **20 of 20 accepted, 100%, zero
+`FORECAST_TEXT` rejections**, median 3.6s. 8D's run was 85%. The windows differ in date range, so
+this is comparable rather than a controlled repeat - what is unqualified is that **the new rule
+fired zero times on twenty real answers**.
 **One defect worth remembering: a literal backspace byte reached a source file**, so a word boundary
 compiled as 0x08 and the negation silently never matched. Repaired, and a sweep of every `.py` in
 `app`, `scripts` and `tests` found exactly that one and no others.
