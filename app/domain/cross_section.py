@@ -14,9 +14,7 @@ formation and holding periods were fixed in the Phase 9D-1 plan before any daily
 is no parameter that could be tuned to the data and then reported as a finding.
 """
 
-from bisect import bisect_right
 from collections.abc import Iterable, Sequence
-from datetime import datetime, timedelta
 from decimal import Decimal
 
 from app.domain.entities.cross_section import (
@@ -26,45 +24,6 @@ from app.domain.entities.cross_section import (
     CrossSectionPeriod,
     CrossSectionProfile,
 )
-from app.domain.entities.market_data import Candle
-
-
-def forward_return(closes: Sequence[Decimal]) -> Decimal | None:
-    """Simple return from the first close to the last.
-
-    `None` when there is nothing to measure or the starting price is not positive — never a
-    substituted zero, which would read as "it did not move" rather than "there is no answer".
-    """
-    if len(closes) < 2 or closes[0] <= 0:
-        return None
-    return (closes[-1] - closes[0]) / closes[0]
-
-
-#: How stale the price standing in for a rebalance date may be. A weekend plus a holiday is four
-#: days; a week is generous without letting a months-old price masquerade as a month-end one.
-MAXIMUM_ANCHOR_STALENESS = timedelta(days=7)
-
-
-def latest_close_at(
-    ordered_candles: Sequence[Candle],
-    moment: datetime,
-    *,
-    maximum_staleness: timedelta = MAXIMUM_ANCHOR_STALENESS,
-) -> Decimal | None:
-    """The last close at or before `moment`, or `None` if the nearest one is too old.
-
-    Every instrument is priced at the **same** calendar anchor, because a cross-section compares one
-    instant. Trading calendars differ, so the anchor rarely falls on a bar for every pair at once —
-    the nearest earlier close stands in, and the staleness bound is what stops that convenience from
-    silently comparing today's price with last quarter's.
-    """
-    index = bisect_right([candle.close_time for candle in ordered_candles], moment)
-    if index == 0:
-        return None
-    candle = ordered_candles[index - 1]
-    if moment - candle.close_time > maximum_staleness:
-        return None
-    return candle.close
 
 
 def rank_into_buckets(

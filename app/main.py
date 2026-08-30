@@ -14,6 +14,7 @@ from app.adapters.factories import (
 )
 from app.api.error_handlers import register_error_handlers
 from app.api.routes.health import router as health_router
+from app.api.routes.market import router as market_router
 from app.api.routes.system import router as system_router
 from app.core.config import Settings, get_settings
 from app.core.logging import configure_logging
@@ -21,6 +22,8 @@ from app.persistence.database import create_engine, create_session_factory
 from app.persistence.database_health import SqlAlchemyDatabaseHealth
 from app.persistence.session import build_uow_factory
 from app.services.health_service import HealthService
+from app.services.market_page_service import MarketPageService
+from app.services.market_reading_service import MarketReadingService
 from app.services.system_state_service import SystemStateService
 
 
@@ -45,6 +48,9 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         app.state.economic_calendar_provider = create_economic_calendar_provider(
             settings,
             client=provider_clients.economic_calendar,
+        )
+        app.state.market_page_service = MarketPageService(
+            readings=MarketReadingService(uow_factory=uow_factory)
         )
         app.state.health_service = HealthService(
             settings=settings,
@@ -76,6 +82,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     register_error_handlers(app)
     app.include_router(health_router)
     app.include_router(system_router)
+    # Off by default. Registration is conditional rather than the route checking a flag per
+    # request: an unregistered route cannot be reached by a mistake in a dependency.
+    if app_settings.market_page_enabled:
+        app.include_router(market_router)
     return app
 
 

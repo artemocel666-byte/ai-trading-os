@@ -142,6 +142,13 @@ class Settings(BaseSettings):
     provider_max_request_range_days: int = Field(default=31, ge=1, le=1100)
     require_integration_tests: bool = False
 
+    #: Whether the API registers the market page route. Off by default, like every other
+    #: capability here. The page is a description of stored readings, and it is served on the
+    #: loopback binding `compose.yaml` already publishes - it carries no authentication of its own,
+    #: because `X-Internal-API-Key` is a header a browser opening a URL cannot send, and inventing
+    #: a weaker scheme would be worse than the honest limit. See `docs/phase11-4-*.md`.
+    market_page_enabled: bool = False
+
     scan_enabled: bool = False
     scheduled_digest_enabled: bool = False
     scheduled_digest_interval_minutes: int = Field(default=60, ge=1, le=1440)

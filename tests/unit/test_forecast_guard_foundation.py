@@ -12,7 +12,7 @@ from app.domain.explanation_contract import (
 
 
 def test_project_phase_is_current() -> None:
-    assert constants.PROJECT_PHASE == "phase_11_3_reading_service"
+    assert constants.PROJECT_PHASE == "phase_11_4_market_page_route"
 
 
 #: Criterion 2, and the criterion that decides the slice: each pattern carries the sentence it must

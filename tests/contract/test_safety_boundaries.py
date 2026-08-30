@@ -3380,16 +3380,37 @@ PHASE_10_4_BACKFILL = Path("scripts/backfill_positioning.py")
 def test_phase10_4_positioning_reaches_no_user_facing_layer() -> None:
     """Positioning is an input to a description, never an output on its own.
 
-    The same line Phase 9D-3 drew for rates and 10-1 narrowed from existence to delivery: Telegram
-    and the API stay closed, and no service or scheduler file may read positioning at all, because
-    nothing in this slice schedules or serves it.
+    **Narrowed in Phase 11-4, and the narrowing is the honest half of that slice.** The page is now
+    served, and the page contains positioning. The route could have imported a function returning a
+    string, never named `PositioningReading`, and left this test passing while the data reached a
+    person exactly as before — a rule that passes while its purpose is defeated is worse than no
+    rule, because it then certifies the thing it was written to prevent. So the rule says what it
+    actually protects instead.
+
+    It is not "a person must never see positioning". Phase 10-2 settled that deliberately, and the
+    net-position table has been printed to a person ever since. What is protected is the **channel**
+    and the **shape**:
+
+    - **Pull, not push.** A page a person opens is not a message a person receives. `app/telegram`
+      stays in the closed list below and its own rules are untouched.
+    - **A document, not a feed.** Only the two named files may name positioning at all, and
+      `test_phase11_4_the_api_serves_a_document_not_a_feed` checks that the API gained no
+      machine-readable payload of it.
+
+    A formatter, a digest or an analysis service that started reading positioning still fails here,
+    which was always the case that mattered.
     """
     markers = ("cftc_positioning", "PositioningReading", "entities.positioning")
-    # Phase 11-3 named one reading path, for the same reason 10-1 named an ingestion path for rates:
-    # five scripts had each loaded positioning themselves and a served page would have been the
-    # sixth. What the rule protects is untouched — **Telegram and the API stay absolutely closed**,
-    # and a formatter or digest that started reading positioning still fails here.
-    allowed = frozenset({Path("app/services/market_reading_service.py")})
+    allowed = frozenset(
+        {
+            # Phase 11-3: one reading path, for the reason 10-1 named an ingestion path for rates —
+            # five scripts had each loaded positioning themselves.
+            Path("app/services/market_reading_service.py"),
+            # Phase 11-4: one assembly, called by both the script and the route, so that the file
+            # and the served page cannot come apart.
+            Path("app/services/market_page_service.py"),
+        }
+    )
     offenders = [
         str(file_path)
         for directory in ("app/telegram", "app/api", "app/services", "app/scheduler")
@@ -3442,3 +3463,116 @@ def test_phase10_4_no_claim_that_positioning_predicts_anything() -> None:
         source = path.read_text(encoding="utf-8").lower()
         for forbidden in ("predicts", "signal", "forecast the", "leading indicator"):
             assert forbidden not in source, f"{path}: {forbidden}"
+
+
+#: The one route Phase 11-4 added, and the only file in `app/api` allowed to reach a page service.
+PHASE_11_4_MARKET_ROUTE = Path("app/api/routes/market.py")
+
+
+def test_phase11_4_the_api_serves_a_document_not_a_feed() -> None:
+    """The shape half of the 11-4 narrowing, and the half that is easiest to lose later.
+
+    A document is read by a person. A feed is consumed by a program, and a program that consumes
+    readings is the first half of something that acts — which is the whole thing this project has
+    refused to build for eleven phases.
+
+    So the market route returns HTML and nothing else. The day someone adds `response_model` beside
+    it, or a second route handing back the same readings as JSON, this fails and says why.
+    """
+    source = PHASE_11_4_MARKET_ROUTE.read_text(encoding="utf-8")
+
+    assert "HTMLResponse" in source
+    assert "response_model" not in source
+    assert "JSONResponse" not in source
+
+    # No other API file may serve the readings either, under any encoding.
+    served_elsewhere = [
+        str(file_path)
+        for file_path in Path("app/api").rglob("*.py")
+        if file_path != PHASE_11_4_MARKET_ROUTE
+        and (
+            "market_page_service" in file_path.read_text(encoding="utf-8")
+            or "market_reading_service" in file_path.read_text(encoding="utf-8")
+        )
+        and "dependencies.py" not in str(file_path)
+    ]
+    assert served_elsewhere == []
+
+
+def test_phase11_4_the_page_route_does_not_exist_when_the_flag_is_off() -> None:
+    """Asserted against the built application, not against the settings object.
+
+    A flag that is read in the wrong place is a flag that is off in the configuration and on in the
+    process. The only answer that counts is which routes the app actually has.
+
+    Read from the OpenAPI schema. This FastAPI version keeps an included router as one opaque entry
+    in `app.routes` that exposes neither `path` nor a nested `routes` list, so both the obvious
+    check and the recursive one find no application routes at all and pass for the wrong reason.
+    The guard assertion below is what caught that, and it stays for the next person.
+    """
+    from app.core.config import Settings
+    from app.main import create_app
+
+    def paths(*, enabled: bool) -> set[str]:
+        # The field name, not the environment name: pydantic-settings silently ignores a keyword
+        # that matches only the env var, which would leave both cases here reading False.
+        settings = Settings(_env_file=None, market_page_enabled=enabled)
+        return set(create_app(settings).openapi()["paths"])
+
+    off, on = paths(enabled=False), paths(enabled=True)
+
+    assert "/health" in off, "no application routes were found; the check would be vacuous"
+    assert "/market/page" not in off
+    assert "/market/page" in on
+
+
+def test_phase11_4_the_api_binding_is_not_widened() -> None:
+    """A promise about exposure is worth exactly what it can be checked for.
+
+    The page carries no authentication of its own, and the reason that is acceptable is that the API
+    is published to loopback only. That reason stops holding the moment the binding changes, so the
+    binding is checked here rather than remembered in a phase report.
+
+    Widening it is a product decision that needs real authentication first — see
+    `docs/phase11-4-preregistration.md`. If this test fails because the binding was widened
+    deliberately, the fix is not to edit the test.
+    """
+    compose = Path("compose.yaml").read_text(encoding="utf-8")
+
+    published = [
+        line.strip()
+        for line in compose.splitlines()
+        if ":8000" in line and line.strip().startswith("-")
+    ]
+
+    assert published == ['- "127.0.0.1:8000:8000"'], published
+
+
+def test_phase11_4_telegram_stays_absolutely_closed_to_the_page() -> None:
+    """Pull, not push — stated as a test so the distinction survives the next slice.
+
+    Serving a page on request is not the same as sending one. Nothing in `app/telegram` may reach
+    the page or the readings behind it.
+    """
+    offenders = [
+        str(file_path)
+        for file_path in Path("app/telegram").rglob("*.py")
+        if "market_page_service" in file_path.read_text(encoding="utf-8")
+        or "market_reading_service" in file_path.read_text(encoding="utf-8")
+        or "MarketPageService" in file_path.read_text(encoding="utf-8")
+    ]
+
+    assert offenders == []
+
+
+def test_phase11_4_the_page_service_computes_no_new_number() -> None:
+    """Every number on the page was measured and named in an earlier phase.
+
+    The assembly chooses which readings appear and in what order. If it starts deriving its own
+    figure, that figure has no phase report behind it and no test, and it will still look exactly as
+    authoritative as the ones that do.
+    """
+    source = Path("app/services/market_page_service.py").read_text(encoding="utf-8")
+
+    for forbidden in ("statistics.", "def _mean", "def _median", "t_statistic", "sqrt"):
+        assert forbidden not in source, forbidden

@@ -4,7 +4,13 @@ AI Trading OS is a safety-first foundation for a future modular Forex analysis a
 
 ## Current Status
 
-- Current project phase: phase_11_3_reading_service.
+- Current project phase: phase_11_4_market_page_route.
+- Phase 11-4 served the page: `MarketPageService` assembles it once, the script writes it and the
+  route serves it, and **the served bytes are identical to the written file**. The safety rule was
+  **narrowed rather than dodged** — what it protects is the channel (pull, not push; Telegram stays
+  closed) and the shape (a document, not a feed). **No new authentication and no widening of the
+  bind**: the API is loopback-only and `MARKET_PAGE_ENABLED` is off by default, so another device
+  cannot open the page — a named cost, not an oversight.
 - Phase 11-3 lifted the loaders into `MarketReadingService`: five scripts held the same query,
   filter and sort, and a served page would have been the sixth copy. Three reads, no arithmetic —
   the duplicated returns derivation went to the domain instead. **The acceptance criterion was that

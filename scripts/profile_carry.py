@@ -36,11 +36,7 @@ from app.domain.carry import (
     lagged_rates_for_anchor,
     observations,
 )
-from app.domain.cross_section import (
-    build_cross_section_profile,
-    forward_return,
-    latest_close_at,
-)
+from app.domain.cross_section import build_cross_section_profile
 from app.domain.currency_universe import UNIVERSE_CURRENCIES, universe_pairs
 from app.domain.entities.carry import CarryReading
 from app.domain.entities.cross_section import (
@@ -50,6 +46,7 @@ from app.domain.entities.cross_section import (
 )
 from app.domain.entities.market_data import Candle
 from app.domain.market_calendar import shift_months
+from app.domain.price_series import forward_return, latest_close_at
 from app.persistence.database import create_engine, create_session_factory
 from app.persistence.session import build_uow_factory
 from app.services.market_reading_service import MarketReadingService

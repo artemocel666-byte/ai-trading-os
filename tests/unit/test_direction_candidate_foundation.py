@@ -69,7 +69,7 @@ def _sawtooth(tick: Decimal, count: int = 12) -> list[Decimal]:
 
 
 def test_project_phase_is_current() -> None:
-    assert constants.PROJECT_PHASE == "phase_11_3_reading_service"
+    assert constants.PROJECT_PHASE == "phase_11_4_market_page_route"
 
 
 def test_a_straight_climb_proposes_short() -> None:

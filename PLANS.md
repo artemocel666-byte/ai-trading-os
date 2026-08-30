@@ -432,18 +432,26 @@ non-actionable and without any signal, AI, or execution behavior.
     text, because the service's own docstring names `argparse` and `print` in order to say it uses
     neither. **A defect found in passing**: `AGENTS.md` and `README.md` had both declared the phase
     four bumps behind the constant, and a ninth test now pins them.
-  - 11-4: the route — **pre-registered 2026-08-30**, see `docs/phase11-4-preregistration.md`. The
-    page served over HTTP, and with it the exposure decision. **Answered: no new authentication and
-    no widening of the bind.** The API is already published to `127.0.0.1:8000` only, so the page is
-    reachable where the operator already is and nowhere else; `MARKET_PAGE_ENABLED` defaults to off.
-    The cost is named rather than solved — **a phone cannot open it**, because binding to the LAN
-    without authentication would make the page readable by anything on the network, and inventing an
-    auth scheme in the same slice would write that half in a hurry.
-    The safety question is answered by **narrowing rather than dodging**: the route could import a
-    string-returning function, never name `PositioningReading`, and pass the 10-4 substring test
-    while the data still reached a person. Refused. What the boundary protects is the **channel**
-    (pull, not push — Telegram stays absolutely closed) and the **shape** (a document, not a feed —
-    no JSON endpoint for positioning, candles or rates). Both get their own criterion.
+  - 11-4: the route — **completed 2026-08-30**, see `docs/phase11-4-verification-report.md`.
+    All eight criteria met. `MarketPageService` assembles the document once; the script writes it
+    and the route serves it, and **the served bytes are identical to the written file** — the
+    criterion that decides the slice, re-checked after the phase bump.
+    **The safety question was answered by narrowing rather than dodging.** The route could have
+    imported a string-returning function, never named `PositioningReading`, and left the 10-4 rule
+    passing while the data reached a person exactly as before. Refused: a rule that passes while its
+    purpose is defeated certifies the thing it was written to prevent. The rule now states the
+    **channel** (pull, not push — Telegram closed, with a new test) and the **shape** (a document,
+    not a feed — no `response_model`, no `JSONResponse`, no other API file reaching the services).
+    **The 9D-2 rule was kept at full strength by moving code rather than widening it**:
+    `forward_return` and `latest_close_at` were never the cross-section, so they moved to
+    `app/domain/price_series.py` and the ranking stayed behind.
+    **Exposure: no new authentication and no widening of the bind.** Loopback only, flag off by
+    default, and a test reads `compose.yaml` to keep that checkable. The cost is named — another
+    device cannot open the page, and that needs real authentication first.
+    **Criterion 4 was vacuous twice before it was right**: this FastAPI version hides included
+    routers behind an opaque entry, so both the obvious check and the recursive one found no
+    application routes and would have passed. A guard assertion written before the result was read
+    caught it — plumbing before the result, one level away from where the habit was learned.
   - Open, and product decisions rather than measurements: whether the page is ever **served**
     instead of written to a file, and whether the **two-level rendering** discussed in 10-2 is worth
     building now that the content has been stable across two phases.

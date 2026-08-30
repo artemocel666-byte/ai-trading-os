@@ -1041,3 +1041,45 @@ anything else is a rewrite in disguise.
 **The phase is declared in three places and they are pinned together.**
 `constants.PROJECT_PHASE`, `AGENTS.md` and `README.md` must agree, and a test enforces it. They had
 drifted four phases apart before 11-3 noticed.
+
+## Serving the market page (Phase 11-4)
+
+**Off by default.** Set `MARKET_PAGE_ENABLED=true` in `.env` and restart the API. The route is
+registered conditionally rather than checking the flag per request, so with the flag off the path
+does not exist at all:
+
+```bash
+curl -si http://127.0.0.1:8000/market/page | head -1
+```
+
+`200` with `text/html` when there are stored candles. `503` when there are none — the page is not
+missing, the data behind it has not been ingested, and those are different problems.
+
+**It is reachable from this machine and nowhere else.** `compose.yaml` publishes
+`127.0.0.1:8000:8000`. That is what makes an unauthenticated read acceptable: the page carries no
+authentication of its own, because `X-Internal-API-Key` is a header a browser opening a URL cannot
+send, and a token in a URL would leak through history, logs and referrers.
+
+**A phone cannot open it, and widening the binding is not the fix.** Binding to the LAN address
+without authentication would make the page readable by anything on the network. Real authentication
+comes first. `test_phase11_4_the_api_binding_is_not_widened` reads `compose.yaml` and fails if the
+binding changes — if it ever fails because the change was deliberate, the fix is not to edit the
+test.
+
+**The route and the script produce the same document.** `MarketPageService.document` is the only
+assembly; `scripts/render_market_page.py` writes its result to a file and the route returns it.
+After changing either, re-check that they still agree:
+
+```bash
+PYTHONPATH=. PYTHONIOENCODING=utf-8 uv run python scripts/render_market_page.py --database-url "$DSN" --output out/page.html
+```
+
+then request the route and compare the two with the embedded timestamp masked. Identical is the
+criterion; two renderings of the same readings that differ are a second copy arriving by another
+door.
+
+**What the API may and may not carry.** The page is a **document**, read by a person. It is not a
+feed: there is no JSON endpoint for candles, positioning or rates, and there must not be — a program
+that consumes readings is the first half of something that acts. **Telegram stays absolutely
+closed**, because a page a person opens is not a message a person receives. Both halves are tests,
+not conventions.

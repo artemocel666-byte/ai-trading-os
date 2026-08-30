@@ -26,13 +26,13 @@ from decimal import Decimal
 from app.core.config import Settings
 from app.core.time import normalize_to_utc, utc_now
 from app.domain.carry import RATE_LAG_MONTHS, carry_differential, lagged_rates_for_anchor
-from app.domain.cross_section import forward_return, latest_close_at
 from app.domain.currency_universe import UNIVERSE_CURRENCIES, universe_pairs
 from app.domain.entities.market_data import Candle
 from app.domain.entities.market_state import CarryReadingToday, MarketStateReport
 from app.domain.entities.positioning import PositioningReading
 from app.domain.market_calendar import month_start, shift_months
 from app.domain.market_state import currency_strength, read_against_history
+from app.domain.price_series import forward_return, latest_close_at
 from app.persistence.database import create_engine, create_session_factory
 from app.persistence.session import build_uow_factory
 from app.presentation.readings import (

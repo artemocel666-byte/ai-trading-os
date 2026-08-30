@@ -1,4 +1,4 @@
-PROJECT_PHASE = "phase_11_3_reading_service"
+PROJECT_PHASE = "phase_11_4_market_page_route"
 STRATEGY_IMPLEMENTED = False
 REAL_TRADING_ENABLED = False
 

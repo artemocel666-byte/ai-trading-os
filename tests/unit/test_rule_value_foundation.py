@@ -30,7 +30,7 @@ MARKET_RULE = "market_context.volatility_ratio"
 
 
 def test_project_phase_is_current() -> None:
-    assert constants.PROJECT_PHASE == "phase_11_3_reading_service"
+    assert constants.PROJECT_PHASE == "phase_11_4_market_page_route"
 
 
 def _outcome(kind: OutcomeKind, direction: SignalDirection) -> WindowOutcome:

@@ -2,7 +2,33 @@
 
 AI Trading OS is a foundation for a future Forex analysis and paper-trading platform.
 
-Current project phase: phase_11_3_reading_service.
+Current project phase: phase_11_4_market_page_route.
+Phase 11-4 served the page. `MarketPageService` assembles the document once; the script writes it,
+the route serves it, and **the served bytes are identical to the written file** - the criterion that
+decided the slice, re-checked after the phase bump.
+**The safety question was answered by narrowing rather than dodging, and that is the part to
+remember.** The page contains positioning, and the 10-4 rule said the API stays absolutely closed to
+it. The dodge was cheap: import a string-returning function, never name `PositioningReading`, leave
+the test passing while the data reaches a person exactly as before. Refused. **A rule that passes
+while its purpose is defeated is worse than no rule, because it then certifies the thing it was
+written to prevent.** The rule now states what it protects - the **channel** (pull, not push, so
+Telegram stays absolutely closed with its own new test) and the **shape** (a document, not a feed:
+no `response_model`, no `JSONResponse`, no other file under `app/api` reaching the services).
+**A second rule was kept at full strength by moving code instead of widening it.** The 9D-2 ban on
+`cross_section` in any service fired unexpectedly, because the page needs a move over a window and a
+price at a date and both helpers lived there. They were never the cross-section; the ranking is.
+They moved to `app/domain/price_series.py`, the ranking stayed, and the rule passes unchanged.
+**Exposure: no new authentication and no widening of the bind.** The API is published to
+`127.0.0.1` only, `MARKET_PAGE_ENABLED` is off by default, and registration is conditional rather
+than a per-request flag check. The cost is named rather than solved: another device cannot open the
+page, and doing that needs real authentication first. A test reads `compose.yaml` so the binding is
+checkable rather than remembered.
+**Criterion 4 was checked two vacuous ways before it was checked correctly.** This FastAPI version
+keeps an included router as one opaque entry exposing neither `path` nor nested `routes`, so both
+the obvious check and the recursive one found no application routes at all - and both would have
+passed. A guard assertion written before the result was read caught it. Plumbing before the result,
+working one level away from where the habit was learned.
+See `docs/phase11-4-verification-report.md`.
 Phase 11-3 lifted the loaders. Five scripts each carried the same query, the same provider filter
 and the same sort, differing only in the window - and a window is a parameter, not a difference in
 kind. A served page would have been the **sixth** copy, and in this project the sixth copy has

@@ -8,6 +8,7 @@ from app.core.config import Settings
 from app.core.exceptions import UnauthorizedError
 from app.core.security import constant_time_equals
 from app.services.health_service import HealthService
+from app.services.market_page_service import MarketPageService
 from app.services.system_state_service import SystemStateService
 
 
@@ -25,6 +26,11 @@ def get_system_state_service(request: Request) -> SystemStateService:
 
 def get_health_service(request: Request) -> HealthService:
     return cast(HealthService, request.app.state.health_service)
+
+
+def get_market_page_service(request: Request) -> MarketPageService:
+    """Present only when `MARKET_PAGE_ENABLED` is on; the route is not registered otherwise."""
+    return cast(MarketPageService, request.app.state.market_page_service)
 
 
 def get_uow_factory(request: Request) -> Callable[[], object]:

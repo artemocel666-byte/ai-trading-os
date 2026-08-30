@@ -19,7 +19,7 @@ DESCRIPTIVE_SCRIPTS = (
 
 
 def test_project_phase_is_current() -> None:
-    assert constants.PROJECT_PHASE == "phase_11_3_reading_service"
+    assert constants.PROJECT_PHASE == "phase_11_4_market_page_route"
 
 
 def test_only_one_place_loads_universe_daily_candles() -> None:

@@ -5,12 +5,7 @@ import pytest
 from pydantic import ValidationError
 
 from app.core import constants
-from app.domain.cross_section import (
-    build_cross_section_profile,
-    forward_return,
-    latest_close_at,
-    rank_into_buckets,
-)
+from app.domain.cross_section import build_cross_section_profile, rank_into_buckets
 from app.domain.entities import Candle, Timeframe
 from app.domain.entities.cross_section import (
     MINIMUM_T_STATISTIC,
@@ -19,6 +14,7 @@ from app.domain.entities.cross_section import (
     CrossSectionPeriod,
     CrossSectionProfile,
 )
+from app.domain.price_series import forward_return, latest_close_at
 from app.domain.value_objects import CurrencyPair
 
 JANUARY = datetime(2020, 1, 1, tzinfo=UTC)
@@ -27,7 +23,7 @@ MARCH = datetime(2020, 3, 1, tzinfo=UTC)
 
 
 def test_project_phase_is_current() -> None:
-    assert constants.PROJECT_PHASE == "phase_11_3_reading_service"
+    assert constants.PROJECT_PHASE == "phase_11_4_market_page_route"
 
 
 def _observation(
