@@ -432,8 +432,18 @@ non-actionable and without any signal, AI, or execution behavior.
     text, because the service's own docstring names `argparse` and `print` in order to say it uses
     neither. **A defect found in passing**: `AGENTS.md` and `README.md` had both declared the phase
     four bumps behind the constant, and a ninth test now pins them.
-  - 11-4: the route, plus the decision between a private network and real authentication — the
-    current `X-Internal-API-Key` is a header, and a browser opening a URL cannot send one.
+  - 11-4: the route — **pre-registered 2026-08-30**, see `docs/phase11-4-preregistration.md`. The
+    page served over HTTP, and with it the exposure decision. **Answered: no new authentication and
+    no widening of the bind.** The API is already published to `127.0.0.1:8000` only, so the page is
+    reachable where the operator already is and nowhere else; `MARKET_PAGE_ENABLED` defaults to off.
+    The cost is named rather than solved — **a phone cannot open it**, because binding to the LAN
+    without authentication would make the page readable by anything on the network, and inventing an
+    auth scheme in the same slice would write that half in a hurry.
+    The safety question is answered by **narrowing rather than dodging**: the route could import a
+    string-returning function, never name `PositioningReading`, and pass the 10-4 substring test
+    while the data still reached a person. Refused. What the boundary protects is the **channel**
+    (pull, not push — Telegram stays absolutely closed) and the **shape** (a document, not a feed —
+    no JSON endpoint for positioning, candles or rates). Both get their own criterion.
   - Open, and product decisions rather than measurements: whether the page is ever **served**
     instead of written to a file, and whether the **two-level rendering** discussed in 10-2 is worth
     building now that the content has been stable across two phases.
