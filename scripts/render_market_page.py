@@ -10,24 +10,22 @@ Read-only apart from the single file it writes, and that file makes no network r
 import argparse
 import asyncio
 import sys
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta
 from decimal import Decimal
-from itertools import pairwise
 from pathlib import Path
 
 from app.core.config import Settings
-from app.core.constants import REAL_MARKET_DATA_PROVIDERS
 from app.core.time import normalize_to_utc, utc_now
 from app.domain.concentration import read_concentration
 from app.domain.currency_universe import UNIVERSE_CURRENCIES, universe_pairs
 from app.domain.entities.concentration import ConcentrationStatus
-from app.domain.entities.market_data import Timeframe
 from app.domain.entities.positioning import PositioningReading
-from app.domain.market_state import currency_strength, read_against_history
+from app.domain.market_state import currency_strength, daily_returns, read_against_history
 from app.persistence.database import create_engine, create_session_factory
 from app.persistence.session import build_uow_factory
 from app.presentation.charts import distribution_strip, matrix_grid, plain_rows, ranked_bars
 from app.presentation.page import build_page
+from app.services.market_reading_service import MarketReadingService
 
 DEFAULT_WINDOW_DAYS = 5
 DEFAULT_HISTORY_DAYS = 730
@@ -52,40 +50,27 @@ def _parse_args() -> argparse.Namespace:
 
 
 async def _load(database_url: str, *, correlation_since: datetime) -> dict[str, object]:
+    """Everything the page draws, over one engine.
+
+    Phase 11-3: the queries are `MarketReadingService` and the returns are `daily_returns`. The
+    correlation window is applied here rather than in either, because it is a property of this
+    page's question and not of the data.
+    """
     engine = create_engine(database_url)
-    candles: dict[str, list] = {}
-    returns: dict[str, dict[object, Decimal]] = {}
-    positioning: dict[str, list[PositioningReading]] = {}
     try:
-        uow_factory = build_uow_factory(create_session_factory(engine))
-        async with uow_factory() as uow:
-            for pair in universe_pairs():
-                rows = await uow.candles.list_range(
-                    pair=pair,
-                    timeframe=Timeframe.D1,
-                    start_at=datetime(2000, 1, 1, tzinfo=UTC),
-                    end_at=normalize_to_utc(utc_now()),
-                )
-                real = [c for c in rows if c.provider in REAL_MARKET_DATA_PROVIDERS]
-                real.sort(key=lambda candle: candle.close_time)
-                if not real:
-                    continue
-                candles[pair.value] = real
-                series: dict[object, Decimal] = {}
-                recent = [c for c in real if c.close_time >= correlation_since]
-                for previous, current in pairwise(recent):
-                    if previous.close > 0:
-                        series[current.close_time.isoformat()] = (
-                            current.close - previous.close
-                        ) / previous.close
-                if series:
-                    returns[pair.value] = series
-            for currency in sorted(UNIVERSE_CURRENCIES):
-                rows = await uow.positioning.list_range(currency=currency)
-                if rows:
-                    positioning[currency] = rows
+        service = MarketReadingService(
+            uow_factory=build_uow_factory(create_session_factory(engine))
+        )
+        candles = await service.daily_candles()
+        positioning = await service.positioning()
     finally:
         await engine.dispose()
+
+    returns: dict[str, dict[str, Decimal]] = {}
+    for symbol, rows in candles.items():
+        series = daily_returns([row for row in rows if row.close_time >= correlation_since])
+        if series:
+            returns[symbol] = series
     return {"candles": candles, "returns": returns, "positioning": positioning}
 
 
@@ -154,7 +139,7 @@ async def _build_document(args: argparse.Namespace) -> str | None:
         correlation_since=as_of - timedelta(days=args.correlation_days),
     )
     candles: dict[str, list] = loaded["candles"]  # type: ignore[assignment]
-    returns: dict[str, dict[object, Decimal]] = loaded["returns"]  # type: ignore[assignment]
+    returns: dict[str, dict[str, Decimal]] = loaded["returns"]  # type: ignore[assignment]
     positioning: dict[str, list[PositioningReading]] = loaded["positioning"]  # type: ignore[assignment]
 
     if not candles:
@@ -218,7 +203,7 @@ def main() -> None:
     sys.exit(0)
 
 
-def _grid_section(returns: dict[str, dict[object, Decimal]], window_days: int) -> str:
+def _grid_section(returns: dict[str, dict[str, Decimal]], window_days: int) -> str:
     if len(returns) < 2:
         return ""
     names = tuple(sorted(returns))

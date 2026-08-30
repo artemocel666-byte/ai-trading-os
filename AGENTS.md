@@ -2,7 +2,31 @@
 
 AI Trading OS is a foundation for a future Forex analysis and paper-trading platform.
 
-Current project phase: phase_9d3_interest_rate_ingestion.
+Current project phase: phase_11_3_reading_service.
+Phase 11-3 lifted the loaders. Five scripts each carried the same query, the same provider filter
+and the same sort, differing only in the window - and a window is a parameter, not a difference in
+kind. A served page would have been the **sixth** copy, and in this project the sixth copy has
+always been the one that disagreed with the other five.
+`app/services/market_reading_service.py` is 90 lines: three reads - daily candles, interest rates,
+positioning - and **no arithmetic**. The other duplication, close-to-close daily returns written out
+identically in two scripts, went to the **domain** as `daily_returns` rather than into the service,
+because a service that quietly derives is how a number ends up with two definitions.
+**The criterion that decided the slice was that nothing changed.** For a refactor, anything else is
+a rewrite in disguise. All three captured outputs are identical byte for byte, and the comparison
+was run again after the phase bump in case the constant leaked into a rendered page. It does not.
+`replay_rules.py` calls the same repository method and **stays out**: one pair, any timeframe, a
+lead-in window and economic events beside it. Folding it in would need three optional parameters,
+and each would be a way for two questions to drift apart while sharing a name.
+**Two criteria had to be checked against parsed syntax rather than file text.** Both were first
+written as substring scans and both failed on the service's own docstring, which names `argparse`
+and `print` in order to say it uses neither - the fourth time here that a rule has been tripped by
+the sentence describing it. Narrowed, never loosened: `ast.BitOr` is not arithmetic, because
+`datetime | None` parses as one and a type union is not a calculation.
+**A defect found in passing, and it is this project's own disease.** `AGENTS.md` and `README.md`
+each declare the phase in prose, and both had been left four bumps behind the constant - through
+9D-4, 10-1 to 10-4, 11-1 and 11-2 - in the two files a partner's agent opens first. Both corrected,
+and a test now pins them to `constants.PROJECT_PHASE`.
+See `docs/phase11-3-verification-report.md`.
 Phase 11-2 closed a gap the validator had carried since 8A: **it blocked advice but not
 forecasting**. Every number had to come from the input and a long actionable list was refused, yet
 "волатильность в 94-м перцентиле, обычно после такого движение замедляется" passed - no actionable

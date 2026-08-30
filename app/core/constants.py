@@ -1,4 +1,4 @@
-PROJECT_PHASE = "phase_11_2_forecast_guard"
+PROJECT_PHASE = "phase_11_3_reading_service"
 STRATEGY_IMPLEMENTED = False
 REAL_TRADING_ENABLED = False
 

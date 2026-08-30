@@ -19,18 +19,16 @@ import asyncio
 import sys
 from datetime import datetime, timedelta
 from decimal import Decimal
-from itertools import pairwise
 
 from app.core.config import Settings
-from app.core.constants import REAL_MARKET_DATA_PROVIDERS
 from app.core.time import normalize_to_utc, utc_now
 from app.domain.concentration import read_concentration
-from app.domain.currency_universe import universe_pairs
 from app.domain.entities.concentration import MINIMUM_OVERLAP, ConcentrationStatus
-from app.domain.entities.market_data import Timeframe
+from app.domain.market_state import daily_returns
 from app.persistence.database import create_engine, create_session_factory
 from app.persistence.session import build_uow_factory
 from app.presentation.readings import format_concentration, format_correlation
+from app.services.market_reading_service import MarketReadingService
 
 #: The window every correlation is taken over. A quarter is about sixty-four trading days, which
 #: puts a correlation's standard error near 0.12 — stated in the output rather than hidden behind
@@ -55,37 +53,22 @@ def _parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-async def _load_returns(database_url: str, *, since: datetime) -> dict[str, dict[object, Decimal]]:
+async def _load_returns(database_url: str, *, since: datetime) -> dict[str, dict[str, Decimal]]:
     """Daily close-to-close returns per pair, keyed by the bar's close time.
 
-    Keyed rather than flat so each pair is aligned on the days both instruments were priced. A
-    holiday in one and not the other must shorten the overlap, never shift it.
+    Phase 11-3: the loading is `MarketReadingService` and the arithmetic is `daily_returns`. This
+    function is now only the wiring between them, plus the engine lifecycle a script owns.
     """
     engine = create_engine(database_url)
-    returns: dict[str, dict[object, Decimal]] = {}
     try:
-        uow_factory = build_uow_factory(create_session_factory(engine))
-        async with uow_factory() as uow:
-            for pair in universe_pairs():
-                candles = await uow.candles.list_range(
-                    pair=pair,
-                    timeframe=Timeframe.D1,
-                    start_at=since,
-                    end_at=normalize_to_utc(utc_now()),
-                )
-                real = [c for c in candles if c.provider in REAL_MARKET_DATA_PROVIDERS]
-                real.sort(key=lambda candle: candle.close_time)
-                series: dict[object, Decimal] = {}
-                for previous, current in pairwise(real):
-                    if previous.close > 0:
-                        series[current.close_time.isoformat()] = (
-                            current.close - previous.close
-                        ) / previous.close
-                if series:
-                    returns[pair.value] = series
+        service = MarketReadingService(
+            uow_factory=build_uow_factory(create_session_factory(engine))
+        )
+        candles = await service.daily_candles(since=since)
     finally:
         await engine.dispose()
-    return returns
+    series = {symbol: daily_returns(rows) for symbol, rows in candles.items()}
+    return {symbol: values for symbol, values in series.items() if values}
 
 
 async def _main() -> int:

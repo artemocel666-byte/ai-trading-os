@@ -16,8 +16,10 @@ that renders them may not phrase any of it as an expectation.
 
 from collections.abc import Mapping, Sequence
 from decimal import Decimal
+from itertools import pairwise
 
 from app.domain.entities.calibration import FieldDistribution
+from app.domain.entities.market_data import Candle
 from app.domain.entities.market_state import CurrencyStrengthReading, HistoricalReading
 from app.domain.rule_calibration import summarize_field
 
@@ -95,3 +97,27 @@ def currency_strength(
     ]
     # Sorted by name so two runs read the same way; the caller orders by strength when it wants to.
     return tuple(sorted(readings, key=lambda reading: reading.currency))
+
+
+def daily_returns(candles: Sequence[Candle]) -> dict[str, Decimal]:
+    """Close-to-close returns keyed by the closing bar's moment.
+
+    Phase 11-3 brought this here from two scripts that had written it identically. It is arithmetic
+    on candles rather than loading, so it belongs beside the other pure functions — a service that
+    quietly derives is how a number ends up with two definitions.
+
+    **Keyed rather than a flat list**, because the only consumers correlate pairs against each
+    other, and alignment is a property of each pair: two instruments share whichever days both were
+    priced. A list would let equal-length series describing different days be compared as though
+    they matched.
+
+    A bar whose predecessor closed at or below zero contributes nothing — there is no return to
+    compute from it, and a substituted zero would read as "it did not move".
+    """
+    series: dict[str, Decimal] = {}
+    for previous, current in pairwise(candles):
+        if previous.close > 0:
+            series[current.close_time.isoformat()] = (
+                current.close - previous.close
+            ) / previous.close
+    return series

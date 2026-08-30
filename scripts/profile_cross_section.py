@@ -20,29 +20,26 @@ import asyncio
 import json
 import sys
 from collections import defaultdict
-from datetime import UTC, datetime
+from datetime import datetime
 from decimal import Decimal
 
 from app.core.config import Settings
-from app.core.constants import REAL_MARKET_DATA_PROVIDERS
-from app.core.time import normalize_to_utc, utc_now
 from app.domain.cross_section import (
     build_cross_section_profile,
     forward_return,
     latest_close_at,
 )
 from app.domain.currency_universe import universe_pairs
-from app.domain.entities import Timeframe
 from app.domain.entities.cross_section import (
     BUCKET_COUNT,
     MINIMUM_T_STATISTIC,
     CrossSectionObservation,
     CrossSectionProfile,
 )
-from app.domain.entities.market_data import Candle
 from app.domain.market_calendar import shift_months
 from app.persistence.database import create_engine, create_session_factory
 from app.persistence.session import build_uow_factory
+from app.services.market_reading_service import MarketReadingService
 
 #: Round-trip cost per leg, in basis points, fixed before the run. Both legs rebalance every month,
 #: so the profile charges twice this. The grid spans from free to implausibly expensive so the whole
@@ -112,22 +109,11 @@ async def _main() -> int:
     pairs = universe_pairs()
 
     try:
-        uow_factory = build_uow_factory(create_session_factory(engine))
-        by_pair: dict[str, list[Candle]] = {}
-        async with uow_factory() as uow:
-            for pair in pairs:
-                candles = await uow.candles.list_range(
-                    pair=pair,
-                    timeframe=Timeframe.D1,
-                    start_at=datetime(2000, 1, 1, tzinfo=UTC),
-                    end_at=normalize_to_utc(utc_now()),
-                )
-                real = [
-                    candle for candle in candles if candle.provider in REAL_MARKET_DATA_PROVIDERS
-                ]
-                real.sort(key=lambda candle: candle.close_time)
-                if real:
-                    by_pair[pair.value] = real
+        # Phase 11-3: the query, the provider filter and the sort are `MarketReadingService`.
+        service = MarketReadingService(
+            uow_factory=build_uow_factory(create_session_factory(engine))
+        )
+        by_pair = await service.daily_candles()
     finally:
         await engine.dispose()
 

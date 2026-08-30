@@ -420,8 +420,18 @@ non-actionable and without any signal, AI, or execution behavior.
     used, at **20 of 20 accepted with zero `FORECAST_TEXT` rejections** against 8D's 85%. A literal
     backspace byte in a source file made the negation silently never match; a sweep found that one
     and no others.
-  - 11-3: lift the per-script loaders into a service, so more than one surface can read the same
-    readings without a fifth copy of `_load`.
+  - 11-3: lift the loaders into a service — **completed 2026-08-30**, see
+    `docs/phase11-3-verification-report.md`. All eight criteria met. Five scripts each held the same
+    query, provider filter and sort; a served page would have been the **sixth** copy, and the sixth
+    copy has historically been the one that disagreed. `MarketReadingService` is 90 lines and holds
+    three reads and no arithmetic — the duplicated returns derivation went to the **domain** instead,
+    because hiding a computation in the module whose job is not to compute is how a number gets two
+    definitions. **The criterion that decided it: identical output before and after** — all three
+    captured runs byte for byte, re-verified after the phase bump. `replay_rules.py` stays out on
+    purpose and a test records why. Two criteria had to read the parsed syntax rather than the file
+    text, because the service's own docstring names `argparse` and `print` in order to say it uses
+    neither. **A defect found in passing**: `AGENTS.md` and `README.md` had both declared the phase
+    four bumps behind the constant, and a ninth test now pins them.
   - 11-4: the route, plus the decision between a private network and real authentication — the
     current `X-Internal-API-Key` is a header, and a browser opening a URL cannot send one.
   - Open, and product decisions rather than measurements: whether the page is ever **served**

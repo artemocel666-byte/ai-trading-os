@@ -22,7 +22,7 @@ WINDOW = "история 730 дн."
 
 
 def test_project_phase_is_current() -> None:
-    assert constants.PROJECT_PHASE == "phase_11_2_forecast_guard"
+    assert constants.PROJECT_PHASE == "phase_11_3_reading_service"
 
 
 def test_the_primitive_set_is_closed() -> None:

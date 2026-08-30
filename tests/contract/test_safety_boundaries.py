@@ -3114,6 +3114,11 @@ PHASE_9D3_RATE_INGESTION_PATH = frozenset(
         Path("app/services/interest_rate_ingestion_service.py"),
         Path("app/scheduler/jobs.py"),
         Path("app/scheduler/worker.py"),
+        # Phase 11-3. Reading joins writing on the named path: five scripts had each loaded rates
+        # themselves, and a served page would have been the sixth. The rule that matters is
+        # unchanged — Telegram and the API stay absolutely closed, and inside the service layer only
+        # these files may touch rates at all.
+        Path("app/services/market_reading_service.py"),
     }
 )
 
@@ -3380,11 +3385,17 @@ def test_phase10_4_positioning_reaches_no_user_facing_layer() -> None:
     nothing in this slice schedules or serves it.
     """
     markers = ("cftc_positioning", "PositioningReading", "entities.positioning")
+    # Phase 11-3 named one reading path, for the same reason 10-1 named an ingestion path for rates:
+    # five scripts had each loaded positioning themselves and a served page would have been the
+    # sixth. What the rule protects is untouched — **Telegram and the API stay absolutely closed**,
+    # and a formatter or digest that started reading positioning still fails here.
+    allowed = frozenset({Path("app/services/market_reading_service.py")})
     offenders = [
         str(file_path)
         for directory in ("app/telegram", "app/api", "app/services", "app/scheduler")
         for file_path in Path(directory).rglob("*.py")
-        if any(marker in file_path.read_text(encoding="utf-8") for marker in markers)
+        if file_path not in allowed
+        and any(marker in file_path.read_text(encoding="utf-8") for marker in markers)
     ]
 
     assert offenders == []

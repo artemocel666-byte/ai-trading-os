@@ -24,7 +24,7 @@ NOW = datetime(2026, 8, 20, tzinfo=UTC)
 
 
 def test_project_phase_is_current() -> None:
-    assert constants.PROJECT_PHASE == "phase_11_2_forecast_guard"
+    assert constants.PROJECT_PHASE == "phase_11_3_reading_service"
 
 
 def test_a_rank_is_the_inverse_of_the_percentile_helper_not_a_second_copy() -> None:

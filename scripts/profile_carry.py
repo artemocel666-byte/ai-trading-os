@@ -25,12 +25,10 @@ import asyncio
 import json
 import sys
 from collections import defaultdict
-from datetime import UTC, datetime
+from datetime import datetime
 from decimal import Decimal
 
 from app.core.config import Settings
-from app.core.constants import REAL_MARKET_DATA_PROVIDERS
-from app.core.time import normalize_to_utc, utc_now
 from app.domain.carry import (
     RATE_LAG_MONTHS,
     CarryComponent,
@@ -44,7 +42,6 @@ from app.domain.cross_section import (
     latest_close_at,
 )
 from app.domain.currency_universe import UNIVERSE_CURRENCIES, universe_pairs
-from app.domain.entities import Timeframe
 from app.domain.entities.carry import CarryReading
 from app.domain.entities.cross_section import (
     BUCKET_COUNT,
@@ -55,6 +52,7 @@ from app.domain.entities.market_data import Candle
 from app.domain.market_calendar import shift_months
 from app.persistence.database import create_engine, create_session_factory
 from app.persistence.session import build_uow_factory
+from app.services.market_reading_service import MarketReadingService
 
 #: Round-trip cost per leg in basis points, the same grid Phase 9D-2 used so the two runs are read
 #: on one scale. Both legs rebalance every month, so the profile charges twice this.
@@ -103,33 +101,18 @@ def _profile_line(label: str, profile: CrossSectionProfile | None) -> str:
 async def _load(
     database_url: str,
 ) -> tuple[dict[str, list[Candle]], dict[str, dict[datetime, Decimal]]]:
-    """Daily candles per pair and monthly rates per currency, both from storage only."""
+    """Daily candles per pair and monthly rates per currency, both from storage only.
+
+    Phase 11-3: the queries are `MarketReadingService`. This keeps only the engine lifecycle.
+    """
     engine = create_engine(database_url)
-    by_pair: dict[str, list[Candle]] = {}
-    by_currency: dict[str, dict[datetime, Decimal]] = {}
     try:
-        uow_factory = build_uow_factory(create_session_factory(engine))
-        async with uow_factory() as uow:
-            for pair in universe_pairs():
-                candles = await uow.candles.list_range(
-                    pair=pair,
-                    timeframe=Timeframe.D1,
-                    start_at=datetime(2000, 1, 1, tzinfo=UTC),
-                    end_at=normalize_to_utc(utc_now()),
-                )
-                real = [
-                    candle for candle in candles if candle.provider in REAL_MARKET_DATA_PROVIDERS
-                ]
-                real.sort(key=lambda candle: candle.close_time)
-                if real:
-                    by_pair[pair.value] = real
-            for currency in sorted(UNIVERSE_CURRENCIES):
-                rates = await uow.interest_rates.list_range(currency=currency)
-                if rates:
-                    by_currency[currency] = {rate.as_of: rate.annual_rate for rate in rates}
+        service = MarketReadingService(
+            uow_factory=build_uow_factory(create_session_factory(engine))
+        )
+        return await service.daily_candles(), await service.interest_rates()
     finally:
         await engine.dispose()
-    return by_pair, by_currency
 
 
 def _criteria(charged: CrossSectionProfile) -> dict[str, bool]:

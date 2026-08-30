@@ -94,7 +94,7 @@ def read_correlation(
 
 
 def aligned_returns(
-    left: Mapping[object, Decimal], right: Mapping[object, Decimal]
+    left: Mapping[str, Decimal], right: Mapping[str, Decimal]
 ) -> tuple[list[Decimal], list[Decimal]]:
     """The two series restricted to the moments both were priced, in a stable order.
 
@@ -102,13 +102,13 @@ def aligned_returns(
     of by date would silently pair a Tuesday with a Wednesday whenever one had a holiday the other
     did not — a correlation computed from mismatched days, reported as though it were real.
     """
-    shared = sorted(set(left) & set(right), key=str)
+    shared = sorted(set(left) & set(right))
     return ([left[key] for key in shared], [right[key] for key in shared])
 
 
 def read_concentration(
     instruments: Sequence[str],
-    returns_by_instrument: Mapping[str, Mapping[object, Decimal]],
+    returns_by_instrument: Mapping[str, Mapping[str, Decimal]],
 ) -> ConcentrationReading:
     """How many independent bets a named set of instruments comes to.
 

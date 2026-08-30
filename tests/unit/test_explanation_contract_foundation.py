@@ -247,7 +247,7 @@ def test_validation_report_cannot_claim_acceptance_with_issues() -> None:
 
 
 def test_project_phase_is_phase8a_explanation_contract_foundation() -> None:
-    assert constants.PROJECT_PHASE == "phase_11_2_forecast_guard"
+    assert constants.PROJECT_PHASE == "phase_11_3_reading_service"
 
 
 # --- readings reach the explainer at a precision a person would write ------------------------

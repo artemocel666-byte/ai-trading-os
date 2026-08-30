@@ -4,7 +4,12 @@ AI Trading OS is a safety-first foundation for a future modular Forex analysis a
 
 ## Current Status
 
-- Current project phase: phase_9d3_interest_rate_ingestion.
+- Current project phase: phase_11_3_reading_service.
+- Phase 11-3 lifted the loaders into `MarketReadingService`: five scripts held the same query,
+  filter and sort, and a served page would have been the sixth copy. Three reads, no arithmetic —
+  the duplicated returns derivation went to the domain instead. **The acceptance criterion was that
+  nothing changed**, and all three captured outputs are identical byte for byte. `replay_rules.py`
+  stays out on purpose, and a test records why.
 - Phase 11-2 closed a real gap: the explanation validator **blocked advice but not forecasting**.
   A model could write "обычно после такого движение замедляется" with every number valid and no
   actionable word, and be accepted. One judgement now lives in the domain and is read by both the

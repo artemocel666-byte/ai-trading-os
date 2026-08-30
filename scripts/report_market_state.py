@@ -20,16 +20,15 @@ Read-only: it evaluates and prints, and writes nothing.
 import argparse
 import asyncio
 import sys
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta
 from decimal import Decimal
 
 from app.core.config import Settings
-from app.core.constants import REAL_MARKET_DATA_PROVIDERS
 from app.core.time import normalize_to_utc, utc_now
 from app.domain.carry import RATE_LAG_MONTHS, carry_differential, lagged_rates_for_anchor
 from app.domain.cross_section import forward_return, latest_close_at
 from app.domain.currency_universe import UNIVERSE_CURRENCIES, universe_pairs
-from app.domain.entities.market_data import Candle, Timeframe
+from app.domain.entities.market_data import Candle
 from app.domain.entities.market_state import CarryReadingToday, MarketStateReport
 from app.domain.entities.positioning import PositioningReading
 from app.domain.market_calendar import month_start, shift_months
@@ -41,6 +40,7 @@ from app.presentation.readings import (
     format_historical_reading,
     format_positioning,
 )
+from app.services.market_reading_service import MarketReadingService
 
 #: How far back "recently" reaches for the currency decomposition. Five sessions is a week of
 #: trading — long enough that one quiet day does not dominate, short enough to still be "now".
@@ -71,51 +71,28 @@ def _daily_ranges(candles: list[Candle]) -> list[Decimal]:
 
 async def _load(
     database_url: str,
-) -> tuple[dict[str, list[Candle]], dict[str, dict[datetime, Decimal]]]:
-    engine = create_engine(database_url)
-    by_pair: dict[str, list[Candle]] = {}
-    by_currency: dict[str, dict[datetime, Decimal]] = {}
-    try:
-        uow_factory = build_uow_factory(create_session_factory(engine))
-        async with uow_factory() as uow:
-            for pair in universe_pairs():
-                candles = await uow.candles.list_range(
-                    pair=pair,
-                    timeframe=Timeframe.D1,
-                    start_at=datetime(2000, 1, 1, tzinfo=UTC),
-                    end_at=normalize_to_utc(utc_now()),
-                )
-                real = [c for c in candles if c.provider in REAL_MARKET_DATA_PROVIDERS]
-                real.sort(key=lambda candle: candle.close_time)
-                if real:
-                    by_pair[pair.value] = real
-            for currency in sorted(UNIVERSE_CURRENCIES):
-                rates = await uow.interest_rates.list_range(currency=currency)
-                if rates:
-                    by_currency[currency] = {rate.as_of: rate.annual_rate for rate in rates}
-    finally:
-        await engine.dispose()
-    return by_pair, by_currency
+) -> tuple[
+    dict[str, list[Candle]],
+    dict[str, dict[datetime, Decimal]],
+    dict[str, list[PositioningReading]],
+]:
+    """Everything this report reads, in one place and over one engine.
 
-
-async def _load_positioning(database_url: str) -> dict[str, list[PositioningReading]]:
-    """Every stored positioning reading per currency, oldest first.
-
-    Loaded here rather than in the domain, as everywhere else: the module that reads storage is the
-    only one that knows about a session.
+    Phase 11-3: the queries moved to `MarketReadingService`. What is left here is the engine
+    lifecycle, which a script owns and a route does not.
     """
     engine = create_engine(database_url)
-    by_currency: dict[str, list[PositioningReading]] = {}
     try:
-        uow_factory = build_uow_factory(create_session_factory(engine))
-        async with uow_factory() as uow:
-            for currency in sorted(UNIVERSE_CURRENCIES):
-                rows = await uow.positioning.list_range(currency=currency)
-                if rows:
-                    by_currency[currency] = rows
+        service = MarketReadingService(
+            uow_factory=build_uow_factory(create_session_factory(engine))
+        )
+        return (
+            await service.daily_candles(),
+            await service.interest_rates(),
+            await service.positioning(),
+        )
     finally:
         await engine.dispose()
-    return by_currency
 
 
 async def _main() -> int:
@@ -124,7 +101,7 @@ async def _main() -> int:
         raise ValueError("history must be at least as long as the window, and both positive")
     settings = Settings(_env_file=None)
     as_of = normalize_to_utc(utc_now())
-    by_pair, by_currency = await _load(args.database_url or settings.database_dsn())
+    by_pair, by_currency, positioning = await _load(args.database_url or settings.database_dsn())
 
     if not by_pair:
         print("Дневных свечей нет. Сначала запустите заливку вселенной фазы 9D-1.")
@@ -217,7 +194,6 @@ async def _main() -> int:
             f"и без предупреждения об этом."  # noqa: RUF001
         )
 
-    positioning = await _load_positioning(args.database_url or settings.database_dsn())
     if positioning:
         absent = sorted(UNIVERSE_CURRENCIES - set(positioning))
         print("\nПозиции спекулянтов по данным CFTC:")  # noqa: RUF001

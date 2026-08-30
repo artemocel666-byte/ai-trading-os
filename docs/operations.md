@@ -998,3 +998,46 @@ docker compose run --rm -T worker python -u -m scripts.evaluate_explanations --b
 
 **A drop below 50% is a problem, not a success.** A validator that rejects most of what it sees has
 removed the feature rather than secured it, and the response is to loosen a pattern and say which.
+
+## Reading the universe (Phase 11-3)
+
+There is **one** place that loads the universe's daily candles, and it is
+`app/services/market_reading_service.py`. Three reads, and no arithmetic anywhere in it:
+
+| method | returns |
+| --- | --- |
+| `daily_candles(since=None)` | every universe pair's real-provider D1 candles, sorted by close |
+| `interest_rates()` | each currency's stored monthly rates, keyed by month |
+| `positioning()` | each currency's CFTC readings, oldest first |
+
+Every descriptive script goes through it. What a script still owns is the **engine lifecycle** —
+`create_engine`, `dispose` — because a script opens and closes its own connection and a route does
+not.
+
+**The service computes nothing, deliberately.** Derivations live in `app/domain/`: daily returns are
+`daily_returns` in `market_state.py` and nowhere else. If a number needs deriving, it goes to the
+domain beside the other pure functions, never into the reading path — a service that quietly derives
+is how one number ends up with two definitions in two callers.
+
+**`replay_rules.py` is not a caller and must not become one.** It loads one pair, on any timeframe,
+with a lead-in window so its oldest windows are not artificially incomplete, and it loads economic
+events beside them. That is a different question wearing a similar call.
+
+**Running the descriptive scripts from the host.** They need the repository root on the path, UTF-8
+output on a Windows console, and the published port rather than the compose hostname:
+
+```bash
+PYTHONPATH=. PYTHONIOENCODING=utf-8 uv run python scripts/report_market_state.py --database-url "$DSN"
+```
+
+`$DSN` is `DATABASE_URL` from `.env` with `@postgres:5432` replaced by `@127.0.0.1:5433`. Inside
+compose no substitution is needed. Without `PYTHONIOENCODING` the Cyrillic output raises
+`UnicodeEncodeError` on cp1252 and the script exits 1 having printed nothing.
+
+**Checking a refactor of this path.** Capture the outputs first, change the code, re-run, and
+compare with the embedded timestamp masked. Identical output is the criterion; for a refactor,
+anything else is a rewrite in disguise.
+
+**The phase is declared in three places and they are pinned together.**
+`constants.PROJECT_PHASE`, `AGENTS.md` and `README.md` must agree, and a test enforces it. They had
+drifted four phases apart before 11-3 noticed.
