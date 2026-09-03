@@ -26,6 +26,9 @@ from app.services.market_reading_service import MarketReadingService
 
 DEFAULT_OUTPUT = "market_state.html"
 
+#: The newline the file is written with, named rather than inlined so the reason survives beside it.
+LINE_ENDING = "\n"
+
 
 def _parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
@@ -67,7 +70,12 @@ def main() -> None:
         print("Дневных свечей нет. Сначала запустите заливку вселенной фазы 9D-1.")
         sys.exit(1)
     output = Path(args.output)
-    output.write_text(document, encoding="utf-8")
+    # An explicit newline so the file holds the document's own bytes. Text mode translates every
+    # newline to CRLF on Windows, which made the written file 42 bytes longer than the identical
+    # page the route served — the same document, but not the same file, and Phase 11-4's decisive
+    # criterion is about bytes. It also stops a page written here and one written inside the
+    # container from differing for a reason no reader could see on the page.
+    output.write_text(document, encoding="utf-8", newline=LINE_ENDING)
     print(f"Написано: {output.resolve()}  ({len(document):,} байт)")
     sys.exit(0)
 

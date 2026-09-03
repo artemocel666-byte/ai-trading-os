@@ -114,3 +114,24 @@ def test_the_price_helpers_left_the_cross_section_behind() -> None:
     # The ranking did not follow them out.
     assert "def build_cross_section_profile" in cross_section
     assert "bucket" not in price_series.lower()
+
+
+def test_the_written_file_holds_the_documents_own_bytes() -> None:
+    """Found by checking criterion 3 against the live container instead of an in-process client.
+
+    `Path.write_text` uses text mode, so on Windows every newline became CRLF and the written file
+    was 42 bytes longer than the identical page the route served. In-process the difference was
+    invisible: `read_text` translates the newlines straight back on the way in, so the comparison
+    that first reported "identical" had normalised away the one thing it was measuring.
+
+    The same document is not the same file, and this criterion is about bytes. An explicit newline
+    also stops a page written on Windows and one written inside the container from differing for a
+    reason no reader could ever see on the page.
+    """
+    source = SCRIPT_FILE.read_text(encoding="utf-8")
+
+    # Raw, because the thing being searched for is a backslash followed by an `n` in the source
+    # text. Written as a normal literal it becomes an actual newline and never matches — the sixth
+    # time in this project that a check has been defeated by the escaping in its own expectation.
+    assert "newline=LINE_ENDING" in source
+    assert r'LINE_ENDING = "\n"' in source

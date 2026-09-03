@@ -13,12 +13,12 @@ before any code (`7fe3415`).
 | --- | --- | --- |
 | 1 | The document is assembled in exactly one place | **Pass** |
 | 2 | **The script's output is unchanged** | **Pass** — identical, re-checked after the bump |
-| 3 | **The route serves the same bytes the script writes** | **Pass** — 22,988 = 22,988 |
+| 3 | **The route serves the same bytes the script writes** | **Pass** — on raw bytes against the live container, after a defect that had hidden itself |
 | 4 | The route does not exist when the flag is off | **Pass** — and the first two ways of checking it were vacuous; see below |
 | 5 | Telegram stays absolutely closed | **Pass** — its rule untouched, plus a new test |
 | 6 | A document, not a feed | **Pass** |
 | 7 | The bind is not widened | **Pass** — asserted against `compose.yaml` |
-| 8 | No new auth, no new dependency, no schema change, suite green | **Pass** — 1016 passed, 9 skipped |
+| 8 | No new auth, no new dependency, no schema change, suite green | **Pass** — 1017 passed, 9 skipped |
 
 ## Criterion 3 is the one that decides the slice
 
@@ -36,6 +36,40 @@ VERDICT: IDENTICAL
 Both this and criterion 2 were run twice — once when the assembly moved, and again after
 `PROJECT_PHASE` was bumped, for the reason 11-3 recorded: a constant that leaked into a rendered
 page is exactly the quiet difference these criteria exist to catch.
+
+### The first measurement of this criterion had normalised away the thing it was measuring
+
+The run above used an in-process client, comparing `response.text` against `Path.read_text()`. It
+reported 22,988 = 22,988 and it was **not wrong about the document** — but it could not have seen a
+difference in bytes, because `read_text` uses text mode and translates newlines on the way in.
+
+Run again against the container over HTTP, the raw bytes differed:
+
+```
+script file : 20,808 bytes   CR 42
+served page : 20,766 bytes   CR 0
+```
+
+Forty-two carriage returns. `Path.write_text` is text mode too, so on Windows every newline in the
+written file became CRLF while the route served the document's own bytes. **The same document, but
+not the same file** — and this criterion is about bytes, which is the whole reason it was chosen to
+decide the slice.
+
+`scripts/render_market_page.py` now writes with an explicit newline, and the comparison holds on raw
+bytes with nothing normalised:
+
+```
+script file : 20,766 bytes   CR 0
+served page : 20,766 bytes   CR 0
+VERDICT (raw bytes, timestamp masked): IDENTICAL
+```
+
+The lesson is not about Windows. **A check run through the same abstraction as the code it checks
+cannot see what that abstraction hides.** The in-process client shared Python's text mode with the
+script; only stepping outside to HTTP and raw bytes made the difference visible. A ninth unit test
+pins the newline so the fix cannot be lost, and it is written with a raw string — a normal literal
+would put an actual newline in the expectation and never match, which is the sixth time in this
+project that a check has been defeated by the escaping in its own expectation.
 
 ## The safety question, answered by narrowing rather than dodging
 
@@ -114,17 +148,24 @@ Criterion 7 makes this checkable rather than remembered: a test reads `compose.y
 API is still published to loopback only. If it ever fails because the binding was widened on
 purpose, the fix is not to edit the test.
 
+## One line added to `compose.yaml` after the flag was switched on
+
+The `api` service enumerates its capability flags in `environment:` with explicit defaults, and
+`MARKET_PAGE_ENABLED` was not among them. It reached the container anyway through `env_file`, so
+nothing was broken — but someone reading that block to learn what the container can do would not
+have seen the page at all. Added with the same `false` default the code has.
+
 ## Verification run
 
 ```
 uv run ruff format .            clean
 uv run ruff check .             All checks passed
 uv run mypy app                 no issues in 148 source files
-uv run pytest                   1016 passed, 9 skipped
+uv run pytest                   1017 passed, 9 skipped
 uv run python scripts/security_check.py   exit 0
 ```
 
-Eight new unit tests and five new safety rules. No existing test was weakened; the 10-4 rule was
+Nine new unit tests and five new safety rules. No existing test was weakened; the 10-4 rule was
 narrowed with its reasoning written into the docstring, and the 9D-2 rule was left untouched.
 
 ## What this slice deliberately did not do
