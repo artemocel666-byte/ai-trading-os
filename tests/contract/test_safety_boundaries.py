@@ -3576,3 +3576,40 @@ def test_phase11_4_the_page_service_computes_no_new_number() -> None:
 
     for forbidden in ("statistics.", "def _mean", "def _median", "t_statistic", "sqrt"):
         assert forbidden not in source, forbidden
+
+
+def test_a_telegram_token_never_reaches_the_logs() -> None:
+    """Written after a live token reached the container logs for the second time.
+
+    `python-telegram-bot` logs every request through `httpx`, and the Telegram API carries its
+    credential in the **path**: `https://api.telegram.org/bot<token>/getUpdates`. Every redaction
+    rule the project had looked for `key=value` or `key: value`, so this shape went through the
+    formatter untouched and the token was printed in full on every poll — roughly every ten seconds.
+
+    Both leaks were found by reading logs rather than by a check, and both cost a reissue through
+    BotFather. This is the check.
+
+    It runs through `JsonLogFormatter`, not through the regex, because the formatter is the path the
+    leak actually took: a rule that is correct and not wired in protects nothing.
+    """
+    import logging
+
+    from app.core.logging import JsonLogFormatter
+
+    token = "8628156935:AAH0000000000000000000000000000000000"
+    record = logging.LogRecord(
+        name="httpx",
+        level=logging.INFO,
+        pathname=__file__,
+        lineno=1,
+        msg=f'HTTP Request: POST https://api.telegram.org/bot{token}/getUpdates "HTTP/1.1 200 OK"',
+        args=(),
+        exc_info=None,
+    )
+
+    formatted = JsonLogFormatter("bot").format(record)
+
+    assert token not in formatted
+    assert "api.telegram.org/bot***REDACTED***" in formatted
+    # The method still shows, so a log line stays useful for diagnosing a failing poll.
+    assert "getUpdates" in formatted

@@ -31,6 +31,16 @@ ASSIGNMENT_SECRET_RE = re.compile(
 )
 DSN_PASSWORD_RE = re.compile(r"([a-z][a-z0-9+.-]*://[^:\s/@]+:)([^@\s/]+)(@)", re.IGNORECASE)
 
+#: A Telegram bot token is a **path segment**, not a query parameter: the API is
+#: `https://api.telegram.org/bot<token>/getUpdates`. Every rule above looks for `key=value` or
+#: `key: value`, so this shape walked straight through the formatter and `python-telegram-bot`'s
+#: request logging put a live token into the container logs — twice, and it had to be reissued
+#: through BotFather both times.
+#:
+#: Narrow on purpose. A general "redact path segments" rule would mangle ordinary URLs and teach
+#: nobody which secret was protected; this names the one API whose credential lives in the path.
+TELEGRAM_TOKEN_RE = re.compile(r"(?i)(api\.telegram\.org/bot)([^/\s\"']+)")
+
 
 def secret_is_set(value: SecretStr | str | None) -> bool:
     if value is None:
@@ -48,7 +58,8 @@ def redact_secret_value(value: str) -> str:
 def redact_text(value: str) -> str:
     """Redact secret-like substrings embedded in ordinary text."""
 
-    redacted = DSN_PASSWORD_RE.sub(rf"\1{SECRET_REPLACEMENT}\3", value)
+    redacted = TELEGRAM_TOKEN_RE.sub(rf"\1{SECRET_REPLACEMENT}", value)
+    redacted = DSN_PASSWORD_RE.sub(rf"\1{SECRET_REPLACEMENT}\3", redacted)
     redacted = AUTHORIZATION_RE.sub(rf"\1{SECRET_REPLACEMENT}", redacted)
     redacted = QUERY_SECRET_RE.sub(rf"\1{SECRET_REPLACEMENT}", redacted)
     return ASSIGNMENT_SECRET_RE.sub(rf"\1{SECRET_REPLACEMENT}", redacted)
